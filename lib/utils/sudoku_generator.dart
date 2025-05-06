@@ -100,7 +100,24 @@ class SudokuGenerator {
   }
 
   static int? getHint(List<List<int>> board, int row, int col) {
-    final solution = getSolution(board);
-    return solution[row][col];
+    // 이미 숫자가 있는 경우 힌트를 제공하지 않음
+    if (board[row][col] != 0) return null;
+
+    // 현재 보드의 복사본 생성
+    final boardCopy = List.generate(9, (i) => List<int>.from(board[i]));
+
+    // 1부터 9까지의 숫자 중 유효한 숫자 찾기
+    for (int num = 1; num <= 9; num++) {
+      if (_isValid(boardCopy, row, col, num)) {
+        // 해당 숫자가 유효한지 확인
+        boardCopy[row][col] = num;
+        if (_solveSudoku(boardCopy)) {
+          return num;
+        }
+        boardCopy[row][col] = 0;
+      }
+    }
+
+    return null;
   }
 }

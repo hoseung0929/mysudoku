@@ -334,7 +334,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -345,7 +345,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withOpacity(0.03),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -412,95 +412,89 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
             ),
             // 스도쿠 보드
             Expanded(
-              child: Center(
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: GridView.builder(
-                        padding: const EdgeInsets.all(8),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 9,
-                            ),
-                        itemCount: 81,
-                        itemBuilder: (context, index) {
-                          final row = index ~/ 9;
-                          final col = index % 9;
-                          final isSelected =
-                              row == _selectedRow && col == _selectedCol;
-                          final isFixed = _fixedNumbers[row][col];
-                          final number = _board[row][col];
-                          final isWrong = _wrongNumbers[row][col];
-
-                          // 3x3 박스 구분선
-                          final isBoxBorder =
-                              (row % 3 == 0 && row != 0) ||
-                              (col % 3 == 0 && col != 0);
-
-                          return GestureDetector(
-                            onTap: () => _onCellTap(row, col),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                border: Border(
-                                  right: BorderSide(
-                                    color:
-                                        isBoxBorder
-                                            ? Colors.black87
-                                            : Colors.grey[300]!,
-                                    width: isBoxBorder ? 2 : 1,
-                                  ),
-                                  bottom: BorderSide(
-                                    color:
-                                        isBoxBorder
-                                            ? Colors.black87
-                                            : Colors.grey[300]!,
-                                    width: isBoxBorder ? 2 : 1,
-                                  ),
-                                ),
-                                color:
-                                    isSelected
-                                        ? Colors.blue.withOpacity(0.1)
-                                        : isWrong
-                                        ? Colors.red.withOpacity(0.1)
-                                        : Colors.white,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  number == 0 ? '' : number.toString(),
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight:
-                                        isFixed
-                                            ? FontWeight.w600
-                                            : FontWeight.w400,
-                                    color:
-                                        isFixed
-                                            ? Colors.black87
-                                            : isWrong
-                                            ? Colors.red
-                                            : Colors.blue[700],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+              child: Container(
+                margin: const EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
                     ),
+                  ],
+                ),
+                child: GridView.builder(
+                  padding: const EdgeInsets.all(8.0),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 9,
+                    mainAxisSpacing: 0,
+                    crossAxisSpacing: 0,
                   ),
+                  itemCount: 81,
+                  itemBuilder: (context, index) {
+                    final row = index ~/ 9;
+                    final col = index % 9;
+                    final isSelected =
+                        row == _selectedRow && col == _selectedCol;
+                    final isFixed = _fixedNumbers[row][col];
+                    final number = _board[row][col];
+                    final isWrong = _wrongNumbers[row][col];
+
+                    // 3x3 박스 구분선
+                    final isBoxBorder =
+                        (row % 3 == 0 && row != 0) ||
+                        (col % 3 == 0 && col != 0);
+                    final isBoxBorderRight = col == 2 || col == 5;
+                    final isBoxBorderBottom = row == 2 || row == 5;
+
+                    return GestureDetector(
+                      onTap: () => _onCellTap(row, col),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border(
+                            right: BorderSide(
+                              color:
+                                  isBoxBorderRight
+                                      ? Colors.black87
+                                      : Colors.grey[300]!,
+                              width: isBoxBorderRight ? 2 : 1,
+                            ),
+                            bottom: BorderSide(
+                              color:
+                                  isBoxBorderBottom
+                                      ? Colors.black87
+                                      : Colors.grey[300]!,
+                              width: isBoxBorderBottom ? 2 : 1,
+                            ),
+                          ),
+                          color:
+                              isSelected
+                                  ? Colors.blue.withOpacity(0.1)
+                                  : isWrong
+                                  ? Colors.red.withOpacity(0.1)
+                                  : Colors.white,
+                        ),
+                        child: Center(
+                          child: Text(
+                            number == 0 ? '' : number.toString(),
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight:
+                                  isFixed ? FontWeight.w600 : FontWeight.w400,
+                              color:
+                                  isFixed
+                                      ? Colors.black87
+                                      : isWrong
+                                      ? Colors.red
+                                      : Colors.blue[700],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -514,7 +508,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withOpacity(0.03),
                     blurRadius: 4,
                     offset: const Offset(0, -2),
                   ),
@@ -569,7 +563,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withOpacity(0.03),
                     blurRadius: 4,
                     offset: const Offset(0, -2),
                   ),
