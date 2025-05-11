@@ -16,9 +16,9 @@ class SudokuGamePresenter {
   final Function(bool) onGameCompleteChanged; // 게임 완료 상태 변경 시 호출
 
   // 게임 상태를 관리하는 private 변수들
-  final List<List<int>> _board;
+  List<List<int>> _board;
   final List<List<int>> _solution;
-  final List<List<bool>> _fixedNumbers;
+  List<List<bool>> _fixedNumbers;
   List<List<bool>> _wrongNumbers = []; // 잘못된 숫자 표시
   int _seconds = 0; // 게임 진행 시간
   bool _isPaused = false; // 일시정지 상태

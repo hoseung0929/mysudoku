@@ -147,7 +147,7 @@ class LevelSelectionScreen extends StatelessWidget {
                         ),
                       ),
                       onTap: () async {
-                        final gameSet = await SudokuGameSet.create(level);
+                        final games = await SudokuGameSet.create(level.name);
                         if (!context.mounted) return;
                         Navigator.push(
                           context,

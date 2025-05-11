@@ -58,9 +58,9 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _buildPage(int index) {
     switch (index) {
       case 0:
-        return const LevelSelectionScreen();
+        return const Center(child: Text('메인'));
       case 1:
-        return const Center(child: Text('게임 기록'));
+        return const LevelSelectionScreen();
       case 2:
         return const Center(child: Text('설정'));
       default:

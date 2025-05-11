@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import '../model/sudoku_game.dart';
+import '../model/sudoku_level.dart';
 import '../presenter/sudoku_game_presenter.dart';
 
 /// 스도쿠 게임의 메인 화면
 /// MVP 패턴에서 View 역할을 수행하며, 사용자 인터페이스를 담당
 class SudokuGameScreen extends StatefulWidget {
   final SudokuGame game;
+  final SudokuLevel level;
 
   const SudokuGameScreen({
     super.key,
     required this.game,
+    required this.level,
   });
 
   @override
@@ -25,6 +28,28 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
     _presenter = SudokuGamePresenter(
       initialBoard: widget.game.board,
       solution: widget.game.solution,
+      level: widget.level,
+      onBoardChanged: (board) {
+        setState(() {});
+      },
+      onFixedNumbersChanged: (fixedNumbers) {
+        setState(() {});
+      },
+      onWrongNumbersChanged: (wrongNumbers) {
+        setState(() {});
+      },
+      onTimeChanged: (time) {
+        setState(() {});
+      },
+      onHintsChanged: (hints) {
+        setState(() {});
+      },
+      onPauseStateChanged: (isPaused) {
+        setState(() {});
+      },
+      onGameCompleteChanged: (isComplete) {
+        setState(() {});
+      },
     );
   }
 

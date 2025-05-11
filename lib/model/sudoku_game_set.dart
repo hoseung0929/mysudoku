@@ -1,6 +1,9 @@
 import 'sudoku_level.dart';
 import 'sudoku_game.dart';
 import '../database/database_helper.dart';
+import '../utils/sudoku_generator.dart';
+import 'dart:convert';
+import 'package:sqflite/sqflite.dart';
 
 class SudokuGameSet {
   final SudokuLevel level;
@@ -41,19 +44,28 @@ class SudokuGameSet {
   int get remainingGames => games.length - (currentGameIndex + 1);
 
   // 게임셋 생성
-  static Future<List<SudokuGame>> create(SudokuLevel level) async {
-    final db = await DatabaseHelper.instance.database;
-    final games = await db.query(
-      'games',
-      where: 'level_name = ?',
-      whereArgs: [level.name],
-      orderBy: 'game_number ASC',
-    );
+  static Future<List<SudokuGame>> create(String level) async {
+    final dbHelper = DatabaseHelper();
+    final games = await dbHelper.getGamesForLevel(level);
 
     if (games.isEmpty) {
       return [];
     }
 
-    return games.map((game) => SudokuGame.fromJson(game)).toList();
+    return List.generate(games.length, (index) {
+      final board = games[index];
+      final solution = SudokuGenerator.getSolution(board);
+      return SudokuGame(
+        board: board,
+        solution: solution,
+        emptyCells: level == '초급'
+            ? 30
+            : level == '중급'
+                ? 40
+                : 50,
+        levelName: level,
+        gameNumber: index + 1,
+      );
+    });
   }
 }

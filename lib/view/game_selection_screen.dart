@@ -22,7 +22,7 @@ class _GameSelectionScreenState extends State<GameSelectionScreen> {
   @override
   void initState() {
     super.initState();
-    _gamesFuture = SudokuGameSet.create(widget.level);
+    _gamesFuture = SudokuGameSet.create(widget.level.name);
   }
 
   @override
@@ -131,7 +131,7 @@ class _GameSelectionScreenState extends State<GameSelectionScreen> {
                               onPressed: () {
                                 setState(() {
                                   _gamesFuture =
-                                      SudokuGameSet.create(widget.level);
+                                      SudokuGameSet.create(widget.level.name);
                                 });
                               },
                               child: const Text('다시 시도'),
@@ -182,6 +182,7 @@ class _GameSelectionScreenState extends State<GameSelectionScreen> {
                                 MaterialPageRoute(
                                   builder: (context) => SudokuGameScreen(
                                     game: game,
+                                    level: widget.level,
                                   ),
                                 ),
                               );

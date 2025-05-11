@@ -34,11 +34,11 @@ class BottomNavBar extends StatelessWidget {
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.grid_view),
-            label: '게임',
+            label: '메인',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.history),
-            label: '기록',
+            label: '게임',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
