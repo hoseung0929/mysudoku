@@ -1,6 +1,9 @@
 import 'dart:math';
 
+/// 스도쿠 게임 데이터를 생성하는 유틸리티 클래스
 class SudokuGenerator {
+  /// 주어진 빈 칸의 개수에 맞는 스도쿠 보드를 생성합니다.
+  /// [emptyCells] 비워둘 셀의 개수
   static List<List<int>> generateSudoku(int emptyCells) {
     // 완성된 스도쿠 보드 생성
     final board = List.generate(9, (_) => List.filled(9, 0));
@@ -22,13 +25,14 @@ class SudokuGenerator {
     return board;
   }
 
+  /// 대각선 3x3 박스를 채웁니다.
   static void _fillDiagonal(List<List<int>> board) {
-    // 3x3 대각선 블록 채우기
     for (int i = 0; i < 9; i += 3) {
       _fillBox(board, i, i);
     }
   }
 
+  /// 3x3 박스를 채웁니다.
   static void _fillBox(List<List<int>> board, int row, int col) {
     final numbers = List.generate(9, (i) => i + 1)..shuffle();
     int index = 0;
@@ -40,6 +44,7 @@ class SudokuGenerator {
     }
   }
 
+  /// 스도쿠 보드를 해결합니다.
   static bool _solveSudoku(List<List<int>> board) {
     for (int row = 0; row < 9; row++) {
       for (int col = 0; col < 9; col++) {
@@ -62,6 +67,7 @@ class SudokuGenerator {
     return true;
   }
 
+  /// 주어진 위치에 숫자를 놓을 수 있는지 확인합니다.
   static bool _isValid(List<List<int>> board, int row, int col, int num) {
     // 행 검사
     for (int x = 0; x < 9; x++) {
@@ -85,6 +91,7 @@ class SudokuGenerator {
     return true;
   }
 
+  /// 고정된 숫자의 위치를 반환합니다.
   static List<List<bool>> getFixedNumbers(List<List<int>> board) {
     return List.generate(9, (row) {
       return List.generate(9, (col) {
@@ -93,12 +100,14 @@ class SudokuGenerator {
     });
   }
 
+  /// 스도쿠 보드의 해답을 반환합니다.
   static List<List<int>> getSolution(List<List<int>> board) {
     final solution = List.generate(9, (i) => List<int>.from(board[i]));
     _solveSudoku(solution);
     return solution;
   }
 
+  /// 주어진 위치에 대한 힌트를 반환합니다.
   static int? getHint(List<List<int>> board, int row, int col) {
     // 이미 숫자가 있는 경우 힌트를 제공하지 않음
     if (board[row][col] != 0) return null;

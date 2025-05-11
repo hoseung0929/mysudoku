@@ -16,8 +16,9 @@ class SudokuGamePresenter {
   final Function(bool) onGameCompleteChanged; // 게임 완료 상태 변경 시 호출
 
   // 게임 상태를 관리하는 private 변수들
-  List<List<int>> _board = []; // 9x9 스도쿠 보드
-  List<List<bool>> _fixedNumbers = []; // 초기에 주어진 고정 숫자 표시
+  final List<List<int>> _board;
+  final List<List<int>> _solution;
+  final List<List<bool>> _fixedNumbers;
   List<List<bool>> _wrongNumbers = []; // 잘못된 숫자 표시
   int _seconds = 0; // 게임 진행 시간
   bool _isPaused = false; // 일시정지 상태
@@ -44,15 +45,31 @@ class SudokuGamePresenter {
     required this.onHintsChanged,
     required this.onPauseStateChanged,
     required this.onGameCompleteChanged,
-  }) {
-    _initializeBoard();
+    required List<List<int>> initialBoard,
+    required List<List<int>> solution,
+  })  : _board = List.generate(
+          9,
+          (i) => List.generate(9, (j) => initialBoard[i][j]),
+        ),
+        _solution = List.generate(
+          9,
+          (i) => List.generate(9, (j) => solution[i][j]),
+        ),
+        _fixedNumbers = List.generate(
+          9,
+          (i) => List.generate(
+            9,
+            (j) => initialBoard[i][j] != 0,
+          ),
+        ) {
+    _wrongNumbers = List.generate(9, (_) => List.filled(9, false));
   }
 
   /// 게임 보드 초기화
   /// 스도쿠 생성기를 사용하여 새로운 보드를 생성하고
   /// 고정 숫자와 잘못된 숫자 표시를 초기화
-  void _initializeBoard() {
-    _board = SudokuGenerator.generateSudoku(level.emptyCells);
+  void _initializeBoard([List<List<int>>? initialBoard]) {
+    _board = initialBoard ?? SudokuGenerator.generateSudoku(level.emptyCells);
     _fixedNumbers = SudokuGenerator.getFixedNumbers(_board);
     _wrongNumbers = List.generate(9, (_) => List.filled(9, false));
 
@@ -77,8 +94,7 @@ class SudokuGamePresenter {
     if (_selectedRow == null ||
         _selectedCol == null ||
         _isGameComplete ||
-        _isPaused)
-      return;
+        _isPaused) return;
 
     _board[_selectedRow!][_selectedCol!] = number;
     onBoardChanged(_board);
@@ -172,8 +188,7 @@ class SudokuGamePresenter {
     if (_hintsRemaining <= 0 ||
         _selectedRow == null ||
         _selectedCol == null ||
-        _isPaused)
-      return;
+        _isPaused) return;
 
     final hint = SudokuGenerator.getHint(_board, _selectedRow!, _selectedCol!);
     if (hint != null) {
@@ -228,4 +243,24 @@ class SudokuGamePresenter {
   bool get isGameComplete => _isGameComplete;
   int? get selectedRow => _selectedRow;
   int? get selectedCol => _selectedCol;
+
+  int getCellValue(int row, int col) => _board[row][col];
+  bool isCellFixed(int row, int col) => _fixedNumbers[row][col];
+  bool isCellSelected(int row, int col) =>
+      row == _selectedRow && col == _selectedCol;
+  bool hasError(int row, int col) {
+    if (_board[row][col] == 0) return false;
+    return _board[row][col] != _solution[row][col];
+  }
+
+  void selectCell(int row, int col) {
+    _selectedRow = row;
+    _selectedCol = col;
+  }
+
+  void setSelectedCellValue(int value) {
+    if (_selectedRow == null || _selectedCol == null) return;
+    if (_fixedNumbers[_selectedRow!][_selectedCol!]) return;
+    _board[_selectedRow!][_selectedCol!] = value;
+  }
 }
