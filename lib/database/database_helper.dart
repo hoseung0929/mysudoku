@@ -22,13 +22,22 @@ class DatabaseHelper {
   /// 데이터베이스를 초기화합니다.
   Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), 'sudoku_games.db');
-    // 데이터베이스가 이미 존재하면 삭제
-    await deleteDatabase(path);
+
+    // 데이터베이스가 이미 존재하는지 확인
+    final exists = await databaseExists(path);
 
     return await openDatabase(
       path,
       version: 1,
       onCreate: _onCreate,
+      onOpen: (db) async {
+        // 데이터베이스가 비어있는 경우에만 초기 데이터 삽입
+        final count = Sqflite.firstIntValue(
+            await db.rawQuery('SELECT COUNT(*) FROM games'));
+        if (count == 0) {
+          await _insertInitialGames(db);
+        }
+      },
     );
   }
 

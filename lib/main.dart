@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'view/level_selection_screen.dart';
+import 'view/settings_screen.dart';
 import 'widgets/bottom_nav_bar.dart';
 
 void main() {
@@ -62,7 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
       case 1:
         return const LevelSelectionScreen();
       case 2:
-        return const Center(child: Text('설정'));
+        return const SettingsScreen();
       default:
         return const Center(child: Text('알 수 없는 페이지'));
     }
