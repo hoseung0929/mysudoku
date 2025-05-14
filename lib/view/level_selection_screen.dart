@@ -54,7 +54,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '원하는 난이도를 선택하여 게임을 시작하세요.',
+                    '원하는 난이도를 선택하여 게임을 시작하세요',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey[600],
@@ -71,13 +71,13 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
             margin: const EdgeInsets.only(bottom: 16),
             child: Card(
               elevation: 0,
-              color: Colors.white,
+              color: Colors.green[50],
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // 난이도 정보 영역
                   Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -113,7 +113,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                '${level.gameCount}게임',
+                                '${level.clearedGames}/${level.gameCount}게임',
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.blue[700],
@@ -123,7 +123,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
+                        //const SizedBox(height: 16),
                         // 난이도 설명
                         Text(
                           level.description,
@@ -131,29 +131,6 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                             fontSize: 16,
                             color: Colors.grey[600],
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        // 난이도 별점 표시
-                        Row(
-                          children: [
-                            Text(
-                              '난이도: ',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            ...List.generate(
-                              5,
-                              (index) => Icon(
-                                Icons.star,
-                                size: 16,
-                                color: index < level.difficulty
-                                    ? Colors.amber
-                                    : Colors.grey[300],
-                              ),
-                            ),
-                          ],
                         ),
                       ],
                     ),
