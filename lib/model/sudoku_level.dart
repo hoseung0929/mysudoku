@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-import '../utils/sudoku_generator.dart';
 import '../database/database_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

@@ -59,27 +59,128 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
       appBar: AppBar(
         title: Text('게임 ${widget.game.gameNumber}'),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 9,
-                childAspectRatio: 1,
-                crossAxisSpacing: 1,
-                mainAxisSpacing: 1,
+          // 그리드 영역
+          Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: Column(
+              children: [
+                AspectRatio(
+                  aspectRatio: 1.0,
+                  child: _buildGrid(),
+                ),
+                Expanded(child: Container()), // 나머지 공간 비움
+              ],
+            ),
+          ),
+          // 하단 숫자버튼 영역 (전체 하단에 고정)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              height: 300, // 원하는 높이로 조정
+              color: Colors.black,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Row(
+                    children: List.generate(4, (index) {
+                      final List<IconData> icons = [
+                        Icons.menu,
+                        Icons.settings,
+                        Icons.help_outline,
+                        Icons.more_vert
+                      ];
+                      final List<String> labels = ['메뉴1', '메뉴2', '메뉴3', '메뉴4'];
+                      return Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              // 메뉴 기능 구현 필요
+                            });
+                          },
+                          child: Container(
+                            height: 60,
+                            alignment: Alignment.center,
+                            color: const Color.fromARGB(255, 238, 189, 189),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  icons[index],
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                                Text(
+                                  labels[index],
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  Row(
+                    children: List.generate(9, (index) {
+                      return Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _presenter.setSelectedCellValue(index + 1);
+                            });
+                          },
+                          child: Container(
+                            height: 60,
+                            alignment: Alignment.center,
+                            color: Colors.grey[900],
+                            child: Text(
+                              (index + 1).toString(),
+                              style: const TextStyle(
+                                fontSize: 22,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  SizedBox(height: 20, child: Container(color: Colors.red)),
+                  SizedBox(height: 100, child: Container(color: Colors.amber)),
+                  SizedBox(height: 20, child: Container(color: Colors.blue)),
+                ],
               ),
-              itemCount: 81,
-              itemBuilder: (context, index) {
-                final row = index ~/ 9;
-                final col = index % 9;
-                final value = _presenter.getCellValue(row, col);
-                final isFixed = _presenter.isCellFixed(row, col);
-                final isSelected = _presenter.isCellSelected(row, col);
-                final hasError = _presenter.hasError(row, col);
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-                return GestureDetector(
+  Widget _buildGrid() {
+    return Column(
+      children: List.generate(9, (row) {
+        return Expanded(
+          child: Row(
+            children: List.generate(9, (col) {
+              final value = _presenter.getCellValue(row, col);
+              final isFixed = _presenter.isCellFixed(row, col);
+              final isSelected = _presenter.isCellSelected(row, col);
+              final isSameNumber = _presenter.isSameNumber(row, col);
+              final isRelated = _presenter.isRelated(row, col);
+
+              return Expanded(
+                child: GestureDetector(
                   onTap: () {
                     setState(() {
                       _presenter.selectCell(row, col);
@@ -87,78 +188,45 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
                   },
                   child: Container(
                     decoration: BoxDecoration(
+                      border: Border(
+                        right: BorderSide(
+                          color: Colors.black,
+                          width: (col == 2 || col == 5) ? 1.5 : 0.5,
+                        ),
+                        bottom: BorderSide(
+                          color: Colors.black,
+                          width: (row == 2 || row == 5) ? 1.5 : 0.5,
+                        ),
+                      ),
                       color: isSelected
-                          ? Colors.blue.withOpacity(0.1)
-                          : hasError
-                              ? Colors.red.withOpacity(0.1)
-                              : Colors.white,
-                      border: Border.all(
-                        color: Colors.grey.withOpacity(0.2),
-                        width: 1,
-                      ),
+                          ? Colors.blue.withAlpha(180)
+                          : isSameNumber
+                              ? Colors.blue.withAlpha(26)
+                              : isRelated
+                                  ? Colors.grey.withAlpha(26)
+                                  : null,
                     ),
                     child: Center(
-                      child: Text(
-                        value == 0 ? '' : value.toString(),
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight:
-                              isFixed ? FontWeight.bold : FontWeight.normal,
-                          color: isFixed ? Colors.black : Colors.blue,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 4,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(
-                9,
-                (index) => GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _presenter.setSelectedCellValue(index + 1);
-                    });
-                  },
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Center(
-                      child: Text(
-                        (index + 1).toString(),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
-                        ),
-                      ),
+                      child: value != 0
+                          ? Text(
+                              value.toString(),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: isFixed
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                color: isFixed ? Colors.black : Colors.blue,
+                              ),
+                            )
+                          : const SizedBox(),
                     ),
                   ),
                 ),
-              ),
-            ),
+              );
+            }),
           ),
-        ],
-      ),
+        );
+      }),
     );
   }
 }

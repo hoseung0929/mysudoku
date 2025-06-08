@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import '../model/sudoku_level.dart';
 import '../utils/sudoku_generator.dart';
 
@@ -94,7 +93,9 @@ class SudokuGamePresenter {
     if (_selectedRow == null ||
         _selectedCol == null ||
         _isGameComplete ||
-        _isPaused) return;
+        _isPaused) {
+      return;
+    }
 
     _board[_selectedRow!][_selectedCol!] = number;
     onBoardChanged(_board);
@@ -188,7 +189,9 @@ class SudokuGamePresenter {
     if (_hintsRemaining <= 0 ||
         _selectedRow == null ||
         _selectedCol == null ||
-        _isPaused) return;
+        _isPaused) {
+      return;
+    }
 
     final hint = SudokuGenerator.getHint(_board, _selectedRow!, _selectedCol!);
     if (hint != null) {
@@ -262,5 +265,22 @@ class SudokuGamePresenter {
     if (_selectedRow == null || _selectedCol == null) return;
     if (_fixedNumbers[_selectedRow!][_selectedCol!]) return;
     _board[_selectedRow!][_selectedCol!] = value;
+    onBoardChanged(_board);
+    _checkWrongNumbers();
+    _checkGameComplete();
+  }
+
+  bool isSameNumber(int row, int col) {
+    if (_selectedRow == null || _selectedCol == null) return false;
+    final selectedValue = getCellValue(_selectedRow!, _selectedCol!);
+    final currentValue = getCellValue(row, col);
+    return selectedValue != 0 && selectedValue == currentValue;
+  }
+
+  bool isRelated(int row, int col) {
+    if (_selectedRow == null || _selectedCol == null) return false;
+    return _selectedRow! == row ||
+        _selectedCol! == col ||
+        (_selectedRow! ~/ 3 == row ~/ 3 && _selectedCol! ~/ 3 == col ~/ 3);
   }
 }

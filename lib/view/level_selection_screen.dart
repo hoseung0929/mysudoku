@@ -71,7 +71,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
             margin: const EdgeInsets.only(bottom: 16),
             child: Card(
               elevation: 0,
-              color: Colors.green[50],
+              color: Colors.orangeAccent[50],
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -109,7 +109,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.blue.withOpacity(0.1),
+                                color: Colors.blue.withAlpha(26),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(

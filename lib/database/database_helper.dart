@@ -23,9 +23,6 @@ class DatabaseHelper {
   Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), 'sudoku_games.db');
 
-    // 데이터베이스가 이미 존재하는지 확인
-    final exists = await databaseExists(path);
-
     return await openDatabase(
       path,
       version: 1,
