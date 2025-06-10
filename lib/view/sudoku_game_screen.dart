@@ -81,11 +81,31 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
             bottom: 0,
             child: Container(
               width: MediaQuery.of(context).size.width,
-              height: 300, // 원하는 높이로 조정
-              color: Colors.black,
+              height: 320,
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: const BorderRadius.all(Radius.circular(20)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(100),
+                      spreadRadius: 1,
+                      blurRadius: 10,
+                      //offset: const Offset(0, -2)
+                    )
+                  ]),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
+                  // 상단 드래그 핸들 추가
+                  // Container(
+                  //   width: 40,
+                  //   height: 4,
+                  //   margin: const EdgeInsets.symmetric(vertical: 8),
+                  //   decoration: BoxDecoration(
+                  //       color: Colors.grey[400],
+                  //       borderRadius: BorderRadius.circular(2)),
+                  // ),
+                  SizedBox(height: 40),
                   Row(
                     children: List.generate(4, (index) {
                       final List<IconData> icons = [
@@ -104,8 +124,11 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
                           },
                           child: Container(
                             height: 60,
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
                             alignment: Alignment.center,
-                            color: const Color.fromARGB(255, 238, 189, 189),
+                            decoration: BoxDecoration(
+                                color: const Color.fromARGB(255, 238, 189, 189),
+                                borderRadius: BorderRadius.circular(12)),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -129,25 +152,39 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
                       );
                     }),
                   ),
+                  const SizedBox(height: 8),
                   Row(
                     children: List.generate(9, (index) {
                       return Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _presenter.setSelectedCellValue(index + 1);
-                            });
-                          },
-                          child: Container(
-                            height: 60,
-                            alignment: Alignment.center,
-                            color: Colors.grey[900],
-                            child: Text(
-                              (index + 1).toString(),
-                              style: const TextStyle(
-                                fontSize: 22,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2.5),
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _presenter.setSelectedCellValue(index + 1);
+                              });
+                            },
+                            child: Container(
+                              height: 60,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                  color: Colors.grey,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                        color: Colors.black.withOpacity(0.2),
+                                        spreadRadius: 1,
+                                        blurRadius: 2,
+                                        offset: const Offset(0, 2))
+                                  ]),
+                              child: Text(
+                                (index + 1).toString(),
+                                style: const TextStyle(
+                                  height: 1.5,
+                                  fontSize: 22,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
@@ -155,9 +192,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
                       );
                     }),
                   ),
-                  SizedBox(height: 20, child: Container(color: Colors.red)),
-                  SizedBox(height: 100, child: Container(color: Colors.amber)),
-                  SizedBox(height: 20, child: Container(color: Colors.blue)),
                 ],
               ),
             ),
