@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'view/level_selection_main.dart';
 import 'view/level_selection_screen.dart';
 import 'view/settings_screen.dart';
 import 'widgets/bottom_nav_bar.dart';
@@ -59,7 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _buildPage(int index) {
     switch (index) {
       case 0:
-        return const Center(child: Text('메인'));
+        return const LevelSelectionMain();
       case 1:
         return const LevelSelectionScreen();
       case 2:
