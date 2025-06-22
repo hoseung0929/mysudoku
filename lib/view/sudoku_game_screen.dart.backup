@@ -95,7 +95,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         title: Text(
-          widget.level.name,
+          '게임 ${widget.game.gameNumber}',
           style: GoogleFonts.notoSans(
             color: AppTheme.textColor,
             fontWeight: FontWeight.w600,
@@ -105,18 +105,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
         backgroundColor: AppTheme.cardColor,
         elevation: 2,
         shadowColor: Colors.black12,
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.refresh,
-              color: AppTheme.textColor,
-            ),
-            onPressed: () {
-              _presenter.restartWithNewGame();
-            },
-            tooltip: '재시작',
-          ),
-        ],
       ),
       body: isTablet ? _buildTabletLayout() : _buildMobileLayout(),
     );
@@ -162,10 +150,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
                   _buildInfoCard(
                       '오답', '${_presenter.wrongCount}/3', Icons.error_outline),
                   const SizedBox(width: 12),
-                  _buildInfoCard(
-                      '진행율',
-                      '${(_presenter.progress * 100).toInt()}%',
-                      Icons.emoji_events),
+                  _buildInfoCard('진행율', '78%', Icons.emoji_events),
                 ],
               ),
             ],
@@ -261,17 +246,14 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
                 child: Row(
                   children: [
                     _buildInfoCard('시간', _presenter.formattedTime, Icons.timer),
-                    //const SizedBox(width: 12),
-                    // _buildInfoCard(
-                    //     '힌트', '${_presenter.hintsRemaining}', Icons.lightbulb),
+                    const SizedBox(width: 12),
+                    _buildInfoCard(
+                        '힌트', '${_presenter.hintsRemaining}', Icons.lightbulb),
                     const SizedBox(width: 12),
                     _buildInfoCard('오답', '${_presenter.wrongCount}/3',
                         Icons.error_outline),
                     const SizedBox(width: 12),
-                    _buildInfoCard(
-                        '진행율',
-                        '${(_presenter.progress * 100).toInt()}%',
-                        Icons.emoji_events),
+                    _buildInfoCard('진행율', '78%', Icons.emoji_events),
                   ],
                 ),
               ),
@@ -580,53 +562,30 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
 
   /// 정답 입력 효과 표시
   void _triggerWaveEffect(int row, int col) {
-    const int waveSpeed = 30; // wave가 퍼지는 속도
-    const int waveOnDuration = 200; // wave가 켜져있는 시간
-    const int returnDelay = 100; // 돌아오기 전 대기 시간
-
     setState(() {
       _waveActive.clear();
     });
-
-    // 최대 거리 계산 (가로 또는 세로 중 더 긴 거리)
-    int maxDistance = 0;
     for (int r = 0; r < 9; r++) {
       for (int c = 0; c < 9; c++) {
         if (r == row || c == col) {
           final int distance = (r == row) ? (c - col).abs() : (r - row).abs();
-          if (distance > maxDistance) maxDistance = distance;
-        }
-      }
-    }
-
-    // 전체 wave가 퍼지는 시간
-    final totalWaveTime = waveSpeed * maxDistance;
-
-    for (int r = 0; r < 9; r++) {
-      for (int c = 0; c < 9; c++) {
-        if (r == row || c == col) {
-          final int distance = (r == row) ? (c - col).abs() : (r - row).abs();
+          const int waveSpeed = 30;
+          const int waveOnDuration = 120;
           final delay = Duration(milliseconds: waveSpeed * distance);
-
-          // wave ON (퍼지는 효과)
+          // wave ON
           Future.delayed(delay, () {
-            if (mounted) {
+            if (mounted)
               setState(() {
                 _waveActive['$r,$c'] = true;
               });
-            }
           });
-
-          // wave OFF (돌아오는 효과) - 전체가 퍼진 후 돌아오기
-          final returnDelayTime = totalWaveTime +
-              returnDelay +
-              (waveSpeed * (maxDistance - distance));
-          Future.delayed(Duration(milliseconds: returnDelayTime), () {
-            if (mounted) {
+          // wave OFF (왕복)
+          Future.delayed(delay + const Duration(milliseconds: waveOnDuration),
+              () {
+            if (mounted)
               setState(() {
                 _waveActive['$r,$c'] = false;
               });
-            }
           });
         }
       }

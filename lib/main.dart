@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'view/level_selection_main.dart';
-import 'view/level_selection_screen.dart';
 import 'view/settings_screen.dart';
 import 'widgets/bottom_nav_bar.dart';
+import 'theme/app_theme.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  // 세로 모드로 고정
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+  // 세로 모드로 고정 (필요시 주석 해제)
+  // SystemChrome.setPreferredOrientations([
+  //   DeviceOrientation.portraitUp,
+  //   DeviceOrientation.portraitDown,
+  // ]);
   runApp(const MySudokuApp());
 }
 
@@ -22,20 +21,7 @@ class MySudokuApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'My Sudoku',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          iconTheme: IconThemeData(color: Colors.black87),
-          titleTextStyle: TextStyle(
-            color: Colors.black87,
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
+      theme: AppTheme.lightTheme,
       home: const MyHomePage(),
     );
   }
@@ -62,7 +48,7 @@ class _MyHomePageState extends State<MyHomePage> {
       case 0:
         return const LevelSelectionMain();
       case 1:
-        return const LevelSelectionScreen();
+        return const Center(child: Text('알 수 없는 페이지'));
       case 2:
         return const SettingsScreen();
       default:
@@ -72,15 +58,34 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: List.generate(3, (index) => _buildPage(index)),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
-      ),
-    );
+    // 화면 크기에 따른 레이아웃 분기
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth > 600;
+
+    if (isTablet) {
+      // 태블릿 레이아웃: 하단 네비게이션 + 더 큰 콘텐츠
+      return Scaffold(
+        body: IndexedStack(
+          index: _selectedIndex,
+          children: List.generate(3, (index) => _buildPage(index)),
+        ),
+        bottomNavigationBar: BottomNavBar(
+          selectedIndex: _selectedIndex,
+          onItemTapped: _onItemTapped,
+        ),
+      );
+    } else {
+      // 모바일 레이아웃: 하단 네비게이션
+      return Scaffold(
+        body: IndexedStack(
+          index: _selectedIndex,
+          children: List.generate(3, (index) => _buildPage(index)),
+        ),
+        // bottomNavigationBar: BottomNavBar(
+        //   selectedIndex: _selectedIndex,
+        //   onItemTapped: _onItemTapped,
+        // ),
+      );
+    }
   }
 }

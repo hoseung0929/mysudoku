@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'sudoku_game_screen.dart';
 import '../model/sudoku_game.dart';
 import '../model/sudoku_level.dart';
-import 'package:flutter/services.dart';
+import '../model/sudoku_game_set.dart';
 
 class LevelSelectionMain extends StatefulWidget {
   const LevelSelectionMain({super.key});
@@ -15,6 +15,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   int? _selectedIndex;
   final ScrollController _scrollController = ScrollController();
   bool _isTop = true;
+  // 게임 데이터 캐시
+  final Map<String, List<SudokuGame>> _gameCache = {};
 
   @override
   void initState() {
@@ -38,15 +40,16 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     super.dispose();
   }
 
-  // 더미 SudokuGame, SudokuLevel (실제 데이터로 교체 필요)
-  SudokuGame getDummyGame(String levelName) {
-    return SudokuGame(
-      board: List.generate(9, (_) => List.generate(9, (_) => 0)),
-      solution: List.generate(9, (_) => List.generate(9, (_) => 1)),
-      emptyCells: 30,
-      levelName: levelName,
-      gameNumber: 1,
-    );
+  /// 특정 난이도의 게임 목록을 로드합니다.
+  /// 캐시된 데이터가 있으면 캐시에서 반환하고,
+  /// 없으면 데이터베이스에서 로드하여 캐시에 저장합니다.
+  Future<List<SudokuGame>> _loadGames(String level) async {
+    if (_gameCache.containsKey(level)) {
+      return _gameCache[level]!;
+    }
+    final games = await SudokuGameSet.create(level);
+    _gameCache[level] = games;
+    return games;
   }
 
   SudokuLevel getLevel(String title) {
@@ -73,184 +76,308 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     }
   }
 
-  void _goToGame(String title) {
+  void _goToGame(String title) async {
     final level = getLevel(title);
-    final game = getDummyGame(level.name);
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SudokuGameScreen(game: game, level: level),
-      ),
-    );
+    final games = await _loadGames(level.name);
+
+    if (games.isNotEmpty) {
+      // 첫 번째 게임으로 이동
+      final game = games.first;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SudokuGameScreen(game: game, level: level),
+        ),
+      );
+    } else {
+      // 게임이 없을 경우 스낵바 표시
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('해당 난이도의 게임을 불러올 수 없습니다.'),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isTablet = screenWidth > 600;
+    final isLandscape = screenWidth > screenHeight;
+
     return Scaffold(
-      //backgroundColor: const Color(0xFFF9F8F6),
-      backgroundColor: Colors.white,
-
-      //backgroundColor: Colors.white,
-
+      backgroundColor: const Color(0xFFF8F9FA),
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 상단 프로필 영역
-            Container(
-              //margin: const EdgeInsets.only(top: 8, bottom: ),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  bottom: BorderSide(
-                    color: _isTop ? Colors.white : Colors.grey[300]!,
-                    width: 2,
-                  ),
-                ),
+        child: isTablet ? _buildTabletLayout() : _buildMobileLayout(),
+      ),
+    );
+  }
+
+  /// 태블릿 레이아웃
+  Widget _buildTabletLayout() {
+    return Column(
+      children: [
+        // 상단 프로필 영역
+        _buildProfileSection(),
+        // 레벨 카드 영역
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 20,
+                mainAxisSpacing: 20,
+                childAspectRatio: 1.5,
               ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: Colors.amber[200],
-                    child:
-                        const Icon(Icons.person, size: 36, color: Colors.brown),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          '게스트',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 24,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          '스도쿠에 오신 것을 환영합니다 👋',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.chevron_right, size: 28, color: Colors.grey),
-                ],
-              ),
+              itemCount: 5,
+              itemBuilder: (context, index) {
+                final levels = [
+                  'Beginner',
+                  'Intermediate',
+                  'Advanced',
+                  'Expert',
+                  'Master'
+                ];
+                final colors = [
+                  const Color(0xFFBFE2D0),
+                  const Color(0xFFCDE7E0),
+                  const Color(0xFFE6D4B8),
+                  const Color(0xFFE6B8C8),
+                  const Color(0xFFB8D4E6),
+                ];
+                final icons = [
+                  Icons.grid_view,
+                  Icons.diamond,
+                  Icons.star,
+                  Icons.flash_on,
+                  Icons.workspace_premium,
+                ];
+
+                return _LevelCard(
+                  color: colors[index],
+                  icon: icons[index],
+                  title: levels[index],
+                  completed: 35 - (index * 3),
+                  remaining: 65 + (index * 3),
+                  progressColor: const Color(0xFF8DC6B0),
+                  isSelected: _selectedIndex == index,
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = index;
+                    });
+                    _goToGame(levels[index]);
+                  },
+                );
+              },
             ),
-            Expanded(
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0, vertical: 8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      //const SizedBox(height: 28),
-                      const Text(
-                        'Select Level',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 24,
-                        ),
-                      ),
-                      // Divider(
-                      //   indent: 10,
-                      //   endIndent: 200,
-                      //   thickness: 1.5,
-                      //   color: Colors.grey[300]!,
-                      // ),
-                      //const SizedBox(height: 16),
-                      // 레벨 카드 리스트
-                      _LevelCard(
-                        color: const Color(0xFFBFE2D0),
-                        icon: Icons.grid_view,
-                        title: 'Beginner',
-                        completed: 35,
-                        remaining: 65,
-                        progressColor: const Color(0xFF8DC6B0),
-                        isSelected: _selectedIndex == 0,
-                        onTap: () {
-                          setState(() {
-                            _selectedIndex = 0;
-                          });
-                          _goToGame('Beginner');
-                        },
-                      ),
-                      _LevelCard(
-                        color: const Color(0xFFCDE7E0),
-                        icon: Icons.diamond,
-                        title: 'Intermediate',
-                        completed: 20,
-                        remaining: 80,
-                        progressColor: const Color(0xFF8DC6B0),
-                        isSelected: _selectedIndex == 1,
-                        onTap: () {
-                          setState(() {
-                            _selectedIndex = 1;
-                          });
-                          _goToGame('Intermediate');
-                        },
-                      ),
-                      _LevelCard(
-                        color: const Color(0xFFF8D6DA),
-                        icon: Icons.star,
-                        title: 'Advanced',
-                        completed: 10,
-                        remaining: 90,
-                        progressColor: const Color(0xFFF5AEB5),
-                        isSelected: _selectedIndex == 2,
-                        onTap: () {
-                          setState(() {
-                            _selectedIndex = 2;
-                          });
-                          _goToGame('Advanced');
-                        },
-                      ),
-                      _LevelCard(
-                        color: const Color(0xFFF9E6B3),
-                        icon: Icons.emoji_events,
-                        title: 'Expert',
-                        completed: 5,
-                        remaining: 95,
-                        progressColor: const Color(0xFFF5D06F),
-                        isSelected: _selectedIndex == 3,
-                        onTap: () {
-                          setState(() {
-                            _selectedIndex = 3;
-                          });
-                          _goToGame('Expert');
-                        },
-                      ),
-                      _LevelCard(
-                        color: const Color(0xFFF5F1E6),
-                        icon: Icons.workspace_premium,
-                        title: 'Master',
-                        completed: 0,
-                        remaining: 100,
-                        progressColor: const Color(0xFFD6CBA6),
-                        isSelected: _selectedIndex == 4,
-                        onTap: () {
-                          setState(() {
-                            _selectedIndex = 4;
-                          });
-                          _goToGame('Master');
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
+      ],
+    );
+  }
+
+  /// 모바일 레이아웃
+  Widget _buildMobileLayout() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 상단 프로필 영역
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              bottom: BorderSide(
+                color: _isTop ? Colors.white : Colors.grey[300]!,
+                width: 2,
+              ),
+            ),
+          ),
+          child: const Row(
+            children: [
+              CircleAvatar(
+                radius: 28,
+                backgroundColor: Color(0xFFB8E6B8),
+                child: Icon(Icons.person, size: 36, color: Color(0xFF2C3E50)),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '게스트',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 24,
+                        color: Color(0xFF2C3E50),
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      '스도쿠에 오신 것을 환영합니다 👋',
+                      style: TextStyle(
+                        color: Color(0xFF7F8C8D),
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, size: 28, color: Color(0xFF7F8C8D)),
+            ],
+          ),
+        ),
+        // 레벨 카드 영역
+        Expanded(
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Select Level',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // 레벨 카드 리스트
+                _LevelCard(
+                  color: const Color(0xFFBFE2D0),
+                  icon: Icons.grid_view,
+                  title: 'Beginner',
+                  completed: 35,
+                  remaining: 65,
+                  progressColor: const Color(0xFF8DC6B0),
+                  isSelected: _selectedIndex == 0,
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = 0;
+                    });
+                    _goToGame('Beginner');
+                  },
+                ),
+                _LevelCard(
+                  color: const Color(0xFFCDE7E0),
+                  icon: Icons.diamond,
+                  title: 'Intermediate',
+                  completed: 20,
+                  remaining: 80,
+                  progressColor: const Color(0xFF8DC6B0),
+                  isSelected: _selectedIndex == 1,
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = 1;
+                    });
+                    _goToGame('Intermediate');
+                  },
+                ),
+                _LevelCard(
+                  color: const Color(0xFFE6D4B8),
+                  icon: Icons.star,
+                  title: 'Advanced',
+                  completed: 15,
+                  remaining: 85,
+                  progressColor: const Color(0xFF8DC6B0),
+                  isSelected: _selectedIndex == 2,
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = 2;
+                    });
+                    _goToGame('Advanced');
+                  },
+                ),
+                _LevelCard(
+                  color: const Color(0xFFE6B8C8),
+                  icon: Icons.flash_on,
+                  title: 'Expert',
+                  completed: 8,
+                  remaining: 92,
+                  progressColor: const Color(0xFF8DC6B0),
+                  isSelected: _selectedIndex == 3,
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = 3;
+                    });
+                    _goToGame('Expert');
+                  },
+                ),
+                _LevelCard(
+                  color: const Color(0xFFB8D4E6),
+                  icon: Icons.workspace_premium,
+                  title: 'Master',
+                  completed: 3,
+                  remaining: 97,
+                  progressColor: const Color(0xFF8DC6B0),
+                  isSelected: _selectedIndex == 4,
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = 4;
+                    });
+                    _goToGame('Master');
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 프로필 섹션 위젯
+  Widget _buildProfileSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(
+            color: _isTop ? Colors.white : Colors.grey[300]!,
+            width: 2,
+          ),
+        ),
+      ),
+      child: const Row(
+        children: [
+          CircleAvatar(
+            radius: 28,
+            backgroundColor: Color(0xFFB8E6B8),
+            child: Icon(Icons.person, size: 36, color: Color(0xFF2C3E50)),
+          ),
+          SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '게스트',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  '스도쿠에 오신 것을 환영합니다 👋',
+                  style: TextStyle(
+                    color: Color(0xFF7F8C8D),
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_right, size: 28, color: Color(0xFF7F8C8D)),
+        ],
       ),
     );
   }
@@ -325,7 +452,7 @@ class _LevelCardState extends State<_LevelCard> {
             BoxShadow(
               color: Colors.black.withOpacity(0.08),
               blurRadius: 12,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -345,20 +472,24 @@ class _LevelCardState extends State<_LevelCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    widget.title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 28,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '${widget.completed} /, ${widget.remaining} ',
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 16,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        widget.title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
+                        ),
+                      ),
+                      Text(
+                        '${widget.completed} / ${widget.remaining}',
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   ClipRRect(
