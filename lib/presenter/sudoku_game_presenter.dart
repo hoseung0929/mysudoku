@@ -19,9 +19,8 @@ class SudokuGamePresenter {
   final Function(int, int)? onCorrectAnswer; // 정답 입력 시 호출 (행, 열)
 
   // 게임 상태를 관리하는 private 변수들
-  final List<List<int>> _initialBoard;
-  List<List<int>> _board;
-  final List<List<int>> _solution;
+  List<List<int>> _board = [];
+  List<List<int>> _solution = [];
   List<List<bool>> _fixedNumbers = [];
   List<List<bool>> _wrongNumbers = []; // 잘못된 숫자 표시
   int _seconds = 0; // 게임 진행 시간
@@ -33,6 +32,7 @@ class SudokuGamePresenter {
   int _wrongCount = 0; // 오답 카운트
   bool _isGameOver = false; // 게임 오버 상태
   Timer? _timer; // 타이머
+  List<List<int>> _initialBoard = []; // 초기 보드 저장
 
   /// Presenter 생성자
   /// [level] 현재 선택된 레벨
@@ -59,26 +59,27 @@ class SudokuGamePresenter {
     required this.onGameOver,
     this.onCorrectAnswer,
     required List<List<int>> initialBoard,
-    required List<List<int>> solution,
-  })  : _initialBoard = initialBoard,
-        _board = List.generate(
-          9,
-          (i) => List.generate(9, (j) => initialBoard[i][j]),
-        ),
-        _solution = List.generate(
-          9,
-          (i) => List.generate(9, (j) => solution[i][j]),
-        ),
-        _fixedNumbers = List.generate(
-          9,
-          (i) => List.generate(
-            9,
-            (j) => initialBoard[i][j] != 0,
-          ),
-        ) {
+    required List<List<int>>? solution,
+  }) {
+    // 해답 데이터 설정
+    if (solution != null && solution.isNotEmpty) {
+      _solution = solution;
+      print('DB에서 가져온 해답 데이터 사용');
+      print('해답 데이터 확인:');
+      for (int i = 0; i < _solution.length; i++) {
+        print('  ${_solution[i]}');
+      }
+    } else {
+      _solution = SudokuGenerator.getSolution(initialBoard);
+      print('동적으로 해답 데이터 생성 (DB에 해답 데이터 없음)');
+      print('동적 해답 데이터 확인:');
+      for (int i = 0; i < _solution.length; i++) {
+        print('  ${_solution[i]}');
+      }
+    }
+
     _wrongNumbers = List.generate(9, (_) => List.filled(9, false));
-    _fixedNumbers.clear();
-    _initializeBoard();
+    _initializeBoard(initialBoard);
     _startTimer();
   }
 
@@ -104,7 +105,17 @@ class SudokuGamePresenter {
   void _initializeBoard([List<List<int>>? initialBoard]) {
     _fixedNumbers.clear();
     _board = initialBoard ?? SudokuGenerator.generateSudoku(level.emptyCells);
-    _fixedNumbers = SudokuGenerator.getFixedNumbers(_board);
+
+    // 초기 보드 저장
+    _initialBoard = List.generate(9, (row) => List<int>.from(_board[row]));
+
+    // 초기 보드에서만 고정 숫자 설정
+    _fixedNumbers = List.generate(9, (row) {
+      return List.generate(9, (col) {
+        return _initialBoard[row][col] != 0;
+      });
+    });
+
     _wrongNumbers = List.generate(9, (_) => List.filled(9, false));
 
     onBoardChanged(_board);
@@ -115,11 +126,46 @@ class SudokuGamePresenter {
   /// 셀 선택 처리
   /// [row] 선택된 행
   /// [col] 선택된 열
-  void onCellSelected(int row, int col) {
-    if (_fixedNumbers[row][col] || _isGameComplete || _isPaused) return;
+  void selectCell(int row, int col) {
+    // 이전에 선택된 셀이 있었다면 해당 셀의 상태 체크
+    if (_selectedRow != null && _selectedCol != null) {
+      _checkCellStatus(_selectedRow!, _selectedCol!);
+    }
 
     _selectedRow = row;
     _selectedCol = col;
+
+    // 새로 선택된 셀의 상태도 체크
+    _checkCellStatus(row, col);
+
+    // UI 업데이트를 위한 콜백 호출
+    if (onBoardChanged != null) {
+      onBoardChanged!(_board);
+    }
+  }
+
+  /// 특정 셀의 상태를 체크하고 오답 여부를 업데이트
+  void _checkCellStatus(int row, int col) {
+    // 해답 데이터가 없는 경우 처리
+    if (_solution.isEmpty) {
+      print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
+      _solution = SudokuGenerator.getSolution(_board);
+    }
+
+    final currentValue = _board[row][col];
+    final correctValue = _solution[row][col];
+    final isWrong = currentValue != 0 && currentValue != correctValue;
+
+    // 해당 셀의 오답 상태 업데이트
+    _wrongNumbers[row][col] = isWrong;
+
+    print(
+        '셀 [$row][$col] 상태 체크: 현재값=$currentValue, 정답=$correctValue, 오답=$isWrong');
+
+    // 오답 상태 변경 알림
+    if (onWrongNumbersChanged != null) {
+      onWrongNumbersChanged!(_wrongNumbers);
+    }
   }
 
   /// 숫자 입력 처리
@@ -133,10 +179,16 @@ class SudokuGamePresenter {
       return;
     }
 
+    // 해답 데이터가 없는 경우 처리
+    if (_solution.isEmpty) {
+      print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
+      _solution = SudokuGenerator.getSolution(_board);
+    }
+
     // 이전 값 저장
     final previousValue = _board[_selectedRow!][_selectedCol!];
 
-    // 이전에 오답이었는지 확인
+    // 이전에 오답이었는지 확인 (해답 데이터 기준)
     final wasWrongBefore = previousValue != 0 &&
         previousValue != _solution[_selectedRow!][_selectedCol!];
 
@@ -146,8 +198,16 @@ class SudokuGamePresenter {
     // 오답 체크
     _checkWrongNumbers();
 
-    // 새로운 값이 오답인지 확인
+    // 새로운 값이 오답인지 확인 (해답 데이터 기준)
     final isWrongNow = number != _solution[_selectedRow!][_selectedCol!];
+
+    // 정답을 입력했는지 확인
+    final isCorrectAnswer = number == _solution[_selectedRow!][_selectedCol!];
+
+    // 정답 입력 시 이벤트 트리거
+    if (isCorrectAnswer && onCorrectAnswer != null) {
+      onCorrectAnswer!(_selectedRow!, _selectedCol!);
+    }
 
     // 오답 카운트 업데이트
     if (isWrongNow && !wasWrongBefore) {
@@ -183,91 +243,23 @@ class SudokuGamePresenter {
     _checkGameComplete();
   }
 
-  /// 잘못된 숫자 검사
   /// 실제 해답과 비교하여 오답을 체크하고, 스도쿠 규칙 위반도 시각적으로 표시
   void _checkWrongNumbers() {
-    _wrongNumbers = List.generate(9, (_) => List.filled(9, false));
-
-    // 실제 해답과 비교하여 오답 체크 (오답 카운트에 포함)
-    for (int row = 0; row < 9; row++) {
-      for (int col = 0; col < 9; col++) {
-        if (_board[row][col] != 0 && _board[row][col] != _solution[row][col]) {
-          _wrongNumbers[row][col] = true;
-        }
-      }
+    // 현재 선택된 셀이 있으면 해당 셀의 상태 체크
+    if (_selectedRow != null && _selectedCol != null) {
+      _checkCellStatus(_selectedRow!, _selectedCol!);
     }
-
-    // 스도쿠 규칙 위반 체크 (시각적 피드백용, 오답 카운트에는 포함하지 않음)
-    // 행 검사
-    for (int row = 0; row < 9; row++) {
-      for (int col = 0; col < 9; col++) {
-        if (_board[row][col] != 0) {
-          for (int c = 0; c < 9; c++) {
-            if (c != col && _board[row][c] == _board[row][col]) {
-              // 이미 오답으로 표시된 경우가 아니면 규칙 위반으로 표시
-              if (!_wrongNumbers[row][col]) {
-                _wrongNumbers[row][col] = true;
-              }
-              if (!_wrongNumbers[row][c]) {
-                _wrongNumbers[row][c] = true;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // 열 검사
-    for (int col = 0; col < 9; col++) {
-      for (int row = 0; row < 9; row++) {
-        if (_board[row][col] != 0) {
-          for (int r = 0; r < 9; r++) {
-            if (r != row && _board[r][col] == _board[row][col]) {
-              // 이미 오답으로 표시된 경우가 아니면 규칙 위반으로 표시
-              if (!_wrongNumbers[row][col]) {
-                _wrongNumbers[row][col] = true;
-              }
-              if (!_wrongNumbers[r][col]) {
-                _wrongNumbers[r][col] = true;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // 3x3 박스 검사
-    for (int boxRow = 0; boxRow < 9; boxRow += 3) {
-      for (int boxCol = 0; boxCol < 9; boxCol += 3) {
-        for (int row = boxRow; row < boxRow + 3; row++) {
-          for (int col = boxCol; col < boxCol + 3; col++) {
-            if (_board[row][col] != 0) {
-              for (int r = boxRow; r < boxRow + 3; r++) {
-                for (int c = boxCol; c < boxCol + 3; c++) {
-                  if ((r != row || c != col) &&
-                      _board[r][c] == _board[row][col]) {
-                    // 이미 오답으로 표시된 경우가 아니면 규칙 위반으로 표시
-                    if (!_wrongNumbers[row][col]) {
-                      _wrongNumbers[row][col] = true;
-                    }
-                    if (!_wrongNumbers[r][c]) {
-                      _wrongNumbers[r][c] = true;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    onWrongNumbersChanged(_wrongNumbers);
   }
 
   /// 게임 완료 검사
   /// 모든 칸이 채워졌고 잘못된 숫자가 없는지 확인
   void _checkGameComplete() {
+    // 해답 데이터가 없는 경우 처리
+    if (_solution.isEmpty) {
+      print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
+      _solution = SudokuGenerator.getSolution(_board);
+    }
+
     // 모든 칸이 채워졌는지 확인
     for (int row = 0; row < 9; row++) {
       for (int col = 0; col < 9; col++) {
@@ -275,13 +267,18 @@ class SudokuGamePresenter {
       }
     }
 
-    // 잘못된 숫자가 없는지 확인
+    // 잘못된 숫자가 없는지 확인 (해답 데이터 기준)
     for (int row = 0; row < 9; row++) {
       for (int col = 0; col < 9; col++) {
-        if (_wrongNumbers[row][col]) return;
+        if (_board[row][col] != _solution[row][col]) {
+          print(
+              '게임 완료 체크 실패: 셀 [$row][$col] - 입력값=${_board[row][col]}, 정답=${_solution[row][col]}');
+          return;
+        }
       }
     }
 
+    print('게임 완료! 모든 셀이 정답으로 채워졌습니다.');
     _isGameComplete = true;
     _isPaused = true;
     _stopTimer();
@@ -402,13 +399,14 @@ class SudokuGamePresenter {
   bool isCellSelected(int row, int col) =>
       row == _selectedRow && col == _selectedCol;
   bool hasError(int row, int col) {
+    // 해답 데이터가 없는 경우 처리
+    if (_solution.isEmpty) {
+      print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
+      _solution = SudokuGenerator.getSolution(_board);
+    }
+
     if (_board[row][col] == 0) return false;
     return _board[row][col] != _solution[row][col];
-  }
-
-  void selectCell(int row, int col) {
-    _selectedRow = row;
-    _selectedCol = col;
   }
 
   void setSelectedCellValue(int value) {
@@ -416,10 +414,16 @@ class SudokuGamePresenter {
     if (_fixedNumbers[_selectedRow!][_selectedCol!]) return;
     if (_isGameComplete || _isPaused || _isGameOver) return;
 
+    // 해답 데이터가 없는 경우 처리
+    if (_solution.isEmpty) {
+      print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
+      _solution = SudokuGenerator.getSolution(_board);
+    }
+
     // 이전 값 저장
     final previousValue = _board[_selectedRow!][_selectedCol!];
 
-    // 이전에 오답이었는지 확인
+    // 이전에 오답이었는지 확인 (해답 데이터 기준)
     final wasWrongBefore = previousValue != 0 &&
         previousValue != _solution[_selectedRow!][_selectedCol!];
 
@@ -429,7 +433,7 @@ class SudokuGamePresenter {
     // 오답 체크
     _checkWrongNumbers();
 
-    // 새로운 값이 오답인지 확인
+    // 새로운 값이 오답인지 확인 (해답 데이터 기준)
     final isWrongNow = value != _solution[_selectedRow!][_selectedCol!];
 
     // 정답을 입력했는지 확인
@@ -493,7 +497,14 @@ class SudokuGamePresenter {
   /// [col] 열 인덱스
   /// Returns: 잘못된 숫자이면 true, 아니면 false
   bool isWrongNumber(int row, int col) {
-    return _wrongNumbers[row][col];
+    // 해답 데이터가 없는 경우 처리
+    if (_solution.isEmpty) {
+      print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
+      _solution = SudokuGenerator.getSolution(_board);
+    }
+
+    if (_board[row][col] == 0) return false;
+    return _board[row][col] != _solution[row][col];
   }
 
   /// 힌트로 입력된 숫자인지 확인

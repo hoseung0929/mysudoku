@@ -50,20 +50,43 @@ class SudokuGameSet {
       return [];
     }
 
-    return List.generate(games.length, (index) {
+    return Future.wait(List.generate(games.length, (index) async {
       final board = games[index];
-      final solution = SudokuGenerator.getSolution(board);
+      final gameNumber = index + 1;
+
+      print('=== 게임 생성 로그 ===');
+      print('플레이 게임 game_number: $gameNumber');
+
+      // DB에서 저장된 해답 데이터를 가져옴
+      final solution = await dbHelper.getSolution(level, gameNumber);
+      print('해답 조회 game_number: $gameNumber');
+
+      // 해답 데이터가 없거나 비어있는 경우에만 동적으로 생성
+      List<List<int>> finalSolution;
+      if (solution.isEmpty) {
+        print('경고: DB에 해답 데이터가 없습니다. 동적으로 생성합니다. (${level} - ${gameNumber})');
+        finalSolution = SudokuGenerator.getSolution(board);
+      } else {
+        print('DB 해답 데이터 사용: ${level} - ${gameNumber}');
+        finalSolution = solution;
+      }
+
+      print('=== 게임 생성 완료 ===');
+      print('플레이 게임 game_number: $gameNumber');
+      print('해답 game_number: $gameNumber');
+      print('========================');
+
       return SudokuGame(
         board: board,
-        solution: solution,
+        solution: finalSolution,
         emptyCells: level == '초급'
             ? 30
             : level == '중급'
                 ? 40
                 : 50,
         levelName: level,
-        gameNumber: index + 1,
+        gameNumber: gameNumber,
       );
-    });
+    }));
   }
 }

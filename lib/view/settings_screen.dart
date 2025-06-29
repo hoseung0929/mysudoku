@@ -10,8 +10,17 @@ class SettingsScreen extends StatelessWidget {
     final isTablet = screenWidth > 600;
 
     return Scaffold(
-      appBar: const CustomAppBar(title: '설정'),
+      appBar: _buildAppBar(),
       body: isTablet ? _buildTabletLayout() : _buildMobileLayout(),
+    );
+  }
+
+  /// 앱바 위젯
+  PreferredSizeWidget _buildAppBar() {
+    return const CustomAppBar(
+      title: '설정',
+      showNotificationIcon: false,
+      showLogoutIcon: false,
     );
   }
 

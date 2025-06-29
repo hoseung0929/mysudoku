@@ -1,17 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
 import 'view/level_selection_main.dart';
 import 'view/settings_screen.dart';
 import 'widgets/bottom_nav_bar.dart';
 import 'theme/app_theme.dart';
+import 'model/sudoku_level.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // DB 경로 출력
+  await printDbPath();
+
+  // 클리어된 게임 수 로드
+  await SudokuLevel.loadAllClearedGames();
+
   // 세로 모드로 고정 (필요시 주석 해제)
   // SystemChrome.setPreferredOrientations([
   //   DeviceOrientation.portraitUp,
   //   DeviceOrientation.portraitDown,
   // ]);
   runApp(const MySudokuApp());
+}
+
+/// DB 경로를 출력하는 함수
+Future<void> printDbPath() async {
+  try {
+    String dbPath = join(await getDatabasesPath(), 'sudoku_games.db');
+    print('=== DB 경로 정보 ===');
+    print('DB 파일명: sudoku_games.db');
+    print('DB 전체 경로: $dbPath');
+    print('==================');
+  } catch (e) {
+    print('DB 경로 출력 중 오류: $e');
+  }
 }
 
 class MySudokuApp extends StatelessWidget {

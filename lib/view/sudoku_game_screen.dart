@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:vibration/vibration.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../model/sudoku_game.dart';
 import '../model/sudoku_level.dart';
 import '../presenter/sudoku_game_presenter.dart';
+import '../utils/sudoku_generator.dart';
 import '../widgets/progressive_blur_button.dart';
 import '../widgets/game_over_dialog.dart';
 import '../widgets/game_complete_dialog.dart';
+import '../widgets/custom_app_bar.dart';
 import '../theme/app_theme.dart';
+import '../database/database_helper.dart';
 
 /// 스도쿠 게임의 메인 화면
 /// MVP 패턴에서 View 역할을 수행하며, 사용자 인터페이스를 담당
@@ -38,12 +43,60 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
   @override
   void initState() {
     super.initState();
+    _initializeGame();
+  }
+
+  /// 게임 초기화
+  Future<void> _initializeGame() async {
+    print('=== 게임 초기화 시작 ===');
+    print('레벨: ${widget.level.name}');
+    print('플레이 게임 game_number: ${widget.game.gameNumber}');
+    print('해답 game_number: ${widget.game.gameNumber}');
+    print('원본 보드:');
+    for (int i = 0; i < widget.game.board.length; i++) {
+      print('  ${widget.game.board[i]}');
+    }
+    print('DB 해답 보드:');
+    for (int i = 0; i < widget.game.solution.length; i++) {
+      print('  ${widget.game.solution[i]}');
+    }
+
+    // 저장된 게임 상태 복원
+    final savedBoard = await _loadGameState();
+    if (savedBoard != null) {
+      print('저장된 게임 상태 발견:');
+      for (int i = 0; i < savedBoard.length; i++) {
+        print('  ${savedBoard[i]}');
+      }
+
+      // 저장된 게임 상태가 현재 게임과 다른지 확인
+      bool isDifferentGame = false;
+      if (savedBoard.length == widget.game.board.length) {
+        for (int row = 0; row < savedBoard.length; row++) {
+          for (int col = 0; col < savedBoard[row].length; col++) {
+            // 원본 보드에서 0이 아닌 셀(고정 숫자)과 저장된 보드가 다르면 다른 게임
+            if (widget.game.board[row][col] != 0 &&
+                savedBoard[row][col] != widget.game.board[row][col]) {
+              isDifferentGame = true;
+              print(
+                  '다른 게임 감지: [$row][$col] - 원본=${widget.game.board[row][col]}, 저장=${savedBoard[row][col]}');
+              break;
+            }
+          }
+          if (isDifferentGame) break;
+        }
+      } else {
+        isDifferentGame = true;
+      }
+    }
+
     _presenter = SudokuGamePresenter(
-      initialBoard: widget.game.board,
-      solution: widget.game.solution,
+      initialBoard: savedBoard ?? widget.game.board,
+      solution: widget.game.solution, // DB에서 가져온 해답 데이터 사용 (항상 동일)
       level: widget.level,
       onBoardChanged: (board) {
         setState(() {});
+        _saveGameState(board); // 보드 변경 시 저장
       },
       onFixedNumbersChanged: (fixedNumbers) {
         setState(() {});
@@ -76,6 +129,54 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
         _triggerWaveEffect(row, col);
       },
     );
+    print('=== 게임 초기화 완료 ===');
+  }
+
+  /// 게임 상태 저장
+  Future<void> _saveGameState(List<List<int>> board) async {
+    final prefs = await SharedPreferences.getInstance();
+    final gameKey = 'game_${widget.level.name}_${widget.game.gameNumber}';
+
+    // 보드만 문자열로 변환하여 저장 (해답은 DB에서 항상 동일하게 가져옴)
+    final boardString = board.map((row) => row.join(',')).join(';');
+    await prefs.setString(gameKey, boardString);
+
+    print('게임 상태 저장 완료: $gameKey');
+    print('참고: 해답 데이터는 DB에서 항상 동일하게 가져오므로 별도 저장하지 않음');
+  }
+
+  /// 게임 상태 복원
+  Future<List<List<int>>?> _loadGameState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final gameKey = 'game_${widget.level.name}_${widget.game.gameNumber}';
+
+    print('게임 상태 로딩 시도: $gameKey');
+
+    final boardString = prefs.getString(gameKey);
+    if (boardString != null) {
+      print('저장된 게임 상태 문자열: $boardString');
+
+      // 문자열을 보드로 변환
+      final rows = boardString.split(';');
+      final board = rows.map((row) {
+        return row.split(',').map((cell) => int.parse(cell)).toList();
+      }).toList();
+      print('게임 상태 복원 완료');
+      return board;
+    } else {
+      print('저장된 게임 상태 없음');
+      return null;
+    }
+  }
+
+  /// 게임 상태 삭제 (게임 완료 또는 재시작 시)
+  Future<void> _clearGameState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final gameKey = 'game_${widget.level.name}_${widget.game.gameNumber}';
+
+    await prefs.remove(gameKey);
+
+    print('게임 상태 삭제 완료: $gameKey');
   }
 
   @override
@@ -93,32 +194,23 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: Text(
-          widget.level.name,
-          style: GoogleFonts.notoSans(
-            color: AppTheme.textColor,
-            fontWeight: FontWeight.w600,
-            fontSize: 20,
-          ),
-        ),
-        backgroundColor: AppTheme.cardColor,
-        elevation: 2,
-        shadowColor: Colors.black12,
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.refresh,
-              color: AppTheme.textColor,
-            ),
-            onPressed: () {
-              _presenter.restartWithNewGame();
-            },
-            tooltip: '재시작',
-          ),
-        ],
-      ),
+      appBar: _buildAppBar(),
       body: isTablet ? _buildTabletLayout() : _buildMobileLayout(),
+    );
+  }
+
+  /// 앱바 위젯
+  PreferredSizeWidget _buildAppBar() {
+    return CustomAppBar(
+      title: widget.level.name,
+      showNotificationIcon: false,
+      showLogoutIcon: false,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.pop(context);
+        },
+      ),
     );
   }
 
@@ -227,6 +319,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
                                     ),
                                 ],
                               ),
+                            //const SizedBox(height: 16),
+                            // 정답 표시 네모칸
+                            _buildAnswerBox(),
                           ],
                         ),
                       ),
@@ -299,7 +394,13 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
                     ),
                   ],
                 ),
-              Expanded(child: Container()), // 나머지 공간 비움
+              // 정답 표시 네모칸
+              _buildAnswerBox()
+              // Padding(
+              //   //padding: const EdgeInsets.symmetric(vertical: 4),
+              //   child: _buildAnswerBox(),
+              // ),
+              //Expanded(child: Container()), // 나머지 공간 비움
             ],
           ),
         ),
@@ -420,13 +521,13 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
                         ),
                         color: isWave
                             ? Colors.green.withOpacity(0.4)
-                            : isWrong
-                                ? AppTheme.sudokuWrongNumberColor
-                                    .withOpacity(0.3)
-                                : isHint
-                                    ? AppTheme.sudokuHintNumberColor
-                                    : isSelected
-                                        ? AppTheme.sudokuSelectedNumberColor
+                            : isSelected
+                                ? AppTheme.sudokuSelectedNumberColor
+                                : isWrong
+                                    ? AppTheme.sudokuWrongNumberColor
+                                        .withOpacity(0.3)
+                                    : isHint
+                                        ? AppTheme.sudokuHintNumberColor
                                         : isSameNumber
                                             ? AppTheme.sudokuSameNumberColor
                                             : isRelated
@@ -472,7 +573,12 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
     final buttonColor = pastelColors[(number - 1) % pastelColors.length];
 
     return ProgressiveBlurButton(
-      onPressed: () {
+      onPressed: () async {
+        // 진동 효과 추가
+        if (await Vibration.hasVibrator() ?? false) {
+          Vibration.vibrate(duration: 50); // 50ms 짧은 진동
+        }
+
         setState(() {
           _presenter.setSelectedCellValue(number);
         });
@@ -536,7 +642,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
   }
 
   /// 게임 완료 다이얼로그 표시
-  void _showGameCompleteDialog() {
+  void _showGameCompleteDialog() async {
+    // 클리어 기록 저장
+    await _saveClearRecord();
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -544,17 +653,35 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
         return GameCompleteDialog(
           timeInSeconds: _presenter.seconds,
           wrongCount: _presenter.wrongCount,
-          onRestart: () {
+          onRestart: () async {
             Navigator.of(context).pop();
+            await _clearGameState(); // 저장된 상태 삭제
             _presenter.restartWithNewGame();
           },
-          onGoToLevelSelection: () {
+          onGoToLevelSelection: () async {
             Navigator.of(context).pop();
+            await _clearGameState(); // 저장된 상태 삭제
             Navigator.of(context).pop(); // 게임 화면으로 돌아가기
           },
         );
       },
     );
+  }
+
+  /// 클리어 기록 저장
+  Future<void> _saveClearRecord() async {
+    try {
+      final dbHelper = DatabaseHelper();
+      await dbHelper.saveClearRecord(
+        levelName: widget.level.name,
+        gameNumber: widget.game.gameNumber,
+        clearTime: _presenter.seconds,
+        wrongCount: _presenter.wrongCount,
+      );
+      print('클리어 기록 저장 완료: ${widget.level.name} 게임 ${widget.game.gameNumber}');
+    } catch (e) {
+      print('클리어 기록 저장 실패: $e');
+    }
   }
 
   /// 게임 오버 다이얼로그 표시
@@ -565,12 +692,14 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
       builder: (BuildContext context) {
         return GameOverDialog(
           wrongCount: _presenter.wrongCount,
-          onRestart: () {
+          onRestart: () async {
             Navigator.of(context).pop();
+            await _clearGameState(); // 저장된 상태 삭제
             _presenter.restartWithNewGame();
           },
-          onGoToLevelSelection: () {
+          onGoToLevelSelection: () async {
             Navigator.of(context).pop();
+            await _clearGameState(); // 저장된 상태 삭제
             Navigator.of(context).pop(); // 게임 화면으로 돌아가기
           },
         );
@@ -578,6 +707,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
     );
   }
 
+  /// 정답 입력 효과 표시
+  /// 정답 입력 효과 표시
+  /// 정답 입력 효과 표시
   /// 정답 입력 효과 표시
   void _triggerWaveEffect(int row, int col) {
     const int waveSpeed = 30; // wave가 퍼지는 속도
@@ -631,5 +763,122 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
         }
       }
     }
+  }
+
+  /// 정답 표시 네모칸
+  Widget _buildAnswerBox() {
+    try {
+      if (_presenter.selectedRow != null && _presenter.selectedCol != null) {
+        final answer = getSelectedCellAnswer();
+
+        if (answer != null) {
+          return Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: AppTheme.cardColor,
+              border: Border.all(color: Colors.grey.shade400, width: 2),
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  '정답',
+                  style: TextStyle(
+                    fontSize: 8,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.lightTextColor,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  answer.toString(),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textColor,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // 예외 발생 시 빈 네모칸 표시
+      print('정답 표시 중 오류 발생: $e');
+    }
+
+    // 셀이 선택되지 않았거나 예외가 발생한 경우 빈 네모칸 표시
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: AppTheme.cardColor,
+        border: Border.all(color: Colors.grey.shade300, width: 2),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: const Center(
+        child: Text(
+          '?',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 선택된 셀의 정답을 반환
+  int? getSelectedCellAnswer() {
+    if (_presenter.selectedRow == null || _presenter.selectedCol == null) {
+      return null;
+    }
+
+    final row = _presenter.selectedRow!;
+    final col = _presenter.selectedCol!;
+
+    print('=== 정답 조회 로그 ===');
+    print('플레이 게임 game_number: ${widget.game.gameNumber}');
+    print('해답 game_number: ${widget.game.gameNumber}');
+    print('선택된 셀: [$row][$col]');
+
+    // DB에서 가져온 해답 데이터를 우선적으로 사용
+    if (widget.game.solution.isNotEmpty &&
+        row < widget.game.solution.length &&
+        col < widget.game.solution[row].length) {
+      final answer = widget.game.solution[row][col];
+      print('DB 해답 데이터 사용: [$row][$col] = $answer');
+      print('========================');
+      return answer;
+    }
+
+    // DB 해답 데이터가 없는 경우에만 동적으로 계산
+    try {
+      final solution = SudokuGenerator.getSolution(widget.game.board);
+      if (row < solution.length && col < solution[row].length) {
+        final answer = solution[row][col];
+        print('동적 정답 계산 사용: [$row][$col] = $answer');
+        print('========================');
+        return answer;
+      }
+    } catch (e) {
+      print('정답 계산 중 오류: $e');
+      print('========================');
+    }
+
+    print('정답을 찾을 수 없음');
+    print('========================');
+    return null;
   }
 }

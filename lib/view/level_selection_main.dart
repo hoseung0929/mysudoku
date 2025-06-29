@@ -3,6 +3,8 @@ import 'sudoku_game_screen.dart';
 import '../model/sudoku_game.dart';
 import '../model/sudoku_level.dart';
 import '../model/sudoku_game_set.dart';
+import '../view/settings_screen.dart';
+import '../view/level_selection_screen.dart';
 
 class LevelSelectionMain extends StatefulWidget {
   const LevelSelectionMain({super.key});
@@ -78,25 +80,14 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
 
   void _goToGame(String title) async {
     final level = getLevel(title);
-    final games = await _loadGames(level.name);
 
-    if (games.isNotEmpty) {
-      // 첫 번째 게임으로 이동
-      final game = games.first;
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SudokuGameScreen(game: game, level: level),
-        ),
-      );
-    } else {
-      // 게임이 없을 경우 스낵바 표시
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('해당 난이도의 게임을 불러올 수 없습니다.'),
-        ),
-      );
-    }
+    // 레벨 선택 화면으로 이동
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LevelSelectionScreen(level: level),
+      ),
+    );
   }
 
   @override
@@ -119,7 +110,63 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     return Column(
       children: [
         // 상단 프로필 영역
-        _buildProfileSection(),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              bottom: BorderSide(
+                color: _isTop ? Colors.white : Colors.grey[300]!,
+                width: 2,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              const CircleAvatar(
+                radius: 28,
+                backgroundColor: Color(0xFFB8E6B8),
+                child: Icon(Icons.person, size: 36, color: Color(0xFF2C3E50)),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '게스트',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 24,
+                        color: Color(0xFF2C3E50),
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      '스도쿠에 오신 것을 환영합니다 👋',
+                      style: TextStyle(
+                        color: Color(0xFF7F8C8D),
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsScreen(),
+                    ),
+                  );
+                },
+                child: const Icon(Icons.chevron_right,
+                    size: 28, color: Color(0xFF7F8C8D)),
+              ),
+            ],
+          ),
+        ),
         // 레벨 카드 영역
         Expanded(
           child: Container(
@@ -195,15 +242,15 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
               ),
             ),
           ),
-          child: const Row(
+          child: Row(
             children: [
-              CircleAvatar(
+              const CircleAvatar(
                 radius: 28,
                 backgroundColor: Color(0xFFB8E6B8),
                 child: Icon(Icons.person, size: 36, color: Color(0xFF2C3E50)),
               ),
-              SizedBox(width: 16),
-              Expanded(
+              const SizedBox(width: 16),
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -226,7 +273,18 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, size: 28, color: Color(0xFF7F8C8D)),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsScreen(),
+                    ),
+                  );
+                },
+                child: const Icon(Icons.chevron_right,
+                    size: 28, color: Color(0xFF7F8C8D)),
+              ),
             ],
           ),
         ),
@@ -329,56 +387,6 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
           ),
         ),
       ],
-    );
-  }
-
-  /// 프로필 섹션 위젯
-  Widget _buildProfileSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(
-            color: _isTop ? Colors.white : Colors.grey[300]!,
-            width: 2,
-          ),
-        ),
-      ),
-      child: const Row(
-        children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: Color(0xFFB8E6B8),
-            child: Icon(Icons.person, size: 36, color: Color(0xFF2C3E50)),
-          ),
-          SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '게스트',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
-                    color: Color(0xFF2C3E50),
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  '스도쿠에 오신 것을 환영합니다 👋',
-                  style: TextStyle(
-                    color: Color(0xFF7F8C8D),
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(Icons.chevron_right, size: 28, color: Color(0xFF7F8C8D)),
-        ],
-      ),
     );
   }
 }

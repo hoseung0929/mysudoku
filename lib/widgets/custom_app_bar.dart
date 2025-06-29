@@ -1,14 +1,41 @@
 import 'package:flutter/material.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
-  const CustomAppBar({Key? key, required this.title}) : super(key: key);
+  final String? title;
+  final List<Widget>? actions;
+  final Widget? leading;
+  final bool showNotificationIcon;
+  final bool showLogoutIcon;
+
+  const CustomAppBar({
+    Key? key,
+    this.title,
+    this.actions,
+    this.leading,
+    this.showNotificationIcon = true,
+    this.showLogoutIcon = true,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Text(title),
-      actions: [
+      title: title != null ? Text(title!) : const Text('미사용'),
+      leading: leading ??
+          IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+      actions: actions ?? _buildDefaultActions(context),
+    );
+  }
+
+  List<Widget> _buildDefaultActions(BuildContext context) {
+    final defaultActions = <Widget>[];
+
+    if (showNotificationIcon) {
+      defaultActions.add(
         IconButton(
           icon: const Icon(Icons.notifications),
           onPressed: () {
@@ -19,6 +46,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             );
           },
         ),
+      );
+    }
+
+    if (showLogoutIcon) {
+      defaultActions.add(
         IconButton(
           icon: const Icon(Icons.logout),
           onPressed: () {
@@ -48,8 +80,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             );
           },
         ),
-      ],
-    );
+      );
+    }
+
+    return defaultActions;
   }
 
   @override

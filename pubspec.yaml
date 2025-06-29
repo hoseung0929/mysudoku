@@ -38,6 +38,7 @@ dependencies:
   path: ^1.8.3
   shared_preferences: ^2.2.2
   google_fonts: ^6.1.0
+  vibration: ^1.8.4
 
 dev_dependencies:
   flutter_test:

@@ -8,7 +8,9 @@ import 'sudoku_game_screen.dart';
 /// 난이도 선택 화면
 /// 사용자가 스도쿠 게임의 난이도를 선택할 수 있는 화면입니다.
 class LevelSelectionScreen extends StatefulWidget {
-  const LevelSelectionScreen({super.key});
+  final SudokuLevel? level;
+
+  const LevelSelectionScreen({super.key, this.level});
 
   @override
   State<LevelSelectionScreen> createState() => _LevelSelectionScreenState();
@@ -17,6 +19,35 @@ class LevelSelectionScreen extends StatefulWidget {
 class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   // 게임 데이터 캐시
   final Map<String, List<SudokuGame>> _gameCache = {};
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // 특정 레벨이 전달된 경우 미리 게임 데이터 로딩
+    if (widget.level != null) {
+      _preloadGames();
+    }
+  }
+
+  /// 게임 데이터 미리 로딩
+  Future<void> _preloadGames() async {
+    if (!_gameCache.containsKey(widget.level!.name)) {
+      setState(() {
+        _isLoading = true;
+      });
+      try {
+        final games = await SudokuGameSet.create(widget.level!.name);
+        _gameCache[widget.level!.name] = games;
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    }
+  }
 
   /// 특정 난이도의 게임 목록을 로드합니다.
   /// 캐시된 데이터가 있으면 캐시에서 반환하고,
@@ -35,141 +66,614 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth > 600;
 
+    // 특정 레벨이 전달된 경우 해당 레벨의 게임들을 카드형으로 표시
+    if (widget.level != null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        appBar: _buildGameSelectionAppBar(),
+        body: SafeArea(
+          child: isTablet
+              ? _buildGameSelectionTabletLayout()
+              : _buildGameSelectionMobileLayout(),
+        ),
+      );
+    }
+
+    // 기존 난이도 선택 화면
     return Scaffold(
-      appBar: const CustomAppBar(title: '스도쿠'),
-      body: isTablet ? _buildTabletLayout() : _buildMobileLayout(),
+      backgroundColor: const Color(0xFFF8F9FA),
+      appBar: _buildAppBar(),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // 상단 설명 영역
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.grey[300]!,
+                    width: 2,
+                  ),
+                ),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '난이도 선택',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    '원하는 난이도를 선택하여 게임을 시작하세요',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Color(0xFF7F8C8D),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // 난이도 카드 영역
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 20,
+                    mainAxisSpacing: 20,
+                    childAspectRatio: 1.5,
+                  ),
+                  itemCount: SudokuLevel.levels.length,
+                  itemBuilder: (context, index) {
+                    final level = SudokuLevel.levels[index];
+                    return _buildLevelCard(level, true);
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  /// 태블릿 레이아웃
-  Widget _buildTabletLayout() {
+  /// 앱바 위젯
+  PreferredSizeWidget _buildAppBar() {
+    return const CustomAppBar(
+      title: '',
+      showNotificationIcon: false,
+      showLogoutIcon: false,
+    );
+  }
+
+  /// 게임 선택 화면용 앱바 위젯
+  PreferredSizeWidget _buildGameSelectionAppBar() {
+    return CustomAppBar(
+      title: '',
+      showNotificationIcon: false,
+      showLogoutIcon: false,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => Navigator.pop(context),
+      ),
+    );
+  }
+
+  /// 게임 선택 화면용 태블릿 레이아웃
+  Widget _buildGameSelectionTabletLayout() {
     return Column(
       children: [
         // 상단 설명 영역
         Container(
           padding: const EdgeInsets.all(24),
-          child: const Column(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              bottom: BorderSide(
+                color: Colors.grey[300]!,
+                width: 2,
+              ),
+            ),
+          ),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '난이도 선택',
-                style: TextStyle(
-                  fontSize: 24,
+                '${widget.level!.name} 게임',
+                style: const TextStyle(
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF2C3E50),
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
-                '원하는 난이도를 선택하여 게임을 시작하세요',
-                style: TextStyle(
+                '원하는 게임을 선택하여 시작하세요',
+                style: const TextStyle(
                   fontSize: 16,
                   color: Color(0xFF7F8C8D),
                 ),
               ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: _getLevelColor(widget.level!.name),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Icon(
+                      _getLevelIcon(widget.level!.name),
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.level!.name,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2C3E50),
+                          ),
+                        ),
+                        Text(
+                          widget.level!.description,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF7F8C8D),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
-        // 난이도 카드 영역
+        // 게임 카드 영역
         Expanded(
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 20,
-                mainAxisSpacing: 20,
-                childAspectRatio: 1.5,
-              ),
-              itemCount: SudokuLevel.levels.length,
-              itemBuilder: (context, index) {
-                final level = SudokuLevel.levels[index];
-                return _buildLevelCard(level, true);
-              },
-            ),
+            padding: const EdgeInsets.all(24),
+            child: _isLoading
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text(
+                          '게임을 불러오는 중...',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Color(0xFF7F8C8D),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : FutureBuilder<List<SudokuGame>>(
+                    future: _loadGames(widget.level!.name),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircularProgressIndicator(),
+                              SizedBox(height: 16),
+                              Text(
+                                '게임을 불러오는 중...',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Color(0xFF7F8C8D),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Center(
+                          child: Text('게임을 불러올 수 없습니다.'),
+                        );
+                      }
+                      return GridView.builder(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          crossAxisSpacing: 20,
+                          mainAxisSpacing: 20,
+                          childAspectRatio: 1,
+                        ),
+                        itemCount: snapshot.data!.length,
+                        itemBuilder: (context, index) {
+                          final game = snapshot.data![index];
+                          return _buildGameSelectionCard(game);
+                        },
+                      );
+                    },
+                  ),
           ),
         ),
       ],
     );
   }
 
-  /// 모바일 레이아웃
-  Widget _buildMobileLayout() {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: SudokuLevel.levels.length + 1, // 제목 섹션을 위해 +1
-      itemBuilder: (context, index) {
-        // 첫 번째 아이템은 제목과 설명
-        if (index == 0) {
-          return Container(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '난이도 선택',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C3E50),
-                  ),
+  /// 게임 선택 화면용 모바일 레이아웃
+  Widget _buildGameSelectionMobileLayout() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 상단 설명 영역
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              bottom: BorderSide(
+                color: Colors.grey[300]!,
+                width: 2,
+              ),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${widget.level!.name} 게임',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2C3E50),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  '원하는 난이도를 선택하여 게임을 시작하세요',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                  ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '원하는 게임을 선택하여 시작하세요',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF7F8C8D),
                 ),
-              ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: _getLevelColor(widget.level!.name),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Icon(
+                      _getLevelIcon(widget.level!.name),
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.level!.name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2C3E50),
+                          ),
+                        ),
+                        Text(
+                          widget.level!.description,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF7F8C8D),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        // 게임 카드 영역
+        Expanded(
+          child: SingleChildScrollView(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: _isLoading
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text(
+                          '게임을 불러오는 중...',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Color(0xFF7F8C8D),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : FutureBuilder<List<SudokuGame>>(
+                    future: _loadGames(widget.level!.name),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircularProgressIndicator(),
+                              SizedBox(height: 16),
+                              Text(
+                                '게임을 불러오는 중...',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Color(0xFF7F8C8D),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Center(
+                          child: Text('게임을 불러올 수 없습니다.'),
+                        );
+                      }
+                      return Column(
+                        children: snapshot.data!
+                            .map((game) => _buildGameSelectionMobileCard(game))
+                            .toList(),
+                      );
+                    },
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 게임 선택용 카드 위젯
+  Widget _buildGameSelectionCard(SudokuGame game) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: Colors.white,
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  SudokuGameScreen(
+                game: game,
+                level: widget.level!,
+              ),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                const begin = Offset(1.0, 0.0);
+                const end = Offset.zero;
+                const curve = Curves.easeInOut;
+                var tween = Tween(begin: begin, end: end)
+                    .chain(CurveTween(curve: curve));
+                var offsetAnimation = animation.drive(tween);
+                return SlideTransition(position: offsetAnimation, child: child);
+              },
+              transitionDuration: const Duration(milliseconds: 300),
             ),
           );
-        }
+        },
+        borderRadius: BorderRadius.circular(28),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: _getLevelColor(widget.level!.name),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: const Icon(
+                Icons.play_arrow,
+                color: Colors.white,
+                size: 36,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '게임 ${game.gameNumber}',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2C3E50),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-        // 난이도 카드
-        final level = SudokuLevel.levels[index - 1];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          child: _buildLevelCard(level, false),
-        );
-      },
+  /// 게임 선택용 모바일 카드 위젯
+  Widget _buildGameSelectionMobileCard(SudokuGame game) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: Colors.white,
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  SudokuGameScreen(
+                game: game,
+                level: widget.level!,
+              ),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                const begin = Offset(1.0, 0.0);
+                const end = Offset.zero;
+                const curve = Curves.easeInOut;
+                var tween = Tween(begin: begin, end: end)
+                    .chain(CurveTween(curve: curve));
+                var offsetAnimation = animation.drive(tween);
+                return SlideTransition(position: offsetAnimation, child: child);
+              },
+              transitionDuration: const Duration(milliseconds: 300),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(28),
+        child: Row(
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: _getLevelColor(widget.level!.name),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: const Icon(
+                Icons.play_arrow,
+                color: Colors.white,
+                size: 36,
+              ),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '게임 ${game.gameNumber}',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '클릭하여 게임 시작',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF7F8C8D),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              color: Color(0xFF7F8C8D),
+              size: 24,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   /// 난이도 카드 위젯
   Widget _buildLevelCard(SudokuLevel level, bool isCompact) {
-    return Card(
-      elevation: 2,
-      shadowColor: Colors.black.withOpacity(0.1),
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: Colors.white,
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: InkWell(
         onTap: () => _showLevelGames(level),
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 난이도 헤더
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        borderRadius: BorderRadius.circular(28),
+        child: Row(
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: _getLevelColor(level.name),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Icon(
+                _getLevelIcon(level.name),
+                color: Colors.white,
+                size: 36,
+              ),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: _getLevelColor(level.name).withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          _getLevelIcon(level.name),
-                          color: const Color(0xFF2C3E50),
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
                       Text(
                         level.name,
                         style: const TextStyle(
@@ -178,67 +682,44 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                           color: Color(0xFF2C3E50),
                         ),
                       ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFB8E6B8).withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${level.clearedGames}/${level.gameCount}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF2C3E50),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFB8E6B8).withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      '${level.clearedGames}/${level.gameCount}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF2C3E50),
-                        fontWeight: FontWeight.w600,
-                      ),
+                  const SizedBox(height: 8),
+                  Text(
+                    level.description,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF7F8C8D),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              // 난이도 설명
-              Text(
-                level.description,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF7F8C8D),
-                ),
-              ),
-              if (!isCompact) ...[
-                const SizedBox(height: 16),
-                // 게임 목록 (모바일용)
-                SizedBox(
-                  height: 100,
-                  child: FutureBuilder<List<SudokuGame>>(
-                    future: _loadGames(level.name),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return const Center(
-                          child: Text('게임을 불러올 수 없습니다.'),
-                        );
-                      }
-                      return ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: snapshot.data!.length,
-                        itemBuilder: (context, gameIndex) {
-                          final game = snapshot.data![gameIndex];
-                          return _buildGameCard(game, level);
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ],
-          ),
+            ),
+            const SizedBox(width: 16),
+            const Icon(
+              Icons.chevron_right,
+              color: Color(0xFF7F8C8D),
+              size: 24,
+            ),
+          ],
         ),
       ),
     );
@@ -278,133 +759,6 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
       default:
         return Icons.grid_view;
     }
-  }
-
-  /// 난이도 가이드 위젯 (데스크톱용)
-  Widget _buildDifficultyGuide() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          '난이도 가이드',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF2C3E50),
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildGuideItem('초급', '스도쿠를 처음 접하는 분들을 위한 단계', 30),
-        _buildGuideItem('중급', '기본 규칙을 익힌 분들을 위한 단계', 40),
-        _buildGuideItem('고급', '경험이 있는 분들을 위한 도전 단계', 50),
-        _buildGuideItem('전문가', '고급 기술이 필요한 전문가 단계', 60),
-        _buildGuideItem('마스터', '최고 수준의 도전을 원하는 분들을 위한 단계', 70),
-      ],
-    );
-  }
-
-  /// 가이드 아이템 위젯
-  Widget _buildGuideItem(String title, String description, int emptyCells) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2C3E50),
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '빈 칸: $emptyCells',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF7F8C8D),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            description,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF7F8C8D),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 게임 카드 위젯
-  Widget _buildGameCard(SudokuGame game, SudokuLevel level) {
-    return Container(
-      width: 100,
-      margin: const EdgeInsets.only(right: 12),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SudokuGameScreen(
-                game: game,
-                level: level,
-              ),
-            ),
-          );
-        },
-        child: Card(
-          elevation: 1,
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '게임 ${game.gameNumber}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C3E50),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFB8E6B8).withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.play_arrow,
-                    color: Color(0xFF2C3E50),
-                    size: 24,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 
   /// 난이도별 게임 목록 표시
@@ -486,6 +840,64 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// 게임 카드 위젯 (모달용)
+  Widget _buildGameCard(SudokuGame game, SudokuLevel level) {
+    return Container(
+      width: 100,
+      margin: const EdgeInsets.only(right: 12),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SudokuGameScreen(
+                game: game,
+                level: level,
+              ),
+            ),
+          );
+        },
+        child: Card(
+          elevation: 1,
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '게임 ${game.gameNumber}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFB8E6B8).withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow,
+                    color: Color(0xFF2C3E50),
+                    size: 24,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
