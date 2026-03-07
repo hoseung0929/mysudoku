@@ -69,9 +69,9 @@ class GameCompleteDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: mintColor.withOpacity(0.1),
+              color: mintColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: mintColor.withOpacity(0.3)),
+              border: Border.all(color: mintColor.withValues(alpha: 0.3)),
             ),
             child: Column(
               children: [

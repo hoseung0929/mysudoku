@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -10,31 +11,22 @@ import 'model/sudoku_level.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // DB 경로 출력
-  await printDbPath();
+  if (kDebugMode) {
+    try {
+      final dbPath = join(await getDatabasesPath(), 'sudoku_games.db');
+      print('=== DB 경로 정보 ===');
+      print('DB 파일명: sudoku_games.db');
+      print('DB 전체 경로: $dbPath');
+      print('==================');
+    } catch (e) {
+      print('DB 경로 출력 중 오류: $e');
+    }
+  }
 
   // 클리어된 게임 수 로드
   await SudokuLevel.loadAllClearedGames();
 
-  // 세로 모드로 고정 (필요시 주석 해제)
-  // SystemChrome.setPreferredOrientations([
-  //   DeviceOrientation.portraitUp,
-  //   DeviceOrientation.portraitDown,
-  // ]);
   runApp(const MySudokuApp());
-}
-
-/// DB 경로를 출력하는 함수
-Future<void> printDbPath() async {
-  try {
-    String dbPath = join(await getDatabasesPath(), 'sudoku_games.db');
-    print('=== DB 경로 정보 ===');
-    print('DB 파일명: sudoku_games.db');
-    print('DB 전체 경로: $dbPath');
-    print('==================');
-  } catch (e) {
-    print('DB 경로 출력 중 오류: $e');
-  }
 }
 
 class MySudokuApp extends StatelessWidget {
@@ -71,11 +63,16 @@ class _MyHomePageState extends State<MyHomePage> {
       case 0:
         return const LevelSelectionMain();
       case 1:
-        return const Center(child: Text('알 수 없는 페이지'));
+        return const Center(
+          child: Text(
+            '기록 · 통계 (준비 중)',
+            style: TextStyle(fontSize: 16, color: Color(0xFF7F8C8D)),
+          ),
+        );
       case 2:
         return const SettingsScreen();
       default:
-        return const Center(child: Text('알 수 없는 페이지'));
+        return const LevelSelectionMain();
     }
   }
 
@@ -104,10 +101,10 @@ class _MyHomePageState extends State<MyHomePage> {
           index: _selectedIndex,
           children: List.generate(3, (index) => _buildPage(index)),
         ),
-        // bottomNavigationBar: BottomNavBar(
-        //   selectedIndex: _selectedIndex,
-        //   onItemTapped: _onItemTapped,
-        // ),
+        bottomNavigationBar: BottomNavBar(
+          selectedIndex: _selectedIndex,
+          onItemTapped: _onItemTapped,
+        ),
       );
     }
   }

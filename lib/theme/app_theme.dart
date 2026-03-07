@@ -117,7 +117,7 @@ class AppTheme {
         ),
       ),
       // 카드 테마
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: cardColor,
         elevation: 2,
         shadowColor: Colors.black.withValues(alpha: 0.1),

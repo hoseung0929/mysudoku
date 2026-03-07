@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'sudoku_game_screen.dart';
-import '../model/sudoku_game.dart';
 import '../model/sudoku_level.dart';
-import '../model/sudoku_game_set.dart';
 import '../view/settings_screen.dart';
 import '../view/level_selection_screen.dart';
+import '../database/database_helper.dart';
 
 class LevelSelectionMain extends StatefulWidget {
   const LevelSelectionMain({super.key});
@@ -17,8 +15,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   int? _selectedIndex;
   final ScrollController _scrollController = ScrollController();
   bool _isTop = true;
-  // 게임 데이터 캐시
-  final Map<String, List<SudokuGame>> _gameCache = {};
+  /// 레벨별 전체 게임 수 (DB 기준)
+  Map<String, int> _levelTotal = {};
 
   @override
   void initState() {
@@ -34,24 +32,26 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
         });
       }
     });
+    _loadLevelTotals();
+  }
+
+  Future<void> _loadLevelTotals() async {
+    final dbHelper = DatabaseHelper();
+    final totals = <String, int>{};
+    for (var level in SudokuLevel.levels) {
+      totals[level.name] = await dbHelper.getGameCount(level.name);
+    }
+    if (mounted) {
+      setState(() {
+        _levelTotal = totals;
+      });
+    }
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
-  }
-
-  /// 특정 난이도의 게임 목록을 로드합니다.
-  /// 캐시된 데이터가 있으면 캐시에서 반환하고,
-  /// 없으면 데이터베이스에서 로드하여 캐시에 저장합니다.
-  Future<List<SudokuGame>> _loadGames(String level) async {
-    if (_gameCache.containsKey(level)) {
-      return _gameCache[level]!;
-    }
-    final games = await SudokuGameSet.create(level);
-    _gameCache[level] = games;
-    return games;
   }
 
   SudokuLevel getLevel(String title) {
@@ -81,21 +81,21 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   void _goToGame(String title) async {
     final level = getLevel(title);
 
-    // 레벨 선택 화면으로 이동
-    Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => LevelSelectionScreen(level: level),
       ),
     );
+    // 게임 화면에서 돌아온 뒤 클리어 수 갱신
+    await SudokuLevel.loadAllClearedGames();
+    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
     final isTablet = screenWidth > 600;
-    final isLandscape = screenWidth > screenHeight;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -180,13 +180,17 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
               ),
               itemCount: 5,
               itemBuilder: (context, index) {
-                final levels = [
+                final levelTitles = [
                   'Beginner',
                   'Intermediate',
                   'Advanced',
                   'Expert',
                   'Master'
                 ];
+                final level = SudokuLevel.levels[index];
+                final total = _levelTotal[level.name] ?? 100;
+                final completed = level.clearedGames;
+                final remaining = total - completed;
                 final colors = [
                   const Color(0xFFBFE2D0),
                   const Color(0xFFCDE7E0),
@@ -205,16 +209,16 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                 return _LevelCard(
                   color: colors[index],
                   icon: icons[index],
-                  title: levels[index],
-                  completed: 35 - (index * 3),
-                  remaining: 65 + (index * 3),
+                  title: levelTitles[index],
+                  completed: completed,
+                  remaining: remaining,
                   progressColor: const Color(0xFF8DC6B0),
                   isSelected: _selectedIndex == index,
                   onTap: () {
                     setState(() {
                       _selectedIndex = index;
                     });
-                    _goToGame(levels[index]);
+                    _goToGame(levelTitles[index]);
                   },
                 );
               },
@@ -306,13 +310,13 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // 레벨 카드 리스트
+                // 레벨 카드 리스트 (실제 클리어 수 반영)
                 _LevelCard(
                   color: const Color(0xFFBFE2D0),
                   icon: Icons.grid_view,
                   title: 'Beginner',
-                  completed: 35,
-                  remaining: 65,
+                  completed: SudokuLevel.levels[0].clearedGames,
+                  remaining: (_levelTotal[SudokuLevel.levels[0].name] ?? 100) - SudokuLevel.levels[0].clearedGames,
                   progressColor: const Color(0xFF8DC6B0),
                   isSelected: _selectedIndex == 0,
                   onTap: () {
@@ -326,8 +330,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                   color: const Color(0xFFCDE7E0),
                   icon: Icons.diamond,
                   title: 'Intermediate',
-                  completed: 20,
-                  remaining: 80,
+                  completed: SudokuLevel.levels[1].clearedGames,
+                  remaining: (_levelTotal[SudokuLevel.levels[1].name] ?? 100) - SudokuLevel.levels[1].clearedGames,
                   progressColor: const Color(0xFF8DC6B0),
                   isSelected: _selectedIndex == 1,
                   onTap: () {
@@ -341,8 +345,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                   color: const Color(0xFFE6D4B8),
                   icon: Icons.star,
                   title: 'Advanced',
-                  completed: 15,
-                  remaining: 85,
+                  completed: SudokuLevel.levels[2].clearedGames,
+                  remaining: (_levelTotal[SudokuLevel.levels[2].name] ?? 100) - SudokuLevel.levels[2].clearedGames,
                   progressColor: const Color(0xFF8DC6B0),
                   isSelected: _selectedIndex == 2,
                   onTap: () {
@@ -356,8 +360,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                   color: const Color(0xFFE6B8C8),
                   icon: Icons.flash_on,
                   title: 'Expert',
-                  completed: 8,
-                  remaining: 92,
+                  completed: SudokuLevel.levels[3].clearedGames,
+                  remaining: (_levelTotal[SudokuLevel.levels[3].name] ?? 100) - SudokuLevel.levels[3].clearedGames,
                   progressColor: const Color(0xFF8DC6B0),
                   isSelected: _selectedIndex == 3,
                   onTap: () {
@@ -371,8 +375,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                   color: const Color(0xFFB8D4E6),
                   icon: Icons.workspace_premium,
                   title: 'Master',
-                  completed: 3,
-                  remaining: 97,
+                  completed: SudokuLevel.levels[4].clearedGames,
+                  remaining: (_levelTotal[SudokuLevel.levels[4].name] ?? 100) - SudokuLevel.levels[4].clearedGames,
                   progressColor: const Color(0xFF8DC6B0),
                   isSelected: _selectedIndex == 4,
                   onTap: () {
@@ -458,7 +462,7 @@ class _LevelCardState extends State<_LevelCard> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -505,7 +509,7 @@ class _LevelCardState extends State<_LevelCard> {
                     child: LinearProgressIndicator(
                       value: percent,
                       minHeight: 7,
-                      backgroundColor: widget.color.withOpacity(0.25),
+                      backgroundColor: widget.color.withValues(alpha: 0.25),
                       valueColor:
                           AlwaysStoppedAnimation<Color>(widget.progressColor),
                     ),
@@ -518,7 +522,7 @@ class _LevelCardState extends State<_LevelCard> {
             //   width: 36,
             //   height: 36,
             //   decoration: BoxDecoration(
-            //     color: Colors.grey.withOpacity(0.12),
+            //     color: Colors.grey.withValues(alpha: 0.12),
             //     shape: BoxShape.circle,
             //   ),
             //   child:

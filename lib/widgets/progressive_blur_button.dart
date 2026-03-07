@@ -24,7 +24,8 @@ class ProgressiveBlurButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveBlurColor = blurColor ?? backgroundColor.withOpacity(0.6);
+    final effectiveBlurColor =
+        blurColor ?? backgroundColor.withValues(alpha: 0.6);
 
     return GestureDetector(
       onTap: onPressed,
@@ -47,7 +48,7 @@ class ProgressiveBlurButton extends StatelessWidget {
                         end: Alignment.bottomRight,
                         colors: [
                           Colors.transparent,
-                          effectiveBlurColor.withOpacity(0.2),
+                          effectiveBlurColor.withValues(alpha: 0.2),
                         ],
                       ).createShader(bounds);
                     },
@@ -58,24 +59,24 @@ class ProgressiveBlurButton extends StatelessWidget {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            backgroundColor.withOpacity(0.9),
-                            effectiveBlurColor.withOpacity(0.7),
-                            effectiveBlurColor.withOpacity(0.5),
+                            backgroundColor.withValues(alpha: 0.9),
+                            effectiveBlurColor.withValues(alpha: 0.7),
+                            effectiveBlurColor.withValues(alpha: 0.5),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(borderRadius),
                         border: Border.all(
-                          color: backgroundColor.withOpacity(0.2),
+                          color: backgroundColor.withValues(alpha: 0.2),
                           width: 1,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: backgroundColor.withOpacity(0.15),
+                            color: backgroundColor.withValues(alpha: 0.15),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
                           BoxShadow(
-                            color: effectiveBlurColor.withOpacity(0.6),
+                            color: effectiveBlurColor.withValues(alpha: 0.6),
                             blurRadius: 8,
                             offset: const Offset(0, -1),
                           ),

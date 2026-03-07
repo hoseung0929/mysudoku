@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../database/database_helper.dart';
 
 class SudokuLevel {
@@ -23,7 +24,9 @@ class SudokuLevel {
       final dbHelper = DatabaseHelper();
       clearedGames = await dbHelper.getClearedGameCount(name);
     } catch (e) {
-      print('클리어된 게임 수 로드 실패: $e');
+      if (kDebugMode) {
+        print('클리어된 게임 수 로드 실패: $e');
+      }
       clearedGames = 0;
     }
   }
@@ -41,7 +44,9 @@ class SudokuLevel {
       await dbHelper.clearRecordsForLevel(name);
       clearedGames = 0;
     } catch (e) {
-      print('클리어된 게임 수 초기화 실패: $e');
+      if (kDebugMode) {
+        print('클리어된 게임 수 초기화 실패: $e');
+      }
     }
   }
 
@@ -99,35 +104,35 @@ class SudokuLevel {
       description: '스도쿠를 처음 시작하는 분들을 위한 레벨',
       difficulty: 1,
       emptyCells: 30,
-      gameCount: 10000,
+      gameCount: 100,
     ),
     SudokuLevel(
       name: '중급',
       description: '기본적인 스도쿠 규칙을 아는 분들을 위한 레벨',
       difficulty: 2,
       emptyCells: 40,
-      gameCount: 10000,
+      gameCount: 100,
     ),
     SudokuLevel(
       name: '고급',
       description: '스도쿠에 익숙한 분들을 위한 레벨',
       difficulty: 3,
       emptyCells: 50,
-      gameCount: 10000,
+      gameCount: 100,
     ),
     SudokuLevel(
       name: '전문가',
       description: '스도쿠 마스터를 위한 레벨',
       difficulty: 4,
       emptyCells: 55,
-      gameCount: 10000,
+      gameCount: 100,
     ),
     SudokuLevel(
       name: '마스터',
       description: '최고의 스도쿠 도전',
       difficulty: 5,
       emptyCells: 60,
-      gameCount: 10000,
+      gameCount: 100,
     ),
   ];
 

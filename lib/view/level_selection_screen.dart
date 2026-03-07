@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../model/sudoku_level.dart';
 import '../model/sudoku_game_set.dart';
 import '../model/sudoku_game.dart';
+import '../database/database_helper.dart';
 import '../widgets/custom_app_bar.dart';
 import 'sudoku_game_screen.dart';
 
@@ -19,14 +20,26 @@ class LevelSelectionScreen extends StatefulWidget {
 class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   // 게임 데이터 캐시
   final Map<String, List<SudokuGame>> _gameCache = {};
+  final Map<String, int> _levelTotal = {};
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    _loadLevelTotals();
     // 특정 레벨이 전달된 경우 미리 게임 데이터 로딩
     if (widget.level != null) {
       _preloadGames();
+    }
+  }
+
+  Future<void> _loadLevelTotals() async {
+    final dbHelper = DatabaseHelper();
+    for (final level in SudokuLevel.levels) {
+      _levelTotal[level.name] = await dbHelper.getGameCount(level.name);
+    }
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -195,9 +208,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              Text(
+              const Text(
                 '원하는 게임을 선택하여 시작하세요',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   color: Color(0xFF7F8C8D),
                 ),
@@ -344,9 +357,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              Text(
+              const Text(
                 '원하는 게임을 선택하여 시작하세요',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   color: Color(0xFF7F8C8D),
                 ),
@@ -470,7 +483,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -547,7 +560,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -607,9 +620,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
+                  const Text(
                     '클릭하여 게임 시작',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       color: Color(0xFF7F8C8D),
                     ),
@@ -642,7 +655,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -688,11 +701,11 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFB8E6B8).withOpacity(0.3),
+                          color: const Color(0xFFB8E6B8).withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          '${level.clearedGames}/${level.gameCount}',
+                          '${level.clearedGames}/${_levelTotal[level.name] ?? level.gameCount}',
                           style: const TextStyle(
                             fontSize: 14,
                             color: Color(0xFF2C3E50),
@@ -779,7 +792,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: _getLevelColor(level.name).withOpacity(0.1),
+                color: _getLevelColor(level.name).withValues(alpha: 0.1),
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(20)),
               ),
@@ -886,7 +899,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFB8E6B8).withOpacity(0.3),
+                    color: const Color(0xFFB8E6B8).withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(

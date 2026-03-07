@@ -21,7 +21,7 @@ class BottomNavBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(50), // 둥근 모서리
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -52,16 +52,12 @@ class BottomNavBar extends StatelessWidget {
                 label: '홈',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.sports_esports_outlined),
-                label: 'Arcade',
+                icon: Icon(Icons.bar_chart_outlined),
+                label: '기록',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.people_alt_outlined),
-                label: '함께 플레이',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.inventory_2_outlined),
-                label: '보관함',
+                icon: Icon(Icons.settings_outlined),
+                label: '설정',
               ),
             ],
           ),

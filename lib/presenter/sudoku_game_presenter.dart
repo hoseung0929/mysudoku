@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import '../model/sudoku_level.dart';
 import '../utils/sudoku_generator.dart';
 
@@ -61,20 +62,23 @@ class SudokuGamePresenter {
     required List<List<int>> initialBoard,
     required List<List<int>>? solution,
   }) {
-    // 해답 데이터 설정
     if (solution != null && solution.isNotEmpty) {
       _solution = solution;
-      print('DB에서 가져온 해답 데이터 사용');
-      print('해답 데이터 확인:');
-      for (int i = 0; i < _solution.length; i++) {
-        print('  ${_solution[i]}');
+      if (kDebugMode) {
+        print('DB에서 가져온 해답 데이터 사용');
+        print('해답 데이터 확인:');
+        for (int i = 0; i < _solution.length; i++) {
+          print('  ${_solution[i]}');
+        }
       }
     } else {
       _solution = SudokuGenerator.getSolution(initialBoard);
-      print('동적으로 해답 데이터 생성 (DB에 해답 데이터 없음)');
-      print('동적 해답 데이터 확인:');
-      for (int i = 0; i < _solution.length; i++) {
-        print('  ${_solution[i]}');
+      if (kDebugMode) {
+        print('동적으로 해답 데이터 생성 (DB에 해답 데이터 없음)');
+        print('동적 해답 데이터 확인:');
+        for (int i = 0; i < _solution.length; i++) {
+          print('  ${_solution[i]}');
+        }
       }
     }
 
@@ -105,6 +109,10 @@ class SudokuGamePresenter {
   void _initializeBoard([List<List<int>>? initialBoard]) {
     _fixedNumbers.clear();
     _board = initialBoard ?? SudokuGenerator.generateSudoku(level.emptyCells);
+    if (initialBoard == null) {
+      // 새 보드를 생성한 경우 해답도 함께 갱신해 정합성을 유지한다.
+      _solution = SudokuGenerator.getSolution(_board);
+    }
 
     // 초기 보드 저장
     _initialBoard = List.generate(9, (row) => List<int>.from(_board[row]));
@@ -139,16 +147,15 @@ class SudokuGamePresenter {
     _checkCellStatus(row, col);
 
     // UI 업데이트를 위한 콜백 호출
-    if (onBoardChanged != null) {
-      onBoardChanged!(_board);
-    }
+    onBoardChanged(_board);
   }
 
   /// 특정 셀의 상태를 체크하고 오답 여부를 업데이트
   void _checkCellStatus(int row, int col) {
-    // 해답 데이터가 없는 경우 처리
     if (_solution.isEmpty) {
-      print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
+      if (kDebugMode) {
+        print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
+      }
       _solution = SudokuGenerator.getSolution(_board);
     }
 
@@ -156,16 +163,15 @@ class SudokuGamePresenter {
     final correctValue = _solution[row][col];
     final isWrong = currentValue != 0 && currentValue != correctValue;
 
-    // 해당 셀의 오답 상태 업데이트
     _wrongNumbers[row][col] = isWrong;
 
-    print(
-        '셀 [$row][$col] 상태 체크: 현재값=$currentValue, 정답=$correctValue, 오답=$isWrong');
+    if (kDebugMode) {
+      print(
+          '셀 [$row][$col] 상태 체크: 현재값=$currentValue, 정답=$correctValue, 오답=$isWrong');
+    }
 
     // 오답 상태 변경 알림
-    if (onWrongNumbersChanged != null) {
-      onWrongNumbersChanged!(_wrongNumbers);
-    }
+    onWrongNumbersChanged(_wrongNumbers);
   }
 
   /// 숫자 입력 처리
@@ -179,16 +185,14 @@ class SudokuGamePresenter {
       return;
     }
 
-    // 해답 데이터가 없는 경우 처리
     if (_solution.isEmpty) {
-      print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
+      if (kDebugMode) {
+        print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
+      }
       _solution = SudokuGenerator.getSolution(_board);
     }
 
-    // 이전 값 저장
     final previousValue = _board[_selectedRow!][_selectedCol!];
-
-    // 이전에 오답이었는지 확인 (해답 데이터 기준)
     final wasWrongBefore = previousValue != 0 &&
         previousValue != _solution[_selectedRow!][_selectedCol!];
 
@@ -252,33 +256,35 @@ class SudokuGamePresenter {
   }
 
   /// 게임 완료 검사
-  /// 모든 칸이 채워졌고 잘못된 숫자가 없는지 확인
   void _checkGameComplete() {
-    // 해답 데이터가 없는 경우 처리
     if (_solution.isEmpty) {
-      print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
+      if (kDebugMode) {
+        print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
+      }
       _solution = SudokuGenerator.getSolution(_board);
     }
 
-    // 모든 칸이 채워졌는지 확인
     for (int row = 0; row < 9; row++) {
       for (int col = 0; col < 9; col++) {
         if (_board[row][col] == 0) return;
       }
     }
 
-    // 잘못된 숫자가 없는지 확인 (해답 데이터 기준)
     for (int row = 0; row < 9; row++) {
       for (int col = 0; col < 9; col++) {
         if (_board[row][col] != _solution[row][col]) {
-          print(
-              '게임 완료 체크 실패: 셀 [$row][$col] - 입력값=${_board[row][col]}, 정답=${_solution[row][col]}');
+          if (kDebugMode) {
+            print(
+                '게임 완료 체크 실패: 셀 [$row][$col] - 입력값=${_board[row][col]}, 정답=${_solution[row][col]}');
+          }
           return;
         }
       }
     }
 
-    print('게임 완료! 모든 셀이 정답으로 채워졌습니다.');
+    if (kDebugMode) {
+      print('게임 완료! 모든 셀이 정답으로 채워졌습니다.');
+    }
     _isGameComplete = true;
     _isPaused = true;
     _stopTimer();
@@ -350,8 +356,9 @@ class SudokuGamePresenter {
     onGameCompleteChanged(_isGameComplete);
     onWrongCountChanged(_wrongCount);
 
-    // 현재 보드로 초기화
-    _initializeBoard();
+    // 초기 보드로 초기화
+    final restartBoard = List.generate(9, (row) => List<int>.from(_initialBoard[row]));
+    _initializeBoard(restartBoard);
     _startTimer();
   }
 
@@ -398,10 +405,19 @@ class SudokuGamePresenter {
   bool isCellFixed(int row, int col) => _fixedNumbers[row][col];
   bool isCellSelected(int row, int col) =>
       row == _selectedRow && col == _selectedCol;
-  bool hasError(int row, int col) {
-    // 해답 데이터가 없는 경우 처리
+
+  int getCorrectValue(int row, int col) {
     if (_solution.isEmpty) {
-      print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
+      _solution = SudokuGenerator.getSolution(_board);
+    }
+    return _solution[row][col];
+  }
+
+  bool hasError(int row, int col) {
+    if (_solution.isEmpty) {
+      if (kDebugMode) {
+        print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
+      }
       _solution = SudokuGenerator.getSolution(_board);
     }
 
@@ -414,16 +430,14 @@ class SudokuGamePresenter {
     if (_fixedNumbers[_selectedRow!][_selectedCol!]) return;
     if (_isGameComplete || _isPaused || _isGameOver) return;
 
-    // 해답 데이터가 없는 경우 처리
     if (_solution.isEmpty) {
-      print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
+      if (kDebugMode) {
+        print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
+      }
       _solution = SudokuGenerator.getSolution(_board);
     }
 
-    // 이전 값 저장
     final previousValue = _board[_selectedRow!][_selectedCol!];
-
-    // 이전에 오답이었는지 확인 (해답 데이터 기준)
     final wasWrongBefore = previousValue != 0 &&
         previousValue != _solution[_selectedRow!][_selectedCol!];
 
@@ -493,13 +507,11 @@ class SudokuGamePresenter {
   }
 
   /// 잘못된 숫자인지 확인
-  /// [row] 행 인덱스
-  /// [col] 열 인덱스
-  /// Returns: 잘못된 숫자이면 true, 아니면 false
   bool isWrongNumber(int row, int col) {
-    // 해답 데이터가 없는 경우 처리
     if (_solution.isEmpty) {
-      print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
+      if (kDebugMode) {
+        print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
+      }
       _solution = SudokuGenerator.getSolution(_board);
     }
 
@@ -520,8 +532,13 @@ class SudokuGamePresenter {
   /// 진행률 계산 (0.0 ~ 1.0)
   /// 사용자가 채워야 하는 초기 빈칸 대비 얼마나 채웠는지를 기준으로 계산합니다.
   double get progress {
+    final int fixedCellCount = _fixedNumbers
+        .expand((row) => row)
+        .where((isFixed) => isFixed)
+        .length;
+
     // 사용자가 채워야 할 총 칸의 수
-    final int totalCellsToFill = 81 - _fixedNumbers.length;
+    final int totalCellsToFill = 81 - fixedCellCount;
     if (totalCellsToFill == 0) {
       // 이미 모든 칸이 채워져 있는 경우
       return 1.0;
@@ -538,9 +555,12 @@ class SudokuGamePresenter {
     }
 
     // 사용자가 직접 채운 칸의 수
-    final int userFilledCells = currentFilledCells - _fixedNumbers.length;
+    final int userFilledCells = currentFilledCells - fixedCellCount;
 
     // 진행률 반환
-    return userFilledCells / totalCellsToFill.toDouble();
+    final double ratio = userFilledCells / totalCellsToFill.toDouble();
+    if (ratio < 0) return 0;
+    if (ratio > 1) return 1;
+    return ratio;
   }
 }

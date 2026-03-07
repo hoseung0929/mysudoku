@@ -174,7 +174,7 @@ class SettingsScreen extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: const Color(0xFFB8E6B8).withOpacity(0.3),
+          color: const Color(0xFFB8E6B8).withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(

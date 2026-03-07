@@ -1,4 +1,7 @@
 # Miscellaneous
+*~
+*.backup
+._*
 *.class
 *.log
 *.pyc

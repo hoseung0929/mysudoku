@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'database_manager.dart';
 
@@ -29,8 +30,10 @@ class ClearRecordRepository {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
 
-    print(
-        '클리어 기록 저장: $levelName 게임 $gameNumber - 시간: ${clearTime}초, 오답: $wrongCount개');
+    if (kDebugMode) {
+      print(
+          '클리어 기록 저장: $levelName 게임 $gameNumber - 시간: $clearTime초, 오답: $wrongCount개');
+    }
   }
 
   /// 특정 레벨의 클리어 기록을 조회합니다.
@@ -111,7 +114,9 @@ class ClearRecordRepository {
   Future<void> clearAllRecords() async {
     final db = await _dbManager.database;
     await db.delete('clear_records');
-    print('모든 클리어 기록이 삭제되었습니다.');
+    if (kDebugMode) {
+      print('모든 클리어 기록이 삭제되었습니다.');
+    }
   }
 
   /// 특정 레벨의 클리어 기록을 삭제합니다.
@@ -122,7 +127,9 @@ class ClearRecordRepository {
       where: 'level_name = ?',
       whereArgs: [levelName],
     );
-    print('$levelName 레벨의 클리어 기록이 삭제되었습니다.');
+    if (kDebugMode) {
+      print('$levelName 레벨의 클리어 기록이 삭제되었습니다.');
+    }
   }
 
   /// 특정 게임의 클리어 기록을 삭제합니다.
@@ -133,6 +140,8 @@ class ClearRecordRepository {
       where: 'level_name = ? AND game_number = ?',
       whereArgs: [levelName, gameNumber],
     );
-    print('$levelName 게임 $gameNumber의 클리어 기록이 삭제되었습니다.');
+    if (kDebugMode) {
+      print('$levelName 게임 $gameNumber의 클리어 기록이 삭제되었습니다.');
+    }
   }
 }
