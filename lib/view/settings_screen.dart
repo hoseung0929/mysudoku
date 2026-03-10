@@ -1,8 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/custom_app_bar.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  static const String _vibrationEnabledKey = 'vibration_enabled';
+  bool _isVibrationEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _isVibrationEnabled = prefs.getBool(_vibrationEnabledKey) ?? true;
+    });
+  }
+
+  Future<void> _setVibrationEnabled(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_vibrationEnabledKey, value);
+    if (!mounted) return;
+    setState(() {
+      _isVibrationEnabled = value;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,6 +140,44 @@ class SettingsScreen extends StatelessWidget {
               onTap: () {
                 // 언어 설정 기능
               },
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        _buildSettingsSection(
+          '게임',
+          [
+            SwitchListTile(
+              value: _isVibrationEnabled,
+              onChanged: _setVibrationEnabled,
+              secondary: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFB8E6B8).withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.vibration,
+                  color: Color(0xFF2C3E50),
+                  size: 20,
+                ),
+              ),
+              title: const Text(
+                '입력 진동',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2C3E50),
+                ),
+              ),
+              subtitle: const Text(
+                '숫자 입력 시 진동 피드백을 사용합니다',
+                style: TextStyle(
+                  color: Color(0xFF7F8C8D),
+                  fontSize: 12,
+                ),
+              ),
+              activeThumbColor: const Color(0xFF2C3E50),
             ),
           ],
         ),

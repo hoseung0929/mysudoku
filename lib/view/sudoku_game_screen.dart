@@ -30,11 +30,16 @@ class SudokuGameScreen extends StatefulWidget {
 }
 
 class _SudokuGameScreenState extends State<SudokuGameScreen> {
+  static const String _vibrationEnabledKey = 'vibration_enabled';
   late final SudokuGamePresenter _presenter;
   bool _presenterReady = false;
+  bool _isVibrationEnabled = true;
+  Set<int> _completedRows = <int>{};
+  Set<int> _completedCols = <int>{};
 
   // 파도 효과 상태
   final Map<String, bool> _waveActive = {};
+  final Map<String, bool> _lineCompleteActive = {};
 
   @override
   void initState() {
@@ -58,6 +63,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
         print('  ${widget.game.solution[i]}');
       }
     }
+
+    await _loadVibrationSetting();
 
     // 저장된 게임 상태 복원
     List<List<int>>? restoredBoard = await _loadGameState();
@@ -98,11 +105,15 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
       }
     }
 
+    final initialBoard = restoredBoard ?? widget.game.board;
+    _initializeCompletedLineState(initialBoard);
+
     _presenter = SudokuGamePresenter(
-      initialBoard: restoredBoard ?? widget.game.board,
+      initialBoard: initialBoard,
       solution: widget.game.solution, // DB에서 가져온 해답 데이터 사용 (항상 동일)
       level: widget.level,
       onBoardChanged: (board) {
+        _checkAndTriggerLineCompletionEffect(board);
         setState(() {});
         _saveGameState(board); // 보드 변경 시 저장
       },
@@ -158,6 +169,99 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
     if (kDebugMode) {
       print('게임 상태 저장 완료: $gameKey');
     }
+  }
+
+  Future<void> _loadVibrationSetting() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _isVibrationEnabled = prefs.getBool(_vibrationEnabledKey) ?? true;
+    });
+  }
+
+  void _initializeCompletedLineState(List<List<int>> board) {
+    _completedRows = _getCompletedCorrectRows(board);
+    _completedCols = _getCompletedCorrectCols(board);
+  }
+
+  Set<int> _getCompletedCorrectRows(List<List<int>> board) {
+    if (widget.game.solution.isEmpty) return <int>{};
+    final completedRows = <int>{};
+    for (int row = 0; row < 9; row++) {
+      bool isCorrectLine = true;
+      for (int col = 0; col < 9; col++) {
+        final value = board[row][col];
+        final answer = widget.game.solution[row][col];
+        if (value == 0 || value != answer) {
+          isCorrectLine = false;
+          break;
+        }
+      }
+      if (isCorrectLine) completedRows.add(row);
+    }
+    return completedRows;
+  }
+
+  Set<int> _getCompletedCorrectCols(List<List<int>> board) {
+    if (widget.game.solution.isEmpty) return <int>{};
+    final completedCols = <int>{};
+    for (int col = 0; col < 9; col++) {
+      bool isCorrectLine = true;
+      for (int row = 0; row < 9; row++) {
+        final value = board[row][col];
+        final answer = widget.game.solution[row][col];
+        if (value == 0 || value != answer) {
+          isCorrectLine = false;
+          break;
+        }
+      }
+      if (isCorrectLine) completedCols.add(col);
+    }
+    return completedCols;
+  }
+
+  void _checkAndTriggerLineCompletionEffect(List<List<int>> board) {
+    final currentCompletedRows = _getCompletedCorrectRows(board);
+    final currentCompletedCols = _getCompletedCorrectCols(board);
+
+    final newlyCompletedRows = currentCompletedRows.difference(_completedRows);
+    final newlyCompletedCols = currentCompletedCols.difference(_completedCols);
+
+    _completedRows = currentCompletedRows;
+    _completedCols = currentCompletedCols;
+
+    if (newlyCompletedRows.isEmpty && newlyCompletedCols.isEmpty) return;
+    _triggerLineCompletionEffect(newlyCompletedRows, newlyCompletedCols);
+  }
+
+  void _triggerLineCompletionEffect(Set<int> rows, Set<int> cols) {
+    final targets = <String>{};
+    for (final row in rows) {
+      for (int col = 0; col < 9; col++) {
+        targets.add('$row,$col');
+      }
+    }
+    for (final col in cols) {
+      for (int row = 0; row < 9; row++) {
+        targets.add('$row,$col');
+      }
+    }
+    if (targets.isEmpty) return;
+
+    setState(() {
+      for (final key in targets) {
+        _lineCompleteActive[key] = true;
+      }
+    });
+
+    Future.delayed(const Duration(milliseconds: 650), () {
+      if (!mounted) return;
+      setState(() {
+        for (final key in targets) {
+          _lineCompleteActive[key] = false;
+        }
+      });
+    });
   }
 
   /// 게임 상태 복원
@@ -496,6 +600,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
 
                 // 파도 효과
                 final isWave = _waveActive['$row,$col'] == true;
+                final isLineComplete = _lineCompleteActive['$row,$col'] == true;
 
                 return Expanded(
                   child: GestureDetector(
@@ -531,6 +636,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
                         ),
                         color: isWave
                             ? Colors.green.withValues(alpha: 0.4)
+                            : isLineComplete
+                                ? Colors.amber.withValues(alpha: 0.35)
                             : isSelected
                                 ? AppTheme.sudokuSelectedNumberColor
                                 : isWrong
@@ -584,10 +691,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
 
     return ProgressiveBlurButton(
       onPressed: () async {
-        // 진동 효과 추가
-        if (await Vibration.hasVibrator() ?? false) {
-          Vibration.vibrate(duration: 50); // 50ms 짧은 진동
-        }
+        await _vibrateOnNumberInput(number);
 
         setState(() {
           _presenter.setSelectedCellValue(number);
@@ -601,6 +705,38 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _vibrateOnNumberInput(int number) async {
+    if (!_isVibrationEnabled || !_presenterReady) return;
+    final hasVibrator = await Vibration.hasVibrator() ?? false;
+    if (!hasVibrator) return;
+
+    final selectedRow = _presenter.selectedRow;
+    final selectedCol = _presenter.selectedCol;
+    if (selectedRow == null || selectedCol == null) return;
+    if (_presenter.isCellFixed(selectedRow, selectedCol)) return;
+    if (_presenter.isPaused ||
+        _presenter.isGameComplete ||
+        _presenter.isGameOver) {
+      return;
+    }
+
+    final isCorrectInput =
+        number == _presenter.getCorrectValue(selectedRow, selectedCol);
+    if (isCorrectInput) {
+      await Vibration.vibrate(duration: 35);
+      return;
+    }
+
+    final supportsCustomPattern =
+        await Vibration.hasCustomVibrationsSupport() ?? false;
+    if (supportsCustomPattern) {
+      await Vibration.vibrate(pattern: [0, 45, 30, 65]);
+      return;
+    }
+
+    await Vibration.vibrate(duration: 120);
   }
 
   Widget _buildMenuButton(int menuNumber) {
@@ -653,7 +789,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
   /// 게임 완료 다이얼로그 표시
   void _showGameCompleteDialog() async {
     // 클리어 기록 저장
-    await _saveClearRecord();
+    final isNewBestRecord = await _saveClearRecord();
     if (!mounted) return;
 
     showDialog(
@@ -663,6 +799,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
         return GameCompleteDialog(
           timeInSeconds: _presenter.seconds,
           wrongCount: _presenter.wrongCount,
+          isNewBestRecord: isNewBestRecord,
           onRestart: () async {
             Navigator.of(context).pop();
             await _clearGameState(); // 저장된 상태 삭제
@@ -682,9 +819,18 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
   }
 
   /// 클리어 기록 저장
-  Future<void> _saveClearRecord() async {
+  Future<bool> _saveClearRecord() async {
     try {
       final dbHelper = DatabaseHelper();
+      final existing = await dbHelper.getClearRecord(
+        widget.level.name,
+        widget.game.gameNumber,
+      );
+      final bool isNewBestRecord = existing == null ||
+          _presenter.seconds < (existing['clear_time'] as int) ||
+          (_presenter.seconds == (existing['clear_time'] as int) &&
+              _presenter.wrongCount < (existing['wrong_count'] as int));
+
       await dbHelper.saveClearRecord(
         levelName: widget.level.name,
         gameNumber: widget.game.gameNumber,
@@ -694,10 +840,12 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
       if (kDebugMode) {
         print('클리어 기록 저장 완료: ${widget.level.name} 게임 ${widget.game.gameNumber}');
       }
+      return isNewBestRecord;
     } catch (e) {
       if (kDebugMode) {
         print('클리어 기록 저장 실패: $e');
       }
+      return false;
     }
   }
 
