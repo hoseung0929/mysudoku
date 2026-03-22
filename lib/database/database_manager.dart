@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:mysudoku/utils/app_logger.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import '../model/sudoku_level.dart';
-import '../utils/sudoku_generator.dart';
+import 'package:mysudoku/model/sudoku_level.dart';
+import 'package:mysudoku/utils/sudoku_generator.dart';
 
 class PuzzleCatalogStatus {
   const PuzzleCatalogStatus({

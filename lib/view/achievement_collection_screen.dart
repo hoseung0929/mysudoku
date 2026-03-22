@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mysudoku/l10n/achievement_l10n.dart';
+import 'package:mysudoku/l10n/app_localizations.dart';
 import 'package:mysudoku/services/achievement_service.dart';
 import 'package:mysudoku/widgets/custom_app_bar.dart';
 
@@ -21,7 +23,10 @@ class _AchievementCollectionScreenState
   @override
   void initState() {
     super.initState();
-    _load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _load();
+    });
   }
 
   Future<void> _load() async {
@@ -30,7 +35,9 @@ class _AchievementCollectionScreenState
     });
 
     try {
-      final summary = await _achievementService.load();
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      final summary = await _achievementService.load(l10n);
       if (!mounted) return;
       setState(() {
         _summary = summary;
@@ -44,32 +51,75 @@ class _AchievementCollectionScreenState
     }
   }
 
+  String _sectionTitle(AppLocalizations l10n) {
+    switch (_filter) {
+      case _BadgeFilter.all:
+        return l10n.achievementSectionAll;
+      case _BadgeFilter.unlocked:
+        return l10n.achievementSectionUnlocked;
+      case _BadgeFilter.locked:
+        return l10n.achievementSectionLocked;
+    }
+  }
+
+  String _emptyMessage(AppLocalizations l10n) {
+    switch (_filter) {
+      case _BadgeFilter.all:
+        return l10n.achievementEmptyAll;
+      case _BadgeFilter.unlocked:
+        return l10n.achievementEmptyUnlocked;
+      case _BadgeFilter.locked:
+        return l10n.achievementEmptyLocked;
+    }
+  }
+
+  String _filterChipLabel(_BadgeFilter filter, AppLocalizations l10n) {
+    switch (filter) {
+      case _BadgeFilter.all:
+        return l10n.achievementFilterAll;
+      case _BadgeFilter.unlocked:
+        return l10n.achievementFilterUnlocked;
+      case _BadgeFilter.locked:
+        return l10n.achievementFilterLocked;
+    }
+  }
+
+  String _sortLabel(_BadgeSort sort, AppLocalizations l10n) {
+    switch (sort) {
+      case _BadgeSort.defaultOrder:
+        return l10n.achievementSortDefault;
+      case _BadgeSort.rarity:
+        return l10n.achievementSortRarity;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      appBar: const CustomAppBar(
-        title: '배지 컬렉션',
+      appBar: CustomAppBar(
+        title: l10n.achievementCollectionAppBarTitle,
         showNotificationIcon: false,
         showLogoutIcon: false,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _summary == null
-              ? const Center(child: Text('배지 정보를 불러올 수 없습니다.'))
+              ? Center(child: Text(l10n.achievementLoadError))
               : RefreshIndicator(
                   onRefresh: _load,
                   child: ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
-                      _CollectionHero(summary: _summary!),
+                      _CollectionHero(summary: _summary!, l10n: l10n),
                       const SizedBox(height: 16),
-                      _buildControls(),
+                      _buildControls(l10n),
                       const SizedBox(height: 16),
                       _BadgeSection(
-                        title: _sectionTitle,
+                        title: _sectionTitle(l10n),
                         badges: _visibleBadges,
-                        emptyMessage: _emptyMessage,
+                        emptyMessage: _emptyMessage(l10n),
                       ),
                     ],
                   ),
@@ -77,16 +127,16 @@ class _AchievementCollectionScreenState
     );
   }
 
-  Widget _buildControls() {
+  Widget _buildControls(AppLocalizations l10n) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '보기 설정',
-              style: TextStyle(
+            Text(
+              l10n.achievementViewSettings,
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF2C3E50),
@@ -98,7 +148,7 @@ class _AchievementCollectionScreenState
               runSpacing: 8,
               children: _BadgeFilter.values.map((filter) {
                 return ChoiceChip(
-                  label: Text(filter.label),
+                  label: Text(_filterChipLabel(filter, l10n)),
                   selected: _filter == filter,
                   onSelected: (_) {
                     setState(() {
@@ -110,17 +160,18 @@ class _AchievementCollectionScreenState
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<_BadgeSort>(
+              key: ValueKey(_sort),
               initialValue: _sort,
-              decoration: const InputDecoration(
-                labelText: '정렬',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.achievementSortLabel,
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               items: _BadgeSort.values
                   .map(
                     (sort) => DropdownMenuItem<_BadgeSort>(
                       value: sort,
-                      child: Text(sort.label),
+                      child: Text(_sortLabel(sort, l10n)),
                     ),
                   )
                   .toList(),
@@ -162,53 +213,27 @@ class _AchievementCollectionScreenState
         return _achievementService.sortBadgesByRarity(badges);
     }
   }
-
-  String get _sectionTitle {
-    switch (_filter) {
-      case _BadgeFilter.all:
-        return '전체 배지';
-      case _BadgeFilter.unlocked:
-        return '획득한 배지';
-      case _BadgeFilter.locked:
-        return '도전 중인 배지';
-    }
-  }
-
-  String get _emptyMessage {
-    switch (_filter) {
-      case _BadgeFilter.all:
-        return '표시할 배지가 없습니다.';
-      case _BadgeFilter.unlocked:
-        return '아직 획득한 배지가 없습니다.';
-      case _BadgeFilter.locked:
-        return '모든 배지를 획득했어요.';
-    }
-  }
 }
 
 enum _BadgeFilter {
-  all('전체'),
-  unlocked('획득'),
-  locked('도전 중');
-
-  const _BadgeFilter(this.label);
-  final String label;
+  all,
+  unlocked,
+  locked,
 }
 
 enum _BadgeSort {
-  defaultOrder('기본순'),
-  rarity('희귀도순');
-
-  const _BadgeSort(this.label);
-  final String label;
+  defaultOrder,
+  rarity,
 }
 
 class _CollectionHero extends StatelessWidget {
   const _CollectionHero({
     required this.summary,
+    required this.l10n,
   });
 
   final AchievementSummary summary;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -234,13 +259,13 @@ class _CollectionHero extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.military_tech, color: Color(0xFFDA8B00), size: 24),
-              SizedBox(width: 8),
+              const Icon(Icons.military_tech, color: Color(0xFFDA8B00), size: 24),
+              const SizedBox(width: 8),
               Text(
-                '성취 컬렉션',
-                style: TextStyle(
+                l10n.achievementHeroTitle,
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF6A4C00),
@@ -250,7 +275,7 @@ class _CollectionHero extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            '획득 $unlockedCount / 전체 $totalCount',
+            l10n.achievementHeroProgress(unlockedCount, totalCount),
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -271,8 +296,8 @@ class _CollectionHero extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             unlockedCount == totalCount
-                ? '모든 배지를 모았어요. 정말 멋집니다.'
-                : '남은 배지를 하나씩 열면서 플레이 기록을 쌓아보세요.',
+                ? l10n.achievementHeroAllUnlocked
+                : l10n.achievementHeroKeepGoing,
             style: const TextStyle(
               color: Color(0xFF7A642D),
             ),
@@ -343,6 +368,7 @@ class _CollectionBadgeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final unlocked = badge.unlocked;
     return Container(
       padding: const EdgeInsets.all(14),
@@ -381,7 +407,7 @@ class _CollectionBadgeTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '진행: ${badge.progressLabel}',
+                  l10n.achievementTileProgress(badge.progressLabel),
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF5C6E7E),
@@ -389,7 +415,9 @@ class _CollectionBadgeTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '희귀도: ${badge.rarity.label}',
+                  l10n.achievementTileRarity(
+                    badge.rarity.localizedName(l10n),
+                  ),
                   style: TextStyle(
                     fontSize: 12,
                     color: unlocked ? badge.accentColor : const Color(0xFF7F8C8D),

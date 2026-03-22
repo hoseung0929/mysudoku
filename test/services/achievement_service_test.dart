@@ -1,10 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mysudoku/l10n/app_localizations_ko.dart';
 import 'package:mysudoku/services/achievement_service.dart';
 import 'package:mysudoku/services/challenge_progress_service.dart';
 import 'package:mysudoku/utils/app_logger.dart';
 
 void main() {
   AppLogger.setMuted(true);
+  final l10nKo = AppLocalizationsKo();
 
   group('AchievementService', () {
     test('unlocks badges from overall clears, streaks, weekly progress, and master wins', () async {
@@ -26,7 +28,7 @@ void main() {
         ],
       );
 
-      final summary = await service.load();
+      final summary = await service.load(l10nKo);
 
       expect(summary.badges.where((badge) => badge.unlocked).length, 5);
       expect(summary.inProgressBadges, isEmpty);
@@ -47,7 +49,7 @@ void main() {
         ],
       );
 
-      final summary = await service.load();
+      final summary = await service.load(l10nKo);
       final firstClear = summary.badges.firstWhere((badge) => badge.id == 'first_clear');
       final perfectClear =
           summary.badges.firstWhere((badge) => badge.id == 'perfect_clear');

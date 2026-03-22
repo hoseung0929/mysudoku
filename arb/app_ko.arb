@@ -1,0 +1,435 @@
+{
+  "@@locale": "ko",
+  "appTitle": "마이 스도쿠",
+  "navHome": "홈",
+  "navChallenge": "챌린지",
+  "navRecords": "기록",
+  "navSettings": "설정",
+  "recordsScreenTitle": "기록 · 통계",
+  "challengeScreenTitle": "챌린지",
+  "settingsTitle": "설정",
+  "settingsSectionNotifications": "알림",
+  "settingsSectionAppearance": "외관",
+  "settingsSectionLanguage": "언어",
+  "settingsSectionGame": "게임",
+  "settingsSectionInfo": "정보",
+  "settingsNotificationsTitle": "알림 설정",
+  "settingsNotificationsSubtitle": "게임 알림을 관리합니다",
+  "settingsNotificationTimeTitle": "알림 시간",
+  "settingsNotificationTimeSubtitle": "알림을 받을 시간을 설정합니다",
+  "settingsThemeTitle": "테마 설정",
+  "settingsThemeSubtitle": "라이트, 다크, 시스템 설정",
+  "settingsDarkModeTitle": "다크 모드",
+  "settingsDarkModeSubtitle": "다크 모드를 켜거나 끕니다",
+  "settingsLanguageTitle": "언어 설정",
+  "settingsLanguageSubtitle": "앱 언어를 변경합니다",
+  "settingsLanguageSystem": "시스템 따라가기",
+  "settingsLanguageEnglish": "English",
+  "settingsLanguageKorean": "한국어",
+  "settingsLanguagePickerTitle": "언어 선택",
+  "settingsVibrationTitle": "입력 진동",
+  "settingsVibrationSubtitle": "숫자 입력 시 진동 피드백을 사용합니다",
+  "settingsAppInfoTitle": "앱 정보",
+  "settingsAppInfoSubtitle": "앱 버전 및 개발자 정보",
+  "settingsPrivacyTitle": "개인정보처리방침",
+  "settingsPrivacySubtitle": "개인정보 수집 및 이용에 관한 안내",
+  "settingsTabletNotificationsHeader": "알림 설정",
+  "settingsTabletNotificationsBody": "게임 알림을 관리하고 설정할 수 있습니다.",
+  "settingsGameCompleteNotifTitle": "게임 완료 알림",
+  "settingsGameCompleteNotifSubtitle": "게임을 완료했을 때 알림을 받습니다",
+  "settingsDailyGoalNotifTitle": "일일 목표 알림",
+  "settingsDailyGoalNotifSubtitle": "일일 목표 달성 시 알림을 받습니다",
+  "settingsHintNotifTitle": "힌트 사용 알림",
+  "settingsHintNotifSubtitle": "힌트를 사용할 때 알림을 받습니다",
+  "levelBeginner": "초급",
+  "levelIntermediate": "중급",
+  "levelAdvanced": "고급",
+  "levelExpert": "전문가",
+  "levelMaster": "마스터",
+  "levelDescBeginner": "스도쿠를 처음 시작하는 분들을 위한 레벨",
+  "levelDescIntermediate": "기본적인 스도쿠 규칙을 아는 분들을 위한 레벨",
+  "levelDescAdvanced": "스도쿠에 익숙한 분들을 위한 레벨",
+  "levelDescExpert": "스도쿠 마스터를 위한 레벨",
+  "levelDescMaster": "최고의 스도쿠 도전",
+  "gameGuideTitle": "게임 가이드",
+  "gameGuideTapCellTitle": "칸을 먼저 선택하세요",
+  "gameGuideTapCellBody": "비어 있는 칸을 누른 뒤 아래 숫자 버튼으로 입력합니다.",
+  "gameGuideMistakesTitle": "오답은 3번까지",
+  "gameGuideMistakesBody": "틀린 숫자를 3번 입력하면 해당 판은 종료됩니다.",
+  "gameGuideColorsTitle": "색상 힌트를 활용하세요",
+  "gameGuideColorsBody": "선택 칸, 같은 숫자, 관련 칸이 함께 강조되어 흐름을 읽기 쉽습니다.",
+  "gameGuidePlayButton": "바로 플레이",
+  "gameNumberLabel": "게임 {number}",
+  "@gameNumberLabel": {
+    "placeholders": {
+      "number": {"type": "int"}
+    }
+  },
+  "gameHintShort": "힌트",
+  "gameMemoShort": "메모",
+  "gameMemoOnShort": "메모 ON",
+  "gameMemoStateOn": "ON",
+  "gameMemoStateOff": "OFF",
+  "gameWrongShort": "오답",
+  "gameProgressShort": "진행율",
+  "gameTimeShort": "시간",
+  "gameNumberInputTitle": "숫자 입력",
+  "gamePause": "일시정지",
+  "gameResume": "계속",
+  "gameAnswerPreview": "정답",
+  "challengeCompletedToday": "오늘의 도전을 완료했어요.",
+  "shareCopySuccess": "결과 문구를 복사했어요.",
+  "shareSubject": "My Sudoku 결과",
+  "shareClearHeader": "My Sudoku 완료",
+  "shareClearLine": "{level} · 게임 {number}",
+  "@shareClearLine": {
+    "placeholders": {
+      "level": {"type": "String"},
+      "number": {"type": "int"}
+    }
+  },
+  "shareClearStats": "기록 {time} · 오답 {wrong}회",
+  "@shareClearStats": {
+    "placeholders": {
+      "time": {"type": "String"},
+      "wrong": {"type": "int"}
+    }
+  },
+  "shareClearTags": "#MySudoku #SudokuChallenge",
+  "shareSummaryPattern": "{time} · 오답 {wrong}회",
+  "@shareSummaryPattern": {
+    "placeholders": {
+      "time": {"type": "String"},
+      "wrong": {"type": "int"}
+    }
+  },
+  "dialogCongratulations": "축하합니다!",
+  "dialogNewBest": "NEW BEST",
+  "dialogSudokuComplete": "스도쿠를 완성했습니다!",
+  "dialogNewBadges": "새 배지 획득",
+  "dialogElapsedTime": "소요 시간",
+  "dialogWrongCount": "오답 횟수",
+  "dialogWrongCountValue": "{count}회",
+  "@dialogWrongCountValue": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "dialogSharePreview": "공유용 결과",
+  "dialogCopyResult": "결과 복사",
+  "dialogShare": "공유하기",
+  "dialogBackToLevels": "레벨 선택으로",
+  "dialogPlayAgain": "다시 시작",
+  "dialogNextPuzzle": "다음 퍼즐",
+  "settingsAppearancePickerTitle": "화면 모드",
+  "settingsThemeModeLight": "라이트",
+  "settingsThemeModeDark": "다크",
+  "settingsNotificationsComingSoonTitle": "알림",
+  "settingsNotificationsComingSoonBody": "푸시 알림 및 알림 세부 설정은 이후 업데이트에서 제공될 예정입니다.",
+  "settingsAboutDialogTitle": "앱 정보",
+  "settingsAboutVersionLabel": "버전 {version}",
+  "@settingsAboutVersionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAboutDeveloperNote": "마이 스도쿠를 즐겨 주세요!",
+  "settingsPrivacyDialogTitle": "개인정보 안내",
+  "settingsPrivacyDialogBody": "게임 진행 및 기록은 이 기기에만 저장됩니다. 계정이나 개인정보 수집은 하지 않습니다. 앱을 삭제하면 기기 백업이 없는 한 로컬 데이터가 함께 삭제될 수 있습니다.",
+  "commonOk": "확인",
+  "gameOverTitle": "게임 오버",
+  "gameOverMessage": "오답이 3개를 초과했습니다.",
+  "gameOverWrongLabel": "오답: {count}/3",
+  "@gameOverWrongLabel": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "recordsFilterSectionTitle": "필터",
+  "recordsFilterAllLevels": "전체",
+  "recordsPeriodLabel": "기간",
+  "recordsPeriodAll": "전체 기간",
+  "recordsPeriodLastDays": "최근 {days}일",
+  "@recordsPeriodLastDays": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "recordsSummaryTitle": "요약 통계",
+  "recordsMetricClears": "클리어",
+  "recordsMetricClearRate": "클리어율",
+  "recordsMetricAvgTime": "평균 시간",
+  "recordsMetricAvgWrong": "평균 오답",
+  "recordsByLevelTitle": "레벨별 통계",
+  "recordsByLevelEmpty": "표시할 레벨 통계가 없습니다.",
+  "recordsAvgTimeDetail": "평균 시간 {time}",
+  "@recordsAvgTimeDetail": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "recordsRecentTitle": "최근 클리어",
+  "recordsRecentEmpty": "선택한 조건의 클리어 기록이 없습니다.",
+  "recordsBestTitle": "최고기록 Top 5",
+  "recordsBestEmpty": "선택한 조건의 최고기록이 없습니다.",
+  "recordsGameNumberTitle": "{level} · 게임 {number}",
+  "@recordsGameNumberTitle": {
+    "placeholders": {
+      "level": {"type": "String"},
+      "number": {"type": "int"}
+    }
+  },
+  "recordsRecentDetail": "{time} · 오답 {wrongCount} · {date}",
+  "@recordsRecentDetail": {
+    "placeholders": {
+      "time": {"type": "String"},
+      "wrongCount": {"type": "int"},
+      "date": {"type": "String"}
+    }
+  },
+  "recordsBestDetail": "{time} · 오답 {wrongCount}",
+  "@recordsBestDetail": {
+    "placeholders": {
+      "time": {"type": "String"},
+      "wrongCount": {"type": "int"}
+    }
+  },
+  "recordsGameLoadError": "게임 데이터를 불러올 수 없습니다.",
+  "challengeLoadError": "챌린지 정보를 불러올 수 없습니다.",
+  "challengeTodaysChallengeTitle": "오늘의 도전",
+  "challengeTodayDoneHint": "오늘 도전은 이미 완료했어요. 기록을 다시 확인해보세요.",
+  "challengeTodayPendingHint": "오늘의 대표 퍼즐로 연속 플레이를 이어가세요.",
+  "challengeTodayReviewButton": "다시 보기",
+  "challengeTodayStartButton": "도전 시작",
+  "challengeSuggestedActions": "추천 액션",
+  "challengeWeeklyGoalReachedTitle": "이번 주 목표를 달성했어요",
+  "challengeWeeklyGoalRemainingTitle": "주간 목표까지 {count}판 남았어요",
+  "@challengeWeeklyGoalRemainingTitle": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "challengeWeeklyGoalReachedBody": "이제 퍼펙트 클리어를 늘려서 더 좋은 리듬을 만들어보세요.",
+  "challengeWeeklyGoalCatchUpBody": "빠른 시작으로 몇 판만 더 하면 이번 주 목표를 채울 수 있어요.",
+  "challengePerfectThisWeek": "이번 주 퍼펙트 클리어 {count}회",
+  "@challengePerfectThisWeek": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "challengePerfectThisWeekFirst": "이번 주 첫 퍼펙트 클리어에 도전해보세요",
+  "challengePerfectPositiveBody": "오답 없는 클리어를 이어가면 실력 성장이 더 잘 보입니다.",
+  "challengePerfectZeroBody": "메모 기능을 활용하면 오답 없는 클리어에 훨씬 가까워집니다.",
+  "challengeWeeklyGoalHeading": "주간 목표",
+  "challengeWeeklyClearsLine": "이번 주 {count}판 클리어",
+  "@challengeWeeklyClearsLine": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "challengeWeeklyProgressShort": "{done}/{target} 완료",
+  "@challengeWeeklyProgressShort": {
+    "placeholders": {
+      "done": {"type": "int"},
+      "target": {"type": "int"}
+    }
+  },
+  "challengeWeeklyPerfectShort": "퍼펙트 {count}회",
+  "@challengeWeeklyPerfectShort": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "challengeWeeklyCongratsFooter": "이번 주 목표를 달성했습니다. 기록을 더 멋지게 쌓아보세요.",
+  "challengeWeeklyAlmostFooter": "지금 흐름이면 이번 주 목표까지 {count}판 남았습니다.",
+  "@challengeWeeklyAlmostFooter": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "challengeAchievementsHeading": "업적 · 배지",
+  "challengeBadgesCollected": "획득 {unlocked}/{total}",
+  "@challengeBadgesCollected": {
+    "placeholders": {
+      "unlocked": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "challengeViewAllBadges": "전체 보기",
+  "challengeEarnedBadgesHeading": "획득한 배지",
+  "challengeNextBadgeTargets": "다음 목표",
+  "challengeBadgeProgressLine": "{desc} 현재 진행: {progress}",
+  "@challengeBadgeProgressLine": {
+    "placeholders": {
+      "desc": {"type": "String"},
+      "progress": {"type": "String"}
+    }
+  },
+  "challengeStreakDays": "{days}일 연속 클리어",
+  "@challengeStreakDays": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "challengeStreakStartToday": "오늘 첫 클리어 도전",
+  "challengeHeroDoneCaption": "오늘의 도전을 완료했습니다. 내일도 이어서 기록을 쌓아보세요.",
+  "challengeHeroPendingCaption": "오늘의 도전이 아직 남아 있어요. 지금 시작하면 스트릭을 이어갈 수 있어요.",
+  "challengeHeroReviewAction": "기록 다시 보기",
+  "challengeHeroStartAction": "오늘의 도전 시작",
+  "challengeQuickStartRecommendedTitle": "빠른 시작",
+  "challengeQuickStartRecommendedBody": "{level} 난이도 추천",
+  "@challengeQuickStartRecommendedBody": {
+    "placeholders": {
+      "level": {"type": "String"}
+    }
+  },
+  "challengeQuickStartBeginnerTitle": "초급 시작",
+  "challengeQuickStartBeginnerBody": "부담 없이 한 판 시작",
+  "challengeQuickStartRandomTitle": "랜덤 도전",
+  "challengeQuickStartRandomBody": "오늘 기분대로 가볍게 플레이",
+  "homeOnboardingWelcomeTitle": "처음 오셨네요",
+  "homeOnboardingStepQuickTitle": "빠른 시작",
+  "homeOnboardingStepQuickBody": "추천 난이도로 바로 한 판 시작할 수 있어요.",
+  "homeOnboardingStepDailyTitle": "오늘의 도전",
+  "homeOnboardingStepDailyBody": "매일 바뀌는 대표 퍼즐로 가볍게 실력을 확인해보세요.",
+  "homeOnboardingStepResumeTitle": "이어하기",
+  "homeOnboardingStepResumeBody": "중단한 게임은 홈 상단 카드에서 곧바로 이어집니다.",
+  "homeOnboardingStartButton": "시작하기",
+  "homeGuestTitle": "게스트",
+  "homeGuestSubtitle": "지금 바로 한 판 시작해보세요",
+  "homeContinueTitle": "이어하기",
+  "homeContinueSubtitle": "{level} · 게임 {gameNumber} · {cells}칸 진행",
+  "@homeContinueSubtitle": {
+    "placeholders": {
+      "level": {"type": "String"},
+      "gameNumber": {"type": "int"},
+      "cells": {"type": "int"}
+    }
+  },
+  "homeContinueDescription": "중단한 퍼즐을 바로 이어서 플레이할 수 있어요.",
+  "homeContinueActionButton": "계속하기",
+  "homeProgressPercent": "진행률 {percent}%",
+  "@homeProgressPercent": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "homeTodayChallengeCardDoneBody": "오늘의 도전을 완료했어요. 연속 기록을 이어가고 있어요.",
+  "homeTodayChallengeCardPendingBody": "매일 한 판, 가볍게 실력을 확인해보세요.",
+  "homeTodayChallengeFooterDoneStreak": "오늘 도전 완료 · 현재 {days}일 연속 기록",
+  "@homeTodayChallengeFooterDoneStreak": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "homeTodayChallengeFooterPending": "오늘의 공통 퍼즐로 연속 도전 흐름을 만들어보세요.",
+  "homeQuickStartSectionTitle": "빠른 시작",
+  "homeBrowseLevelsTitle": "난이도 탐색",
+  "homeStreakTodayDoneLine": "오늘의 도전도 완료했어요.",
+  "homeStreakTodayPendingLine": "오늘의 도전을 완료하면 기록을 이어갈 수 있어요.",
+  "homeBadgeProgressTitle": "배지 진행",
+  "homeCatalogPreparingTitle": "퍼즐 카탈로그 준비 중",
+  "homeCatalogProgressDetail": "{generated}/{target}판 준비됨 · 남은 {remaining}판",
+  "@homeCatalogProgressDetail": {
+    "placeholders": {
+      "generated": {"type": "int"},
+      "target": {"type": "int"},
+      "remaining": {"type": "int"}
+    }
+  },
+  "levelPickDifficultyTitle": "난이도 선택",
+  "levelPickDifficultySubtitle": "원하는 난이도를 선택하여 게임을 시작하세요",
+  "levelPickGameSubtitle": "원하는 게임을 선택하여 시작하세요",
+  "levelGamesScreenTitle": "{levelName} 게임",
+  "@levelGamesScreenTitle": {
+    "placeholders": {
+      "levelName": {"type": "String"}
+    }
+  },
+  "levelLoadingGames": "게임을 불러오는 중...",
+  "levelTapToStart": "클릭하여 게임 시작",
+  "levelClearedBadge": "클리어",
+  "levelCatalogPreparingShort": "추가 퍼즐 준비 중 · {done}/{total}판",
+  "@levelCatalogPreparingShort": {
+    "placeholders": {
+      "done": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "achievementCollectionAppBarTitle": "배지 컬렉션",
+  "achievementLoadError": "배지 정보를 불러올 수 없습니다.",
+  "achievementViewSettings": "보기 설정",
+  "achievementSortLabel": "정렬",
+  "achievementFilterAll": "전체",
+  "achievementFilterUnlocked": "획득",
+  "achievementFilterLocked": "도전 중",
+  "achievementSectionAll": "전체 배지",
+  "achievementSectionUnlocked": "획득한 배지",
+  "achievementSectionLocked": "도전 중인 배지",
+  "achievementEmptyAll": "표시할 배지가 없습니다.",
+  "achievementEmptyUnlocked": "아직 획득한 배지가 없습니다.",
+  "achievementEmptyLocked": "모든 배지를 획득했어요.",
+  "achievementHeroTitle": "성취 컬렉션",
+  "achievementHeroProgress": "획득 {unlocked} / 전체 {total}",
+  "@achievementHeroProgress": {
+    "placeholders": {
+      "unlocked": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "achievementHeroAllUnlocked": "모든 배지를 모았어요. 정말 멋집니다.",
+  "achievementHeroKeepGoing": "남은 배지를 하나씩 열면서 플레이 기록을 쌓아보세요.",
+  "achievementBadgeFirstClearTitle": "첫 클리어",
+  "achievementBadgeFirstClearDesc": "첫 퍼즐을 완주해 스도쿠 여정을 시작했어요.",
+  "achievementBadgeStreakTitle": "3일 연속",
+  "achievementBadgeStreakDesc": "3일 연속으로 퍼즐을 클리어해 리듬을 만들어요.",
+  "achievementBadgeWeeklyTitle": "주간 러너",
+  "achievementBadgeWeeklyDesc": "최근 7일 동안 5판을 클리어해 꾸준함을 보여주세요.",
+  "achievementBadgePerfectTitle": "퍼펙트 클리어",
+  "achievementBadgePerfectDesc": "오답 없이 한 판을 끝내면 획득합니다.",
+  "achievementBadgeMasterTitle": "마스터 첫 승리",
+  "achievementBadgeMasterDesc": "마스터 난이도를 처음 클리어하면 해금됩니다.",
+  "achievementProgressFraction": "{current}/{max}",
+  "@achievementProgressFraction": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "max": {"type": "int"}
+    }
+  },
+  "achievementProgressStreak": "{current}/{max}일",
+  "@achievementProgressStreak": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "max": {"type": "int"}
+    }
+  },
+  "achievementProgressWeekly": "{current}/{max}판",
+  "@achievementProgressWeekly": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "max": {"type": "int"}
+    }
+  },
+  "achievementStatusDone": "완료",
+  "achievementStatusNotMet": "미달성",
+  "achievementStatusTrying": "도전 중",
+  "achievementTileProgress": "진행: {label}",
+  "@achievementTileProgress": {
+    "placeholders": {
+      "label": {"type": "String"}
+    }
+  },
+  "achievementTileRarity": "희귀도: {label}",
+  "@achievementTileRarity": {
+    "placeholders": {
+      "label": {"type": "String"}
+    }
+  },
+  "achievementRarityCommon": "기본",
+  "achievementRarityRare": "희귀",
+  "achievementRarityEpic": "에픽",
+  "achievementSortDefault": "기본순",
+  "achievementSortRarity": "희귀도순"
+}

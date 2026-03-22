@@ -2,6 +2,17 @@
 
 A new Flutter project.
 
+## Verification
+
+Run the local verification script before pushing changes:
+
+```bash
+bash scripts/verify.sh
+```
+
+This script removes stray `._*` AppleDouble files, runs `flutter pub get`,
+then executes `flutter analyze` and `flutter test`.
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../widgets/custom_app_bar.dart';
+import 'package:mysudoku/l10n/app_locale_scope.dart';
+import 'package:mysudoku/l10n/app_localizations.dart';
+import 'package:mysudoku/theme/app_theme.dart';
+import 'package:mysudoku/theme/app_theme_scope.dart';
+import 'package:mysudoku/widgets/custom_app_bar.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -36,6 +41,166 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
+  Future<void> _showLanguagePicker() async {
+    final l10n = AppLocalizations.of(context)!;
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  l10n.settingsLanguagePickerTitle,
+                  style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
+              ListTile(
+                title: Text(l10n.settingsLanguageSystem),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  await AppLocaleScope.of(context).setAppLocale(null);
+                },
+              ),
+              ListTile(
+                title: Text(l10n.settingsLanguageEnglish),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  await AppLocaleScope.of(context)
+                      .setAppLocale(const Locale('en'));
+                },
+              ),
+              ListTile(
+                title: Text(l10n.settingsLanguageKorean),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  await AppLocaleScope.of(context)
+                      .setAppLocale(const Locale('ko'));
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showNotificationsComingSoon() async {
+    final l10n = AppLocalizations.of(context)!;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.settingsNotificationsComingSoonTitle),
+        content: Text(l10n.settingsNotificationsComingSoonBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.commonOk),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showAppearancePicker() async {
+    final l10n = AppLocalizations.of(context)!;
+    final scope = AppThemeScope.of(context);
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  l10n.settingsAppearancePickerTitle,
+                  style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
+              ListTile(
+                title: Text(l10n.settingsLanguageSystem),
+                trailing: scope.themeMode == ThemeMode.system
+                    ? const Icon(Icons.check, color: AppTheme.mintColor)
+                    : null,
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  await scope.setThemeMode(ThemeMode.system);
+                },
+              ),
+              ListTile(
+                title: Text(l10n.settingsThemeModeLight),
+                trailing: scope.themeMode == ThemeMode.light
+                    ? const Icon(Icons.check, color: AppTheme.mintColor)
+                    : null,
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  await scope.setThemeMode(ThemeMode.light);
+                },
+              ),
+              ListTile(
+                title: Text(l10n.settingsThemeModeDark),
+                trailing: scope.themeMode == ThemeMode.dark
+                    ? const Icon(Icons.check, color: AppTheme.mintColor)
+                    : null,
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  await scope.setThemeMode(ThemeMode.dark);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showAppAbout() async {
+    final l10n = AppLocalizations.of(context)!;
+    final info = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+    showAboutDialog(
+      context: context,
+      applicationName: l10n.appTitle,
+      applicationVersion: l10n.settingsAboutVersionLabel(info.version),
+      applicationLegalese: '© ${DateTime.now().year}',
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(l10n.settingsAboutDeveloperNote),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showPrivacyDialog() async {
+    final l10n = AppLocalizations.of(context)!;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.settingsPrivacyDialogTitle),
+        content: SingleChildScrollView(
+          child: Text(l10n.settingsPrivacyDialogBody),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.commonOk),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -49,8 +214,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   /// 앱바 위젯
   PreferredSizeWidget _buildAppBar() {
-    return const CustomAppBar(
-      title: '설정',
+    final l10n = AppLocalizations.of(context)!;
+    return CustomAppBar(
+      title: l10n.settingsTitle,
       showNotificationIcon: false,
       showLogoutIcon: false,
     );
@@ -83,69 +249,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   /// 설정 목록 위젯
   Widget _buildSettingsList() {
+    final l10n = AppLocalizations.of(context)!;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         _buildSettingsSection(
-          '알림',
+          l10n.settingsSectionNotifications,
           [
             _buildSettingsTile(
               icon: Icons.notifications,
-              title: '알림 설정',
-              subtitle: '게임 알림을 관리합니다',
-              onTap: () {
-                // 알림 설정 기능
-              },
+              title: l10n.settingsNotificationsTitle,
+              subtitle: l10n.settingsNotificationsSubtitle,
+              onTap: _showNotificationsComingSoon,
             ),
             _buildSettingsTile(
               icon: Icons.schedule,
-              title: '알림 시간',
-              subtitle: '알림을 받을 시간을 설정합니다',
-              onTap: () {
-                // 알림 시간 설정 기능
-              },
+              title: l10n.settingsNotificationTimeTitle,
+              subtitle: l10n.settingsNotificationTimeSubtitle,
+              onTap: _showNotificationsComingSoon,
             ),
           ],
         ),
         const SizedBox(height: 24),
         _buildSettingsSection(
-          '외관',
+          l10n.settingsSectionAppearance,
           [
             _buildSettingsTile(
-              icon: Icons.color_lens,
-              title: '테마 설정',
-              subtitle: '앱의 색상 테마를 변경합니다',
-              onTap: () {
-                // 테마 설정 기능
-              },
-            ),
-            _buildSettingsTile(
-              icon: Icons.brightness_6,
-              title: '다크 모드',
-              subtitle: '다크 모드를 켜거나 끕니다',
-              onTap: () {
-                // 다크 모드 설정 기능
-              },
+              icon: Icons.palette_outlined,
+              title: l10n.settingsThemeTitle,
+              subtitle: l10n.settingsThemeSubtitle,
+              onTap: _showAppearancePicker,
             ),
           ],
         ),
         const SizedBox(height: 24),
         _buildSettingsSection(
-          '언어',
+          l10n.settingsSectionLanguage,
           [
             _buildSettingsTile(
               icon: Icons.language,
-              title: '언어 설정',
-              subtitle: '앱 언어를 변경합니다',
-              onTap: () {
-                // 언어 설정 기능
-              },
+              title: l10n.settingsLanguageTitle,
+              subtitle: l10n.settingsLanguageSubtitle,
+              onTap: _showLanguagePicker,
             ),
           ],
         ),
         const SizedBox(height: 24),
         _buildSettingsSection(
-          '게임',
+          l10n.settingsSectionGame,
           [
             SwitchListTile(
               value: _isVibrationEnabled,
@@ -154,52 +305,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFB8E6B8).withValues(alpha: 0.3),
+                  color: AppTheme.mintColor.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.vibration,
-                  color: Color(0xFF2C3E50),
+                  color: Theme.of(context).colorScheme.onSurface,
                   size: 20,
                 ),
               ),
-              title: const Text(
-                '입력 진동',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF2C3E50),
-                ),
+              title: Text(
+                l10n.settingsVibrationTitle,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
               ),
-              subtitle: const Text(
-                '숫자 입력 시 진동 피드백을 사용합니다',
-                style: TextStyle(
-                  color: Color(0xFF7F8C8D),
-                  fontSize: 12,
-                ),
+              subtitle: Text(
+                l10n.settingsVibrationSubtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
               ),
-              activeThumbColor: const Color(0xFF2C3E50),
             ),
           ],
         ),
         const SizedBox(height: 24),
         _buildSettingsSection(
-          '정보',
+          l10n.settingsSectionInfo,
           [
             _buildSettingsTile(
               icon: Icons.info,
-              title: '앱 정보',
-              subtitle: '앱 버전 및 개발자 정보',
-              onTap: () {
-                // 앱 정보 다이얼로그
-              },
+              title: l10n.settingsAppInfoTitle,
+              subtitle: l10n.settingsAppInfoSubtitle,
+              onTap: _showAppAbout,
             ),
             _buildSettingsTile(
               icon: Icons.privacy_tip,
-              title: '개인정보처리방침',
-              subtitle: '개인정보 수집 및 이용에 관한 안내',
-              onTap: () {
-                // 개인정보처리방침
-              },
+              title: l10n.settingsPrivacyTitle,
+              subtitle: l10n.settingsPrivacySubtitle,
+              onTap: _showPrivacyDialog,
             ),
           ],
         ),
@@ -209,6 +354,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   /// 설정 섹션 위젯
   Widget _buildSettingsSection(String title, List<Widget> children) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -216,11 +362,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Text(
             title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2C3E50),
-            ),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: onSurface,
+                ),
           ),
         ),
         Card(
@@ -239,96 +384,79 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String subtitle,
     required VoidCallback onTap,
   }) {
+    final cs = Theme.of(context).colorScheme;
     return ListTile(
       leading: Container(
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: const Color(0xFFB8E6B8).withValues(alpha: 0.3),
+          color: AppTheme.mintColor.withValues(alpha: 0.35),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
           icon,
-          color: const Color(0xFF2C3E50),
+          color: cs.onSurface,
           size: 20,
         ),
       ),
       title: Text(
         title,
-        style: const TextStyle(
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF2C3E50),
-        ),
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: cs.onSurface,
+            ),
       ),
       subtitle: Text(
         subtitle,
-        style: const TextStyle(
-          color: Color(0xFF7F8C8D),
-          fontSize: 12,
-        ),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
       ),
-      trailing: const Icon(
+      trailing: Icon(
         Icons.chevron_right,
-        color: Color(0xFF7F8C8D),
+        color: cs.onSurfaceVariant,
       ),
       onTap: onTap,
     );
   }
 
-  /// 설정 콘텐츠 위젯 (데스크톱용)
+  /// 설정 콘텐츠 위젯 (태블릿 우측 패널)
   Widget _buildSettingsContent() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    return ListView(
+      padding: EdgeInsets.zero,
       children: [
-        const Text(
-          '알림 설정',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF2C3E50),
-          ),
+        Text(
+          l10n.settingsTabletNotificationsHeader,
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: cs.onSurface,
+              ),
         ),
         const SizedBox(height: 16),
-        const Text(
-          '게임 알림을 관리하고 설정할 수 있습니다.',
-          style: TextStyle(
-            fontSize: 16,
-            color: Color(0xFF7F8C8D),
-          ),
+        Text(
+          l10n.settingsNotificationsComingSoonBody,
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 24),
         Card(
           child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
+            padding: const EdgeInsets.all(20),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '알림 설정',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C3E50),
+                Icon(Icons.info_outline, color: cs.primary, size: 28),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    l10n.settingsTabletNotificationsBody,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                SwitchListTile(
-                  title: const Text('게임 완료 알림'),
-                  subtitle: const Text('게임을 완료했을 때 알림을 받습니다'),
-                  value: true,
-                  onChanged: (value) {},
-                ),
-                SwitchListTile(
-                  title: const Text('일일 목표 알림'),
-                  subtitle: const Text('일일 목표 달성 시 알림을 받습니다'),
-                  value: false,
-                  onChanged: (value) {},
-                ),
-                SwitchListTile(
-                  title: const Text('힌트 사용 알림'),
-                  subtitle: const Text('힌트를 사용할 때 알림을 받습니다'),
-                  value: true,
-                  onChanged: (value) {},
                 ),
               ],
             ),

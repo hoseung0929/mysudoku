@@ -1,0 +1,435 @@
+{
+  "@@locale": "en",
+  "appTitle": "My Sudoku",
+  "navHome": "Home",
+  "navChallenge": "Challenge",
+  "navRecords": "Records",
+  "navSettings": "Settings",
+  "recordsScreenTitle": "Records & stats",
+  "challengeScreenTitle": "Challenge",
+  "settingsTitle": "Settings",
+  "settingsSectionNotifications": "Notifications",
+  "settingsSectionAppearance": "Appearance",
+  "settingsSectionLanguage": "Language",
+  "settingsSectionGame": "Game",
+  "settingsSectionInfo": "About",
+  "settingsNotificationsTitle": "Notification settings",
+  "settingsNotificationsSubtitle": "Manage game notifications",
+  "settingsNotificationTimeTitle": "Notification time",
+  "settingsNotificationTimeSubtitle": "Choose when to receive reminders",
+  "settingsThemeTitle": "Theme",
+  "settingsThemeSubtitle": "Light, dark, or system default",
+  "settingsDarkModeTitle": "Dark mode",
+  "settingsDarkModeSubtitle": "Turn dark mode on or off",
+  "settingsLanguageTitle": "Language",
+  "settingsLanguageSubtitle": "Change app language",
+  "settingsLanguageSystem": "System default",
+  "settingsLanguageEnglish": "English",
+  "settingsLanguageKorean": "Korean",
+  "settingsLanguagePickerTitle": "Choose language",
+  "settingsVibrationTitle": "Haptic feedback",
+  "settingsVibrationSubtitle": "Vibrate when entering numbers",
+  "settingsAppInfoTitle": "App info",
+  "settingsAppInfoSubtitle": "Version and developer info",
+  "settingsPrivacyTitle": "Privacy policy",
+  "settingsPrivacySubtitle": "How we handle your data",
+  "settingsTabletNotificationsHeader": "Notification settings",
+  "settingsTabletNotificationsBody": "Manage and configure game notifications.",
+  "settingsGameCompleteNotifTitle": "Game complete notification",
+  "settingsGameCompleteNotifSubtitle": "Notify when you finish a puzzle",
+  "settingsDailyGoalNotifTitle": "Daily goal notification",
+  "settingsDailyGoalNotifSubtitle": "Notify when you reach your daily goal",
+  "settingsHintNotifTitle": "Hint usage notification",
+  "settingsHintNotifSubtitle": "Notify when you use a hint",
+  "levelBeginner": "Beginner",
+  "levelIntermediate": "Intermediate",
+  "levelAdvanced": "Advanced",
+  "levelExpert": "Expert",
+  "levelMaster": "Master",
+  "levelDescBeginner": "Perfect if you are new to Sudoku",
+  "levelDescIntermediate": "For those who know the basic rules",
+  "levelDescAdvanced": "For experienced players",
+  "levelDescExpert": "For Sudoku masters",
+  "levelDescMaster": "The ultimate challenge",
+  "gameGuideTitle": "How to play",
+  "gameGuideTapCellTitle": "Select a cell first",
+  "gameGuideTapCellBody": "Tap an empty cell, then use the number buttons below.",
+  "gameGuideMistakesTitle": "Up to 3 mistakes",
+  "gameGuideMistakesBody": "Three wrong numbers end this puzzle.",
+  "gameGuideColorsTitle": "Use color hints",
+  "gameGuideColorsBody": "Selected cell, same numbers, and related cells are highlighted.",
+  "gameGuidePlayButton": "Play now",
+  "gameNumberLabel": "Game {number}",
+  "@gameNumberLabel": {
+    "placeholders": {
+      "number": {"type": "int"}
+    }
+  },
+  "gameHintShort": "Hint",
+  "gameMemoShort": "Memo",
+  "gameMemoOnShort": "Memo ON",
+  "gameMemoStateOn": "ON",
+  "gameMemoStateOff": "OFF",
+  "gameWrongShort": "Wrong",
+  "gameProgressShort": "Progress",
+  "gameTimeShort": "Time",
+  "gameNumberInputTitle": "Number input",
+  "gamePause": "Pause",
+  "gameResume": "Resume",
+  "gameAnswerPreview": "Answer",
+  "challengeCompletedToday": "You completed today’s challenge!",
+  "shareCopySuccess": "Result copied to clipboard.",
+  "shareSubject": "My Sudoku result",
+  "shareClearHeader": "My Sudoku clear",
+  "shareClearLine": "{level} · Game {number}",
+  "@shareClearLine": {
+    "placeholders": {
+      "level": {"type": "String"},
+      "number": {"type": "int"}
+    }
+  },
+  "shareClearStats": "{time} · {wrong} mistakes",
+  "@shareClearStats": {
+    "placeholders": {
+      "time": {"type": "String"},
+      "wrong": {"type": "int"}
+    }
+  },
+  "shareClearTags": "#MySudoku #SudokuChallenge",
+  "shareSummaryPattern": "{time} · {wrong} mistakes",
+  "@shareSummaryPattern": {
+    "placeholders": {
+      "time": {"type": "String"},
+      "wrong": {"type": "int"}
+    }
+  },
+  "dialogCongratulations": "Congratulations!",
+  "dialogNewBest": "NEW BEST",
+  "dialogSudokuComplete": "You completed the puzzle!",
+  "dialogNewBadges": "New badges",
+  "dialogElapsedTime": "Time",
+  "dialogWrongCount": "Mistakes",
+  "dialogWrongCountValue": "{count} times",
+  "@dialogWrongCountValue": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "dialogSharePreview": "Share text",
+  "dialogCopyResult": "Copy",
+  "dialogShare": "Share",
+  "dialogBackToLevels": "Level list",
+  "dialogPlayAgain": "Play again",
+  "dialogNextPuzzle": "Next puzzle",
+  "settingsAppearancePickerTitle": "Appearance",
+  "settingsThemeModeLight": "Light",
+  "settingsThemeModeDark": "Dark",
+  "settingsNotificationsComingSoonTitle": "Notifications",
+  "settingsNotificationsComingSoonBody": "Push reminders and notification options will be available in a future update. Thanks for your patience!",
+  "settingsAboutDialogTitle": "About this app",
+  "settingsAboutVersionLabel": "Version {version}",
+  "@settingsAboutVersionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAboutDeveloperNote": "Enjoy playing My Sudoku!",
+  "settingsPrivacyDialogTitle": "Privacy",
+  "settingsPrivacyDialogBody": "This app stores your game progress and records only on this device. We do not collect personal data or require an account. If you uninstall the app, local data may be removed unless your device backs up app data.",
+  "commonOk": "OK",
+  "gameOverTitle": "Game over",
+  "gameOverMessage": "You made more than 3 mistakes.",
+  "gameOverWrongLabel": "Mistakes: {count}/3",
+  "@gameOverWrongLabel": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "recordsFilterSectionTitle": "Filters",
+  "recordsFilterAllLevels": "All levels",
+  "recordsPeriodLabel": "Period",
+  "recordsPeriodAll": "All time",
+  "recordsPeriodLastDays": "Last {days} days",
+  "@recordsPeriodLastDays": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "recordsSummaryTitle": "Summary",
+  "recordsMetricClears": "Clears",
+  "recordsMetricClearRate": "Clear rate",
+  "recordsMetricAvgTime": "Avg. time",
+  "recordsMetricAvgWrong": "Avg. mistakes",
+  "recordsByLevelTitle": "By level",
+  "recordsByLevelEmpty": "No stats for this filter.",
+  "recordsAvgTimeDetail": "Avg. time {time}",
+  "@recordsAvgTimeDetail": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "recordsRecentTitle": "Recent clears",
+  "recordsRecentEmpty": "No clears match this filter.",
+  "recordsBestTitle": "Best times (Top 5)",
+  "recordsBestEmpty": "No best times for this filter.",
+  "recordsGameNumberTitle": "{level} · Game {number}",
+  "@recordsGameNumberTitle": {
+    "placeholders": {
+      "level": {"type": "String"},
+      "number": {"type": "int"}
+    }
+  },
+  "recordsRecentDetail": "{time} · Mistakes: {wrongCount} · {date}",
+  "@recordsRecentDetail": {
+    "placeholders": {
+      "time": {"type": "String"},
+      "wrongCount": {"type": "int"},
+      "date": {"type": "String"}
+    }
+  },
+  "recordsBestDetail": "{time} · Mistakes: {wrongCount}",
+  "@recordsBestDetail": {
+    "placeholders": {
+      "time": {"type": "String"},
+      "wrongCount": {"type": "int"}
+    }
+  },
+  "recordsGameLoadError": "Could not load puzzle data.",
+  "challengeLoadError": "Couldn't load challenge data.",
+  "challengeTodaysChallengeTitle": "Today's challenge",
+  "challengeTodayDoneHint": "You've already finished today. Open it again anytime to review.",
+  "challengeTodayPendingHint": "Keep your streak with today's featured puzzle.",
+  "challengeTodayReviewButton": "Review",
+  "challengeTodayStartButton": "Start challenge",
+  "challengeSuggestedActions": "Suggested next steps",
+  "challengeWeeklyGoalReachedTitle": "Weekly goal reached",
+  "challengeWeeklyGoalRemainingTitle": "{count} more clears to hit your weekly goal",
+  "@challengeWeeklyGoalRemainingTitle": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "challengeWeeklyGoalReachedBody": "Add more perfect clears to build an even stronger rhythm.",
+  "challengeWeeklyGoalCatchUpBody": "A few quick sessions can finish this week's target.",
+  "challengePerfectThisWeek": "{count} perfect clears this week",
+  "@challengePerfectThisWeek": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "challengePerfectThisWeekFirst": "Try your first perfect clear this week",
+  "challengePerfectPositiveBody": "Flawless runs make your progress easier to see.",
+  "challengePerfectZeroBody": "Memo mode gets you much closer to mistake-free clears.",
+  "challengeWeeklyGoalHeading": "Weekly goal",
+  "challengeWeeklyClearsLine": "{count} clears this week",
+  "@challengeWeeklyClearsLine": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "challengeWeeklyProgressShort": "{done} / {target} done",
+  "@challengeWeeklyProgressShort": {
+    "placeholders": {
+      "done": {"type": "int"},
+      "target": {"type": "int"}
+    }
+  },
+  "challengeWeeklyPerfectShort": "{count} perfect",
+  "@challengeWeeklyPerfectShort": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "challengeWeeklyCongratsFooter": "Weekly goal complete—keep stacking great records!",
+  "challengeWeeklyAlmostFooter": "{count} more clears to finish the week.",
+  "@challengeWeeklyAlmostFooter": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "challengeAchievementsHeading": "Achievements · badges",
+  "challengeBadgesCollected": "{unlocked} / {total} earned",
+  "@challengeBadgesCollected": {
+    "placeholders": {
+      "unlocked": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "challengeViewAllBadges": "View all",
+  "challengeEarnedBadgesHeading": "Earned badges",
+  "challengeNextBadgeTargets": "Next targets",
+  "challengeBadgeProgressLine": "{desc} · Progress: {progress}",
+  "@challengeBadgeProgressLine": {
+    "placeholders": {
+      "desc": {"type": "String"},
+      "progress": {"type": "String"}
+    }
+  },
+  "challengeStreakDays": "{days}-day streak",
+  "@challengeStreakDays": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "challengeStreakStartToday": "Chase your first clear today",
+  "challengeHeroDoneCaption": "You finished today's challenge. Come back tomorrow to extend your streak.",
+  "challengeHeroPendingCaption": "Today's puzzle is still open—start now to keep your streak alive.",
+  "challengeHeroReviewAction": "Review results",
+  "challengeHeroStartAction": "Start today's challenge",
+  "challengeQuickStartRecommendedTitle": "Quick start",
+  "challengeQuickStartRecommendedBody": "{level} — recommended",
+  "@challengeQuickStartRecommendedBody": {
+    "placeholders": {
+      "level": {"type": "String"}
+    }
+  },
+  "challengeQuickStartBeginnerTitle": "Beginner start",
+  "challengeQuickStartBeginnerBody": "Start an easy, low-pressure game",
+  "challengeQuickStartRandomTitle": "Random challenge",
+  "challengeQuickStartRandomBody": "Play something light to match your mood",
+  "homeOnboardingWelcomeTitle": "Welcome!",
+  "homeOnboardingStepQuickTitle": "Quick start",
+  "homeOnboardingStepQuickBody": "Jump into a recommended difficulty right away.",
+  "homeOnboardingStepDailyTitle": "Daily challenge",
+  "homeOnboardingStepDailyBody": "Try the daily puzzle to check your skills in one short game.",
+  "homeOnboardingStepResumeTitle": "Resume",
+  "homeOnboardingStepResumeBody": "Continue saved games from the card at the top of Home.",
+  "homeOnboardingStartButton": "Get started",
+  "homeGuestTitle": "Guest",
+  "homeGuestSubtitle": "Start a game in one tap",
+  "homeContinueTitle": "Resume",
+  "homeContinueSubtitle": "{level} · Game {gameNumber} · {cells} cells filled",
+  "@homeContinueSubtitle": {
+    "placeholders": {
+      "level": {"type": "String"},
+      "gameNumber": {"type": "int"},
+      "cells": {"type": "int"}
+    }
+  },
+  "homeContinueDescription": "Pick up your paused puzzle where you left off.",
+  "homeContinueActionButton": "Continue",
+  "homeProgressPercent": "Progress {percent}%",
+  "@homeProgressPercent": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "homeTodayChallengeCardDoneBody": "You finished today's challenge. Keep your streak going!",
+  "homeTodayChallengeCardPendingBody": "One puzzle a day—light practice, steady progress.",
+  "homeTodayChallengeFooterDoneStreak": "Today's challenge done · {days}-day streak",
+  "@homeTodayChallengeFooterDoneStreak": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "homeTodayChallengeFooterPending": "Use today's puzzle to build a streak.",
+  "homeQuickStartSectionTitle": "Quick start",
+  "homeBrowseLevelsTitle": "Browse levels",
+  "homeStreakTodayDoneLine": "Today's challenge is done too.",
+  "homeStreakTodayPendingLine": "Finish today's challenge to extend your streak.",
+  "homeBadgeProgressTitle": "Badge progress",
+  "homeCatalogPreparingTitle": "Preparing puzzle catalog",
+  "homeCatalogProgressDetail": "{generated}/{target} puzzles ready · {remaining} to go",
+  "@homeCatalogProgressDetail": {
+    "placeholders": {
+      "generated": {"type": "int"},
+      "target": {"type": "int"},
+      "remaining": {"type": "int"}
+    }
+  },
+  "levelPickDifficultyTitle": "Choose difficulty",
+  "levelPickDifficultySubtitle": "Pick a difficulty to start playing.",
+  "levelPickGameSubtitle": "Choose a puzzle to begin.",
+  "levelGamesScreenTitle": "{levelName} games",
+  "@levelGamesScreenTitle": {
+    "placeholders": {
+      "levelName": {"type": "String"}
+    }
+  },
+  "levelLoadingGames": "Loading puzzles…",
+  "levelTapToStart": "Tap to start",
+  "levelClearedBadge": "Cleared",
+  "levelCatalogPreparingShort": "Preparing more puzzles · {done}/{total}",
+  "@levelCatalogPreparingShort": {
+    "placeholders": {
+      "done": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "achievementCollectionAppBarTitle": "Badges",
+  "achievementLoadError": "Couldn't load badges.",
+  "achievementViewSettings": "Display",
+  "achievementSortLabel": "Sort",
+  "achievementFilterAll": "All",
+  "achievementFilterUnlocked": "Unlocked",
+  "achievementFilterLocked": "In progress",
+  "achievementSectionAll": "All badges",
+  "achievementSectionUnlocked": "Unlocked badges",
+  "achievementSectionLocked": "Badges in progress",
+  "achievementEmptyAll": "No badges to show.",
+  "achievementEmptyUnlocked": "No badges unlocked yet.",
+  "achievementEmptyLocked": "You've unlocked every badge.",
+  "achievementHeroTitle": "Achievements",
+  "achievementHeroProgress": "{unlocked} / {total} unlocked",
+  "@achievementHeroProgress": {
+    "placeholders": {
+      "unlocked": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "achievementHeroAllUnlocked": "You collected every badge. Amazing!",
+  "achievementHeroKeepGoing": "Keep playing to unlock more badges.",
+  "achievementBadgeFirstClearTitle": "First clear",
+  "achievementBadgeFirstClearDesc": "Finish your first puzzle to begin your Sudoku journey.",
+  "achievementBadgeStreakTitle": "3-day streak",
+  "achievementBadgeStreakDesc": "Clear puzzles three days in a row to build a habit.",
+  "achievementBadgeWeeklyTitle": "Weekly runner",
+  "achievementBadgeWeeklyDesc": "Clear five puzzles in the last seven days.",
+  "achievementBadgePerfectTitle": "Perfect clear",
+  "achievementBadgePerfectDesc": "Finish a puzzle with zero mistakes.",
+  "achievementBadgeMasterTitle": "Master first win",
+  "achievementBadgeMasterDesc": "Clear a Master puzzle for the first time.",
+  "achievementProgressFraction": "{current}/{max}",
+  "@achievementProgressFraction": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "max": {"type": "int"}
+    }
+  },
+  "achievementProgressStreak": "{current}/{max} days",
+  "@achievementProgressStreak": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "max": {"type": "int"}
+    }
+  },
+  "achievementProgressWeekly": "{current}/{max} clears",
+  "@achievementProgressWeekly": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "max": {"type": "int"}
+    }
+  },
+  "achievementStatusDone": "Done",
+  "achievementStatusNotMet": "Not yet",
+  "achievementStatusTrying": "In progress",
+  "achievementTileProgress": "Progress: {label}",
+  "@achievementTileProgress": {
+    "placeholders": {
+      "label": {"type": "String"}
+    }
+  },
+  "achievementTileRarity": "Rarity: {label}",
+  "@achievementTileRarity": {
+    "placeholders": {
+      "label": {"type": "String"}
+    }
+  },
+  "achievementRarityCommon": "Common",
+  "achievementRarityRare": "Rare",
+  "achievementRarityEpic": "Epic",
+  "achievementSortDefault": "Default order",
+  "achievementSortRarity": "By rarity"
+}

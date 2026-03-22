@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mysudoku/l10n/app_localizations.dart';
 import 'package:mysudoku/services/achievement_service.dart';
 
 /// 게임 완료 축하 다이얼로그 위젯
@@ -14,14 +15,11 @@ class GameCompleteDialog extends StatelessWidget {
   final VoidCallback onGoToLevelSelection;
   final VoidCallback onCopyResult;
   final VoidCallback onShareResult;
+  /// 같은 난이도의 다음 게임이 있을 때만 전달합니다.
+  final VoidCallback? onNextPuzzle;
 
-  // 색상 테마 정의
-  static const Color backgroundColor = Color(0xFFF8F9FA);
-  static const Color cardColor = Colors.white;
   static const Color mintColor = Color(0xFFB8E6B8);
   static const Color goldColor = Color(0xFFFFD700);
-  static const Color textColor = Color(0xFF2C3E50);
-  static const Color lightTextColor = Color(0xFF34495E);
 
   const GameCompleteDialog({
     super.key,
@@ -35,6 +33,7 @@ class GameCompleteDialog extends StatelessWidget {
     required this.onGoToLevelSelection,
     required this.onCopyResult,
     required this.onShareResult,
+    this.onNextPuzzle,
   });
 
   String get formattedTime {
@@ -45,6 +44,11 @@ class GameCompleteDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    final onSurface = cs.onSurface;
+    final onVar = cs.onSurfaceVariant;
+    final shareBg = cs.surfaceContainerHighest;
     return AlertDialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
@@ -58,9 +62,9 @@ class GameCompleteDialog extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Text(
-            '축하합니다!',
+            l10n.dialogCongratulations,
             style: GoogleFonts.notoSans(
-              color: textColor,
+              color: onSurface,
               fontWeight: FontWeight.bold,
               fontSize: 20,
             ),
@@ -79,19 +83,19 @@ class GameCompleteDialog extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
-                'NEW BEST',
+                l10n.dialogNewBest,
                 style: GoogleFonts.notoSans(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: textColor,
+                  color: onSurface,
                 ),
               ),
             ),
           Text(
-            '스도쿠를 완성했습니다!',
+            l10n.dialogSudokuComplete,
             style: GoogleFonts.notoSans(
               fontSize: 16,
-              color: lightTextColor,
+              color: onVar,
             ),
           ),
           if (challengeMessage != null) ...[
@@ -104,7 +108,7 @@ class GameCompleteDialog extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.local_fire_department, size: 18, color: textColor),
+                  Icon(Icons.local_fire_department, size: 18, color: onSurface),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -112,7 +116,7 @@ class GameCompleteDialog extends StatelessWidget {
                       style: GoogleFonts.notoSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: textColor,
+                        color: onSurface,
                       ),
                     ),
                   ),
@@ -135,14 +139,14 @@ class GameCompleteDialog extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.military_tech, size: 18, color: textColor),
+                      Icon(Icons.military_tech, size: 18, color: onSurface),
                       const SizedBox(width: 8),
                       Text(
-                        '새 배지 획득',
+                        l10n.dialogNewBadges,
                         style: GoogleFonts.notoSans(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: textColor,
+                          color: onSurface,
                         ),
                       ),
                     ],
@@ -166,7 +170,7 @@ class GameCompleteDialog extends StatelessWidget {
                               style: GoogleFonts.notoSans(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: lightTextColor,
+                                color: onVar,
                               ),
                             ),
                           ),
@@ -194,17 +198,17 @@ class GameCompleteDialog extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.timer,
-                          color: textColor,
+                          color: onSurface,
                           size: 20,
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '소요 시간',
+                          l10n.dialogElapsedTime,
                           style: GoogleFonts.notoSans(
                             fontSize: 14,
-                            color: lightTextColor,
+                            color: onVar,
                           ),
                         ),
                       ],
@@ -214,7 +218,7 @@ class GameCompleteDialog extends StatelessWidget {
                       style: GoogleFonts.notoSans(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: textColor,
+                        color: onSurface,
                       ),
                     ),
                   ],
@@ -225,27 +229,27 @@ class GameCompleteDialog extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.error_outline,
-                          color: textColor,
+                          color: onSurface,
                           size: 20,
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '오답 횟수',
+                          l10n.dialogWrongCount,
                           style: GoogleFonts.notoSans(
                             fontSize: 14,
-                            color: lightTextColor,
+                            color: onVar,
                           ),
                         ),
                       ],
                     ),
                     Text(
-                      '$wrongCount회',
+                      l10n.dialogWrongCountValue(wrongCount),
                       style: GoogleFonts.notoSans(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: textColor,
+                        color: onSurface,
                       ),
                     ),
                   ],
@@ -258,18 +262,18 @@ class GameCompleteDialog extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F4F6),
+              color: shareBg,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '공유용 결과',
+                  l10n.dialogSharePreview,
                   style: GoogleFonts.notoSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: textColor,
+                    color: onSurface,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -277,7 +281,7 @@ class GameCompleteDialog extends StatelessWidget {
                   shareSummary,
                   style: GoogleFonts.notoSans(
                     fontSize: 14,
-                    color: lightTextColor,
+                    color: onVar,
                   ),
                 ),
               ],
@@ -288,11 +292,11 @@ class GameCompleteDialog extends StatelessWidget {
       actions: [
         TextButton.icon(
           onPressed: onCopyResult,
-          icon: const Icon(Icons.copy, size: 18),
+          icon: Icon(Icons.copy, size: 18, color: onVar),
           label: Text(
-            '결과 복사',
+            l10n.dialogCopyResult,
             style: GoogleFonts.notoSans(
-              color: lightTextColor,
+              color: onVar,
               fontSize: 15,
               fontWeight: FontWeight.w600,
             ),
@@ -300,11 +304,11 @@ class GameCompleteDialog extends StatelessWidget {
         ),
         TextButton.icon(
           onPressed: onShareResult,
-          icon: const Icon(Icons.ios_share, size: 18),
+          icon: Icon(Icons.ios_share, size: 18, color: onVar),
           label: Text(
-            '공유하기',
+            l10n.dialogShare,
             style: GoogleFonts.notoSans(
-              color: lightTextColor,
+              color: onVar,
               fontSize: 15,
               fontWeight: FontWeight.w600,
             ),
@@ -313,25 +317,37 @@ class GameCompleteDialog extends StatelessWidget {
         TextButton(
           onPressed: onGoToLevelSelection,
           child: Text(
-            '레벨 선택으로',
+            l10n.dialogBackToLevels,
             style: GoogleFonts.notoSans(
-              color: lightTextColor,
+              color: onVar,
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
           ),
         ),
+        if (onNextPuzzle != null)
+          TextButton(
+            onPressed: onNextPuzzle,
+            child: Text(
+              l10n.dialogNextPuzzle,
+              style: GoogleFonts.notoSans(
+                color: onSurface,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
         ElevatedButton(
           onPressed: onRestart,
           style: ElevatedButton.styleFrom(
             backgroundColor: mintColor,
-            foregroundColor: textColor,
+            foregroundColor: const Color(0xFF1A2E24),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
           ),
           child: Text(
-            '다시 시작',
+            l10n.dialogPlayAgain,
             style: GoogleFonts.notoSans(
               fontSize: 16,
               fontWeight: FontWeight.w600,

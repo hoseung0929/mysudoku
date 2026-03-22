@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:mysudoku/utils/app_logger.dart';
-import 'sudoku_level.dart';
-import 'sudoku_game.dart';
-import '../database/database_helper.dart';
-import '../utils/sudoku_generator.dart';
+import 'package:mysudoku/database/database_helper.dart';
+import 'package:mysudoku/model/sudoku_game.dart';
+import 'package:mysudoku/model/sudoku_level.dart';
+import 'package:mysudoku/utils/sudoku_generator.dart';
 
 class SudokuGameSet {
   final SudokuLevel level;

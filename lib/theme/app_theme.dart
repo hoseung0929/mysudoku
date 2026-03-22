@@ -172,15 +172,59 @@ class AppTheme {
     );
   }
 
-  /// 다크 테마 (향후 확장용)
+  /// 다크 테마
   static ThemeData get darkTheme {
+    final base = ColorScheme.fromSeed(
+      seedColor: mintColor,
+      brightness: Brightness.dark,
+    );
     return ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: mintColor,
-        brightness: Brightness.dark,
+      colorScheme: base,
+      scaffoldBackgroundColor: base.surfaceContainerLowest,
+      textTheme: GoogleFonts.notoSansTextTheme(ThemeData.dark().textTheme).apply(
+        bodyColor: base.onSurface,
+        displayColor: base.onSurface,
       ),
-      textTheme: GoogleFonts.notoSansTextTheme(ThemeData.dark().textTheme),
+      appBarTheme: AppBarTheme(
+        backgroundColor: base.surfaceContainerHigh,
+        foregroundColor: base.onSurface,
+        elevation: 0,
+        titleTextStyle: GoogleFonts.notoSans(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: base.onSurface,
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: base.surfaceContainerHigh,
+        elevation: 1,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: mintColor.withValues(alpha: 0.85),
+          foregroundColor: const Color(0xFF1A1A1A),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: GoogleFonts.notoSans(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: base.onSurfaceVariant,
+          textStyle: GoogleFonts.notoSans(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
     );
   }
 

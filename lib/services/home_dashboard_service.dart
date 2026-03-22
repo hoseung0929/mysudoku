@@ -1,9 +1,13 @@
-import '../database/database_helper.dart';
-import '../model/sudoku_game.dart';
-import '../model/sudoku_level.dart';
-import 'achievement_service.dart';
-import 'challenge_progress_service.dart';
-import 'game_state_service.dart';
+import 'package:mysudoku/database/database_helper.dart';
+import 'package:mysudoku/l10n/app_localizations.dart';
+import 'package:mysudoku/model/sudoku_game.dart';
+import 'package:mysudoku/model/sudoku_level.dart';
+import 'package:mysudoku/services/achievement_service.dart';
+import 'package:mysudoku/services/challenge_progress_service.dart';
+import 'package:mysudoku/services/game_state_service.dart';
+
+/// 빠른 시작 행의 종류 (표시 문자열은 UI에서 로케일 매핑).
+enum QuickStartKind { recommended, beginner, random }
 
 class ContinueGameSummary {
   const ContinueGameSummary({
@@ -21,13 +25,11 @@ class ContinueGameSummary {
 
 class QuickStartOption {
   const QuickStartOption({
-    required this.label,
-    required this.description,
+    required this.kind,
     required this.level,
   });
 
-  final String label;
-  final String description;
+  final QuickStartKind kind;
   final SudokuLevel level;
 }
 
@@ -65,12 +67,12 @@ class HomeDashboardService {
   final ChallengeProgressService _challengeProgressService;
   final AchievementService _achievementService;
 
-  Future<HomeDashboardData> load() async {
+  Future<HomeDashboardData> load(AppLocalizations l10n) async {
     final continueGame = await _loadContinueGame();
     final todayChallenge = await _loadTodayChallenge();
     final quickStartOptions = _buildQuickStartOptions();
     final challengeProgress = await _challengeProgressService.load();
-    final achievementSummary = await _achievementService.load();
+    final achievementSummary = await _achievementService.load(l10n);
 
     return HomeDashboardData(
       continueGame: continueGame,
@@ -150,18 +152,15 @@ class HomeDashboardService {
     final recommendedLevel = _recommendedLevel();
     return [
       QuickStartOption(
-        label: '빠른 시작',
-        description: '${recommendedLevel.name} 난이도 추천',
+        kind: QuickStartKind.recommended,
         level: recommendedLevel,
       ),
       QuickStartOption(
-        label: '초급 시작',
-        description: '부담 없이 한 판 시작',
+        kind: QuickStartKind.beginner,
         level: SudokuLevel.levels.first,
       ),
       QuickStartOption(
-        label: '랜덤 도전',
-        description: '오늘 기분대로 가볍게 플레이',
+        kind: QuickStartKind.random,
         level: SudokuLevel.levels[(DateTime.now().millisecond) %
             SudokuLevel.levels.length],
       ),

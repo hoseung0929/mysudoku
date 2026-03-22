@@ -2,6 +2,7 @@
 *~
 *.backup
 ._*
+arb/._*
 *.class
 *.log
 *.pyc

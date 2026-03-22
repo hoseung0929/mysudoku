@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mysudoku/l10n/app_localizations.dart';
 
 /// 게임 오버 다이얼로그 위젯
 class GameOverDialog extends StatelessWidget {
@@ -7,13 +8,8 @@ class GameOverDialog extends StatelessWidget {
   final VoidCallback onRestart;
   final VoidCallback onGoToLevelSelection;
 
-  // 색상 테마 정의
-  static const Color backgroundColor = Color(0xFFF8F9FA);
-  static const Color cardColor = Colors.white;
   static const Color mintColor = Color(0xFFB8E6B8);
   static const Color pinkColor = Color(0xFFE6B8C8);
-  static const Color textColor = Color(0xFF2C3E50);
-  static const Color lightTextColor = Color(0xFF34495E);
 
   const GameOverDialog({
     super.key,
@@ -24,6 +20,9 @@ class GameOverDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final onVar = Theme.of(context).colorScheme.onSurfaceVariant;
     return AlertDialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
@@ -37,9 +36,9 @@ class GameOverDialog extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Text(
-            '게임 오버',
+            l10n.gameOverTitle,
             style: GoogleFonts.notoSans(
-              color: textColor,
+              color: onSurface,
               fontWeight: FontWeight.bold,
               fontSize: 20,
             ),
@@ -50,10 +49,10 @@ class GameOverDialog extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '오답이 3개를 초과했습니다.',
+            l10n.gameOverMessage,
             style: GoogleFonts.notoSans(
               fontSize: 16,
-              color: lightTextColor,
+              color: onVar,
             ),
           ),
           const SizedBox(height: 16),
@@ -74,7 +73,7 @@ class GameOverDialog extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '오답: $wrongCount/3',
+                  l10n.gameOverWrongLabel(wrongCount),
                   style: GoogleFonts.notoSans(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -90,9 +89,9 @@ class GameOverDialog extends StatelessWidget {
         TextButton(
           onPressed: onGoToLevelSelection,
           child: Text(
-            '레벨 선택으로',
+            l10n.dialogBackToLevels,
             style: GoogleFonts.notoSans(
-              color: lightTextColor,
+              color: onVar,
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
@@ -102,13 +101,13 @@ class GameOverDialog extends StatelessWidget {
           onPressed: onRestart,
           style: ElevatedButton.styleFrom(
             backgroundColor: mintColor,
-            foregroundColor: textColor,
+            foregroundColor: const Color(0xFF1A2E24),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
           ),
           child: Text(
-            '다시 시작',
+            l10n.dialogPlayAgain,
             style: GoogleFonts.notoSans(
               fontSize: 16,
               fontWeight: FontWeight.w600,

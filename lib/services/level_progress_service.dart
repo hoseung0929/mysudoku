@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:mysudoku/utils/app_logger.dart';
 
-import '../database/database_helper.dart';
-import '../model/sudoku_level.dart';
+import 'package:mysudoku/database/database_helper.dart';
+import 'package:mysudoku/model/sudoku_level.dart';
 
 typedef ClearedGameCountLoader = Future<int> Function(String levelName);
 typedef LevelRecordsClearer = Future<void> Function(String levelName);

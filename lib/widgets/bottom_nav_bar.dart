@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mysudoku/l10n/app_localizations.dart';
 
 /// 하단 네비게이션 바 위젯
 class BottomNavBar extends StatelessWidget {
@@ -13,6 +14,7 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.symmetric(
           horizontal: 20.0, vertical: 20.0), // 세로 마진 줄이기
@@ -44,22 +46,22 @@ class BottomNavBar extends StatelessWidget {
           unselectedLabelStyle: const TextStyle(
               fontWeight: FontWeight.normal, fontSize: 10), // 폰트 크기 줄이기
           elevation: 0,
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: '홈',
+              icon: const Icon(Icons.home),
+              label: l10n.navHome,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.emoji_events_outlined),
-              label: '챌린지',
+              icon: const Icon(Icons.emoji_events_outlined),
+              label: l10n.navChallenge,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.bar_chart_outlined),
-              label: '기록',
+              icon: const Icon(Icons.bar_chart_outlined),
+              label: l10n.navRecords,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.settings_outlined),
-              label: '설정',
+              icon: const Icon(Icons.settings_outlined),
+              label: l10n.navSettings,
             ),
           ],
         ),

@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'package:mysudoku/utils/app_logger.dart';
-import '../database/database_helper.dart';
+import 'package:mysudoku/database/database_helper.dart';
 
 class GameRecordService {
   GameRecordService({DatabaseHelper? databaseHelper})

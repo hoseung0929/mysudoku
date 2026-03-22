@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:mysudoku/utils/app_logger.dart';
-import '../model/sudoku_level.dart';
-import '../utils/sudoku_generator.dart';
-import 'game_timer_controller.dart';
-import 'sudoku_board_controller.dart';
+import 'package:mysudoku/model/sudoku_level.dart';
+import 'package:mysudoku/utils/sudoku_generator.dart';
+import 'package:mysudoku/presenter/game_timer_controller.dart';
+import 'package:mysudoku/presenter/sudoku_board_controller.dart';
 
 /// 스도쿠 게임의 비즈니스 로직을 처리하는 Presenter 클래스
 /// MVP 패턴에서 View와 Model 사이의 중재자 역할을 수행

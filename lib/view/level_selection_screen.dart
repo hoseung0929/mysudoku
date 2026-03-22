@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import '../model/sudoku_level.dart';
-import '../model/sudoku_game_set.dart';
-import '../model/sudoku_game.dart';
-import '../database/database_helper.dart';
-import '../database/database_manager.dart';
-import '../services/level_progress_service.dart';
-import '../widgets/custom_app_bar.dart';
-import 'sudoku_game_screen.dart';
+import 'package:mysudoku/l10n/app_localizations.dart';
+import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
+import 'package:mysudoku/database/database_helper.dart';
+import 'package:mysudoku/database/database_manager.dart';
+import 'package:mysudoku/model/sudoku_game.dart';
+import 'package:mysudoku/model/sudoku_game_set.dart';
+import 'package:mysudoku/model/sudoku_level.dart';
+import 'package:mysudoku/services/level_progress_service.dart';
+import 'package:mysudoku/view/sudoku_game_screen.dart';
+import 'package:mysudoku/widgets/custom_app_bar.dart';
 
 /// 난이도 선택 화면
 /// 사용자가 스도쿠 게임의 난이도를 선택할 수 있는 화면입니다.
@@ -131,6 +133,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth > 600;
 
@@ -148,14 +151,17 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                   if (!status.isRunning) return const SizedBox.shrink();
                   return Padding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    child: _CatalogStatusBar(status: status),
+                    child: _CatalogStatusBar(
+                      status: status,
+                      l10n: AppLocalizations.of(context)!,
+                    ),
                   );
                 },
               ),
               Expanded(
                 child: isTablet
-                    ? _buildGameSelectionTabletLayout()
-                    : _buildGameSelectionMobileLayout(),
+                    ? _buildGameSelectionTabletLayout(l10n)
+                    : _buildGameSelectionMobileLayout(l10n),
               ),
             ],
           ),
@@ -182,21 +188,21 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                   ),
                 ),
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '난이도 선택',
-                    style: TextStyle(
+                    l10n.levelPickDifficultyTitle,
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF2C3E50),
                     ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
-                    '원하는 난이도를 선택하여 게임을 시작하세요',
-                    style: TextStyle(
+                    l10n.levelPickDifficultySubtitle,
+                    style: const TextStyle(
                       fontSize: 16,
                       color: Color(0xFF7F8C8D),
                     ),
@@ -218,7 +224,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                   itemCount: SudokuLevel.levels.length,
                   itemBuilder: (context, index) {
                     final level = SudokuLevel.levels[index];
-                    return _buildLevelCard(level, true);
+                    return _buildLevelCard(level, true, l10n);
                   },
                 ),
               ),
@@ -252,7 +258,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   }
 
   /// 게임 선택 화면용 태블릿 레이아웃
-  Widget _buildGameSelectionTabletLayout() {
+  Widget _buildGameSelectionTabletLayout(AppLocalizations l10n) {
     return Column(
       children: [
         // 상단 설명 영역
@@ -271,7 +277,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${widget.level!.name} 게임',
+                l10n.levelGamesScreenTitle(
+                  widget.level!.localizedName(l10n),
+                ),
                 style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -279,9 +287,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                '원하는 게임을 선택하여 시작하세요',
-                style: TextStyle(
+              Text(
+                l10n.levelPickGameSubtitle,
+                style: const TextStyle(
                   fontSize: 16,
                   color: Color(0xFF7F8C8D),
                 ),
@@ -308,7 +316,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.level!.name,
+                          widget.level!.localizedName(l10n),
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -316,7 +324,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                           ),
                         ),
                         Text(
-                          widget.level!.description,
+                          widget.level!.localizedDescription(l10n),
                           style: const TextStyle(
                             fontSize: 14,
                             color: Color(0xFF7F8C8D),
@@ -335,15 +343,15 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
           child: Container(
             padding: const EdgeInsets.all(24),
             child: _isLoading
-                ? const Center(
+                ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 16),
+                        const CircularProgressIndicator(),
+                        const SizedBox(height: 16),
                         Text(
-                          '게임을 불러오는 중...',
-                          style: TextStyle(
+                          l10n.levelLoadingGames,
+                          style: const TextStyle(
                             fontSize: 16,
                             color: Color(0xFF7F8C8D),
                           ),
@@ -355,15 +363,15 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                     future: _loadGames(widget.level!.name),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(
+                        return Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              CircularProgressIndicator(),
-                              SizedBox(height: 16),
+                              const CircularProgressIndicator(),
+                              const SizedBox(height: 16),
                               Text(
-                                '게임을 불러오는 중...',
-                                style: TextStyle(
+                                l10n.levelLoadingGames,
+                                style: const TextStyle(
                                   fontSize: 16,
                                   color: Color(0xFF7F8C8D),
                                 ),
@@ -373,8 +381,8 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                         );
                       }
                       if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return const Center(
-                          child: Text('게임을 불러올 수 없습니다.'),
+                        return Center(
+                          child: Text(l10n.recordsGameLoadError),
                         );
                       }
                       return GridView.builder(
@@ -388,7 +396,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                         itemCount: snapshot.data!.length,
                         itemBuilder: (context, index) {
                           final game = snapshot.data![index];
-                          return _buildGameSelectionCard(game);
+                          return _buildGameSelectionCard(game, l10n);
                         },
                       );
                     },
@@ -400,7 +408,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   }
 
   /// 게임 선택 화면용 모바일 레이아웃
-  Widget _buildGameSelectionMobileLayout() {
+  Widget _buildGameSelectionMobileLayout(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -420,7 +428,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${widget.level!.name} 게임',
+                l10n.levelGamesScreenTitle(
+                  widget.level!.localizedName(l10n),
+                ),
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -428,9 +438,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                '원하는 게임을 선택하여 시작하세요',
-                style: TextStyle(
+              Text(
+                l10n.levelPickGameSubtitle,
+                style: const TextStyle(
                   fontSize: 14,
                   color: Color(0xFF7F8C8D),
                 ),
@@ -457,7 +467,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.level!.name,
+                          widget.level!.localizedName(l10n),
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -465,7 +475,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                           ),
                         ),
                         Text(
-                          widget.level!.description,
+                          widget.level!.localizedDescription(l10n),
                           style: const TextStyle(
                             fontSize: 12,
                             color: Color(0xFF7F8C8D),
@@ -485,15 +495,15 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: _isLoading
-                ? const Center(
+                ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 16),
+                        const CircularProgressIndicator(),
+                        const SizedBox(height: 16),
                         Text(
-                          '게임을 불러오는 중...',
-                          style: TextStyle(
+                          l10n.levelLoadingGames,
+                          style: const TextStyle(
                             fontSize: 16,
                             color: Color(0xFF7F8C8D),
                           ),
@@ -505,15 +515,15 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                     future: _loadGames(widget.level!.name),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(
+                        return Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              CircularProgressIndicator(),
-                              SizedBox(height: 16),
+                              const CircularProgressIndicator(),
+                              const SizedBox(height: 16),
                               Text(
-                                '게임을 불러오는 중...',
-                                style: TextStyle(
+                                l10n.levelLoadingGames,
+                                style: const TextStyle(
                                   fontSize: 16,
                                   color: Color(0xFF7F8C8D),
                                 ),
@@ -523,13 +533,14 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                         );
                       }
                       if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return const Center(
-                          child: Text('게임을 불러올 수 없습니다.'),
+                        return Center(
+                          child: Text(l10n.recordsGameLoadError),
                         );
                       }
                       return Column(
                         children: snapshot.data!
-                            .map((game) => _buildGameSelectionMobileCard(game))
+                            .map((game) =>
+                                _buildGameSelectionMobileCard(game, l10n))
                             .toList(),
                       );
                     },
@@ -541,7 +552,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   }
 
   /// 게임 선택용 카드 위젯
-  Widget _buildGameSelectionCard(SudokuGame game) {
+  Widget _buildGameSelectionCard(SudokuGame game, AppLocalizations l10n) {
     final isCleared = _isCleared(game);
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
@@ -586,7 +597,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '게임 ${game.gameNumber}',
+                  l10n.gameNumberLabel(game.gameNumber),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -607,9 +618,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                     color: const Color(0xFFB8E6B8),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text(
-                    '클리어',
-                    style: TextStyle(
+                  child: Text(
+                    l10n.levelClearedBadge,
+                    style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF2C3E50),
@@ -624,7 +635,10 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   }
 
   /// 게임 선택용 모바일 카드 위젯
-  Widget _buildGameSelectionMobileCard(SudokuGame game) {
+  Widget _buildGameSelectionMobileCard(
+    SudokuGame game,
+    AppLocalizations l10n,
+  ) {
     final isCleared = _isCleared(game);
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
@@ -670,7 +684,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '게임 ${game.gameNumber}',
+                    l10n.gameNumberLabel(game.gameNumber),
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -678,9 +692,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    '클릭하여 게임 시작',
-                    style: TextStyle(
+                  Text(
+                    l10n.levelTapToStart,
+                    style: const TextStyle(
                       fontSize: 14,
                       color: Color(0xFF7F8C8D),
                     ),
@@ -697,9 +711,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                   color: const Color(0xFFB8E6B8),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text(
-                  '클리어',
-                  style: TextStyle(
+                child: Text(
+                  l10n.levelClearedBadge,
+                  style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF2C3E50),
@@ -718,7 +732,11 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   }
 
   /// 난이도 카드 위젯
-  Widget _buildLevelCard(SudokuLevel level, bool isCompact) {
+  Widget _buildLevelCard(
+    SudokuLevel level,
+    bool isCompact,
+    AppLocalizations l10n,
+  ) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.all(12),
@@ -764,7 +782,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        level.name,
+                        level.localizedName(l10n),
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -793,7 +811,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    level.description,
+                    level.localizedDescription(l10n),
                     style: const TextStyle(
                       fontSize: 14,
                       color: Color(0xFF7F8C8D),
@@ -852,6 +870,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
 
   /// 난이도별 게임 목록 표시
   void _showLevelGames(SudokuLevel level) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -881,7 +900,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    '${level.name} 게임',
+                    l10n.levelGamesScreenTitle(level.localizedName(l10n)),
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -906,8 +925,8 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(
-                      child: Text('게임을 불러올 수 없습니다.'),
+                    return Center(
+                      child: Text(l10n.recordsGameLoadError),
                     );
                   }
                   return GridView.builder(
@@ -922,7 +941,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                     itemCount: snapshot.data!.length,
                     itemBuilder: (context, index) {
                       final game = snapshot.data![index];
-                      return _buildGameCard(game, level);
+                      return _buildGameCard(game, level, l10n);
                     },
                   );
                 },
@@ -935,7 +954,11 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   }
 
   /// 게임 카드 위젯 (모달용)
-  Widget _buildGameCard(SudokuGame game, SudokuLevel level) {
+  Widget _buildGameCard(
+    SudokuGame game,
+    SudokuLevel level,
+    AppLocalizations l10n,
+  ) {
     final isCleared = _isCleared(game);
     return Container(
       width: 100,
@@ -956,7 +979,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '게임 ${game.gameNumber}',
+                  l10n.gameNumberLabel(game.gameNumber),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -979,9 +1002,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                 ),
                 if (isCleared) ...[
                   const SizedBox(height: 6),
-                  const Text(
-                    '클리어',
-                    style: TextStyle(
+                  Text(
+                    l10n.levelClearedBadge,
+                    style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF2C3E50),
@@ -1000,9 +1023,11 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
 class _CatalogStatusBar extends StatelessWidget {
   const _CatalogStatusBar({
     required this.status,
+    required this.l10n,
   });
 
   final PuzzleCatalogStatus status;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -1020,7 +1045,10 @@ class _CatalogStatusBar extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              '추가 퍼즐 준비 중 · ${status.totalGenerated}/${status.totalTarget}판',
+              l10n.levelCatalogPreparingShort(
+                status.totalGenerated,
+                status.totalTarget,
+              ),
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF6A4C00),

@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
-import '../model/sudoku_game.dart';
-import '../model/sudoku_level.dart';
-import '../view/settings_screen.dart';
-import '../view/level_selection_screen.dart';
-import '../view/sudoku_game_screen.dart';
-import '../database/database_helper.dart';
-import '../database/database_manager.dart';
-import '../services/level_progress_service.dart';
-import '../services/home_dashboard_service.dart';
-import '../services/onboarding_service.dart';
-import '../services/challenge_progress_service.dart';
-import '../services/achievement_service.dart';
+import 'package:mysudoku/l10n/app_localizations.dart';
+import 'package:mysudoku/l10n/quick_start_option_l10n.dart';
+import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
+import 'package:mysudoku/database/database_helper.dart';
+import 'package:mysudoku/database/database_manager.dart';
+import 'package:mysudoku/model/sudoku_game.dart';
+import 'package:mysudoku/model/sudoku_level.dart';
+import 'package:mysudoku/services/achievement_service.dart';
+import 'package:mysudoku/services/challenge_progress_service.dart';
+import 'package:mysudoku/services/home_dashboard_service.dart';
+import 'package:mysudoku/services/level_progress_service.dart';
+import 'package:mysudoku/services/onboarding_service.dart';
+import 'package:mysudoku/view/level_selection_screen.dart';
+import 'package:mysudoku/view/settings_screen.dart';
+import 'package:mysudoku/view/sudoku_game_screen.dart';
 
 class LevelSelectionMain extends StatefulWidget {
   const LevelSelectionMain({super.key});
@@ -52,7 +55,10 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
       }
     });
     _loadLevelTotals();
-    _loadHomeDashboard();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _loadHomeDashboard();
+    });
     _maybeShowHomeOnboarding();
   }
 
@@ -75,7 +81,9 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     });
 
     try {
-      final data = await _homeDashboardService.load();
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      final data = await _homeDashboardService.load(l10n);
       if (mounted) {
         setState(() {
           _continueGame = data.continueGame;
@@ -104,47 +112,50 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
       await showDialog<void>(
         context: context,
         barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          title: const Text(
-            '처음 오셨네요',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2C3E50),
+        builder: (dialogContext) {
+          final l10n = AppLocalizations.of(dialogContext)!;
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
             ),
-          ),
-          content: const Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _GuideStep(
-                icon: Icons.play_circle_fill,
-                title: '빠른 시작',
-                description: '추천 난이도로 바로 한 판 시작할 수 있어요.',
+            title: Text(
+              l10n.homeOnboardingWelcomeTitle,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2C3E50),
               ),
-              SizedBox(height: 12),
-              _GuideStep(
-                icon: Icons.bolt,
-                title: '오늘의 도전',
-                description: '매일 바뀌는 대표 퍼즐로 가볍게 실력을 확인해보세요.',
-              ),
-              SizedBox(height: 12),
-              _GuideStep(
-                icon: Icons.history,
-                title: '이어하기',
-                description: '중단한 게임은 홈 상단 카드에서 곧바로 이어집니다.',
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _GuideStep(
+                  icon: Icons.play_circle_fill,
+                  title: l10n.homeOnboardingStepQuickTitle,
+                  description: l10n.homeOnboardingStepQuickBody,
+                ),
+                const SizedBox(height: 12),
+                _GuideStep(
+                  icon: Icons.bolt,
+                  title: l10n.homeOnboardingStepDailyTitle,
+                  description: l10n.homeOnboardingStepDailyBody,
+                ),
+                const SizedBox(height: 12),
+                _GuideStep(
+                  icon: Icons.history,
+                  title: l10n.homeOnboardingStepResumeTitle,
+                  description: l10n.homeOnboardingStepResumeBody,
+                ),
+              ],
+            ),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text(l10n.homeOnboardingStartButton),
               ),
             ],
-          ),
-          actions: [
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('시작하기'),
-            ),
-          ],
-        ),
+          );
+        },
       );
       await _onboardingService.markHomeOnboardingSeen();
       _isShowingOnboarding = false;
@@ -290,7 +301,10 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                     if (!status.isRunning) return const SizedBox.shrink();
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: _CatalogProgressBanner(status: status),
+                      child: _CatalogProgressBanner(
+                        status: status,
+                        l10n: AppLocalizations.of(context)!,
+                      ),
                     );
                   },
                 ),
@@ -308,6 +322,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -327,22 +342,22 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
             child: Icon(Icons.person, size: 36, color: Color(0xFF2C3E50)),
           ),
           const SizedBox(width: 16),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '게스트',
-                  style: TextStyle(
+                  l10n.homeGuestTitle,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 24,
                     color: Color(0xFF2C3E50),
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
-                  '지금 바로 한 판 시작해보세요',
-                  style: TextStyle(
+                  l10n.homeGuestSubtitle,
+                  style: const TextStyle(
                     color: Color(0xFF7F8C8D),
                     fontSize: 16,
                   ),
@@ -388,13 +403,17 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   }
 
   Widget _buildContinueCard(ContinueGameSummary summary) {
+    final l10n = AppLocalizations.of(context)!;
     return _HeroActionCard(
-      title: '이어하기',
-      subtitle:
-          '${summary.level.name} · 게임 ${summary.game.gameNumber} · ${summary.elapsedFilledCells}칸 진행',
-      description: '중단한 퍼즐을 바로 이어서 플레이할 수 있어요.',
+      title: l10n.homeContinueTitle,
+      subtitle: l10n.homeContinueSubtitle(
+        summary.level.localizedName(l10n),
+        summary.game.gameNumber,
+        summary.elapsedFilledCells,
+      ),
+      description: l10n.homeContinueDescription,
       accentColor: const Color(0xFF8DC6B0),
-      actionLabel: '계속하기',
+      actionLabel: l10n.homeContinueActionButton,
       onTap: () => _openGame(summary.game, summary.level),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -412,7 +431,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
           ),
           const SizedBox(height: 8),
           Text(
-            '진행률 ${(summary.progress * 100).toInt()}%',
+            l10n.homeProgressPercent((summary.progress * 100).toInt()),
             style: const TextStyle(
               fontWeight: FontWeight.w600,
               color: Color(0xFF2C3E50),
@@ -424,6 +443,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   }
 
   Widget _buildTodayChallengeCard(SudokuGame game) {
+    final l10n = AppLocalizations.of(context)!;
     final level = SudokuLevel.levels.firstWhere(
       (item) => item.name == game.levelName,
       orElse: () => SudokuLevel.levels.first,
@@ -432,13 +452,18 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     final streakDays = _challengeProgress?.streakDays ?? 0;
 
     return _HeroActionCard(
-      title: '오늘의 도전',
-      subtitle: '${game.levelName} · 게임 ${game.gameNumber}',
+      title: l10n.challengeTodaysChallengeTitle,
+      subtitle: l10n.recordsGameNumberTitle(
+        game.levelName.localizedSudokuLevelName(l10n),
+        game.gameNumber,
+      ),
       description: challengeDone
-          ? '오늘의 도전을 완료했어요. 연속 기록을 이어가고 있어요.'
-          : '매일 한 판, 가볍게 실력을 확인해보세요.',
+          ? l10n.homeTodayChallengeCardDoneBody
+          : l10n.homeTodayChallengeCardPendingBody,
       accentColor: const Color(0xFFE6D4B8),
-      actionLabel: challengeDone ? '다시 보기' : '도전하기',
+      actionLabel: challengeDone
+          ? l10n.challengeTodayReviewButton
+          : l10n.challengeTodayStartButton,
       onTap: () => _openGame(game, level),
       child: Padding(
         padding: const EdgeInsets.only(top: 12),
@@ -452,8 +477,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
             Expanded(
               child: Text(
                 challengeDone
-                    ? '오늘 도전 완료 · 현재 $streakDays일 연속 기록'
-                    : '오늘의 공통 퍼즐로 연속 도전 흐름을 만들어보세요.',
+                    ? l10n.homeTodayChallengeFooterDoneStreak(streakDays)
+                    : l10n.homeTodayChallengeFooterPending,
                 style: const TextStyle(
                   color: Color(0xFF6B5A45),
                 ),
@@ -466,12 +491,13 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   }
 
   Widget _buildQuickStartSection() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '빠른 시작',
-          style: TextStyle(
+        Text(
+          l10n.homeQuickStartSectionTitle,
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 22,
             color: Color(0xFF2C3E50),
@@ -492,7 +518,10 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                 const SizedBox(height: 12),
               ],
               if (_achievementSummary != null) ...[
-                _AchievementPreviewCard(summary: _achievementSummary!),
+                _AchievementPreviewCard(
+                  summary: _achievementSummary!,
+                  l10n: l10n,
+                ),
                 const SizedBox(height: 12),
               ],
               Wrap(
@@ -514,12 +543,13 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   }
 
   Widget _buildLevelExplorer() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '난이도 탐색',
-          style: TextStyle(
+        Text(
+          l10n.homeBrowseLevelsTitle,
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 22,
             color: Color(0xFF2C3E50),
@@ -532,12 +562,13 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   }
 
   Widget _buildLevelGrid() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '난이도 탐색',
-          style: TextStyle(
+        Text(
+          l10n.homeBrowseLevelsTitle,
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 22,
             color: Color(0xFF2C3E50),
@@ -561,6 +592,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   }
 
   Widget _buildLevelCard(int index) {
+    final l10n = AppLocalizations.of(context)!;
     final levelTitles = [
       'Beginner',
       'Intermediate',
@@ -590,7 +622,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     return _LevelCard(
       color: colors[index],
       icon: icons[index],
-      title: levelTitles[index],
+      title: level.localizedName(l10n),
       completed: completed,
       remaining: remaining,
       progressColor: const Color(0xFF8DC6B0),
@@ -699,6 +731,7 @@ class _QuickStartChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(18),
@@ -722,7 +755,7 @@ class _QuickStartChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              option.label,
+              option.localizedTitle(l10n),
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -731,7 +764,7 @@ class _QuickStartChip extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              option.description,
+              option.localizedDescription(l10n),
               style: const TextStyle(
                 fontSize: 13,
                 color: Color(0xFF7F8C8D),
@@ -753,8 +786,10 @@ class _StreakCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final streakLabel =
-        summary.streakDays > 0 ? '${summary.streakDays}일 연속 클리어' : '오늘 첫 클리어에 도전해보세요';
+    final l10n = AppLocalizations.of(context)!;
+    final streakLabel = summary.streakDays > 0
+        ? l10n.challengeStreakDays(summary.streakDays)
+        : l10n.challengeStreakStartToday;
 
     return Container(
       width: double.infinity,
@@ -782,8 +817,8 @@ class _StreakCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   summary.isTodayChallengeCleared
-                      ? '오늘의 도전도 완료했어요.'
-                      : '오늘의 도전을 완료하면 기록을 이어갈 수 있어요.',
+                      ? l10n.homeStreakTodayDoneLine
+                      : l10n.homeStreakTodayPendingLine,
                   style: const TextStyle(
                     color: Color(0xFF7A642D),
                   ),
@@ -852,9 +887,11 @@ class _GuideStep extends StatelessWidget {
 class _AchievementPreviewCard extends StatelessWidget {
   const _AchievementPreviewCard({
     required this.summary,
+    required this.l10n,
   });
 
   final AchievementSummary summary;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -873,13 +910,13 @@ class _AchievementPreviewCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.military_tech, color: Color(0xFF476C9B)),
-              SizedBox(width: 8),
+              const Icon(Icons.military_tech, color: Color(0xFF476C9B)),
+              const SizedBox(width: 8),
               Text(
-                '배지 진행',
-                style: TextStyle(
+                l10n.homeBadgeProgressTitle,
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF2C3E50),
                 ),
@@ -914,7 +951,10 @@ class _AchievementPreviewCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '${badge.description} · ${badge.progressLabel}',
+                          l10n.challengeBadgeProgressLine(
+                            badge.description,
+                            badge.progressLabel,
+                          ),
                           style: const TextStyle(
                             color: Color(0xFF6B7780),
                             fontSize: 13,
@@ -936,9 +976,11 @@ class _AchievementPreviewCard extends StatelessWidget {
 class _CatalogProgressBanner extends StatelessWidget {
   const _CatalogProgressBanner({
     required this.status,
+    required this.l10n,
   });
 
   final PuzzleCatalogStatus status;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -957,13 +999,13 @@ class _CatalogProgressBanner extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.auto_awesome, color: Color(0xFF476C9B)),
-              SizedBox(width: 8),
+              const Icon(Icons.auto_awesome, color: Color(0xFF476C9B)),
+              const SizedBox(width: 8),
               Text(
-                '퍼즐 카탈로그 준비 중',
-                style: TextStyle(
+                l10n.homeCatalogPreparingTitle,
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF2C3E50),
                 ),
@@ -972,7 +1014,11 @@ class _CatalogProgressBanner extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '${status.totalGenerated}/${status.totalTarget}판 준비됨 · 남은 ${status.remaining}판',
+            l10n.homeCatalogProgressDetail(
+              status.totalGenerated,
+              status.totalTarget,
+              status.remaining,
+            ),
             style: const TextStyle(
               color: Color(0xFF6B7780),
             ),

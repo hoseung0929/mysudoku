@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mysudoku/constants/records_level_filter.dart';
 import 'package:mysudoku/services/records_statistics_service.dart';
 import 'package:mysudoku/utils/app_logger.dart';
 
@@ -21,6 +22,20 @@ void main() {
 
       expect(filtered.length, 1);
       expect(filtered.first['level_name'], '초급');
+    });
+
+    test('all-levels filter keeps every record (locale-independent constant)', () {
+      final recent = [
+        {'level_name': '초급', 'clear_time': 100, 'wrong_count': 1},
+        {'level_name': '중급', 'clear_time': 200, 'wrong_count': 2},
+      ];
+
+      final filtered = service.filterRecentRecords(
+        recent: recent,
+        selectedLevel: RecordsLevelFilter.allLevels,
+      );
+
+      expect(filtered.length, 2);
     });
 
     test('builds overall stats from filtered records', () {

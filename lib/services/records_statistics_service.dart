@@ -1,4 +1,5 @@
-import '../database/database_helper.dart';
+import 'package:mysudoku/constants/records_level_filter.dart';
+import 'package:mysudoku/database/database_helper.dart';
 
 class RecordsStatisticsData {
   const RecordsStatisticsData({
@@ -53,7 +54,7 @@ class RecordsStatisticsService {
     required List<Map<String, dynamic>> recent,
     required String selectedLevel,
   }) {
-    if (selectedLevel == '전체') {
+    if (RecordsLevelFilter.isAllLevels(selectedLevel)) {
       return recent;
     }
     return recent
@@ -73,7 +74,7 @@ class RecordsStatisticsService {
     );
     final totalsByLevel = buildTotalByLevel(levels);
 
-    final totalGames = selectedLevel == '전체'
+    final totalGames = RecordsLevelFilter.isAllLevels(selectedLevel)
         ? (overall['total_games'] ?? 0) as int
         : totalsByLevel[selectedLevel] ?? 0;
 
@@ -100,7 +101,8 @@ class RecordsStatisticsService {
     final stats = <Map<String, dynamic>>[];
 
     for (final level in levelOrder) {
-      if (selectedLevel != '전체' && selectedLevel != level) {
+      if (!RecordsLevelFilter.isAllLevels(selectedLevel) &&
+          selectedLevel != level) {
         continue;
       }
 

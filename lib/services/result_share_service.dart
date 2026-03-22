@@ -1,26 +1,33 @@
+import 'package:mysudoku/l10n/app_localizations.dart';
+
 class ResultShareService {
   String buildClearResultText({
-    required String levelName,
+    required AppLocalizations l10n,
+    required String localizedLevelName,
     required int gameNumber,
     required int clearTimeSeconds,
     required int wrongCount,
     required bool isNewBestRecord,
   }) {
-    final badge = isNewBestRecord ? 'NEW BEST\n' : '';
+    final badge = isNewBestRecord ? '${l10n.dialogNewBest}\n' : '';
     return [
       badge,
-      'My Sudoku 완료',
-      '$levelName · 게임 $gameNumber',
-      '기록 ${_formatSeconds(clearTimeSeconds)} · 오답 $wrongCount회',
-      '#MySudoku #SudokuChallenge',
+      l10n.shareClearHeader,
+      l10n.shareClearLine(localizedLevelName, gameNumber),
+      l10n.shareClearStats(_formatSeconds(clearTimeSeconds), wrongCount),
+      l10n.shareClearTags,
     ].where((line) => line.isNotEmpty).join('\n');
   }
 
   String formatClearSummary({
+    required AppLocalizations l10n,
     required int clearTimeSeconds,
     required int wrongCount,
   }) {
-    return '${_formatSeconds(clearTimeSeconds)} · 오답 $wrongCount회';
+    return l10n.shareSummaryPattern(
+      _formatSeconds(clearTimeSeconds),
+      wrongCount,
+    );
   }
 
   String _formatSeconds(int value) {

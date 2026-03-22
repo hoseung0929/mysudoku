@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
-
-import '../database/database_helper.dart';
-import '../model/sudoku_game.dart';
-import '../model/sudoku_level.dart';
-import '../services/achievement_service.dart';
-import '../services/challenge_progress_service.dart';
-import '../services/home_dashboard_service.dart';
-import 'achievement_collection_screen.dart';
-import 'sudoku_game_screen.dart';
+import 'package:mysudoku/l10n/achievement_l10n.dart';
+import 'package:mysudoku/l10n/app_localizations.dart';
+import 'package:mysudoku/l10n/quick_start_option_l10n.dart';
+import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
+import 'package:mysudoku/database/database_helper.dart';
+import 'package:mysudoku/model/sudoku_game.dart';
+import 'package:mysudoku/model/sudoku_level.dart';
+import 'package:mysudoku/services/achievement_service.dart';
+import 'package:mysudoku/services/challenge_progress_service.dart';
+import 'package:mysudoku/services/home_dashboard_service.dart';
+import 'package:mysudoku/view/achievement_collection_screen.dart';
+import 'package:mysudoku/view/sudoku_game_screen.dart';
 
 class ChallengeScreen extends StatefulWidget {
   const ChallengeScreen({super.key});
@@ -24,7 +27,10 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
   @override
   void initState() {
     super.initState();
-    _load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _load();
+    });
   }
 
   Future<void> _load() async {
@@ -33,7 +39,9 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
     });
 
     try {
-      final data = await _homeDashboardService.load();
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      final data = await _homeDashboardService.load(l10n);
       if (mounted) {
         setState(() {
           _data = data;
@@ -88,26 +96,26 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     final data = _data;
     if (data == null) {
-      return const Center(child: Text('챌린지 정보를 불러올 수 없습니다.'));
+      return Center(child: Text(l10n.challengeLoadError));
     }
 
     final challenge = data.challengeProgress;
     final todayGame = data.todayChallenge;
-
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text(
-            '챌린지',
-            style: TextStyle(
+          Text(
+            l10n.challengeScreenTitle,
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Color(0xFF2C3E50),
@@ -115,10 +123,13 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
           ),
           const SizedBox(height: 12),
           _ChallengeHeroCard(
+            l10n: l10n,
             streakDays: challenge.streakDays,
             isTodayCleared: challenge.isTodayChallengeCleared,
-            todayLabel:
-                '${challenge.todayChallengeLevelName} · 게임 ${challenge.todayChallengeGameNumber}',
+            todayLabel: l10n.recordsGameNumberTitle(
+              challenge.todayChallengeLevelName.localizedSudokuLevelName(l10n),
+              challenge.todayChallengeGameNumber,
+            ),
             onTap: () => _openGame(todayGame),
           ),
           const SizedBox(height: 16),
@@ -128,9 +139,9 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '오늘의 도전',
-                    style: TextStyle(
+                  Text(
+                    l10n.challengeTodaysChallengeTitle,
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF2C3E50),
@@ -138,7 +149,10 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '${todayGame.levelName} 난이도 · 게임 ${todayGame.gameNumber}',
+                    l10n.recordsGameNumberTitle(
+                      todayGame.levelName.localizedSudokuLevelName(l10n),
+                      todayGame.gameNumber,
+                    ),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -147,8 +161,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                   const SizedBox(height: 6),
                   Text(
                     challenge.isTodayChallengeCleared
-                        ? '오늘 도전은 이미 완료했어요. 기록을 다시 확인해보세요.'
-                        : '오늘의 대표 퍼즐로 연속 플레이를 이어가세요.',
+                        ? l10n.challengeTodayDoneHint
+                        : l10n.challengeTodayPendingHint,
                     style: const TextStyle(
                       color: Color(0xFF7F8C8D),
                     ),
@@ -157,7 +171,9 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                   FilledButton(
                     onPressed: () => _openGame(todayGame),
                     child: Text(
-                      challenge.isTodayChallengeCleared ? '다시 보기' : '도전 시작',
+                      challenge.isTodayChallengeCleared
+                          ? l10n.challengeTodayReviewButton
+                          : l10n.challengeTodayStartButton,
                     ),
                   ),
                 ],
@@ -165,9 +181,10 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          _WeeklyGoalCard(challenge: challenge),
+          _WeeklyGoalCard(l10n: l10n, challenge: challenge),
           const SizedBox(height: 16),
           _AchievementSection(
+            l10n: l10n,
             summary: data.achievementSummary,
             onViewAll: () async {
               await Navigator.push(
@@ -186,9 +203,9 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '추천 액션',
-                    style: TextStyle(
+                  Text(
+                    l10n.challengeSuggestedActions,
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF2C3E50),
@@ -197,11 +214,13 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                   const SizedBox(height: 12),
                   _NextMilestoneTile(
                     title: challenge.isWeeklyGoalAchieved
-                        ? '이번 주 목표를 달성했어요'
-                        : '주간 목표까지 ${challenge.remainingWeeklyGoal}판 남았어요',
+                        ? l10n.challengeWeeklyGoalReachedTitle
+                        : l10n.challengeWeeklyGoalRemainingTitle(
+                            challenge.remainingWeeklyGoal,
+                          ),
                     description: challenge.isWeeklyGoalAchieved
-                        ? '이제 퍼펙트 클리어를 늘려서 더 좋은 리듬을 만들어보세요.'
-                        : '빠른 시작으로 몇 판만 더 하면 이번 주 목표를 채울 수 있어요.',
+                        ? l10n.challengeWeeklyGoalReachedBody
+                        : l10n.challengeWeeklyGoalCatchUpBody,
                     icon: challenge.isWeeklyGoalAchieved
                         ? Icons.emoji_events
                         : Icons.flag,
@@ -209,11 +228,13 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                   const SizedBox(height: 8),
                   _NextMilestoneTile(
                     title: challenge.perfectClearCount > 0
-                        ? '이번 주 퍼펙트 클리어 ${challenge.perfectClearCount}회'
-                        : '이번 주 첫 퍼펙트 클리어에 도전해보세요',
+                        ? l10n.challengePerfectThisWeek(
+                            challenge.perfectClearCount,
+                          )
+                        : l10n.challengePerfectThisWeekFirst,
                     description: challenge.perfectClearCount > 0
-                        ? '오답 없는 클리어를 이어가면 실력 성장이 더 잘 보입니다.'
-                        : '메모 기능을 활용하면 오답 없는 클리어에 훨씬 가까워집니다.',
+                        ? l10n.challengePerfectPositiveBody
+                        : l10n.challengePerfectZeroBody,
                     icon: Icons.auto_awesome,
                   ),
                   const SizedBox(height: 12),
@@ -221,8 +242,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                     (option) => ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.play_arrow),
-                      title: Text(option.label),
-                      subtitle: Text(option.description),
+                      title: Text(option.localizedTitle(l10n)),
+                      subtitle: Text(option.localizedDescription(l10n)),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => _startQuickGame(option.level),
                     ),
@@ -239,9 +260,11 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
 
 class _WeeklyGoalCard extends StatelessWidget {
   const _WeeklyGoalCard({
+    required this.l10n,
     required this.challenge,
   });
 
+  final AppLocalizations l10n;
   final ChallengeProgressSummary challenge;
 
   @override
@@ -257,9 +280,9 @@ class _WeeklyGoalCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '주간 목표',
-              style: TextStyle(
+            Text(
+              l10n.challengeWeeklyGoalHeading,
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF2C3E50),
@@ -267,7 +290,7 @@ class _WeeklyGoalCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '이번 주 ${challenge.weeklyGoalTarget}판 클리어',
+              l10n.challengeWeeklyClearsLine(challenge.weeklyGoalTarget),
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -291,15 +314,19 @@ class _WeeklyGoalCard extends StatelessWidget {
                 Expanded(
                   child: _GoalStatChip(
                     icon: Icons.check_circle_outline,
-                    label:
-                        '${challenge.weeklyClearCount}/${challenge.weeklyGoalTarget} 완료',
+                    label: l10n.challengeWeeklyProgressShort(
+                      challenge.weeklyClearCount,
+                      challenge.weeklyGoalTarget,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: _GoalStatChip(
                     icon: Icons.auto_awesome,
-                    label: '퍼펙트 ${challenge.perfectClearCount}회',
+                    label: l10n.challengeWeeklyPerfectShort(
+                      challenge.perfectClearCount,
+                    ),
                   ),
                 ),
               ],
@@ -307,8 +334,10 @@ class _WeeklyGoalCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               challenge.isWeeklyGoalAchieved
-                  ? '이번 주 목표를 달성했습니다. 기록을 더 멋지게 쌓아보세요.'
-                  : '지금 흐름이면 이번 주 목표까지 ${challenge.remainingWeeklyGoal}판 남았습니다.',
+                  ? l10n.challengeWeeklyCongratsFooter
+                  : l10n.challengeWeeklyAlmostFooter(
+                      challenge.remainingWeeklyGoal,
+                    ),
               style: const TextStyle(
                 color: Color(0xFF7F8C8D),
               ),
@@ -410,10 +439,12 @@ class _NextMilestoneTile extends StatelessWidget {
 
 class _AchievementSection extends StatelessWidget {
   const _AchievementSection({
+    required this.l10n,
     required this.summary,
     required this.onViewAll,
   });
 
+  final AppLocalizations l10n;
   final AchievementSummary summary;
   final VoidCallback onViewAll;
 
@@ -428,9 +459,9 @@ class _AchievementSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '업적 · 배지',
-              style: TextStyle(
+            Text(
+              l10n.challengeAchievementsHeading,
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF2C3E50),
@@ -441,7 +472,10 @@ class _AchievementSection extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    '획득 ${summary.unlockedBadges.length}/${summary.badges.length}',
+                    l10n.challengeBadgesCollected(
+                      summary.unlockedBadges.length,
+                      summary.badges.length,
+                    ),
                     style: const TextStyle(
                       color: Color(0xFF7F8C8D),
                     ),
@@ -449,15 +483,15 @@ class _AchievementSection extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: onViewAll,
-                  child: const Text('전체 보기'),
+                  child: Text(l10n.challengeViewAllBadges),
                 ),
               ],
             ),
             if (unlocked.isNotEmpty) ...[
               const SizedBox(height: 14),
-              const Text(
-                '획득한 배지',
-                style: TextStyle(
+              Text(
+                l10n.challengeEarnedBadgesHeading,
+                style: const TextStyle(
                   fontWeight: FontWeight.w700,
                   color: Color(0xFF2C3E50),
                 ),
@@ -477,9 +511,9 @@ class _AchievementSection extends StatelessWidget {
             ],
             if (upcoming.isNotEmpty) ...[
               const SizedBox(height: 16),
-              const Text(
-                '다음 목표',
-                style: TextStyle(
+              Text(
+                l10n.challengeNextBadgeTargets,
+                style: const TextStyle(
                   fontWeight: FontWeight.w700,
                   color: Color(0xFF2C3E50),
                 ),
@@ -490,8 +524,10 @@ class _AchievementSection extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 8),
                   child: _NextMilestoneTile(
                     title: badge.title,
-                    description:
-                        '${badge.description} 현재 진행: ${badge.progressLabel}',
+                    description: l10n.challengeBadgeProgressLine(
+                      badge.description,
+                      badge.progressLabel,
+                    ),
                     icon: Icons.workspace_premium,
                   ),
                 ),
@@ -513,6 +549,7 @@ class _AchievementBadgeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: 150,
       padding: const EdgeInsets.all(12),
@@ -542,7 +579,7 @@ class _AchievementBadgeChip extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${badge.progressLabel} · ${badge.rarity.label}',
+            '${badge.progressLabel} · ${badge.rarity.localizedName(l10n)}',
             style: TextStyle(
               color: badge.unlocked ? badge.accentColor : const Color(0xFF7F8C8D),
             ),
@@ -555,12 +592,14 @@ class _AchievementBadgeChip extends StatelessWidget {
 
 class _ChallengeHeroCard extends StatelessWidget {
   const _ChallengeHeroCard({
+    required this.l10n,
     required this.streakDays,
     required this.isTodayCleared,
     required this.todayLabel,
     required this.onTap,
   });
 
+  final AppLocalizations l10n;
   final int streakDays;
   final bool isTodayCleared;
   final String todayLabel;
@@ -590,7 +629,9 @@ class _ChallengeHeroCard extends StatelessWidget {
               const Icon(Icons.local_fire_department, color: Color(0xFFDA8B00)),
               const SizedBox(width: 8),
               Text(
-                streakDays > 0 ? '$streakDays일 연속 클리어' : '오늘 첫 클리어 도전',
+                streakDays > 0
+                    ? l10n.challengeStreakDays(streakDays)
+                    : l10n.challengeStreakStartToday,
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -610,8 +651,8 @@ class _ChallengeHeroCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             isTodayCleared
-                ? '오늘의 도전을 완료했습니다. 내일도 이어서 기록을 쌓아보세요.'
-                : '오늘의 도전이 아직 남아 있어요. 지금 시작하면 스트릭을 이어갈 수 있어요.',
+                ? l10n.challengeHeroDoneCaption
+                : l10n.challengeHeroPendingCaption,
             style: const TextStyle(
               color: Color(0xFF7A642D),
             ),
@@ -619,7 +660,11 @@ class _ChallengeHeroCard extends StatelessWidget {
           const SizedBox(height: 14),
           FilledButton(
             onPressed: onTap,
-            child: Text(isTodayCleared ? '기록 다시 보기' : '오늘의 도전 시작'),
+            child: Text(
+              isTodayCleared
+                  ? l10n.challengeHeroReviewAction
+                  : l10n.challengeHeroStartAction,
+            ),
           ),
         ],
       ),

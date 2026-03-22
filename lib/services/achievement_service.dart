@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mysudoku/database/database_helper.dart';
+import 'package:mysudoku/l10n/app_localizations.dart';
 
-import 'challenge_progress_service.dart';
+import 'package:mysudoku/services/challenge_progress_service.dart';
 
 class AchievementBadge {
   const AchievementBadge({
@@ -68,19 +69,6 @@ enum AchievementRarity {
   epic,
 }
 
-extension AchievementRarityX on AchievementRarity {
-  String get label {
-    switch (this) {
-      case AchievementRarity.common:
-        return '기본';
-      case AchievementRarity.rare:
-        return '희귀';
-      case AchievementRarity.epic:
-        return '에픽';
-    }
-  }
-}
-
 class AchievementSummary {
   const AchievementSummary({
     required this.badges,
@@ -114,7 +102,7 @@ class AchievementService {
   final Future<Map<String, dynamic>> Function() _loadOverallStatistics;
   final Future<List<Map<String, dynamic>>> Function() _loadRecentRecords;
 
-  Future<AchievementSummary> load() async {
+  Future<AchievementSummary> load(AppLocalizations l10n) async {
     final overall = await _loadOverallStatistics();
     final records = await _loadRecentRecords();
 
@@ -133,45 +121,58 @@ class AchievementService {
       badges: [
         AchievementBadge(
           id: 'first_clear',
-          title: '첫 클리어',
-          description: '첫 퍼즐을 완주해 스도쿠 여정을 시작했어요.',
-          progressLabel: '${_cap(totalCleared, 1)}/1',
+          title: l10n.achievementBadgeFirstClearTitle,
+          description: l10n.achievementBadgeFirstClearDesc,
+          progressLabel: l10n.achievementProgressFraction(
+            _cap(totalCleared, 1),
+            1,
+          ),
           unlocked: totalCleared >= 1,
           rarity: AchievementRarity.common,
           sortOrder: 0,
         ),
         AchievementBadge(
           id: 'streak_3',
-          title: '3일 연속',
-          description: '3일 연속으로 퍼즐을 클리어해 리듬을 만들어요.',
-          progressLabel: '${_cap(streakDays, 3)}/3일',
+          title: l10n.achievementBadgeStreakTitle,
+          description: l10n.achievementBadgeStreakDesc,
+          progressLabel: l10n.achievementProgressStreak(
+            _cap(streakDays, 3),
+            3,
+          ),
           unlocked: streakDays >= 3,
           rarity: AchievementRarity.rare,
           sortOrder: 1,
         ),
         AchievementBadge(
           id: 'weekly_5',
-          title: '주간 러너',
-          description: '최근 7일 동안 5판을 클리어해 꾸준함을 보여주세요.',
-          progressLabel: '${_cap(weeklyClearCount, 5)}/5판',
+          title: l10n.achievementBadgeWeeklyTitle,
+          description: l10n.achievementBadgeWeeklyDesc,
+          progressLabel: l10n.achievementProgressWeekly(
+            _cap(weeklyClearCount, 5),
+            5,
+          ),
           unlocked: weeklyClearCount >= 5,
           rarity: AchievementRarity.rare,
           sortOrder: 2,
         ),
         AchievementBadge(
           id: 'perfect_clear',
-          title: '퍼펙트 클리어',
-          description: '오답 없이 한 판을 끝내면 획득합니다.',
-          progressLabel: hasPerfectClear ? '완료' : '미달성',
+          title: l10n.achievementBadgePerfectTitle,
+          description: l10n.achievementBadgePerfectDesc,
+          progressLabel: hasPerfectClear
+              ? l10n.achievementStatusDone
+              : l10n.achievementStatusNotMet,
           unlocked: hasPerfectClear,
           rarity: AchievementRarity.epic,
           sortOrder: 3,
         ),
         AchievementBadge(
           id: 'master_clear',
-          title: '마스터 첫 승리',
-          description: '마스터 난이도를 처음 클리어하면 해금됩니다.',
-          progressLabel: hasMasterClear ? '완료' : '도전 중',
+          title: l10n.achievementBadgeMasterTitle,
+          description: l10n.achievementBadgeMasterDesc,
+          progressLabel: hasMasterClear
+              ? l10n.achievementStatusDone
+              : l10n.achievementStatusTrying,
           unlocked: hasMasterClear,
           rarity: AchievementRarity.epic,
           sortOrder: 4,

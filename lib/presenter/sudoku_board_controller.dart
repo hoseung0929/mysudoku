@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:mysudoku/utils/app_logger.dart';
 
-import '../utils/sudoku_generator.dart';
+import 'package:mysudoku/utils/sudoku_generator.dart';
 
 class SudokuBoardController {
   SudokuBoardController({

@@ -1,5 +1,5 @@
-import '../database/database_helper.dart';
-import '../model/sudoku_level.dart';
+import 'package:mysudoku/database/database_helper.dart';
+import 'package:mysudoku/model/sudoku_level.dart';
 
 class ChallengeProgressSummary {
   const ChallengeProgressSummary({
