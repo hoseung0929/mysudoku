@@ -1,8 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:vibration/vibration.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vibration/vibration.dart';
+import '../services/game_record_service.dart';
+import '../services/game_state_service.dart';
+import '../services/onboarding_service.dart';
+import '../services/result_share_service.dart';
+import '../services/challenge_progress_service.dart';
+import '../services/achievement_service.dart';
 import '../model/sudoku_game.dart';
 import '../model/sudoku_level.dart';
 import '../presenter/sudoku_game_presenter.dart';
@@ -11,7 +19,7 @@ import '../widgets/game_over_dialog.dart';
 import '../widgets/game_complete_dialog.dart';
 import '../widgets/custom_app_bar.dart';
 import '../theme/app_theme.dart';
-import '../database/database_helper.dart';
+import 'package:mysudoku/utils/app_logger.dart';
 
 /// 스도쿠 게임의 메인 화면
 /// MVP 패턴에서 View 역할을 수행하며, 사용자 인터페이스를 담당
@@ -31,9 +39,17 @@ class SudokuGameScreen extends StatefulWidget {
 
 class _SudokuGameScreenState extends State<SudokuGameScreen> {
   static const String _vibrationEnabledKey = 'vibration_enabled';
+  final GameStateService _gameStateService = GameStateService();
+  final GameRecordService _gameRecordService = GameRecordService();
+  final OnboardingService _onboardingService = OnboardingService();
+  final ResultShareService _resultShareService = ResultShareService();
+  final ChallengeProgressService _challengeProgressService =
+      ChallengeProgressService();
+  final AchievementService _achievementService = AchievementService();
   late final SudokuGamePresenter _presenter;
   bool _presenterReady = false;
   bool _isVibrationEnabled = true;
+  bool _hasShownGameGuide = false;
   Set<int> _completedRows = <int>{};
   Set<int> _completedCols = <int>{};
 
@@ -50,59 +66,49 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
   /// 게임 초기화
   Future<void> _initializeGame() async {
     if (kDebugMode) {
-      print('=== 게임 초기화 시작 ===');
-      print('레벨: ${widget.level.name}');
-      print('플레이 게임 game_number: ${widget.game.gameNumber}');
-      print('해답 game_number: ${widget.game.gameNumber}');
-      print('원본 보드:');
-      for (int i = 0; i < widget.game.board.length; i++) {
-        print('  ${widget.game.board[i]}');
-      }
-      print('DB 해답 보드:');
-      for (int i = 0; i < widget.game.solution.length; i++) {
-        print('  ${widget.game.solution[i]}');
-      }
+      AppLogger.debug(
+        '게임 초기화 시작: ${widget.level.name} 게임 ${widget.game.gameNumber}',
+      );
     }
 
     await _loadVibrationSetting();
 
     // 저장된 게임 상태 복원
-    List<List<int>>? restoredBoard = await _loadGameState();
+    List<List<int>>? restoredBoard = await _gameStateService.loadBoard(
+      levelName: widget.level.name,
+      gameNumber: widget.game.gameNumber,
+    );
     if (restoredBoard != null && kDebugMode) {
-      debugPrint('저장된 게임 상태 발견:');
-      for (int i = 0; i < restoredBoard.length; i++) {
-        debugPrint('  ${restoredBoard[i]}');
-      }
+      AppLogger.debug('저장된 게임 상태 발견');
     }
-    if (restoredBoard != null) {
-      // 저장된 게임 상태가 현재 게임과 다른지 확인
-      bool isDifferentGame = false;
-      if (restoredBoard.length == widget.game.board.length) {
+    if (restoredBoard != null &&
+        !_gameStateService.isBoardCompatible(
+          originalBoard: widget.game.board,
+          restoredBoard: restoredBoard,
+        )) {
+      if (kDebugMode) {
         for (int row = 0; row < restoredBoard.length; row++) {
           for (int col = 0; col < restoredBoard[row].length; col++) {
-            if (widget.game.board[row][col] != 0 &&
-                restoredBoard[row][col] != widget.game.board[row][col]) {
-              isDifferentGame = true;
-              if (kDebugMode) {
-                print(
-                    '다른 게임 감지: [$row][$col] - 원본=${widget.game.board[row][col]}, 저장=${restoredBoard[row][col]}');
-              }
+            if (row >= widget.game.board.length ||
+                col >= widget.game.board[row].length ||
+                (widget.game.board[row][col] != 0 &&
+                    restoredBoard[row][col] != widget.game.board[row][col])) {
+              AppLogger.debug(
+                '다른 게임 감지: [$row][$col], 원본=${row < widget.game.board.length && col < widget.game.board[row].length ? widget.game.board[row][col] : 'N/A'}, 저장=${restoredBoard[row][col]}',
+              );
               break;
             }
           }
-          if (isDifferentGame) break;
         }
-      } else {
-        isDifferentGame = true;
       }
-
-      if (isDifferentGame) {
-        if (kDebugMode) {
-          print('저장된 게임 상태를 무시하고 현재 게임 원본 보드로 시작합니다.');
-        }
-        await _clearGameState();
-        restoredBoard = null;
+      if (kDebugMode) {
+        AppLogger.debug('저장된 게임 상태가 현재 퍼즐과 달라 무시합니다');
       }
+      await _gameStateService.clearBoard(
+        levelName: widget.level.name,
+        gameNumber: widget.game.gameNumber,
+      );
+      restoredBoard = null;
     }
 
     final initialBoard = restoredBoard ?? widget.game.board;
@@ -115,7 +121,11 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
       onBoardChanged: (board) {
         _checkAndTriggerLineCompletionEffect(board);
         setState(() {});
-        _saveGameState(board); // 보드 변경 시 저장
+        _gameStateService.saveBoard(
+          levelName: widget.level.name,
+          gameNumber: widget.game.gameNumber,
+          board: board,
+        );
       },
       onFixedNumbersChanged: (fixedNumbers) {
         setState(() {});
@@ -153,22 +163,91 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
         _presenterReady = true;
       });
     }
+    await _maybeShowGameGuide();
     if (kDebugMode) {
-      print('=== 게임 초기화 완료 ===');
+      AppLogger.debug('게임 초기화 완료');
     }
   }
 
-  /// 게임 상태 저장
-  Future<void> _saveGameState(List<List<int>> board) async {
-    final prefs = await SharedPreferences.getInstance();
-    final gameKey = 'game_${widget.level.name}_${widget.game.gameNumber}';
+  Future<void> _maybeShowGameGuide() async {
+    if (!mounted || _hasShownGameGuide) return;
+    final shouldShow = await _onboardingService.shouldShowGameGuide();
+    if (!shouldShow || !mounted) return;
 
-    final boardString = board.map((row) => row.join(',')).join(';');
-    await prefs.setString(gameKey, boardString);
+    _hasShownGameGuide = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (context) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '게임 가이드',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                const _GameGuideItem(
+                  title: '칸을 먼저 선택하세요',
+                  description: '비어 있는 칸을 누른 뒤 아래 숫자 버튼으로 입력합니다.',
+                ),
+                const SizedBox(height: 10),
+                const _GameGuideItem(
+                  title: '오답은 3번까지',
+                  description: '틀린 숫자를 3번 입력하면 해당 판은 종료됩니다.',
+                ),
+                const SizedBox(height: 10),
+                const _GameGuideItem(
+                  title: '색상 힌트를 활용하세요',
+                  description: '선택 칸, 같은 숫자, 관련 칸이 함께 강조되어 흐름을 읽기 쉽습니다.',
+                ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('바로 플레이'),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+      await _onboardingService.markGameGuideSeen();
+    });
+  }
 
-    if (kDebugMode) {
-      print('게임 상태 저장 완료: $gameKey');
-    }
+  Future<void> _clearCurrentGameState() async {
+    await _gameStateService.clearBoard(
+      levelName: widget.level.name,
+      gameNumber: widget.game.gameNumber,
+    );
+  }
+
+  Future<void> _resetAndRestartCurrentGame() async {
+    await _clearCurrentGameState();
+    if (!mounted) return;
+    _presenter.restartGame();
+  }
+
+  Future<void> _exitToLevelSelection() async {
+    final levelNavigator = Navigator.of(context);
+    await _clearCurrentGameState();
+    if (!mounted) return;
+    levelNavigator.pop();
   }
 
   Future<void> _loadVibrationSetting() async {
@@ -264,48 +343,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
     });
   }
 
-  /// 게임 상태 복원
-  Future<List<List<int>>?> _loadGameState() async {
-    final prefs = await SharedPreferences.getInstance();
-    final gameKey = 'game_${widget.level.name}_${widget.game.gameNumber}';
-
-    if (kDebugMode) {
-      print('게임 상태 로딩 시도: $gameKey');
-    }
-
-    final boardString = prefs.getString(gameKey);
-    if (boardString != null) {
-      if (kDebugMode) {
-        print('저장된 게임 상태 문자열: $boardString');
-      }
-      final rows = boardString.split(';');
-      final board = rows.map((row) {
-        return row.split(',').map((cell) => int.parse(cell)).toList();
-      }).toList();
-      if (kDebugMode) {
-        print('게임 상태 복원 완료');
-      }
-      return board;
-    } else {
-      if (kDebugMode) {
-        print('저장된 게임 상태 없음');
-      }
-      return null;
-    }
-  }
-
-  /// 게임 상태 삭제 (게임 완료 또는 재시작 시)
-  Future<void> _clearGameState() async {
-    final prefs = await SharedPreferences.getInstance();
-    final gameKey = 'game_${widget.level.name}_${widget.game.gameNumber}';
-
-    await prefs.remove(gameKey);
-
-    if (kDebugMode) {
-      print('게임 상태 삭제 완료: $gameKey');
-    }
-  }
-
   @override
   void dispose() {
     if (_presenterReady) {
@@ -389,6 +426,15 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
                       '힌트', '${_presenter.hintsRemaining}', Icons.lightbulb),
                   const SizedBox(width: 12),
                   _buildInfoCard(
+                    '메모',
+                    _presenter.isMemoMode ? 'ON' : 'OFF',
+                    Icons.edit_note,
+                    accentColor: _presenter.isMemoMode
+                        ? AppTheme.mintColor
+                        : null,
+                  ),
+                  const SizedBox(width: 12),
+                  _buildInfoCard(
                       '오답', '${_presenter.wrongCount}/3', Icons.error_outline),
                   const SizedBox(width: 12),
                   _buildInfoCard(
@@ -456,6 +502,49 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
                                     ),
                                 ],
                               ),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _buildActionButton(
+                                  icon: Icons.edit_note,
+                                  label: _presenter.isMemoMode ? '메모 ON' : '메모',
+                                  backgroundColor: _presenter.isMemoMode
+                                      ? AppTheme.mintColor
+                                      : AppTheme.lightBlueColor,
+                                  onPressed: () {
+                                    setState(() {
+                                      _presenter.toggleMemoMode();
+                                    });
+                                  },
+                                ),
+                                const SizedBox(width: 8),
+                                _buildActionButton(
+                                  icon: Icons.lightbulb,
+                                  label: '힌트',
+                                  backgroundColor: AppTheme.yellowColor,
+                                  onPressed: () {
+                                    setState(() {
+                                      _presenter.useHint();
+                                    });
+                                  },
+                                ),
+                                const SizedBox(width: 8),
+                                _buildActionButton(
+                                  icon: _presenter.isPaused
+                                      ? Icons.play_arrow
+                                      : Icons.pause,
+                                  label: _presenter.isPaused ? '계속' : '일시정지',
+                                  backgroundColor: AppTheme.pinkColor,
+                                  onPressed: () {
+                                    setState(() {
+                                      _presenter.togglePause();
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
                             //const SizedBox(height: 16),
                             // 정답 표시 네모칸
                             _buildAnswerBox(),
@@ -499,6 +588,15 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
                     const SizedBox(width: 12),
                     _buildInfoCard('오답', '${_presenter.wrongCount}/3',
                         Icons.error_outline),
+                    const SizedBox(width: 12),
+                    _buildInfoCard(
+                      '메모',
+                      _presenter.isMemoMode ? 'ON' : 'OFF',
+                      Icons.edit_note,
+                      accentColor: _presenter.isMemoMode
+                          ? AppTheme.mintColor
+                          : null,
+                    ),
                     const SizedBox(width: 12),
                     _buildInfoCard(
                         '진행율',
@@ -546,11 +644,16 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
   }
 
   /// 정보 카드 위젯
-  Widget _buildInfoCard(String label, String value, IconData icon) {
+  Widget _buildInfoCard(
+    String label,
+    String value,
+    IconData icon, {
+    Color? accentColor,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppTheme.cardColor,
+        color: accentColor ?? AppTheme.cardColor,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.grey.shade300),
       ),
@@ -564,6 +667,36 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
             style: GoogleFonts.notoSans(
               fontSize: 14,
               fontWeight: FontWeight.w500,
+              color: AppTheme.textColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Color backgroundColor,
+    required VoidCallback onPressed,
+  }) {
+    return ProgressiveBlurButton(
+      onPressed: onPressed,
+      width: 92,
+      height: 64,
+      borderRadius: 20,
+      backgroundColor: backgroundColor,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: AppTheme.textColor, size: 26),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: GoogleFonts.notoSans(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
               color: AppTheme.textColor,
             ),
           ),
@@ -597,6 +730,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
                 final isRelated = _presenter.isRelated(row, col);
                 final isWrong = _presenter.isWrongNumber(row, col);
                 final isHint = _presenter.isHintNumber(row, col);
+                final notes = _presenter.getCellNotes(row, col);
 
                 // 파도 효과
                 final isWave = _waveActive['$row,$col'] == true;
@@ -667,12 +801,41 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
                                             ? AppTheme.sudokuFixedNumberStyle
                                             : AppTheme.sudokuNumberStyle,
                               )
-                            : const SizedBox(),
+                            : _buildMemoGrid(notes),
                       ),
                     ),
                   ),
                 );
               }),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildMemoGrid(Set<int> notes) {
+    if (notes.isEmpty) {
+      return const SizedBox();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(3),
+      child: GridView.count(
+        crossAxisCount: 3,
+        physics: const NeverScrollableScrollPhysics(),
+        shrinkWrap: true,
+        children: List.generate(9, (index) {
+          final noteValue = index + 1;
+          final isVisible = notes.contains(noteValue);
+          return Center(
+            child: Text(
+              isVisible ? '$noteValue' : '',
+              style: GoogleFonts.notoSans(
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.lightTextColor.withValues(alpha: 0.75),
+              ),
             ),
           );
         }),
@@ -691,7 +854,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
 
     return ProgressiveBlurButton(
       onPressed: () async {
-        await _vibrateOnNumberInput(number);
+        if (!_presenter.isMemoMode) {
+          await _vibrateOnNumberInput(number);
+        }
 
         setState(() {
           _presenter.setSelectedCellValue(number);
@@ -741,23 +906,38 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
 
   Widget _buildMenuButton(int menuNumber) {
     final List<IconData> icons = [
-      Icons.menu,
-      Icons.settings,
-      Icons.help_outline,
+      Icons.edit_note,
+      Icons.lightbulb,
+      _presenter.isPaused ? Icons.play_arrow : Icons.pause,
+    ];
+    final labels = [
+      _presenter.isMemoMode ? '메모 ON' : '메모',
+      '힌트',
+      _presenter.isPaused ? '계속' : '일시정지',
     ];
 
     // 메뉴 버튼용 파스텔톤 색상
     final List<Color> menuColors = [
-      AppTheme.lightBlueColor,
+      _presenter.isMemoMode ? AppTheme.mintColor : AppTheme.lightBlueColor,
       AppTheme.yellowColor,
-      AppTheme.mintColor
+      AppTheme.pinkColor
     ];
     final menuColor = menuColors[(menuNumber - 1) % menuColors.length];
 
     return ProgressiveBlurButton(
       onPressed: () {
         setState(() {
-          // 메뉴 기능 구현 필요
+          switch (menuNumber) {
+            case 1:
+              _presenter.toggleMemoMode();
+              break;
+            case 2:
+              _presenter.useHint();
+              break;
+            case 3:
+              _presenter.togglePause();
+              break;
+          }
         });
       },
       width: 70,
@@ -773,14 +953,14 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
             size: 32,
           ),
           const SizedBox(height: 4),
-          // Text(
-          //   labels[menuNumber - 1],
-          //   style: const TextStyle(
-          //         color: Colors.white,
-          //         fontSize: 12,
-          //         fontWeight: FontWeight.w500,
-          //       ),
-          // ),
+          Text(
+            labels[menuNumber - 1],
+            style: GoogleFonts.notoSans(
+              color: AppTheme.textColor,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );
@@ -788,8 +968,25 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
 
   /// 게임 완료 다이얼로그 표시
   void _showGameCompleteDialog() async {
+    final beforeAchievements = await _achievementService.load();
     // 클리어 기록 저장
-    final isNewBestRecord = await _saveClearRecord();
+    final isNewBestRecord = await _gameRecordService.saveClearRecordIfBest(
+      levelName: widget.level.name,
+      gameNumber: widget.game.gameNumber,
+      clearTime: _presenter.seconds,
+      wrongCount: _presenter.wrongCount,
+    );
+    if (!mounted) return;
+    final afterAchievements = await _achievementService.load();
+    if (!mounted) return;
+    final newlyUnlockedBadges = _achievementService.getNewlyUnlockedBadges(
+      before: beforeAchievements,
+      after: afterAchievements,
+    );
+    final isTodayChallenge = await _challengeProgressService.isTodayChallenge(
+      levelName: widget.level.name,
+      gameNumber: widget.game.gameNumber,
+    );
     if (!mounted) return;
 
     showDialog(
@@ -797,56 +994,57 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return GameCompleteDialog(
+          shareSummary: _resultShareService.formatClearSummary(
+            clearTimeSeconds: _presenter.seconds,
+            wrongCount: _presenter.wrongCount,
+          ),
           timeInSeconds: _presenter.seconds,
           wrongCount: _presenter.wrongCount,
           isNewBestRecord: isNewBestRecord,
+          challengeMessage:
+              isTodayChallenge ? '오늘의 도전을 완료했어요.' : null,
+          unlockedBadges: newlyUnlockedBadges,
+          onCopyResult: () => _copyClearResult(isNewBestRecord),
+          onShareResult: () => _shareClearResult(isNewBestRecord),
           onRestart: () async {
             Navigator.of(context).pop();
-            await _clearGameState(); // 저장된 상태 삭제
-            if (!mounted) return;
-            _presenter.restartGame();
+            await _resetAndRestartCurrentGame();
           },
           onGoToLevelSelection: () async {
-            final levelNavigator = Navigator.of(this.context);
             Navigator.of(context).pop();
-            await _clearGameState(); // 저장된 상태 삭제
-            if (!mounted) return;
-            levelNavigator.pop(); // 게임 화면으로 돌아가기
+            await _exitToLevelSelection();
           },
         );
       },
     );
   }
 
-  /// 클리어 기록 저장
-  Future<bool> _saveClearRecord() async {
-    try {
-      final dbHelper = DatabaseHelper();
-      final existing = await dbHelper.getClearRecord(
-        widget.level.name,
-        widget.game.gameNumber,
-      );
-      final bool isNewBestRecord = existing == null ||
-          _presenter.seconds < (existing['clear_time'] as int) ||
-          (_presenter.seconds == (existing['clear_time'] as int) &&
-              _presenter.wrongCount < (existing['wrong_count'] as int));
+  Future<void> _copyClearResult(bool isNewBestRecord) async {
+    final resultText = _resultShareService.buildClearResultText(
+      levelName: widget.level.name,
+      gameNumber: widget.game.gameNumber,
+      clearTimeSeconds: _presenter.seconds,
+      wrongCount: _presenter.wrongCount,
+      isNewBestRecord: isNewBestRecord,
+    );
 
-      await dbHelper.saveClearRecord(
-        levelName: widget.level.name,
-        gameNumber: widget.game.gameNumber,
-        clearTime: _presenter.seconds,
-        wrongCount: _presenter.wrongCount,
-      );
-      if (kDebugMode) {
-        print('클리어 기록 저장 완료: ${widget.level.name} 게임 ${widget.game.gameNumber}');
-      }
-      return isNewBestRecord;
-    } catch (e) {
-      if (kDebugMode) {
-        print('클리어 기록 저장 실패: $e');
-      }
-      return false;
-    }
+    await Clipboard.setData(ClipboardData(text: resultText));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('결과 문구를 복사했어요.')),
+    );
+  }
+
+  Future<void> _shareClearResult(bool isNewBestRecord) async {
+    final resultText = _resultShareService.buildClearResultText(
+      levelName: widget.level.name,
+      gameNumber: widget.game.gameNumber,
+      clearTimeSeconds: _presenter.seconds,
+      wrongCount: _presenter.wrongCount,
+      isNewBestRecord: isNewBestRecord,
+    );
+
+    await Share.share(resultText, subject: 'My Sudoku 결과');
   }
 
   /// 게임 오버 다이얼로그 표시
@@ -859,16 +1057,11 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
           wrongCount: _presenter.wrongCount,
           onRestart: () async {
             Navigator.of(context).pop();
-            await _clearGameState(); // 저장된 상태 삭제
-            if (!mounted) return;
-            _presenter.restartGame();
+            await _resetAndRestartCurrentGame();
           },
           onGoToLevelSelection: () async {
-            final levelNavigator = Navigator.of(this.context);
             Navigator.of(context).pop();
-            await _clearGameState(); // 저장된 상태 삭제
-            if (!mounted) return;
-            levelNavigator.pop(); // 게임 화면으로 돌아가기
+            await _exitToLevelSelection();
           },
         );
       },
@@ -981,7 +1174,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
       }
     } catch (e) {
       if (kDebugMode) {
-        print('정답 표시 중 오류 발생: $e');
+        AppLogger.debug('정답 표시 중 오류 발생: $e');
       }
     }
 
@@ -1017,30 +1210,74 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
     final col = _presenter.selectedCol!;
 
     if (kDebugMode) {
-      print('=== 정답 조회 로그 ===');
-      print('플레이 게임 game_number: ${widget.game.gameNumber}');
-      print('해답 game_number: ${widget.game.gameNumber}');
-      print('선택된 셀: [$row][$col]');
+      AppLogger.debug('정답 조회: 게임 ${widget.game.gameNumber}, 셀 [$row][$col]');
     }
 
     try {
       final answer = _presenter.getCorrectValue(row, col);
       if (kDebugMode) {
-        print('현재 게임 해답 데이터 사용: [$row][$col] = $answer');
-        print('========================');
+        AppLogger.debug('정답 조회 성공: [$row][$col] = $answer');
       }
       return answer;
     } catch (e) {
       if (kDebugMode) {
-        print('정답 계산 중 오류: $e');
-        print('========================');
+        AppLogger.debug('정답 계산 중 오류: $e');
       }
     }
 
     if (kDebugMode) {
-      print('정답을 찾을 수 없음');
-      print('========================');
+      AppLogger.debug('정답을 찾을 수 없음');
     }
     return null;
+  }
+}
+
+class _GameGuideItem extends StatelessWidget {
+  const _GameGuideItem({
+    required this.title,
+    required this.description,
+  });
+
+  final String title;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: const EdgeInsets.only(top: 2),
+          width: 8,
+          height: 8,
+          decoration: const BoxDecoration(
+            color: Color(0xFF8DC6B0),
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF2C3E50),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                style: const TextStyle(
+                  color: Color(0xFF6B7780),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }

@@ -1,13 +1,62 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
+import 'package:mysudoku/utils/app_logger.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../model/sudoku_level.dart';
 import '../utils/sudoku_generator.dart';
 
+class PuzzleCatalogStatus {
+  const PuzzleCatalogStatus({
+    required this.isRunning,
+    required this.generatedCounts,
+    required this.targetPerLevel,
+  });
+
+  final bool isRunning;
+  final Map<String, int> generatedCounts;
+  final int targetPerLevel;
+
+  int get totalGenerated =>
+      generatedCounts.values.fold(0, (sum, count) => sum + count);
+
+  int get totalTarget => SudokuLevel.levels.length * targetPerLevel;
+
+  int get remaining => totalTarget - totalGenerated;
+
+  bool get isComplete => remaining <= 0;
+
+  PuzzleCatalogStatus copyWith({
+    bool? isRunning,
+    Map<String, int>? generatedCounts,
+    int? targetPerLevel,
+  }) {
+    return PuzzleCatalogStatus(
+      isRunning: isRunning ?? this.isRunning,
+      generatedCounts: generatedCounts ?? this.generatedCounts,
+      targetPerLevel: targetPerLevel ?? this.targetPerLevel,
+    );
+  }
+}
+
 /// 데이터베이스 초기화와 기본 관리를 담당하는 클래스
 class DatabaseManager {
   static final DatabaseManager _instance = DatabaseManager._internal();
   static Database? _database;
+  static const int _targetGamesPerLevel = 100;
+  static const int _initialSeedGamesPerLevel = 12;
+  bool _isTopUpRunning = false;
+  final ValueNotifier<PuzzleCatalogStatus> catalogStatus =
+      ValueNotifier<PuzzleCatalogStatus>(
+    PuzzleCatalogStatus(
+      isRunning: false,
+      generatedCounts: {
+        for (final level in SudokuLevel.levels) level.name: 0,
+      },
+      targetPerLevel: _targetGamesPerLevel,
+    ),
+  );
 
   factory DatabaseManager() => _instance;
 
@@ -30,12 +79,9 @@ class DatabaseManager {
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onOpen: (db) async {
-        // 데이터베이스가 비어있는 경우에만 초기 데이터 삽입
-        final count = Sqflite.firstIntValue(
-            await db.rawQuery('SELECT COUNT(*) FROM games'));
-        if (count == 0) {
-          await _insertInitialGames(db);
-        }
+        await _ensureInitialSeed(db);
+        await _refreshCatalogStatus(db, isRunning: false);
+        unawaited(_topUpGamesInBackground(db));
       },
     );
   }
@@ -68,7 +114,11 @@ class DatabaseManager {
     ''');
 
     // 초기 게임 데이터 삽입
-    await _insertInitialGames(db);
+    await _insertInitialGames(
+      db,
+      gamesPerLevel: _initialSeedGamesPerLevel,
+      logAsSeed: true,
+    );
   }
 
   /// 데이터베이스 업그레이드 처리
@@ -90,51 +140,171 @@ class DatabaseManager {
   }
 
   /// 초기 게임 데이터를 생성하여 데이터베이스에 삽입합니다.
-  Future<void> _insertInitialGames(Database db) async {
+  Future<void> _ensureInitialSeed(Database db) async {
+    final count = Sqflite.firstIntValue(
+          await db.rawQuery('SELECT COUNT(*) FROM games'),
+        ) ??
+        0;
+    if (count > 0) {
+      return;
+    }
+
+    await _insertInitialGames(
+      db,
+      gamesPerLevel: _initialSeedGamesPerLevel,
+      logAsSeed: true,
+    );
+  }
+
+  Future<void> _topUpGamesInBackground(Database db) async {
+    if (_isTopUpRunning) {
+      return;
+    }
+
+    _isTopUpRunning = true;
+    await _refreshCatalogStatus(db, isRunning: true);
+    try {
+      for (final level in SudokuLevel.levels) {
+        final currentCount = Sqflite.firstIntValue(
+              await db.rawQuery(
+                'SELECT COUNT(*) FROM games WHERE level_name = ?',
+                [level.name],
+              ),
+            ) ??
+            0;
+
+        if (currentCount >= _targetGamesPerLevel) {
+          continue;
+        }
+
+        await _insertGamesForLevel(
+          db,
+          level: level,
+          startGameNumber: currentCount + 1,
+          count: _targetGamesPerLevel - currentCount,
+          logProgress: false,
+          onProgress: (generatedCount) {
+            _updateLevelCount(level.name, generatedCount, isRunning: true);
+          },
+        );
+      }
+
+      if (kDebugMode) {
+        AppLogger.debug('백그라운드 퍼즐 보충 완료');
+      }
+    } finally {
+      _isTopUpRunning = false;
+      await _refreshCatalogStatus(db, isRunning: false);
+    }
+  }
+
+  Future<void> _insertInitialGames(
+    Database db, {
+    required int gamesPerLevel,
+    required bool logAsSeed,
+  }) async {
     if (kDebugMode) {
-      print('=== 게임 데이터 생성 시작 ===');
+      AppLogger.debug(logAsSeed ? '초기 시드 퍼즐 생성 시작' : '초기 게임 데이터 생성 시작');
     }
     int totalGames = 0;
-    const iMax = 100;
 
     for (var level in SudokuLevel.levels) {
       if (kDebugMode) {
-        print('${level.name} 레벨 게임 생성 중... ($iMax개)');
+        AppLogger.debug('${level.name} 레벨 게임 생성 중... ($gamesPerLevel개)');
       }
-      totalGames += iMax;
-
-      for (var i = 0; i < iMax; i++) {
-        final board = SudokuGenerator.generateSudoku(level.emptyCells);
-        final solution = SudokuGenerator.getSolution(board);
-
-        final boardStr = board.map((row) => row.join(',')).join(';');
-        final solutionStr = solution.map((row) => row.join(',')).join(';');
-
-        await db.insert(
-          'games',
-          {
-            'level_name': level.name,
-            'game_number': i + 1,
-            'board': boardStr,
-            'solution': solutionStr,
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-
-        if (kDebugMode && (i + 1) % 100 == 0) {
-          debugPrint('  ${level.name} 레벨: ${i + 1}/$iMax 완료');
-        }
-      }
+      totalGames += gamesPerLevel;
+      await _insertGamesForLevel(
+        db,
+        level: level,
+        startGameNumber: 1,
+        count: gamesPerLevel,
+        logProgress: true,
+        onProgress: (generatedCount) {
+          _updateLevelCount(level.name, generatedCount, isRunning: false);
+        },
+      );
       if (kDebugMode) {
-        print('${level.name} 레벨 완료! ($iMax개 생성됨)');
+        AppLogger.debug('${level.name} 레벨 완료: $gamesPerLevel개');
       }
     }
 
     if (kDebugMode) {
-      print('=== 게임 데이터 생성 완료 ===');
-      print('총 $totalGames개의 게임이 생성되었습니다.');
-      print('========================');
+      AppLogger.debug(
+        logAsSeed
+            ? '초기 시드 퍼즐 생성 완료: 총 $totalGames개'
+            : '초기 게임 데이터 생성 완료: 총 $totalGames개',
+      );
     }
+  }
+
+  Future<void> _insertGamesForLevel(
+    Database db, {
+    required SudokuLevel level,
+    required int startGameNumber,
+    required int count,
+    required bool logProgress,
+    void Function(int generatedCount)? onProgress,
+  }) async {
+    for (var offset = 0; offset < count; offset++) {
+      final board = SudokuGenerator.generateSudoku(level.emptyCells);
+      final solution = SudokuGenerator.getSolution(board);
+
+      final boardStr = board.map((row) => row.join(',')).join(';');
+      final solutionStr = solution.map((row) => row.join(',')).join(';');
+
+      await db.insert(
+        'games',
+        {
+          'level_name': level.name,
+          'game_number': startGameNumber + offset,
+          'board': boardStr,
+          'solution': solutionStr,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      onProgress?.call(startGameNumber + offset);
+
+      if (kDebugMode && logProgress && (offset + 1) == count) {
+        AppLogger.debug(
+          '${level.name} 레벨: ${startGameNumber + offset}/${startGameNumber + count - 1} 완료',
+        );
+      }
+    }
+  }
+
+  Future<void> _refreshCatalogStatus(
+    Database db, {
+    required bool isRunning,
+  }) async {
+    final counts = <String, int>{};
+    for (final level in SudokuLevel.levels) {
+      counts[level.name] = Sqflite.firstIntValue(
+            await db.rawQuery(
+              'SELECT COUNT(*) FROM games WHERE level_name = ?',
+              [level.name],
+            ),
+          ) ??
+          0;
+    }
+
+    catalogStatus.value = PuzzleCatalogStatus(
+      isRunning: isRunning,
+      generatedCounts: counts,
+      targetPerLevel: _targetGamesPerLevel,
+    );
+  }
+
+  void _updateLevelCount(
+    String levelName,
+    int generatedCount, {
+    required bool isRunning,
+  }) {
+    final nextCounts = Map<String, int>.from(catalogStatus.value.generatedCounts);
+    nextCounts[levelName] = generatedCount;
+    catalogStatus.value = catalogStatus.value.copyWith(
+      isRunning: isRunning,
+      generatedCounts: nextCounts,
+    );
   }
 
   /// 데이터베이스 연결을 닫습니다.

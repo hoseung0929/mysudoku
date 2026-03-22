@@ -1,6 +1,3 @@
-import 'package:flutter/foundation.dart';
-import '../database/database_helper.dart';
-
 class SudokuLevel {
   final String name;
   final String description;
@@ -17,86 +14,6 @@ class SudokuLevel {
     required this.gameCount,
     this.clearedGames = 0,
   });
-
-  /// 클리어한 게임 수를 DB에서 로드합니다.
-  Future<void> loadClearedGames() async {
-    try {
-      final dbHelper = DatabaseHelper();
-      clearedGames = await dbHelper.getClearedGameCount(name);
-    } catch (e) {
-      if (kDebugMode) {
-        print('클리어된 게임 수 로드 실패: $e');
-      }
-      clearedGames = 0;
-    }
-  }
-
-  /// 게임을 클리어했을 때 호출되는 메서드입니다.
-  Future<void> onGameCleared() async {
-    // DB에서 클리어된 게임 수를 다시 로드
-    await loadClearedGames();
-  }
-
-  /// 클리어한 게임 수를 초기화합니다.
-  Future<void> resetClearedGames() async {
-    try {
-      final dbHelper = DatabaseHelper();
-      await dbHelper.clearRecordsForLevel(name);
-      clearedGames = 0;
-    } catch (e) {
-      if (kDebugMode) {
-        print('클리어된 게임 수 초기화 실패: $e');
-      }
-    }
-  }
-
-  // 각 레벨별 게임셋 생성
-  Future<List<List<List<int>>>> generateGameSet() async {
-    final dbHelper = DatabaseHelper();
-    final games = await dbHelper.getGamesForLevel(name);
-    if (games.isEmpty) {
-      // 데이터베이스에 게임이 없는 경우 빈 보드 반환
-      return List.generate(gameCount,
-          (_) => List.generate(9, (_) => List.generate(9, (_) => 0)));
-    }
-    return games;
-  }
-
-  // 특정 게임 가져오기
-  Future<List<List<int>>> getGame(int gameNumber) async {
-    final dbHelper = DatabaseHelper();
-    return await dbHelper.getGame(name, gameNumber);
-  }
-
-  // 특정 게임의 해답 가져오기
-  Future<List<List<int>>> getSolution(int gameNumber) async {
-    final dbHelper = DatabaseHelper();
-    return await dbHelper.getSolution(name, gameNumber);
-  }
-
-  // 특정 레벨의 클리어 기록 가져오기
-  Future<List<Map<String, dynamic>>> getClearRecords() async {
-    final dbHelper = DatabaseHelper();
-    return await dbHelper.getClearRecordsForLevel(name);
-  }
-
-  // 특정 레벨의 최고 기록 가져오기
-  Future<Map<String, dynamic>?> getBestRecord() async {
-    final dbHelper = DatabaseHelper();
-    return await dbHelper.getBestRecord(name);
-  }
-
-  // 특정 레벨의 평균 클리어 시간 가져오기
-  Future<double> getAverageClearTime() async {
-    final dbHelper = DatabaseHelper();
-    return await dbHelper.getAverageClearTime(name);
-  }
-
-  // 특정 레벨의 평균 오답 수 가져오기
-  Future<double> getAverageWrongCount() async {
-    final dbHelper = DatabaseHelper();
-    return await dbHelper.getAverageWrongCount(name);
-  }
 
   static List<SudokuLevel> levels = [
     SudokuLevel(
@@ -136,10 +53,4 @@ class SudokuLevel {
     ),
   ];
 
-  /// 모든 레벨의 클리어한 게임 수를 로드합니다.
-  static Future<void> loadAllClearedGames() async {
-    for (var level in levels) {
-      await level.loadClearedGames();
-    }
-  }
 }

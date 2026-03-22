@@ -3,10 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'view/level_selection_main.dart';
+import 'view/challenge_screen.dart';
+import 'view/records_statistics_screen.dart';
 import 'view/settings_screen.dart';
 import 'widgets/bottom_nav_bar.dart';
 import 'theme/app_theme.dart';
 import 'model/sudoku_level.dart';
+import 'services/level_progress_service.dart';
+import 'package:mysudoku/utils/app_logger.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,17 +18,11 @@ void main() async {
   if (kDebugMode) {
     try {
       final dbPath = join(await getDatabasesPath(), 'sudoku_games.db');
-      print('=== DB 경로 정보 ===');
-      print('DB 파일명: sudoku_games.db');
-      print('DB 전체 경로: $dbPath');
-      print('==================');
+      AppLogger.debug('DB 경로: $dbPath');
     } catch (e) {
-      print('DB 경로 출력 중 오류: $e');
+      AppLogger.debug('DB 경로 출력 실패: $e');
     }
   }
-
-  // 클리어된 게임 수 로드
-  await SudokuLevel.loadAllClearedGames();
 
   runApp(const MySudokuApp());
 }
@@ -50,7 +48,29 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final LevelProgressService _levelProgressService = LevelProgressService();
   int _selectedIndex = 0;
+  bool _isInitializingApp = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeAppData();
+  }
+
+  Future<void> _initializeAppData() async {
+    try {
+      await _levelProgressService.refreshAllLevels(SudokuLevel.levels);
+    } catch (e) {
+      AppLogger.debug('앱 초기 진행도 로드 실패: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isInitializingApp = false;
+        });
+      }
+    }
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -63,13 +83,10 @@ class _MyHomePageState extends State<MyHomePage> {
       case 0:
         return const LevelSelectionMain();
       case 1:
-        return const Center(
-          child: Text(
-            '기록 · 통계 (준비 중)',
-            style: TextStyle(fontSize: 16, color: Color(0xFF7F8C8D)),
-          ),
-        );
+        return const ChallengeScreen();
       case 2:
+        return const RecordsStatisticsScreen();
+      case 3:
         return const SettingsScreen();
       default:
         return const LevelSelectionMain();
@@ -85,9 +102,18 @@ class _MyHomePageState extends State<MyHomePage> {
     if (isTablet) {
       // 태블릿 레이아웃: 하단 네비게이션 + 더 큰 콘텐츠
       return Scaffold(
-        body: IndexedStack(
-          index: _selectedIndex,
-          children: List.generate(3, (index) => _buildPage(index)),
+        body: Stack(
+          children: [
+            IndexedStack(
+              index: _selectedIndex,
+              children: List.generate(4, (index) => _buildPage(index)),
+            ),
+            if (_isInitializingApp)
+              const Align(
+                alignment: Alignment.topCenter,
+                child: LinearProgressIndicator(minHeight: 3),
+              ),
+          ],
         ),
         bottomNavigationBar: BottomNavBar(
           selectedIndex: _selectedIndex,
@@ -97,9 +123,18 @@ class _MyHomePageState extends State<MyHomePage> {
     } else {
       // 모바일 레이아웃: 하단 네비게이션
       return Scaffold(
-        body: IndexedStack(
-          index: _selectedIndex,
-          children: List.generate(3, (index) => _buildPage(index)),
+        body: Stack(
+          children: [
+            IndexedStack(
+              index: _selectedIndex,
+              children: List.generate(4, (index) => _buildPage(index)),
+            ),
+            if (_isInitializingApp)
+              const Align(
+                alignment: Alignment.topCenter,
+                child: LinearProgressIndicator(minHeight: 3),
+              ),
+          ],
         ),
         bottomNavigationBar: BottomNavBar(
           selectedIndex: _selectedIndex,

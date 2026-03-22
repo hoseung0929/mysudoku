@@ -15,6 +15,11 @@
 .swiftpm/
 migrate_working_dir/
 
+# Large local game data (GitHub 100MB limit)
+/sudoku_games.csv
+/sudoku_games.numbers
+/sudoku_games.xlsx
+
 # IntelliJ related
 *.iml
 *.ipr

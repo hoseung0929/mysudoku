@@ -29,38 +29,39 @@ class BottomNavBar extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(50),
-        child: SizedBox(
-          height: 70, // 높이를 50으로 직접 지정
-          child: BottomNavigationBar(
-            currentIndex: selectedIndex,
-            onTap: onItemTapped,
-            backgroundColor: Colors.white, // 흰색 배경으로 되돌림
-            type: BottomNavigationBarType.fixed,
-            showSelectedLabels: true,
-            showUnselectedLabels: true,
-            selectedItemColor: const Color(0xFF2C3E50), // 어두운 색상으로 변경
-            unselectedItemColor: const Color(0xFF7F8C8D), // 어두운 색상으로 변경
-            iconSize: 20, // 아이콘 크기 줄이기
-            selectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.bold, fontSize: 10), // 폰트 크기 줄이기
-            unselectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.normal, fontSize: 10), // 폰트 크기 줄이기
-            elevation: 0,
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home),
-                label: '홈',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.bar_chart_outlined),
-                label: '기록',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.settings_outlined),
-                label: '설정',
-              ),
-            ],
-          ),
+        child: BottomNavigationBar(
+          currentIndex: selectedIndex,
+          onTap: onItemTapped,
+          backgroundColor: Colors.white, // 흰색 배경으로 되돌림
+          type: BottomNavigationBarType.fixed,
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
+          selectedItemColor: const Color(0xFF2C3E50), // 어두운 색상으로 변경
+          unselectedItemColor: const Color(0xFF7F8C8D), // 어두운 색상으로 변경
+          iconSize: 20, // 아이콘 크기 줄이기
+          selectedLabelStyle: const TextStyle(
+              fontWeight: FontWeight.bold, fontSize: 10), // 폰트 크기 줄이기
+          unselectedLabelStyle: const TextStyle(
+              fontWeight: FontWeight.normal, fontSize: 10), // 폰트 크기 줄이기
+          elevation: 0,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: '홈',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.emoji_events_outlined),
+              label: '챌린지',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.bar_chart_outlined),
+              label: '기록',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.settings_outlined),
+              label: '설정',
+            ),
+          ],
         ),
       ),
     );

@@ -1,7 +1,9 @@
-import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:mysudoku/utils/app_logger.dart';
 import '../model/sudoku_level.dart';
 import '../utils/sudoku_generator.dart';
+import 'game_timer_controller.dart';
+import 'sudoku_board_controller.dart';
 
 /// 스도쿠 게임의 비즈니스 로직을 처리하는 Presenter 클래스
 /// MVP 패턴에서 View와 Model 사이의 중재자 역할을 수행
@@ -20,20 +22,14 @@ class SudokuGamePresenter {
   final Function(int, int)? onCorrectAnswer; // 정답 입력 시 호출 (행, 열)
 
   // 게임 상태를 관리하는 private 변수들
-  List<List<int>> _board = [];
-  List<List<int>> _solution = [];
-  List<List<bool>> _fixedNumbers = [];
-  List<List<bool>> _wrongNumbers = []; // 잘못된 숫자 표시
-  int _seconds = 0; // 게임 진행 시간
   bool _isPaused = false; // 일시정지 상태
   int _hintsRemaining = 3; // 남은 힌트 수
   bool _isGameComplete = false; // 게임 완료 상태
-  int? _selectedRow; // 현재 선택된 행
-  int? _selectedCol; // 현재 선택된 열
   int _wrongCount = 0; // 오답 카운트
   bool _isGameOver = false; // 게임 오버 상태
-  Timer? _timer; // 타이머
-  List<List<int>> _initialBoard = []; // 초기 보드 저장
+  bool _isMemoMode = false; // 후보 메모 모드
+  late final GameTimerController _timerController;
+  late final SudokuBoardController _boardController;
 
   /// Presenter 생성자
   /// [level] 현재 선택된 레벨
@@ -62,73 +58,42 @@ class SudokuGamePresenter {
     required List<List<int>> initialBoard,
     required List<List<int>>? solution,
   }) {
-    if (solution != null && solution.isNotEmpty) {
-      _solution = solution;
-      if (kDebugMode) {
-        print('DB에서 가져온 해답 데이터 사용');
-        print('해답 데이터 확인:');
-        for (int i = 0; i < _solution.length; i++) {
-          print('  ${_solution[i]}');
-        }
-      }
-    } else {
-      _solution = SudokuGenerator.getSolution(initialBoard);
-      if (kDebugMode) {
-        print('동적으로 해답 데이터 생성 (DB에 해답 데이터 없음)');
-        print('동적 해답 데이터 확인:');
-        for (int i = 0; i < _solution.length; i++) {
-          print('  ${_solution[i]}');
-        }
-      }
-    }
-
-    _wrongNumbers = List.generate(9, (_) => List.filled(9, false));
+    _timerController = GameTimerController(
+      onTick: onTimeChanged,
+      canTick: () => !_isPaused && !_isGameComplete && !_isGameOver,
+    );
+    _boardController = SudokuBoardController(
+      initialBoard: initialBoard,
+      solution: solution,
+    );
     _initializeBoard(initialBoard);
     _startTimer();
   }
 
   /// 타이머 시작
   void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!_isPaused && !_isGameComplete && !_isGameOver) {
-        _seconds++;
-        onTimeChanged(_seconds);
-      }
-    });
+    _timerController.start();
   }
 
   /// 타이머 정지
   void _stopTimer() {
-    _timer?.cancel();
-    _timer = null;
+    _timerController.stop();
   }
 
   /// 게임 보드 초기화
   /// 스도쿠 생성기를 사용하여 새로운 보드를 생성하고
   /// 고정 숫자와 잘못된 숫자 표시를 초기화
   void _initializeBoard([List<List<int>>? initialBoard]) {
-    _fixedNumbers.clear();
-    _board = initialBoard ?? SudokuGenerator.generateSudoku(level.emptyCells);
     if (initialBoard == null) {
-      // 새 보드를 생성한 경우 해답도 함께 갱신해 정합성을 유지한다.
-      _solution = SudokuGenerator.getSolution(_board);
+      final board = SudokuGenerator.generateSudoku(level.emptyCells);
+      final solution = SudokuGenerator.getSolution(board);
+      _boardController.initializeGeneratedBoard(board, solution);
+    } else {
+      _boardController.initializeBoard(initialBoard);
     }
-
-    // 초기 보드 저장
-    _initialBoard = List.generate(9, (row) => List<int>.from(_board[row]));
-
-    // 초기 보드에서만 고정 숫자 설정
-    _fixedNumbers = List.generate(9, (row) {
-      return List.generate(9, (col) {
-        return _initialBoard[row][col] != 0;
-      });
-    });
-
-    _wrongNumbers = List.generate(9, (_) => List.filled(9, false));
-
-    onBoardChanged(_board);
-    onFixedNumbersChanged(_fixedNumbers);
-    onWrongNumbersChanged(_wrongNumbers);
+    onBoardChanged(_boardController.board);
+    onFixedNumbersChanged(_boardController.fixedNumbers);
+    onWrongNumbersChanged(_boardController.wrongNumbers);
   }
 
   /// 셀 선택 처리
@@ -136,146 +101,56 @@ class SudokuGamePresenter {
   /// [col] 선택된 열
   void selectCell(int row, int col) {
     // 이전에 선택된 셀이 있었다면 해당 셀의 상태 체크
-    if (_selectedRow != null && _selectedCol != null) {
-      _checkCellStatus(_selectedRow!, _selectedCol!);
+    if (_boardController.selectedRow != null && _boardController.selectedCol != null) {
+      _checkCellStatus(_boardController.selectedRow!, _boardController.selectedCol!);
     }
 
-    _selectedRow = row;
-    _selectedCol = col;
+    _boardController.selectCell(row, col);
 
     // 새로 선택된 셀의 상태도 체크
     _checkCellStatus(row, col);
 
     // UI 업데이트를 위한 콜백 호출
-    onBoardChanged(_board);
+    onBoardChanged(_boardController.board);
   }
 
   /// 특정 셀의 상태를 체크하고 오답 여부를 업데이트
   void _checkCellStatus(int row, int col) {
-    if (_solution.isEmpty) {
-      if (kDebugMode) {
-        print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
-      }
-      _solution = SudokuGenerator.getSolution(_board);
-    }
-
-    final currentValue = _board[row][col];
-    final correctValue = _solution[row][col];
-    final isWrong = currentValue != 0 && currentValue != correctValue;
-
-    _wrongNumbers[row][col] = isWrong;
-
-    if (kDebugMode) {
-      print(
-          '셀 [$row][$col] 상태 체크: 현재값=$currentValue, 정답=$correctValue, 오답=$isWrong');
-    }
-
-    // 오답 상태 변경 알림
-    onWrongNumbersChanged(_wrongNumbers);
+    _boardController.updateWrongStatus(row, col);
+    onWrongNumbersChanged(_boardController.wrongNumbers);
   }
 
   /// 숫자 입력 처리
   /// [number] 입력된 숫자 (1-9)
   void onNumberSelected(int number) {
-    if (_selectedRow == null ||
-        _selectedCol == null ||
-        _isGameComplete ||
-        _isPaused ||
-        _isGameOver) {
-      return;
-    }
-
-    if (_solution.isEmpty) {
-      if (kDebugMode) {
-        print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
-      }
-      _solution = SudokuGenerator.getSolution(_board);
-    }
-
-    final previousValue = _board[_selectedRow!][_selectedCol!];
-    final wasWrongBefore = previousValue != 0 &&
-        previousValue != _solution[_selectedRow!][_selectedCol!];
-
-    _board[_selectedRow!][_selectedCol!] = number;
-    onBoardChanged(_board);
-
-    // 오답 체크
-    _checkWrongNumbers();
-
-    // 새로운 값이 오답인지 확인 (해답 데이터 기준)
-    final isWrongNow = number != _solution[_selectedRow!][_selectedCol!];
-
-    // 정답을 입력했는지 확인
-    final isCorrectAnswer = number == _solution[_selectedRow!][_selectedCol!];
-
-    // 정답 입력 시 이벤트 트리거
-    if (isCorrectAnswer && onCorrectAnswer != null) {
-      onCorrectAnswer!(_selectedRow!, _selectedCol!);
-    }
-
-    // 오답 카운트 업데이트
-    if (isWrongNow && !wasWrongBefore) {
-      // 이전에는 정답이었는데 지금 오답이 되었으면 카운트 증가
-      _wrongCount++;
-      onWrongCountChanged(_wrongCount);
-
-      // 오답이 3개 이상이면 게임 오버
-      if (_wrongCount >= 3) {
-        _isGameOver = true;
-        _isPaused = true;
-        _stopTimer();
-        onGameOver();
-        onPauseStateChanged(_isPaused);
-        return; // 게임 오버 시 더 이상 진행하지 않음
-      }
-    } else if (isWrongNow && wasWrongBefore) {
-      // 이전에도 오답이었고 지금도 오답이면 카운트 증가 (다른 오답으로 변경)
-      _wrongCount++;
-      onWrongCountChanged(_wrongCount);
-
-      // 오답이 3개 이상이면 게임 오버
-      if (_wrongCount >= 3) {
-        _isGameOver = true;
-        _isPaused = true;
-        _stopTimer();
-        onGameOver();
-        onPauseStateChanged(_isPaused);
-        return; // 게임 오버 시 더 이상 진행하지 않음
-      }
-    }
-
-    _checkGameComplete();
+    _applySelectedCellValue(number);
   }
 
   /// 실제 해답과 비교하여 오답을 체크하고, 스도쿠 규칙 위반도 시각적으로 표시
   void _checkWrongNumbers() {
     // 현재 선택된 셀이 있으면 해당 셀의 상태 체크
-    if (_selectedRow != null && _selectedCol != null) {
-      _checkCellStatus(_selectedRow!, _selectedCol!);
+    if (_boardController.selectedRow != null && _boardController.selectedCol != null) {
+      _checkCellStatus(_boardController.selectedRow!, _boardController.selectedCol!);
     }
   }
 
   /// 게임 완료 검사
   void _checkGameComplete() {
-    if (_solution.isEmpty) {
-      if (kDebugMode) {
-        print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
-      }
-      _solution = SudokuGenerator.getSolution(_board);
-    }
+    _boardController.ensureSolution();
 
     for (int row = 0; row < 9; row++) {
       for (int col = 0; col < 9; col++) {
-        if (_board[row][col] == 0) return;
+        if (_boardController.board[row][col] == 0) return;
       }
     }
 
     for (int row = 0; row < 9; row++) {
       for (int col = 0; col < 9; col++) {
-        if (_board[row][col] != _solution[row][col]) {
+        if (_boardController.board[row][col] != _boardController.solution[row][col]) {
           if (kDebugMode) {
-            print(
-                '게임 완료 체크 실패: 셀 [$row][$col] - 입력값=${_board[row][col]}, 정답=${_solution[row][col]}');
+            AppLogger.debug(
+              '게임 완료 체크 실패: 셀 [$row][$col], 입력값=${_boardController.board[row][col]}, 정답=${_boardController.solution[row][col]}',
+            );
           }
           return;
         }
@@ -283,7 +158,7 @@ class SudokuGamePresenter {
     }
 
     if (kDebugMode) {
-      print('게임 완료! 모든 셀이 정답으로 채워졌습니다.');
+      AppLogger.debug('게임 완료: 모든 셀이 정답으로 채워졌습니다');
     }
     _isGameComplete = true;
     _isPaused = true;
@@ -296,22 +171,28 @@ class SudokuGamePresenter {
   /// 선택된 셀에 대한 힌트를 제공하고 남은 힌트 수를 감소
   void useHint() {
     if (_hintsRemaining <= 0 ||
-        _selectedRow == null ||
-        _selectedCol == null ||
-        _isPaused) {
+        _boardController.selectedRow == null ||
+        _boardController.selectedCol == null ||
+        _isPaused ||
+        _isGameComplete ||
+        _isGameOver ||
+        _boardController.isCellFixed(
+          _boardController.selectedRow!,
+          _boardController.selectedCol!,
+        )) {
       return;
     }
 
-    final hint = SudokuGenerator.getHint(_board, _selectedRow!, _selectedCol!);
-    if (hint != null) {
-      _hintsRemaining--;
-      _board[_selectedRow!][_selectedCol!] = hint;
+    final row = _boardController.selectedRow!;
+    final col = _boardController.selectedCol!;
+    if (_boardController.getCellValue(row, col) != 0) return;
+    _hintsRemaining--;
+    _boardController.applyHint(row, col);
 
-      onHintsChanged(_hintsRemaining);
-      onBoardChanged(_board);
-      _checkWrongNumbers();
-      _checkGameComplete();
-    }
+    onHintsChanged(_hintsRemaining);
+    onBoardChanged(_boardController.board);
+    _checkWrongNumbers();
+    _checkGameComplete();
   }
 
   /// 일시정지 토글
@@ -326,38 +207,37 @@ class SudokuGamePresenter {
   /// 시간 업데이트
   /// [seconds] 새로운 시간 값
   void updateTime(int seconds) {
-    _seconds = seconds;
-    onTimeChanged(_seconds);
+    _timerController.update(seconds);
   }
 
   /// 시간을 MM:SS 형식으로 변환
   String get formattedTime {
-    final minutes = _seconds ~/ 60;
-    final seconds = _seconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    return _timerController.formattedTime;
   }
 
   /// 게임 재시작 (현재 게임을 다시 시작)
   /// 모든 게임 상태를 초기화하고 현재 보드로 재시작
   void restartGame() {
     _stopTimer();
-    _seconds = 0;
     _isPaused = false;
     _hintsRemaining = 3;
     _isGameComplete = false;
     _isGameOver = false;
+    _isMemoMode = false;
     _wrongCount = 0;
-    _selectedRow = null;
-    _selectedCol = null;
+    _boardController.clearSelection();
 
-    onTimeChanged(_seconds);
+    _timerController.reset();
     onPauseStateChanged(_isPaused);
     onHintsChanged(_hintsRemaining);
     onGameCompleteChanged(_isGameComplete);
     onWrongCountChanged(_wrongCount);
 
     // 초기 보드로 초기화
-    final restartBoard = List.generate(9, (row) => List<int>.from(_initialBoard[row]));
+    final restartBoard = List.generate(
+      9,
+      (row) => List<int>.from(_boardController.initialBoard[row]),
+    );
     _initializeBoard(restartBoard);
     _startTimer();
   }
@@ -366,157 +246,75 @@ class SudokuGamePresenter {
   /// 모든 게임 상태를 초기화하고 새로운 보드 생성
   void restartWithNewGame() {
     _stopTimer();
-    _seconds = 0;
     _isPaused = false;
     _hintsRemaining = 3;
     _isGameComplete = false;
     _isGameOver = false;
+    _isMemoMode = false;
     _wrongCount = 0;
-    _selectedRow = null;
-    _selectedCol = null;
+    _boardController.clearSelection();
 
-    onTimeChanged(_seconds);
+    _timerController.reset();
     onPauseStateChanged(_isPaused);
     onHintsChanged(_hintsRemaining);
     onGameCompleteChanged(_isGameComplete);
     onWrongCountChanged(_wrongCount);
 
-    _fixedNumbers.clear(); // 재시작 시 리스트 초기화
     _initializeBoard();
     _startTimer();
   }
 
   /// 리소스 정리
   void dispose() {
-    _stopTimer();
+    _timerController.dispose();
   }
 
   // Getters
-  int get seconds => _seconds;
+  int get seconds => _timerController.seconds;
   bool get isPaused => _isPaused;
   int get hintsRemaining => _hintsRemaining;
   bool get isGameComplete => _isGameComplete;
   bool get isGameOver => _isGameOver;
+  bool get isMemoMode => _isMemoMode;
   int get wrongCount => _wrongCount;
-  int? get selectedRow => _selectedRow;
-  int? get selectedCol => _selectedCol;
+  int? get selectedRow => _boardController.selectedRow;
+  int? get selectedCol => _boardController.selectedCol;
 
-  int getCellValue(int row, int col) => _board[row][col];
-  bool isCellFixed(int row, int col) => _fixedNumbers[row][col];
+  int getCellValue(int row, int col) => _boardController.getCellValue(row, col);
+  bool isCellFixed(int row, int col) => _boardController.isCellFixed(row, col);
   bool isCellSelected(int row, int col) =>
-      row == _selectedRow && col == _selectedCol;
+      _boardController.isCellSelected(row, col);
 
   int getCorrectValue(int row, int col) {
-    if (_solution.isEmpty) {
-      _solution = SudokuGenerator.getSolution(_board);
-    }
-    return _solution[row][col];
+    return _boardController.getCorrectValue(row, col);
   }
 
   bool hasError(int row, int col) {
-    if (_solution.isEmpty) {
-      if (kDebugMode) {
-        print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
-      }
-      _solution = SudokuGenerator.getSolution(_board);
-    }
-
-    if (_board[row][col] == 0) return false;
-    return _board[row][col] != _solution[row][col];
+    return _boardController.hasError(row, col);
   }
 
   void setSelectedCellValue(int value) {
-    if (_selectedRow == null || _selectedCol == null) return;
-    if (_fixedNumbers[_selectedRow!][_selectedCol!]) return;
-    if (_isGameComplete || _isPaused || _isGameOver) return;
-
-    if (_solution.isEmpty) {
-      if (kDebugMode) {
-        print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
-      }
-      _solution = SudokuGenerator.getSolution(_board);
+    if (_boardController.selectedRow == null || _boardController.selectedCol == null) return;
+    if (_boardController.isCellFixed(
+      _boardController.selectedRow!,
+      _boardController.selectedCol!,
+    )) {
+      return;
     }
-
-    final previousValue = _board[_selectedRow!][_selectedCol!];
-    final wasWrongBefore = previousValue != 0 &&
-        previousValue != _solution[_selectedRow!][_selectedCol!];
-
-    _board[_selectedRow!][_selectedCol!] = value;
-    onBoardChanged(_board);
-
-    // 오답 체크
-    _checkWrongNumbers();
-
-    // 새로운 값이 오답인지 확인 (해답 데이터 기준)
-    final isWrongNow = value != _solution[_selectedRow!][_selectedCol!];
-
-    // 정답을 입력했는지 확인
-    final isCorrectAnswer = value == _solution[_selectedRow!][_selectedCol!];
-
-    // 정답 입력 시 이벤트 트리거
-    if (isCorrectAnswer && onCorrectAnswer != null) {
-      onCorrectAnswer!(_selectedRow!, _selectedCol!);
-    }
-
-    // 오답 카운트 업데이트
-    if (isWrongNow && !wasWrongBefore) {
-      // 이전에는 정답이었는데 지금 오답이 되었으면 카운트 증가
-      _wrongCount++;
-      onWrongCountChanged(_wrongCount);
-
-      // 오답이 3개 이상이면 게임 오버
-      if (_wrongCount >= 3) {
-        _isGameOver = true;
-        _isPaused = true;
-        _stopTimer();
-        onGameOver();
-        onPauseStateChanged(_isPaused);
-        return; // 게임 오버 시 더 이상 진행하지 않음
-      }
-    } else if (isWrongNow && wasWrongBefore) {
-      // 이전에도 오답이었고 지금도 오답이면 카운트 증가 (다른 오답으로 변경)
-      _wrongCount++;
-      onWrongCountChanged(_wrongCount);
-
-      // 오답이 3개 이상이면 게임 오버
-      if (_wrongCount >= 3) {
-        _isGameOver = true;
-        _isPaused = true;
-        _stopTimer();
-        onGameOver();
-        onPauseStateChanged(_isPaused);
-        return; // 게임 오버 시 더 이상 진행하지 않음
-      }
-    }
-
-    _checkGameComplete();
+    _applySelectedCellValue(value);
   }
 
   bool isSameNumber(int row, int col) {
-    if (_selectedRow == null || _selectedCol == null) return false;
-    final selectedValue = getCellValue(_selectedRow!, _selectedCol!);
-    final currentValue = getCellValue(row, col);
-    return selectedValue != 0 && selectedValue == currentValue;
+    return _boardController.isSameNumber(row, col);
   }
 
   bool isRelated(int row, int col) {
-    if (_selectedRow == null || _selectedCol == null) return false;
-    return _selectedRow! == row ||
-        _selectedCol! == col ||
-        (_selectedRow! ~/ 3 == row ~/ 3 && _selectedCol! ~/ 3 == col ~/ 3);
+    return _boardController.isRelated(row, col);
   }
 
   /// 잘못된 숫자인지 확인
   bool isWrongNumber(int row, int col) {
-    if (_solution.isEmpty) {
-      if (kDebugMode) {
-        print('경고: 해답 데이터가 없습니다. 동적으로 생성합니다.');
-      }
-      _solution = SudokuGenerator.getSolution(_board);
-    }
-
-    if (_board[row][col] == 0) return false;
-    return _board[row][col] != _solution[row][col];
+    return _boardController.isWrongNumber(row, col);
   }
 
   /// 힌트로 입력된 숫자인지 확인
@@ -524,43 +322,84 @@ class SudokuGamePresenter {
   /// [col] 열 인덱스
   /// Returns: 힌트로 입력된 숫자이면 true, 아니면 false
   bool isHintNumber(int row, int col) {
-    // 현재는 힌트 기능이 구현되지 않았으므로 false 반환
-    // TODO: 힌트 표시 기능 구현 시 이 메서드를 업데이트
-    return false;
+    return _boardController.isHintNumber(row, col);
+  }
+
+  Set<int> getCellNotes(int row, int col) {
+    return _boardController.getCellNotes(row, col);
+  }
+
+  bool hasNote(int row, int col, int value) {
+    return _boardController.hasNote(row, col, value);
   }
 
   /// 진행률 계산 (0.0 ~ 1.0)
   /// 사용자가 채워야 하는 초기 빈칸 대비 얼마나 채웠는지를 기준으로 계산합니다.
   double get progress {
-    final int fixedCellCount = _fixedNumbers
-        .expand((row) => row)
-        .where((isFixed) => isFixed)
-        .length;
+    return _boardController.progress;
+  }
 
-    // 사용자가 채워야 할 총 칸의 수
-    final int totalCellsToFill = 81 - fixedCellCount;
-    if (totalCellsToFill == 0) {
-      // 이미 모든 칸이 채워져 있는 경우
-      return 1.0;
+  void toggleMemoMode() {
+    if (_isGameComplete || _isGameOver) return;
+    _isMemoMode = !_isMemoMode;
+    onBoardChanged(_boardController.board);
+  }
+
+  void _applySelectedCellValue(int value) {
+    if (_boardController.selectedRow == null ||
+        _boardController.selectedCol == null ||
+        _isGameComplete ||
+        _isPaused ||
+        _isGameOver) {
+      return;
     }
 
-    // 현재 채워진 모든 칸의 수
-    int currentFilledCells = 0;
-    for (var row in _board) {
-      for (var cell in row) {
-        if (cell != 0) {
-          currentFilledCells++;
-        }
+    final row = _boardController.selectedRow!;
+    final col = _boardController.selectedCol!;
+
+    if (_isMemoMode) {
+      _boardController.toggleNote(row, col, value);
+      onBoardChanged(_boardController.board);
+      return;
+    }
+
+    _boardController.setCellValue(row, col, value);
+    onBoardChanged(_boardController.board);
+    _checkWrongNumbers();
+
+    final correctValue = _boardController.getCorrectValue(row, col);
+    final isWrongNow = value != correctValue;
+    final isCorrectAnswer = value == correctValue;
+
+    if (isCorrectAnswer && onCorrectAnswer != null) {
+      onCorrectAnswer!(row, col);
+    }
+
+    if (_shouldIncreaseWrongCount(isWrongNow: isWrongNow)) {
+      _wrongCount++;
+      onWrongCountChanged(_wrongCount);
+
+      if (_wrongCount >= 3) {
+        _handleGameOver();
+        return;
       }
     }
 
-    // 사용자가 직접 채운 칸의 수
-    final int userFilledCells = currentFilledCells - fixedCellCount;
+    _checkGameComplete();
+  }
 
-    // 진행률 반환
-    final double ratio = userFilledCells / totalCellsToFill.toDouble();
-    if (ratio < 0) return 0;
-    if (ratio > 1) return 1;
-    return ratio;
+  bool _shouldIncreaseWrongCount({
+    required bool isWrongNow,
+  }) {
+    // 기존 동작을 유지하기 위해, 오답 입력이면 이전 상태와 관계없이 카운트를 증가시킨다.
+    return isWrongNow;
+  }
+
+  void _handleGameOver() {
+    _isGameOver = true;
+    _isPaused = true;
+    _stopTimer();
+    onGameOver();
+    onPauseStateChanged(_isPaused);
   }
 }

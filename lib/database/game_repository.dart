@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:mysudoku/utils/app_logger.dart';
 import 'package:sqflite/sqflite.dart';
 import 'database_manager.dart';
 
@@ -65,8 +66,7 @@ class GameRepository {
   /// 특정 레벨의 특정 게임의 해답을 반환합니다.
   Future<List<List<int>>> getSolution(String levelName, int gameNumber) async {
     if (kDebugMode) {
-      print('=== 해답 조회 로그 ===');
-      print('해답 조회 요청 - 레벨: $levelName, game_number: $gameNumber');
+      AppLogger.debug('해답 조회 요청: $levelName 게임 $gameNumber');
     }
 
     final db = await _dbManager.database;
@@ -78,7 +78,7 @@ class GameRepository {
 
     if (maps.isEmpty) {
       if (kDebugMode) {
-        print('해답 조회 결과: 데이터 없음 (레벨: $levelName, game_number: $gameNumber)');
+        AppLogger.debug('해답 조회 결과 없음: $levelName 게임 $gameNumber');
       }
       return [];
     }
@@ -86,8 +86,7 @@ class GameRepository {
     final solution = _parseBoardString(maps.first['solution'] as String);
 
     if (kDebugMode) {
-      print('해답 조회 성공: 레벨: $levelName, game_number: $gameNumber');
-      print('========================');
+      AppLogger.debug('해답 조회 성공: $levelName 게임 $gameNumber');
     }
 
     return solution;

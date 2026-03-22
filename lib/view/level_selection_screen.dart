@@ -3,6 +3,8 @@ import '../model/sudoku_level.dart';
 import '../model/sudoku_game_set.dart';
 import '../model/sudoku_game.dart';
 import '../database/database_helper.dart';
+import '../database/database_manager.dart';
+import '../services/level_progress_service.dart';
 import '../widgets/custom_app_bar.dart';
 import 'sudoku_game_screen.dart';
 
@@ -18,9 +20,12 @@ class LevelSelectionScreen extends StatefulWidget {
 }
 
 class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
+  final DatabaseManager _databaseManager = DatabaseManager();
+  final LevelProgressService _levelProgressService = LevelProgressService();
   // 게임 데이터 캐시
   final Map<String, List<SudokuGame>> _gameCache = {};
   final Map<String, int> _levelTotal = {};
+  final Map<String, Set<int>> _clearedGameNumbers = {};
   bool _isLoading = false;
 
   @override
@@ -52,6 +57,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
       try {
         final games = await SudokuGameSet.create(widget.level!.name);
         _gameCache[widget.level!.name] = games;
+        await _loadClearedGameNumbers(widget.level!.name);
       } finally {
         if (mounted) {
           setState(() {
@@ -66,12 +72,61 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   /// 캐시된 데이터가 있으면 캐시에서 반환하고,
   /// 없으면 데이터베이스에서 로드하여 캐시에 저장합니다.
   Future<List<SudokuGame>> _loadGames(String level) async {
+    if (!_clearedGameNumbers.containsKey(level)) {
+      await _loadClearedGameNumbers(level);
+    }
     if (_gameCache.containsKey(level)) {
       return _gameCache[level]!;
     }
     final games = await SudokuGameSet.create(level);
     _gameCache[level] = games;
     return games;
+  }
+
+  Future<void> _loadClearedGameNumbers(String levelName) async {
+    final dbHelper = DatabaseHelper();
+    final records = await dbHelper.getClearRecordsForLevel(levelName);
+    _clearedGameNumbers[levelName] = records
+        .map((record) => record['game_number'] as int)
+        .toSet();
+  }
+
+  bool _isCleared(SudokuGame game) {
+    final levelName = game.levelName;
+    return _clearedGameNumbers[levelName]?.contains(game.gameNumber) ?? false;
+  }
+
+  Future<void> _onGameSelected(SudokuGame game, SudokuLevel level) async {
+    await Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => SudokuGameScreen(
+          game: game,
+          level: level,
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOut;
+          final tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          final offsetAnimation = animation.drive(tween);
+          return SlideTransition(position: offsetAnimation, child: child);
+        },
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
+
+    await _loadClearedGameNumbers(level.name);
+    final currentLevel = SudokuLevel.levels.firstWhere(
+      (item) => item.name == level.name,
+      orElse: () => level,
+    );
+    await _levelProgressService.refreshLevel(currentLevel);
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -85,9 +140,25 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
         backgroundColor: const Color(0xFFF8F9FA),
         appBar: _buildGameSelectionAppBar(),
         body: SafeArea(
-          child: isTablet
-              ? _buildGameSelectionTabletLayout()
-              : _buildGameSelectionMobileLayout(),
+          child: Column(
+            children: [
+              ValueListenableBuilder<PuzzleCatalogStatus>(
+                valueListenable: _databaseManager.catalogStatus,
+                builder: (context, status, child) {
+                  if (!status.isRunning) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: _CatalogStatusBar(status: status),
+                  );
+                },
+              ),
+              Expanded(
+                child: isTablet
+                    ? _buildGameSelectionTabletLayout()
+                    : _buildGameSelectionMobileLayout(),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -471,6 +542,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
 
   /// 게임 선택용 카드 위젯
   Widget _buildGameSelectionCard(SudokuGame game) {
+    final isCleared = _isCleared(game);
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.all(12),
@@ -490,56 +562,61 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
         ],
       ),
       child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) =>
-                  SudokuGameScreen(
-                game: game,
-                level: widget.level!,
-              ),
-              transitionsBuilder:
-                  (context, animation, secondaryAnimation, child) {
-                const begin = Offset(1.0, 0.0);
-                const end = Offset.zero;
-                const curve = Curves.easeInOut;
-                var tween = Tween(begin: begin, end: end)
-                    .chain(CurveTween(curve: curve));
-                var offsetAnimation = animation.drive(tween);
-                return SlideTransition(position: offsetAnimation, child: child);
-              },
-              transitionDuration: const Duration(milliseconds: 300),
-            ),
-          );
+        onTap: () async {
+          await _onGameSelected(game, widget.level!);
         },
         borderRadius: BorderRadius.circular(28),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
           children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: _getLevelColor(widget.level!.name),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: const Icon(
-                Icons.play_arrow,
-                color: Colors.white,
-                size: 36,
-              ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: _getLevelColor(widget.level!.name),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Icon(
+                    isCleared ? Icons.check : Icons.play_arrow,
+                    color: Colors.white,
+                    size: 36,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '게임 ${game.gameNumber}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2C3E50),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            Text(
-              '게임 ${game.gameNumber}',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF2C3E50),
+            if (isCleared)
+              Positioned(
+                top: 6,
+                right: 6,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFB8E6B8),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    '클리어',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
           ],
         ),
       ),
@@ -548,6 +625,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
 
   /// 게임 선택용 모바일 카드 위젯
   Widget _buildGameSelectionMobileCard(SudokuGame game) {
+    final isCleared = _isCleared(game);
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.all(12),
@@ -567,28 +645,8 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
         ],
       ),
       child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) =>
-                  SudokuGameScreen(
-                game: game,
-                level: widget.level!,
-              ),
-              transitionsBuilder:
-                  (context, animation, secondaryAnimation, child) {
-                const begin = Offset(1.0, 0.0);
-                const end = Offset.zero;
-                const curve = Curves.easeInOut;
-                var tween = Tween(begin: begin, end: end)
-                    .chain(CurveTween(curve: curve));
-                var offsetAnimation = animation.drive(tween);
-                return SlideTransition(position: offsetAnimation, child: child);
-              },
-              transitionDuration: const Duration(milliseconds: 300),
-            ),
-          );
+        onTap: () async {
+          await _onGameSelected(game, widget.level!);
         },
         borderRadius: BorderRadius.circular(28),
         child: Row(
@@ -600,8 +658,8 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                 color: _getLevelColor(widget.level!.name),
                 borderRadius: BorderRadius.circular(18),
               ),
-              child: const Icon(
-                Icons.play_arrow,
+              child: Icon(
+                isCleared ? Icons.check : Icons.play_arrow,
                 color: Colors.white,
                 size: 36,
               ),
@@ -630,6 +688,24 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                 ],
               ),
             ),
+            if (isCleared)
+              Container(
+                margin: const EdgeInsets.only(right: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFB8E6B8),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  '클리어',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+              ),
             const Icon(
               Icons.chevron_right,
               color: Color(0xFF7F8C8D),
@@ -860,20 +936,13 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
 
   /// 게임 카드 위젯 (모달용)
   Widget _buildGameCard(SudokuGame game, SudokuLevel level) {
+    final isCleared = _isCleared(game);
     return Container(
       width: 100,
       margin: const EdgeInsets.only(right: 12),
       child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SudokuGameScreen(
-                game: game,
-                level: level,
-              ),
-            ),
-          );
+        onTap: () async {
+          await _onGameSelected(game, level);
         },
         child: Card(
           elevation: 1,
@@ -902,16 +971,63 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                     color: const Color(0xFFB8E6B8).withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(
-                    Icons.play_arrow,
-                    color: Color(0xFF2C3E50),
+                  child: Icon(
+                    isCleared ? Icons.check : Icons.play_arrow,
+                    color: const Color(0xFF2C3E50),
                     size: 24,
                   ),
                 ),
+                if (isCleared) ...[
+                  const SizedBox(height: 6),
+                  const Text(
+                    '클리어',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _CatalogStatusBar extends StatelessWidget {
+  const _CatalogStatusBar({
+    required this.status,
+  });
+
+  final PuzzleCatalogStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7E8),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF0D48A)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.hourglass_top, color: Color(0xFFDA8B00)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              '추가 퍼즐 준비 중 · ${status.totalGenerated}/${status.totalTarget}판',
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF6A4C00),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

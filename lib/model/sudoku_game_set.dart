@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:mysudoku/utils/app_logger.dart';
 import 'sudoku_level.dart';
 import 'sudoku_game.dart';
 import '../database/database_helper.dart';
@@ -62,25 +63,17 @@ class SudokuGameSet {
       final solution = entry['solution'] as List<List<int>>;
 
       if (kDebugMode) {
-        print('=== 게임 생성 로그 ===');
-        print('플레이 게임 game_number: $gameNumber');
+        AppLogger.debug('게임 생성: $level 게임 $gameNumber');
       }
 
       List<List<int>> finalSolution;
       if (solution.isEmpty) {
         if (kDebugMode) {
-          print('경고: DB에 해답 데이터가 없습니다. 동적으로 생성합니다. ($level - $gameNumber)');
+          AppLogger.debug('해답 데이터 없음, 동적 생성: $level 게임 $gameNumber');
         }
         finalSolution = SudokuGenerator.getSolution(board);
       } else {
         finalSolution = solution;
-      }
-
-      if (kDebugMode) {
-        print('=== 게임 생성 완료 ===');
-        print('플레이 게임 game_number: $gameNumber');
-        print('해답 game_number: $gameNumber');
-        print('========================');
       }
 
       return SudokuGame(
