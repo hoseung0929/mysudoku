@@ -6,6 +6,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:mysudoku/model/sudoku_level.dart';
 import 'package:mysudoku/utils/sudoku_generator.dart';
+import 'package:mysudoku/utils/board_codec.dart';
 
 class PuzzleCatalogStatus {
   const PuzzleCatalogStatus({
@@ -249,8 +250,8 @@ class DatabaseManager {
       final board = SudokuGenerator.generateSudoku(level.emptyCells);
       final solution = SudokuGenerator.getSolution(board);
 
-      final boardStr = board.map((row) => row.join(',')).join(';');
-      final solutionStr = solution.map((row) => row.join(',')).join(';');
+      final boardStr = BoardCodec.encode(board);
+      final solutionStr = BoardCodec.encode(solution);
 
       await db.insert(
         'games',

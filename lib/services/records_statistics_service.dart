@@ -79,14 +79,20 @@ class RecordsStatisticsService {
         : totalsByLevel[selectedLevel] ?? 0;
 
     final cleared = filtered.length;
+    final perfectClears = filtered.where((record) {
+      return (record['wrong_count'] as int? ?? 0) == 0;
+    }).length;
     final avgTime = _averageIntField(filtered, 'clear_time');
     final avgWrong = _averageIntField(filtered, 'wrong_count');
     final clearRate = totalGames > 0 ? (cleared / totalGames) * 100 : 0.0;
+    final perfectRate = cleared > 0 ? (perfectClears / cleared) * 100 : 0.0;
 
     return {
       'total_cleared': cleared,
       'total_games': totalGames,
       'total_clear_rate': clearRate,
+      'perfect_clears': perfectClears,
+      'perfect_clear_rate': perfectRate,
       'total_average_time': avgTime,
       'total_average_wrong_count': avgWrong,
     };
@@ -146,6 +152,121 @@ class RecordsStatisticsService {
       });
 
     return records.take(limit).toList();
+  }
+
+  List<Map<String, dynamic>> buildBestByLevel({
+    required List<Map<String, dynamic>> recent,
+    required String selectedLevel,
+  }) {
+    final result = <Map<String, dynamic>>[];
+
+    for (final level in levelOrder) {
+      if (!RecordsLevelFilter.isAllLevels(selectedLevel) &&
+          selectedLevel != level) {
+        continue;
+      }
+
+      final records = recent
+          .where((record) => record['level_name'] == level)
+          .toList()
+        ..sort((a, b) {
+          final clearTimeA = a['clear_time'] as int;
+          final clearTimeB = b['clear_time'] as int;
+          if (clearTimeA != clearTimeB) {
+            return clearTimeA.compareTo(clearTimeB);
+          }
+          final wrongA = a['wrong_count'] as int;
+          final wrongB = b['wrong_count'] as int;
+          return wrongA.compareTo(wrongB);
+        });
+
+      if (records.isEmpty) {
+        continue;
+      }
+
+      final best = records.first;
+      result.add({
+        'level_name': level,
+        'game_number': best['game_number'],
+        'clear_time': best['clear_time'],
+        'wrong_count': best['wrong_count'],
+        'is_perfect': (best['wrong_count'] as int? ?? 0) == 0,
+      });
+    }
+
+    return result;
+  }
+
+  List<Map<String, dynamic>> buildDailyTrend({
+    required List<Map<String, dynamic>> recent,
+    required String selectedLevel,
+    int days = 7,
+  }) {
+    final filtered = filterRecentRecords(
+      recent: recent,
+      selectedLevel: selectedLevel,
+    );
+    final today = DateTime.now();
+    final buckets = <String, List<Map<String, dynamic>>>{};
+
+    for (int i = days - 1; i >= 0; i--) {
+      final date = today.subtract(Duration(days: i));
+      buckets[_formatDate(date)] = <Map<String, dynamic>>[];
+    }
+
+    for (final record in filtered) {
+      final clearDate = record['clear_date'] as String?;
+      if (clearDate == null || !buckets.containsKey(clearDate)) {
+        continue;
+      }
+      buckets[clearDate]!.add(record);
+    }
+
+    return buckets.entries.map((entry) {
+      final records = entry.value;
+      return {
+        'date': entry.key,
+        'label': entry.key.substring(5),
+        'clears': records.length,
+        'average_time': _averageIntField(records, 'clear_time'),
+        'average_wrong': _averageIntField(records, 'wrong_count'),
+      };
+    }).toList();
+  }
+
+  Map<String, dynamic> buildTrendSummary({
+    required List<Map<String, dynamic>> recent,
+    required String selectedLevel,
+    int days = 7,
+  }) {
+    final trend = buildDailyTrend(
+      recent: recent,
+      selectedLevel: selectedLevel,
+      days: days,
+    );
+    final totalClears = trend.fold<int>(
+      0,
+      (sum, day) => sum + (day['clears'] as int),
+    );
+    final activeDays = trend.where((day) => (day['clears'] as int) > 0).length;
+    final records = filterRecentRecords(
+      recent: recent,
+      selectedLevel: selectedLevel,
+    ).where((record) {
+      final clearDate = record['clear_date'] as String?;
+      if (clearDate == null) {
+        return false;
+      }
+      return trend.any((day) => day['date'] == clearDate);
+    }).toList();
+
+    return {
+      'days': days,
+      'total_clears': totalClears,
+      'active_days': activeDays,
+      'average_time': _averageIntField(records, 'clear_time'),
+      'average_wrong': _averageIntField(records, 'wrong_count'),
+    };
   }
 
   Map<String, int> buildTotalByLevel(List<Map<String, dynamic>> levels) {

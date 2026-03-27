@@ -6,7 +6,9 @@ import 'package:path/path.dart';
 import 'package:mysudoku/l10n/app_locale_scope.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
 import 'package:mysudoku/model/sudoku_level.dart';
+import 'package:mysudoku/services/app_settings_service.dart';
 import 'package:mysudoku/services/level_progress_service.dart';
+import 'package:mysudoku/services/notification_service.dart';
 import 'package:mysudoku/theme/app_theme.dart';
 import 'package:mysudoku/theme/app_theme_scope.dart';
 import 'package:mysudoku/view/challenge_screen.dart';
@@ -42,8 +44,12 @@ class MySudokuApp extends StatefulWidget {
 }
 
 class _MySudokuAppState extends State<MySudokuApp> {
+  final AppSettingsService _appSettingsService = AppSettingsService();
+  final NotificationService _notificationService = NotificationService();
   Locale? _localeOverride;
   ThemeMode _themeMode = ThemeMode.system;
+  bool _highContrastEnabled = false;
+  bool _largeTextEnabled = false;
   bool _prefsLoaded = false;
 
   @override
@@ -53,9 +59,19 @@ class _MySudokuAppState extends State<MySudokuApp> {
   }
 
   Future<void> _loadSavedPreferences() async {
+    await _notificationService.initialize();
+    await _notificationService.resyncFromStoredSettings();
     final prefs = await SharedPreferences.getInstance();
     final code = prefs.getString(_prefsLocaleKey);
     final themeCode = prefs.getString(_prefsThemeModeKey);
+    final highContrastEnabled = await _appSettingsService.getBool(
+      AppSettingsService.highContrastEnabledKey,
+      defaultValue: false,
+    );
+    final largeTextEnabled = await _appSettingsService.getBool(
+      AppSettingsService.largeTextEnabledKey,
+      defaultValue: false,
+    );
     if (!mounted) return;
     setState(() {
       if (code == null || code.isEmpty || code == 'system') {
@@ -64,6 +80,8 @@ class _MySudokuAppState extends State<MySudokuApp> {
         _localeOverride = Locale(code);
       }
       _themeMode = _themeModeFromStorage(themeCode);
+      _highContrastEnabled = highContrastEnabled;
+      _largeTextEnabled = largeTextEnabled;
       _prefsLoaded = true;
     });
   }
@@ -104,6 +122,24 @@ class _MySudokuAppState extends State<MySudokuApp> {
     setState(() => _themeMode = mode);
   }
 
+  Future<void> _setHighContrastEnabled(bool enabled) async {
+    await _appSettingsService.setBool(
+      AppSettingsService.highContrastEnabledKey,
+      enabled,
+    );
+    if (!mounted) return;
+    setState(() => _highContrastEnabled = enabled);
+  }
+
+  Future<void> _setLargeTextEnabled(bool enabled) async {
+    await _appSettingsService.setBool(
+      AppSettingsService.largeTextEnabledKey,
+      enabled,
+    );
+    if (!mounted) return;
+    setState(() => _largeTextEnabled = enabled);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_prefsLoaded) {
@@ -120,30 +156,68 @@ class _MySudokuAppState extends State<MySudokuApp> {
       child: AppThemeScope(
         themeMode: _themeMode,
         setThemeMode: _setThemeMode,
+        highContrastEnabled: _highContrastEnabled,
+        setHighContrastEnabled: _setHighContrastEnabled,
+        largeTextEnabled: _largeTextEnabled,
+        setLargeTextEnabled: _setLargeTextEnabled,
         child: MaterialApp(
-        onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: _themeMode,
-        locale: _localeOverride,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        localeResolutionCallback: (locale, supported) {
-          if (_localeOverride != null) {
-            return _localeOverride;
-          }
-          if (locale == null) return supported.first;
-          for (final supportedLocale in supported) {
-            if (supportedLocale.languageCode == locale.languageCode) {
-              return supportedLocale;
+          onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
+          theme: AppTheme.lightTheme(highContrast: _highContrastEnabled),
+          darkTheme: AppTheme.darkTheme(highContrast: _highContrastEnabled),
+          themeMode: _themeMode,
+          locale: _localeOverride,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          localeResolutionCallback: (locale, supported) {
+            if (_localeOverride != null) {
+              return _localeOverride;
             }
-          }
-          return supported.first;
-        },
-        home: const MyHomePage(),
+            if (locale == null) return supported.first;
+            for (final supportedLocale in supported) {
+              if (supportedLocale.languageCode == locale.languageCode) {
+                return supportedLocale;
+              }
+            }
+            return supported.first;
+          },
+          builder: (context, child) {
+            final mediaQuery = MediaQuery.of(context);
+            final textScaler = _largeTextEnabled
+                ? _ScaledTextScaler(
+                    base: mediaQuery.textScaler,
+                    factor: 1.12,
+                  )
+                : mediaQuery.textScaler;
+            return MediaQuery(
+              data: mediaQuery.copyWith(textScaler: textScaler),
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
+          home: const MyHomePage(),
         ),
       ),
     );
+  }
+}
+
+class _ScaledTextScaler extends TextScaler {
+  const _ScaledTextScaler({
+    required this.base,
+    required this.factor,
+  });
+
+  final TextScaler base;
+  final double factor;
+
+  @override
+  double scale(double fontSize) {
+    return base.scale(fontSize) * factor;
+  }
+
+  @override
+  double get textScaleFactor {
+    // ignore: deprecated_member_use
+    return base.textScaleFactor * factor;
   }
 }
 

@@ -185,8 +185,20 @@ abstract class AppLocalizations {
   /// No description provided for @settingsNotificationsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Manage game notifications'**
+  /// **'Send a reminder when today’s challenge is still unfinished'**
   String get settingsNotificationsSubtitle;
+
+  /// No description provided for @settingsStreakReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak reminder'**
+  String get settingsStreakReminderTitle;
+
+  /// No description provided for @settingsStreakReminderSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send one more reminder when you already have an active streak'**
+  String get settingsStreakReminderSubtitle;
 
   /// No description provided for @settingsNotificationTimeTitle.
   ///
@@ -200,6 +212,12 @@ abstract class AppLocalizations {
   /// **'Choose when to receive reminders'**
   String get settingsNotificationTimeSubtitle;
 
+  /// No description provided for @settingsNotificationsPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification permission is required to turn reminders on.'**
+  String get settingsNotificationsPermissionDenied;
+
   /// No description provided for @settingsThemeTitle.
   ///
   /// In en, this message translates to:
@@ -211,6 +229,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Light, dark, or system default'**
   String get settingsThemeSubtitle;
+
+  /// No description provided for @settingsLargeTextTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Large text'**
+  String get settingsLargeTextTitle;
+
+  /// No description provided for @settingsLargeTextSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show slightly larger text across the app'**
+  String get settingsLargeTextSubtitle;
+
+  /// No description provided for @settingsHighContrastTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'High contrast'**
+  String get settingsHighContrastTitle;
+
+  /// No description provided for @settingsHighContrastSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Make text and card boundaries more distinct'**
+  String get settingsHighContrastSubtitle;
 
   /// No description provided for @settingsDarkModeTitle.
   ///
@@ -272,6 +314,54 @@ abstract class AppLocalizations {
   /// **'Vibrate when entering numbers'**
   String get settingsVibrationSubtitle;
 
+  /// No description provided for @settingsKeepScreenAwakeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep screen awake'**
+  String get settingsKeepScreenAwakeTitle;
+
+  /// No description provided for @settingsKeepScreenAwakeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Prevent the game screen from sleeping automatically'**
+  String get settingsKeepScreenAwakeSubtitle;
+
+  /// No description provided for @settingsOneHandModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'One-hand mode'**
+  String get settingsOneHandModeTitle;
+
+  /// No description provided for @settingsOneHandModeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a denser button layout on the mobile game screen'**
+  String get settingsOneHandModeSubtitle;
+
+  /// No description provided for @settingsMemoHighlightTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Memo highlight'**
+  String get settingsMemoHighlightTitle;
+
+  /// No description provided for @settingsMemoHighlightSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show memo focus, candidate, and unique-note highlights'**
+  String get settingsMemoHighlightSubtitle;
+
+  /// No description provided for @settingsSmartHintTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Playable-cell highlight'**
+  String get settingsSmartHintTitle;
+
+  /// No description provided for @settingsSmartHintSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Softly highlight cells that can be filled immediately by rules'**
+  String get settingsSmartHintSubtitle;
+
   /// No description provided for @settingsAppInfoTitle.
   ///
   /// In en, this message translates to:
@@ -329,7 +419,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsDailyGoalNotifSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Notify when you reach your daily goal'**
+  /// **'Celebrate the moment you reach your weekly goal'**
   String get settingsDailyGoalNotifSubtitle;
 
   /// No description provided for @settingsHintNotifTitle.
@@ -488,11 +578,41 @@ abstract class AppLocalizations {
   /// **'OFF'**
   String get gameMemoStateOff;
 
+  /// No description provided for @gameMemoFocusShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus'**
+  String get gameMemoFocusShort;
+
+  /// No description provided for @gameMemoFocusIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get gameMemoFocusIdle;
+
   /// No description provided for @gameWrongShort.
   ///
   /// In en, this message translates to:
   /// **'Wrong'**
   String get gameWrongShort;
+
+  /// No description provided for @gamePerfectShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Perfect'**
+  String get gamePerfectShort;
+
+  /// No description provided for @gamePerfectReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get gamePerfectReady;
+
+  /// No description provided for @gamePerfectMissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost'**
+  String get gamePerfectMissed;
 
   /// No description provided for @gameProgressShort.
   ///
@@ -511,6 +631,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Number input'**
   String get gameNumberInputTitle;
+
+  /// No description provided for @gameRowsCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} row cleared'**
+  String gameRowsCompleted(int count);
+
+  /// No description provided for @gameColsCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} column cleared'**
+  String gameColsCompleted(int count);
+
+  /// No description provided for @gameBoxesCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} box cleared'**
+  String gameBoxesCompleted(int count);
 
   /// No description provided for @gamePause.
   ///
@@ -776,6 +914,30 @@ abstract class AppLocalizations {
   /// **'Summary'**
   String get recordsSummaryTitle;
 
+  /// No description provided for @recordsTrendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get recordsTrendTitle;
+
+  /// No description provided for @recordsTrendEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough recent clears to show a 7-day trend.'**
+  String get recordsTrendEmpty;
+
+  /// No description provided for @recordsTrendClears.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent clears'**
+  String get recordsTrendClears;
+
+  /// No description provided for @recordsTrendActiveDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Active days'**
+  String get recordsTrendActiveDays;
+
   /// No description provided for @recordsMetricClears.
   ///
   /// In en, this message translates to:
@@ -787,6 +949,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear rate'**
   String get recordsMetricClearRate;
+
+  /// No description provided for @recordsMetricPerfectRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Perfect rate'**
+  String get recordsMetricPerfectRate;
 
   /// No description provided for @recordsMetricAvgTime.
   ///
@@ -811,6 +979,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No stats for this filter.'**
   String get recordsByLevelEmpty;
+
+  /// No description provided for @recordsBestByLevelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Best by level'**
+  String get recordsBestByLevelTitle;
+
+  /// No description provided for @recordsBestByLevelEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No best-by-level records for this filter.'**
+  String get recordsBestByLevelEmpty;
+
+  /// No description provided for @recordsBestByLevelDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'{time} · Mistakes: {wrongCount}'**
+  String recordsBestByLevelDetail(String time, int wrongCount);
+
+  /// No description provided for @recordsPerfectBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Perfect'**
+  String get recordsPerfectBadge;
 
   /// No description provided for @recordsAvgTimeDetail.
   ///

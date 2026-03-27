@@ -41,6 +41,7 @@ class SudokuBoardController {
   List<List<Set<int>>> get noteNumbers => _noteNumbers;
   int? get selectedRow => _selectedRow;
   int? get selectedCol => _selectedCol;
+  Set<String> get hintCells => Set<String>.from(_hintCells);
 
   void initializeBoard(List<List<int>> board) {
     _hintCells.clear();
@@ -83,16 +84,11 @@ class SudokuBoardController {
   }
 
   void updateWrongStatus(int row, int col) {
-    ensureSolution();
-
-    final currentValue = _board[row][col];
-    final correctValue = _solution[row][col];
-    final isWrong = currentValue != 0 && currentValue != correctValue;
-    _wrongNumbers[row][col] = isWrong;
+    _recomputeConflictStatus();
 
     if (kDebugMode) {
       AppLogger.debug(
-        '셀 상태 체크: [$row][$col], 현재값=$currentValue, 정답=$correctValue, 오답=$isWrong',
+        '셀 충돌 체크: [$row][$col], 현재값=${_board[row][col]}, 충돌=${_wrongNumbers[row][col]}',
       );
     }
   }
@@ -101,6 +97,9 @@ class SudokuBoardController {
     _board[row][col] = value;
     _hintCells.remove(_cellKey(row, col));
     _noteNumbers[row][col].clear();
+    if (value != 0) {
+      _clearRelatedNotes(row, col, value);
+    }
   }
 
   void applyHint(int row, int col) {
@@ -108,6 +107,7 @@ class SudokuBoardController {
     _board[row][col] = _solution[row][col];
     _hintCells.add(_cellKey(row, col));
     _noteNumbers[row][col].clear();
+    _clearRelatedNotes(row, col, _solution[row][col]);
   }
 
   void toggleNote(int row, int col, int value) {
@@ -126,6 +126,46 @@ class SudokuBoardController {
 
   Set<int> getCellNotes(int row, int col) {
     return Set<int>.from(_noteNumbers[row][col]);
+  }
+
+  List<List<Set<int>>> getAllCellNotes() {
+    return List.generate(
+      9,
+      (row) => List.generate(
+        9,
+        (col) => Set<int>.from(_noteNumbers[row][col]),
+      ),
+    );
+  }
+
+  void restoreNotes(List<List<Set<int>>> notes) {
+    _noteNumbers = List.generate(9, (row) {
+      return List.generate(9, (col) {
+        final rowData = row < notes.length ? notes[row] : const <Set<int>>[];
+        final noteSet = col < rowData.length ? rowData[col] : const <int>{};
+        if (_fixedNumbers[row][col] || _board[row][col] != 0) {
+          return <int>{};
+        }
+        return Set<int>.from(noteSet);
+      });
+    });
+  }
+
+  void restoreHintCells(Set<String> hintCells) {
+    _hintCells
+      ..clear()
+      ..addAll(hintCells.where((cellKey) {
+        final parts = cellKey.split(',');
+        if (parts.length != 2) {
+          return false;
+        }
+        final row = int.tryParse(parts[0]);
+        final col = int.tryParse(parts[1]);
+        if (row == null || col == null || row < 0 || row > 8 || col < 0 || col > 8) {
+          return false;
+        }
+        return _board[row][col] != 0;
+      }));
   }
 
   bool hasNote(int row, int col, int value) {
@@ -160,9 +200,7 @@ class SudokuBoardController {
   }
 
   bool isWrongNumber(int row, int col) {
-    ensureSolution();
-    if (_board[row][col] == 0) return false;
-    return _board[row][col] != _solution[row][col];
+    return _wrongNumbers[row][col];
   }
 
   bool hasError(int row, int col) {
@@ -199,4 +237,67 @@ class SudokuBoardController {
   }
 
   String _cellKey(int row, int col) => '$row,$col';
+
+  void _recomputeConflictStatus() {
+    _wrongNumbers = List.generate(9, (row) {
+      return List.generate(9, (col) => _hasConflictAt(row, col));
+    });
+  }
+
+  bool _hasConflictAt(int row, int col) {
+    final value = _board[row][col];
+    if (value == 0) {
+      return false;
+    }
+
+    for (int checkCol = 0; checkCol < 9; checkCol++) {
+      if (checkCol != col && _board[row][checkCol] == value) {
+        return true;
+      }
+    }
+
+    for (int checkRow = 0; checkRow < 9; checkRow++) {
+      if (checkRow != row && _board[checkRow][col] == value) {
+        return true;
+      }
+    }
+
+    final startRow = (row ~/ 3) * 3;
+    final startCol = (col ~/ 3) * 3;
+    for (int checkRow = startRow; checkRow < startRow + 3; checkRow++) {
+      for (int checkCol = startCol; checkCol < startCol + 3; checkCol++) {
+        if ((checkRow != row || checkCol != col) &&
+            _board[checkRow][checkCol] == value) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  void _clearRelatedNotes(int row, int col, int value) {
+    for (int checkCol = 0; checkCol < 9; checkCol++) {
+      if (checkCol != col) {
+        _noteNumbers[row][checkCol].remove(value);
+      }
+    }
+
+    for (int checkRow = 0; checkRow < 9; checkRow++) {
+      if (checkRow != row) {
+        _noteNumbers[checkRow][col].remove(value);
+      }
+    }
+
+    final startRow = (row ~/ 3) * 3;
+    final startCol = (col ~/ 3) * 3;
+    for (int checkRow = startRow; checkRow < startRow + 3; checkRow++) {
+      for (int checkCol = startCol; checkCol < startCol + 3; checkCol++) {
+        if (checkRow == row && checkCol == col) {
+          continue;
+        }
+        _noteNumbers[checkRow][checkCol].remove(value);
+      }
+    }
+  }
 }

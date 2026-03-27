@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mysudoku/l10n/app_locale_scope.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
+import 'package:mysudoku/services/app_settings_service.dart';
+import 'package:mysudoku/services/notification_service.dart';
 import 'package:mysudoku/theme/app_theme.dart';
 import 'package:mysudoku/theme/app_theme_scope.dart';
 import 'package:mysudoku/widgets/custom_app_bar.dart';
@@ -15,8 +16,23 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  static const String _vibrationEnabledKey = 'vibration_enabled';
+  final AppSettingsService _settingsService = AppSettingsService();
+  final NotificationService _notificationService = NotificationService();
   bool _isVibrationEnabled = true;
+  bool _notificationsEnabled = false;
+  bool _streakReminderEnabled = false;
+  bool _gameCompleteNotificationEnabled = false;
+  bool _dailyGoalNotificationEnabled = false;
+  bool _highContrastEnabled = false;
+  bool _largeTextEnabled = false;
+  bool _keepScreenAwake = false;
+  bool _oneHandModeEnabled = false;
+  bool _memoHighlightEnabled = true;
+  bool _smartHintHighlightEnabled = true;
+  TimeOfDay _notificationTime = const TimeOfDay(
+    hour: NotificationService.defaultReminderHour,
+    minute: NotificationService.defaultReminderMinute,
+  );
 
   @override
   void initState() {
@@ -25,19 +41,283 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
+    final notificationsEnabled = await _settingsService.getBool(
+      AppSettingsService.notificationsEnabledKey,
+      defaultValue: false,
+    );
+    final streakReminderEnabled = await _settingsService.getBool(
+      AppSettingsService.streakReminderEnabledKey,
+      defaultValue: false,
+    );
+    final gameCompleteNotificationEnabled = await _settingsService.getBool(
+      AppSettingsService.gameCompleteNotificationEnabledKey,
+      defaultValue: false,
+    );
+    final dailyGoalNotificationEnabled = await _settingsService.getBool(
+      AppSettingsService.dailyGoalNotificationEnabledKey,
+      defaultValue: false,
+    );
+    final notificationHour = await _settingsService.getInt(
+      AppSettingsService.notificationHourKey,
+      defaultValue: NotificationService.defaultReminderHour,
+    );
+    final notificationMinute = await _settingsService.getInt(
+      AppSettingsService.notificationMinuteKey,
+      defaultValue: NotificationService.defaultReminderMinute,
+    );
+    final vibrationEnabled = await _settingsService.getBool(
+      AppSettingsService.vibrationEnabledKey,
+      defaultValue: true,
+    );
+    final keepScreenAwake = await _settingsService.getBool(
+      AppSettingsService.keepScreenAwakeKey,
+      defaultValue: false,
+    );
+    final highContrastEnabled = await _settingsService.getBool(
+      AppSettingsService.highContrastEnabledKey,
+      defaultValue: false,
+    );
+    final largeTextEnabled = await _settingsService.getBool(
+      AppSettingsService.largeTextEnabledKey,
+      defaultValue: false,
+    );
+    final oneHandModeEnabled = await _settingsService.getBool(
+      AppSettingsService.oneHandModeEnabledKey,
+      defaultValue: false,
+    );
+    final memoHighlightEnabled = await _settingsService.getBool(
+      AppSettingsService.memoHighlightEnabledKey,
+      defaultValue: true,
+    );
+    final smartHintHighlightEnabled = await _settingsService.getBool(
+      AppSettingsService.smartHintHighlightEnabledKey,
+      defaultValue: true,
+    );
     if (!mounted) return;
     setState(() {
-      _isVibrationEnabled = prefs.getBool(_vibrationEnabledKey) ?? true;
+      _notificationsEnabled = notificationsEnabled;
+      _streakReminderEnabled = streakReminderEnabled;
+      _gameCompleteNotificationEnabled = gameCompleteNotificationEnabled;
+      _dailyGoalNotificationEnabled = dailyGoalNotificationEnabled;
+      _notificationTime = TimeOfDay(
+        hour: notificationHour,
+        minute: notificationMinute,
+      );
+      _isVibrationEnabled = vibrationEnabled;
+      _highContrastEnabled = highContrastEnabled;
+      _largeTextEnabled = largeTextEnabled;
+      _keepScreenAwake = keepScreenAwake;
+      _oneHandModeEnabled = oneHandModeEnabled;
+      _memoHighlightEnabled = memoHighlightEnabled;
+      _smartHintHighlightEnabled = smartHintHighlightEnabled;
     });
   }
 
   Future<void> _setVibrationEnabled(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_vibrationEnabledKey, value);
+    await _settingsService.setBool(AppSettingsService.vibrationEnabledKey, value);
     if (!mounted) return;
     setState(() {
       _isVibrationEnabled = value;
+    });
+  }
+
+  Future<void> _setNotificationsEnabled(bool value) async {
+    final l10n = AppLocalizations.of(context)!;
+    if (value) {
+      final granted = await _notificationService.requestPermissions();
+      if (!granted) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.settingsNotificationsPermissionDenied),
+          ),
+        );
+        return;
+      }
+    }
+
+    await _settingsService.setBool(
+      AppSettingsService.notificationsEnabledKey,
+      value,
+    );
+    await _notificationService.syncReminders(
+      challengeReminderEnabled: value,
+      streakReminderEnabled: _streakReminderEnabled,
+      hour: _notificationTime.hour,
+      minute: _notificationTime.minute,
+    );
+    if (!mounted) return;
+    setState(() {
+      _notificationsEnabled = value;
+    });
+  }
+
+  Future<void> _setStreakReminderEnabled(bool value) async {
+    final l10n = AppLocalizations.of(context)!;
+    if (value && !_notificationsEnabled) {
+      final granted = await _notificationService.requestPermissions();
+      if (!granted) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.settingsNotificationsPermissionDenied),
+          ),
+        );
+        return;
+      }
+    }
+
+    await _settingsService.setBool(
+      AppSettingsService.streakReminderEnabledKey,
+      value,
+    );
+    await _notificationService.syncReminders(
+      challengeReminderEnabled: _notificationsEnabled,
+      streakReminderEnabled: value,
+      hour: _notificationTime.hour,
+      minute: _notificationTime.minute,
+    );
+    if (!mounted) return;
+    setState(() {
+      _streakReminderEnabled = value;
+    });
+  }
+
+  Future<void> _setGameCompleteNotificationEnabled(bool value) async {
+    final l10n = AppLocalizations.of(context)!;
+    if (value) {
+      final granted = await _notificationService.requestPermissions();
+      if (!granted) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.settingsNotificationsPermissionDenied),
+          ),
+        );
+        return;
+      }
+    }
+
+    await _settingsService.setBool(
+      AppSettingsService.gameCompleteNotificationEnabledKey,
+      value,
+    );
+    if (!mounted) return;
+    setState(() {
+      _gameCompleteNotificationEnabled = value;
+    });
+  }
+
+  Future<void> _setDailyGoalNotificationEnabled(bool value) async {
+    final l10n = AppLocalizations.of(context)!;
+    if (value) {
+      final granted = await _notificationService.requestPermissions();
+      if (!granted) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.settingsNotificationsPermissionDenied),
+          ),
+        );
+        return;
+      }
+    }
+
+    await _settingsService.setBool(
+      AppSettingsService.dailyGoalNotificationEnabledKey,
+      value,
+    );
+    if (!mounted) return;
+    setState(() {
+      _dailyGoalNotificationEnabled = value;
+    });
+  }
+
+  Future<void> _pickNotificationTime() async {
+    final selected = await showTimePicker(
+      context: context,
+      initialTime: _notificationTime,
+    );
+    if (selected == null) return;
+
+    await _settingsService.setInt(
+      AppSettingsService.notificationHourKey,
+      selected.hour,
+    );
+    await _settingsService.setInt(
+      AppSettingsService.notificationMinuteKey,
+      selected.minute,
+    );
+    await _notificationService.syncReminders(
+      challengeReminderEnabled: _notificationsEnabled,
+      streakReminderEnabled: _streakReminderEnabled,
+      hour: selected.hour,
+      minute: selected.minute,
+    );
+    if (!mounted) return;
+    setState(() {
+      _notificationTime = selected;
+    });
+  }
+
+  String _formatNotificationTime(BuildContext context) {
+    return MaterialLocalizations.of(context).formatTimeOfDay(_notificationTime);
+  }
+
+  Future<void> _setKeepScreenAwake(bool value) async {
+    await _settingsService.setBool(AppSettingsService.keepScreenAwakeKey, value);
+    if (!mounted) return;
+    setState(() {
+      _keepScreenAwake = value;
+    });
+  }
+
+  Future<void> _setHighContrastEnabled(bool value) async {
+    await AppThemeScope.of(context).setHighContrastEnabled(value);
+    if (!mounted) return;
+    setState(() {
+      _highContrastEnabled = value;
+    });
+  }
+
+  Future<void> _setLargeTextEnabled(bool value) async {
+    await AppThemeScope.of(context).setLargeTextEnabled(value);
+    if (!mounted) return;
+    setState(() {
+      _largeTextEnabled = value;
+    });
+  }
+
+  Future<void> _setOneHandModeEnabled(bool value) async {
+    await _settingsService.setBool(
+      AppSettingsService.oneHandModeEnabledKey,
+      value,
+    );
+    if (!mounted) return;
+    setState(() {
+      _oneHandModeEnabled = value;
+    });
+  }
+
+  Future<void> _setMemoHighlightEnabled(bool value) async {
+    await _settingsService.setBool(
+      AppSettingsService.memoHighlightEnabledKey,
+      value,
+    );
+    if (!mounted) return;
+    setState(() {
+      _memoHighlightEnabled = value;
+    });
+  }
+
+  Future<void> _setSmartHintHighlightEnabled(bool value) async {
+    await _settingsService.setBool(
+      AppSettingsService.smartHintHighlightEnabledKey,
+      value,
+    );
+    if (!mounted) return;
+    setState(() {
+      _smartHintHighlightEnabled = value;
     });
   }
 
@@ -87,23 +367,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         );
       },
-    );
-  }
-
-  Future<void> _showNotificationsComingSoon() async {
-    final l10n = AppLocalizations.of(context)!;
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.settingsNotificationsComingSoonTitle),
-        content: Text(l10n.settingsNotificationsComingSoonBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.commonOk),
-          ),
-        ],
-      ),
     );
   }
 
@@ -256,17 +519,84 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _buildSettingsSection(
           l10n.settingsSectionNotifications,
           [
-            _buildSettingsTile(
-              icon: Icons.notifications,
-              title: l10n.settingsNotificationsTitle,
-              subtitle: l10n.settingsNotificationsSubtitle,
-              onTap: _showNotificationsComingSoon,
+            SwitchListTile(
+              value: _gameCompleteNotificationEnabled,
+              onChanged: _setGameCompleteNotificationEnabled,
+              secondary: _buildGameOptionIcon(Icons.emoji_events_outlined),
+              title: Text(
+                l10n.settingsGameCompleteNotifTitle,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+              ),
+              subtitle: Text(
+                l10n.settingsGameCompleteNotifSubtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            SwitchListTile(
+              value: _dailyGoalNotificationEnabled,
+              onChanged: _setDailyGoalNotificationEnabled,
+              secondary: _buildGameOptionIcon(Icons.flag_outlined),
+              title: Text(
+                l10n.settingsDailyGoalNotifTitle,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+              ),
+              subtitle: Text(
+                l10n.settingsDailyGoalNotifSubtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ),
+            SwitchListTile(
+              value: _notificationsEnabled,
+              onChanged: _setNotificationsEnabled,
+              secondary: _buildGameOptionIcon(Icons.notifications_active_outlined),
+              title: Text(
+                l10n.settingsNotificationsTitle,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+              ),
+              subtitle: Text(
+                l10n.settingsNotificationsSubtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            SwitchListTile(
+              value: _streakReminderEnabled,
+              onChanged: _setStreakReminderEnabled,
+              secondary: _buildGameOptionIcon(Icons.local_fire_department_outlined),
+              title: Text(
+                l10n.settingsStreakReminderTitle,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+              ),
+              subtitle: Text(
+                l10n.settingsStreakReminderSubtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
             ),
             _buildSettingsTile(
               icon: Icons.schedule,
               title: l10n.settingsNotificationTimeTitle,
-              subtitle: l10n.settingsNotificationTimeSubtitle,
-              onTap: _showNotificationsComingSoon,
+              subtitle:
+                  '${l10n.settingsNotificationTimeSubtitle} · ${_formatNotificationTime(context)}',
+              onTap: _pickNotificationTime,
             ),
           ],
         ),
@@ -274,6 +604,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _buildSettingsSection(
           l10n.settingsSectionAppearance,
           [
+            SwitchListTile(
+              value: _largeTextEnabled,
+              onChanged: _setLargeTextEnabled,
+              secondary: _buildGameOptionIcon(Icons.text_fields_rounded),
+              title: Text(
+                l10n.settingsLargeTextTitle,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+              ),
+              subtitle: Text(
+                l10n.settingsLargeTextSubtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ),
+            SwitchListTile(
+              value: _highContrastEnabled,
+              onChanged: _setHighContrastEnabled,
+              secondary: _buildGameOptionIcon(Icons.contrast_outlined),
+              title: Text(
+                l10n.settingsHighContrastTitle,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+              ),
+              subtitle: Text(
+                l10n.settingsHighContrastSubtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ),
             _buildSettingsTile(
               icon: Icons.palette_outlined,
               title: l10n.settingsThemeTitle,
@@ -328,6 +694,78 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
               ),
             ),
+            SwitchListTile(
+              value: _keepScreenAwake,
+              onChanged: _setKeepScreenAwake,
+              secondary: _buildGameOptionIcon(Icons.screen_lock_portrait),
+              title: Text(
+                l10n.settingsKeepScreenAwakeTitle,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+              ),
+              subtitle: Text(
+                l10n.settingsKeepScreenAwakeSubtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            SwitchListTile(
+              value: _oneHandModeEnabled,
+              onChanged: _setOneHandModeEnabled,
+              secondary: _buildGameOptionIcon(Icons.pan_tool_alt_outlined),
+              title: Text(
+                l10n.settingsOneHandModeTitle,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+              ),
+              subtitle: Text(
+                l10n.settingsOneHandModeSubtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ),
+            SwitchListTile(
+              value: _memoHighlightEnabled,
+              onChanged: _setMemoHighlightEnabled,
+              secondary: _buildGameOptionIcon(Icons.filter_center_focus),
+              title: Text(
+                l10n.settingsMemoHighlightTitle,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+              ),
+              subtitle: Text(
+                l10n.settingsMemoHighlightSubtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ),
+            SwitchListTile(
+              value: _smartHintHighlightEnabled,
+              onChanged: _setSmartHintHighlightEnabled,
+              secondary: _buildGameOptionIcon(Icons.tips_and_updates_outlined),
+              title: Text(
+                l10n.settingsSmartHintTitle,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+              ),
+              subtitle: Text(
+                l10n.settingsSmartHintSubtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 24),
@@ -374,6 +812,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildGameOptionIcon(IconData icon) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: AppTheme.mintColor.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Icon(
+        icon,
+        color: Theme.of(context).colorScheme.onSurface,
+        size: 20,
+      ),
     );
   }
 
@@ -436,7 +890,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          l10n.settingsNotificationsComingSoonBody,
+          l10n.settingsNotificationsSubtitle,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: cs.onSurfaceVariant,
               ),
@@ -452,7 +906,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
-                    l10n.settingsTabletNotificationsBody,
+                    '${l10n.settingsTabletNotificationsBody}\n${l10n.settingsNotificationTimeTitle}: ${_formatNotificationTime(context)}\n${l10n.settingsStreakReminderTitle}: ${_streakReminderEnabled ? l10n.gameMemoStateOn : l10n.gameMemoStateOff}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),

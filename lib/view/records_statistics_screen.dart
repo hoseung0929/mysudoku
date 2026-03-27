@@ -86,6 +86,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -97,16 +98,20 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         children: [
           Text(
             l10n.recordsScreenTitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF2C3E50),
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 12),
           _buildFilterSection(l10n),
           const SizedBox(height: 12),
           _buildOverallSection(l10n),
+          const SizedBox(height: 16),
+          _buildTrendSection(l10n),
+          const SizedBox(height: 16),
+          _buildBestByLevelSection(l10n),
           const SizedBox(height: 16),
           _buildLevelSection(l10n),
           const SizedBox(height: 16),
@@ -119,6 +124,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   }
 
   Widget _buildFilterSection(AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -127,10 +133,10 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           children: [
             Text(
               l10n.recordsFilterSectionTitle,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2C3E50),
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 10),
@@ -199,10 +205,12 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   }
 
   Widget _buildOverallSection(AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
     final stats = _displayOverall;
     final totalCleared = stats['total_cleared'] as int;
     final totalGames = stats['total_games'] as int;
     final clearRate = stats['total_clear_rate'] as double;
+    final perfectRate = stats['perfect_clear_rate'] as double;
     final avgTime = stats['total_average_time'] as double;
     final avgWrong = stats['total_average_wrong_count'] as double;
 
@@ -214,10 +222,10 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           children: [
             Text(
               l10n.recordsSummaryTitle,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2C3E50),
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 12),
@@ -228,6 +236,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 _metricChip(l10n.recordsMetricClears, '$totalCleared/$totalGames'),
                 _metricChip(
                     l10n.recordsMetricClearRate, '${clearRate.toStringAsFixed(1)}%'),
+                _metricChip(
+                    l10n.recordsMetricPerfectRate, '${perfectRate.toStringAsFixed(1)}%'),
                 _metricChip(l10n.recordsMetricAvgTime,
                     _statisticsService.formatSeconds(avgTime)),
                 _metricChip(
@@ -241,6 +251,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   }
 
   Widget _buildLevelSection(AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
     final stats = _displayLevelStats;
 
     return Card(
@@ -251,10 +262,10 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           children: [
             Text(
               l10n.recordsByLevelTitle,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2C3E50),
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
@@ -296,16 +307,16 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                       child: LinearProgressIndicator(
                         minHeight: 8,
                         value: (clearRate / 100).clamp(0.0, 1.0),
-                        backgroundColor: const Color(0xFFECEFF1),
-                        valueColor: const AlwaysStoppedAnimation(Color(0xFF8DC6B0)),
+                        backgroundColor: colorScheme.surfaceContainerHighest,
+                        valueColor: AlwaysStoppedAnimation(colorScheme.primary),
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       l10n.recordsAvgTimeDetail(avgTime),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: Color(0xFF7F8C8D),
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -318,7 +329,213 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     );
   }
 
+  Widget _buildBestByLevelSection(AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final bestByLevel = _statisticsService.buildBestByLevel(
+      recent: _recent,
+      selectedLevel: _selectedLevel,
+    );
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.recordsBestByLevelTitle,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (bestByLevel.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(l10n.recordsBestByLevelEmpty),
+              ),
+            ...bestByLevel.map((record) {
+              final levelNameKey = record['level_name'] as String;
+              final levelName = levelNameKey.localizedSudokuLevelName(l10n);
+              final gameNumber = record['game_number'] as int;
+              final clearTime = record['clear_time'] as int;
+              final wrongCount = record['wrong_count'] as int;
+              final isPerfect = record['is_perfect'] as bool;
+              final timeStr = _statisticsService.formatSeconds(clearTime);
+
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: CircleAvatar(
+                  radius: 16,
+                  backgroundColor: colorScheme.surfaceContainerHighest,
+                  child: Text(
+                    levelName.substring(0, 1),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                title: Text(
+                  l10n.recordsGameNumberTitle(levelName, gameNumber),
+                ),
+                subtitle: Text(
+                  l10n.recordsBestByLevelDetail(timeStr, wrongCount),
+                ),
+                trailing: isPerfect
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          l10n.recordsPerfectBadge,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                      )
+                    : Icon(
+                        Icons.chevron_right,
+                        size: 18,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                onTap: () => _openGameFromRecord(record),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrendSection(AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final trend = _statisticsService.buildDailyTrend(
+      recent: _recent,
+      selectedLevel: _selectedLevel,
+    );
+    final summary = _statisticsService.buildTrendSummary(
+      recent: _recent,
+      selectedLevel: _selectedLevel,
+    );
+    final maxClears = trend.isEmpty
+        ? 1
+        : trend
+            .map((day) => day['clears'] as int)
+            .reduce((a, b) => a > b ? a : b)
+            .clamp(1, 99);
+    final totalClears = summary['total_clears'] as int;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.recordsTrendTitle,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (totalClears == 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(l10n.recordsTrendEmpty),
+              )
+            else ...[
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  _metricChip(
+                    l10n.recordsTrendClears,
+                    '$totalClears',
+                  ),
+                  _metricChip(
+                    l10n.recordsTrendActiveDays,
+                    '${summary['active_days']}',
+                  ),
+                  _metricChip(
+                    l10n.recordsMetricAvgTime,
+                    _statisticsService
+                        .formatSeconds(summary['average_time'] as double),
+                  ),
+                  _metricChip(
+                    l10n.recordsMetricAvgWrong,
+                    (summary['average_wrong'] as double).toStringAsFixed(1),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 132,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: trend.map((day) {
+                    final clears = day['clears'] as int;
+                    final ratio = clears / maxClears;
+                    return Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Text(
+                              '$clears',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Container(
+                              height: 72 * ratio + 8,
+                              decoration: BoxDecoration(
+                                color: clears == 0
+                                    ? colorScheme.surfaceContainerHighest
+                                    : colorScheme.primary,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              day['label'] as String,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildRecentSection(AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
     final records = _filteredRecent;
 
     return Card(
@@ -329,10 +546,10 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           children: [
             Text(
               l10n.recordsRecentTitle,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2C3E50),
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
@@ -351,7 +568,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               final timeStr = _statisticsService.formatSeconds(clearTime);
               return ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.history, color: Color(0xFF7F8C8D)),
+                leading: Icon(Icons.history, color: colorScheme.onSurfaceVariant),
                 title: Text(
                   l10n.recordsGameNumberTitle(levelName, gameNumber),
                 ),
@@ -367,6 +584,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   }
 
   Widget _buildBestSection(AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
     final topRecords = _statisticsService.buildTopRecords(
       recent: _recent,
       selectedLevel: _selectedLevel,
@@ -380,10 +598,10 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           children: [
             Text(
               l10n.recordsBestTitle,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2C3E50),
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
@@ -411,10 +629,10 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 subtitle: Text(
                   l10n.recordsBestDetail(timeStr, wrongCount),
                 ),
-                trailing: const Icon(
+                trailing: Icon(
                   Icons.chevron_right,
                   size: 18,
-                  color: Color(0xFF7F8C8D),
+                  color: colorScheme.onSurfaceVariant,
                 ),
                 onTap: () => _openGameFromRecord(record),
               );
@@ -426,6 +644,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   }
 
   Widget _rankBadge(int rank) {
+    final colorScheme = Theme.of(context).colorScheme;
     IconData icon;
     Color color;
     switch (rank) {
@@ -443,7 +662,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         break;
       default:
         icon = Icons.emoji_events;
-        color = const Color(0xFF7F8C8D);
+        color = colorScheme.onSurfaceVariant;
         break;
     }
 
@@ -455,10 +674,11 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   }
 
   Widget _metricChip(String label, String value) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F4F6),
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -466,18 +686,18 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: Color(0xFF7F8C8D),
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF2C3E50),
+              color: colorScheme.onSurface,
             ),
           ),
         ],

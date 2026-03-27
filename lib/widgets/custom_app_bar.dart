@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? title;
+  final Widget? titleWidget;
   final List<Widget>? actions;
   final Widget? leading;
   final bool showNotificationIcon;
@@ -10,6 +11,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({
     Key? key,
     this.title,
+    this.titleWidget,
     this.actions,
     this.leading,
     this.showNotificationIcon = true,
@@ -19,7 +21,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: title != null ? Text(title!) : const Text('미사용'),
+      title: titleWidget ?? (title != null ? Text(title!) : const Text('미사용')),
       leading: leading ??
           IconButton(
             icon: const Icon(Icons.arrow_back),

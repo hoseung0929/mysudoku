@@ -51,7 +51,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsNotificationsTitle => 'Notification settings';
 
   @override
-  String get settingsNotificationsSubtitle => 'Manage game notifications';
+  String get settingsNotificationsSubtitle =>
+      'Send a reminder when today’s challenge is still unfinished';
+
+  @override
+  String get settingsStreakReminderTitle => 'Streak reminder';
+
+  @override
+  String get settingsStreakReminderSubtitle =>
+      'Send one more reminder when you already have an active streak';
 
   @override
   String get settingsNotificationTimeTitle => 'Notification time';
@@ -61,10 +69,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choose when to receive reminders';
 
   @override
+  String get settingsNotificationsPermissionDenied =>
+      'Notification permission is required to turn reminders on.';
+
+  @override
   String get settingsThemeTitle => 'Theme';
 
   @override
   String get settingsThemeSubtitle => 'Light, dark, or system default';
+
+  @override
+  String get settingsLargeTextTitle => 'Large text';
+
+  @override
+  String get settingsLargeTextSubtitle =>
+      'Show slightly larger text across the app';
+
+  @override
+  String get settingsHighContrastTitle => 'High contrast';
+
+  @override
+  String get settingsHighContrastSubtitle =>
+      'Make text and card boundaries more distinct';
 
   @override
   String get settingsDarkModeTitle => 'Dark mode';
@@ -97,6 +123,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsVibrationSubtitle => 'Vibrate when entering numbers';
 
   @override
+  String get settingsKeepScreenAwakeTitle => 'Keep screen awake';
+
+  @override
+  String get settingsKeepScreenAwakeSubtitle =>
+      'Prevent the game screen from sleeping automatically';
+
+  @override
+  String get settingsOneHandModeTitle => 'One-hand mode';
+
+  @override
+  String get settingsOneHandModeSubtitle =>
+      'Use a denser button layout on the mobile game screen';
+
+  @override
+  String get settingsMemoHighlightTitle => 'Memo highlight';
+
+  @override
+  String get settingsMemoHighlightSubtitle =>
+      'Show memo focus, candidate, and unique-note highlights';
+
+  @override
+  String get settingsSmartHintTitle => 'Playable-cell highlight';
+
+  @override
+  String get settingsSmartHintSubtitle =>
+      'Softly highlight cells that can be filled immediately by rules';
+
+  @override
   String get settingsAppInfoTitle => 'App info';
 
   @override
@@ -127,7 +181,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsDailyGoalNotifSubtitle =>
-      'Notify when you reach your daily goal';
+      'Celebrate the moment you reach your weekly goal';
 
   @override
   String get settingsHintNotifTitle => 'Hint usage notification';
@@ -212,7 +266,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gameMemoStateOff => 'OFF';
 
   @override
+  String get gameMemoFocusShort => 'Focus';
+
+  @override
+  String get gameMemoFocusIdle => 'None';
+
+  @override
   String get gameWrongShort => 'Wrong';
+
+  @override
+  String get gamePerfectShort => 'Perfect';
+
+  @override
+  String get gamePerfectReady => 'Active';
+
+  @override
+  String get gamePerfectMissed => 'Lost';
 
   @override
   String get gameProgressShort => 'Progress';
@@ -222,6 +291,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gameNumberInputTitle => 'Number input';
+
+  @override
+  String gameRowsCompleted(int count) {
+    return '$count row cleared';
+  }
+
+  @override
+  String gameColsCompleted(int count) {
+    return '$count column cleared';
+  }
+
+  @override
+  String gameBoxesCompleted(int count) {
+    return '$count box cleared';
+  }
 
   @override
   String get gamePause => 'Pause';
@@ -372,10 +456,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsSummaryTitle => 'Summary';
 
   @override
+  String get recordsTrendTitle => 'Last 7 days';
+
+  @override
+  String get recordsTrendEmpty =>
+      'Not enough recent clears to show a 7-day trend.';
+
+  @override
+  String get recordsTrendClears => 'Recent clears';
+
+  @override
+  String get recordsTrendActiveDays => 'Active days';
+
+  @override
   String get recordsMetricClears => 'Clears';
 
   @override
   String get recordsMetricClearRate => 'Clear rate';
+
+  @override
+  String get recordsMetricPerfectRate => 'Perfect rate';
 
   @override
   String get recordsMetricAvgTime => 'Avg. time';
@@ -388,6 +488,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recordsByLevelEmpty => 'No stats for this filter.';
+
+  @override
+  String get recordsBestByLevelTitle => 'Best by level';
+
+  @override
+  String get recordsBestByLevelEmpty =>
+      'No best-by-level records for this filter.';
+
+  @override
+  String recordsBestByLevelDetail(String time, int wrongCount) {
+    return '$time · Mistakes: $wrongCount';
+  }
+
+  @override
+  String get recordsPerfectBadge => 'Perfect';
 
   @override
   String recordsAvgTimeDetail(String time) {

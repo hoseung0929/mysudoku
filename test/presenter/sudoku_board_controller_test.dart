@@ -66,11 +66,12 @@ void main() {
       expect(controller.isHintNumber(0, 1), isFalse);
     });
 
-    test('updates wrong-number status from solution', () {
-      controller.setCellValue(0, 1, 4);
+    test('updates wrong-number status from sudoku rule conflicts', () {
+      controller.setCellValue(0, 1, 5);
       controller.updateWrongStatus(0, 1);
 
       expect(controller.wrongNumbers[0][1], isTrue);
+      expect(controller.wrongNumbers[0][0], isTrue);
       expect(controller.isWrongNumber(0, 1), isTrue);
       expect(controller.hasError(0, 1), isTrue);
     });
@@ -111,6 +112,61 @@ void main() {
       controller.toggleNote(0, 2, 4);
       controller.applyHint(0, 2);
       expect(controller.getCellNotes(0, 2), isEmpty);
+    });
+
+    test('removes matching candidate notes from related cells on value commit', () {
+      final boardWithMoreEmpties = List.generate(
+        9,
+        (row) => List<int>.from(board[row]),
+      );
+      boardWithMoreEmpties[1][1] = 0;
+      boardWithMoreEmpties[4][1] = 0;
+      boardWithMoreEmpties[4][4] = 0;
+      final localController = SudokuBoardController(
+        initialBoard: boardWithMoreEmpties,
+        solution: solution,
+      );
+
+      localController.toggleNote(0, 2, 4);
+      localController.toggleNote(1, 1, 4);
+      localController.toggleNote(4, 1, 4);
+      localController.toggleNote(4, 4, 4);
+      localController.toggleNote(4, 4, 8);
+
+      localController.setCellValue(0, 1, 4);
+
+      expect(localController.getCellNotes(0, 2), isEmpty);
+      expect(localController.getCellNotes(1, 1), isEmpty);
+      expect(localController.getCellNotes(4, 1), isEmpty);
+      expect(localController.getCellNotes(4, 4), equals({4, 8}));
+    });
+
+    test('removes matching candidate notes from related cells on hint apply', () {
+      final boardWithMoreEmpties = List.generate(
+        9,
+        (row) => List<int>.from(board[row]),
+      );
+      boardWithMoreEmpties[1][1] = 0;
+      boardWithMoreEmpties[4][2] = 0;
+      boardWithMoreEmpties[4][4] = 0;
+      final localController = SudokuBoardController(
+        initialBoard: boardWithMoreEmpties,
+        solution: solution,
+      );
+
+      localController.toggleNote(0, 1, 4);
+      localController.toggleNote(1, 1, 4);
+      localController.toggleNote(4, 2, 4);
+      localController.toggleNote(4, 4, 4);
+      localController.toggleNote(4, 4, 9);
+
+      localController.applyHint(0, 2);
+
+      expect(localController.getCellNotes(0, 2), isEmpty);
+      expect(localController.getCellNotes(0, 1), isEmpty);
+      expect(localController.getCellNotes(1, 1), isEmpty);
+      expect(localController.getCellNotes(4, 2), isEmpty);
+      expect(localController.getCellNotes(4, 4), equals({4, 9}));
     });
   });
 }

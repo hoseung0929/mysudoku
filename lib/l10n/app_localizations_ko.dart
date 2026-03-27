@@ -51,7 +51,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsNotificationsTitle => '알림 설정';
 
   @override
-  String get settingsNotificationsSubtitle => '게임 알림을 관리합니다';
+  String get settingsNotificationsSubtitle => '오늘의 도전을 아직 끝내지 않았을 때 리마인드를 보냅니다';
+
+  @override
+  String get settingsStreakReminderTitle => '연속 플레이 리마인드';
+
+  @override
+  String get settingsStreakReminderSubtitle =>
+      '연속 기록이 있을 때 한 번 더 이어서 플레이를 알려줍니다';
 
   @override
   String get settingsNotificationTimeTitle => '알림 시간';
@@ -60,10 +67,26 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsNotificationTimeSubtitle => '알림을 받을 시간을 설정합니다';
 
   @override
+  String get settingsNotificationsPermissionDenied =>
+      '알림 권한이 허용되지 않아 리마인드를 켤 수 없어요.';
+
+  @override
   String get settingsThemeTitle => '테마 설정';
 
   @override
   String get settingsThemeSubtitle => '라이트, 다크, 시스템 설정';
+
+  @override
+  String get settingsLargeTextTitle => '큰 글씨 모드';
+
+  @override
+  String get settingsLargeTextSubtitle => '앱 전반의 글자를 조금 더 크게 표시합니다';
+
+  @override
+  String get settingsHighContrastTitle => '고대비 모드';
+
+  @override
+  String get settingsHighContrastSubtitle => '텍스트와 카드 경계를 더 선명하게 표시합니다';
 
   @override
   String get settingsDarkModeTitle => '다크 모드';
@@ -96,6 +119,30 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsVibrationSubtitle => '숫자 입력 시 진동 피드백을 사용합니다';
 
   @override
+  String get settingsKeepScreenAwakeTitle => '화면 깨우기 유지';
+
+  @override
+  String get settingsKeepScreenAwakeSubtitle => '게임 화면이 자동으로 꺼지지 않도록 유지합니다';
+
+  @override
+  String get settingsOneHandModeTitle => '한 손 모드';
+
+  @override
+  String get settingsOneHandModeSubtitle => '모바일 게임 화면의 버튼과 간격을 더 조밀하게 표시합니다';
+
+  @override
+  String get settingsMemoHighlightTitle => '메모 탐색 강조';
+
+  @override
+  String get settingsMemoHighlightSubtitle => '메모 후보, 포커스 숫자, 유일 후보 강조를 표시합니다';
+
+  @override
+  String get settingsSmartHintTitle => '완성 가능 칸 강조';
+
+  @override
+  String get settingsSmartHintSubtitle => '규칙상 바로 넣을 수 있는 칸을 약하게 강조합니다';
+
+  @override
   String get settingsAppInfoTitle => '앱 정보';
 
   @override
@@ -123,7 +170,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsDailyGoalNotifTitle => '일일 목표 알림';
 
   @override
-  String get settingsDailyGoalNotifSubtitle => '일일 목표 달성 시 알림을 받습니다';
+  String get settingsDailyGoalNotifSubtitle => '주간 목표를 막 달성했을 때 축하 알림을 받습니다';
 
   @override
   String get settingsHintNotifTitle => '힌트 사용 알림';
@@ -206,7 +253,22 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gameMemoStateOff => 'OFF';
 
   @override
+  String get gameMemoFocusShort => '탐색';
+
+  @override
+  String get gameMemoFocusIdle => '없음';
+
+  @override
   String get gameWrongShort => '오답';
+
+  @override
+  String get gamePerfectShort => '퍼펙트';
+
+  @override
+  String get gamePerfectReady => '유지 중';
+
+  @override
+  String get gamePerfectMissed => '깨짐';
 
   @override
   String get gameProgressShort => '진행율';
@@ -216,6 +278,21 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get gameNumberInputTitle => '숫자 입력';
+
+  @override
+  String gameRowsCompleted(int count) {
+    return '행 $count개 완성';
+  }
+
+  @override
+  String gameColsCompleted(int count) {
+    return '열 $count개 완성';
+  }
+
+  @override
+  String gameBoxesCompleted(int count) {
+    return '박스 $count개 완성';
+  }
 
   @override
   String get gamePause => '일시정지';
@@ -366,10 +443,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsSummaryTitle => '요약 통계';
 
   @override
+  String get recordsTrendTitle => '최근 7일 추세';
+
+  @override
+  String get recordsTrendEmpty => '최근 7일 추세를 만들 기록이 없습니다.';
+
+  @override
+  String get recordsTrendClears => '최근 클리어';
+
+  @override
+  String get recordsTrendActiveDays => '플레이한 날';
+
+  @override
   String get recordsMetricClears => '클리어';
 
   @override
   String get recordsMetricClearRate => '클리어율';
+
+  @override
+  String get recordsMetricPerfectRate => '퍼펙트율';
 
   @override
   String get recordsMetricAvgTime => '평균 시간';
@@ -382,6 +474,20 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get recordsByLevelEmpty => '표시할 레벨 통계가 없습니다.';
+
+  @override
+  String get recordsBestByLevelTitle => '난이도별 최고 기록';
+
+  @override
+  String get recordsBestByLevelEmpty => '표시할 난이도별 최고 기록이 없습니다.';
+
+  @override
+  String recordsBestByLevelDetail(String time, int wrongCount) {
+    return '$time · 오답 $wrongCount';
+  }
+
+  @override
+  String get recordsPerfectBadge => '퍼펙트';
 
   @override
   String recordsAvgTimeDetail(String time) {

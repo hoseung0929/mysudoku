@@ -15,12 +15,24 @@ class ContinueGameSummary {
     required this.game,
     required this.progress,
     required this.elapsedFilledCells,
+    required this.lastPlayedAtMillis,
+    required this.elapsedSeconds,
+    required this.hintsRemaining,
+    required this.wrongCount,
+    required this.isMemoMode,
+    required this.noteCount,
   });
 
   final SudokuLevel level;
   final SudokuGame game;
   final double progress;
   final int elapsedFilledCells;
+  final int lastPlayedAtMillis;
+  final int elapsedSeconds;
+  final int hintsRemaining;
+  final int wrongCount;
+  final bool isMemoMode;
+  final int noteCount;
 }
 
 class QuickStartOption {
@@ -36,6 +48,7 @@ class QuickStartOption {
 class HomeDashboardData {
   const HomeDashboardData({
     required this.continueGame,
+    required this.continueGames,
     required this.todayChallenge,
     required this.quickStartOptions,
     required this.challengeProgress,
@@ -43,6 +56,7 @@ class HomeDashboardData {
   });
 
   final ContinueGameSummary? continueGame;
+  final List<ContinueGameSummary> continueGames;
   final SudokuGame todayChallenge;
   final List<QuickStartOption> quickStartOptions;
   final ChallengeProgressSummary challengeProgress;
@@ -55,20 +69,33 @@ class HomeDashboardService {
     GameStateService? gameStateService,
     ChallengeProgressService? challengeProgressService,
     AchievementService? achievementService,
-  })  : _databaseHelper = databaseHelper ?? DatabaseHelper(),
-        _gameStateService = gameStateService ?? GameStateService(),
+    Future<List<List<int>>> Function(String levelName, int gameNumber)? loadGame,
+    Future<List<List<int>>> Function(String levelName, int gameNumber)? loadSolution,
+    Future<int> Function(String levelName)? loadGameCount,
+  })  : _gameStateService = gameStateService ?? GameStateService(),
         _challengeProgressService =
             challengeProgressService ?? ChallengeProgressService(databaseHelper: databaseHelper),
         _achievementService =
-            achievementService ?? AchievementService(databaseHelper: databaseHelper);
+            achievementService ?? AchievementService(databaseHelper: databaseHelper),
+        _loadGame =
+            loadGame ?? (databaseHelper ?? DatabaseHelper()).getGame,
+        _loadSolution =
+            loadSolution ?? (databaseHelper ?? DatabaseHelper()).getSolution,
+        _loadGameCount =
+            loadGameCount ?? (databaseHelper ?? DatabaseHelper()).getGameCount;
 
-  final DatabaseHelper _databaseHelper;
   final GameStateService _gameStateService;
   final ChallengeProgressService _challengeProgressService;
   final AchievementService _achievementService;
+  final Future<List<List<int>>> Function(String levelName, int gameNumber)
+      _loadGame;
+  final Future<List<List<int>>> Function(String levelName, int gameNumber)
+      _loadSolution;
+  final Future<int> Function(String levelName) _loadGameCount;
 
   Future<HomeDashboardData> load(AppLocalizations l10n) async {
-    final continueGame = await _loadContinueGame();
+    final continueGames = await _loadContinueGames();
+    final continueGame = continueGames.isEmpty ? null : continueGames.first;
     final todayChallenge = await _loadTodayChallenge();
     final quickStartOptions = _buildQuickStartOptions();
     final challengeProgress = await _challengeProgressService.load();
@@ -76,6 +103,7 @@ class HomeDashboardService {
 
     return HomeDashboardData(
       continueGame: continueGame,
+      continueGames: continueGames,
       todayChallenge: todayChallenge,
       quickStartOptions: quickStartOptions,
       challengeProgress: challengeProgress,
@@ -83,20 +111,28 @@ class HomeDashboardService {
     );
   }
 
-  Future<ContinueGameSummary?> _loadContinueGame() async {
+  Future<List<ContinueGameSummary>> _loadContinueGames() async {
     final savedGames = await _gameStateService.getSavedGames();
     if (savedGames.isEmpty) {
-      return null;
+      return const [];
     }
 
+    final summaries = <ContinueGameSummary>[];
+
     for (final saved in savedGames) {
+      final session = await _gameStateService.loadSession(
+        levelName: saved.levelName,
+        gameNumber: saved.gameNumber,
+      );
+      if (session == null) {
+        continue;
+      }
       final level = SudokuLevel.levels.firstWhere(
         (item) => item.name == saved.levelName,
         orElse: () => SudokuLevel.levels.first,
       );
-      final board = await _databaseHelper.getGame(saved.levelName, saved.gameNumber);
-      final solution =
-          await _databaseHelper.getSolution(saved.levelName, saved.gameNumber);
+      final board = await _loadGame(saved.levelName, saved.gameNumber);
+      final solution = await _loadSolution(saved.levelName, saved.gameNumber);
       if (board.isEmpty || solution.isEmpty) {
         continue;
       }
@@ -109,35 +145,42 @@ class HomeDashboardService {
         gameNumber: saved.gameNumber,
       );
 
-      return ContinueGameSummary(
+      summaries.add(
+        ContinueGameSummary(
         level: level,
         game: game,
         progress: _calculateProgress(
           originalBoard: board,
-          savedBoard: saved.board,
+          savedBoard: session.board,
         ),
         elapsedFilledCells: _countUserFilledCells(
           originalBoard: board,
-          savedBoard: saved.board,
+          savedBoard: session.board,
         ),
-      );
+        lastPlayedAtMillis: saved.lastPlayedAtMillis,
+        elapsedSeconds: session.elapsedSeconds,
+        hintsRemaining: session.hintsRemaining,
+        wrongCount: session.wrongCount,
+        isMemoMode: session.isMemoMode,
+        noteCount: _countNotes(session.notes),
+      ));
     }
 
-    return null;
+    return summaries;
   }
 
   Future<SudokuGame> _loadTodayChallenge() async {
     final levelIndex = DateTime.now().difference(DateTime(2024, 1, 1)).inDays %
         SudokuLevel.levels.length;
     final level = SudokuLevel.levels[levelIndex];
-    final gameCount = await _databaseHelper.getGameCount(level.name);
+    final gameCount = await _loadGameCount(level.name);
     final safeGameCount = gameCount == 0 ? 1 : gameCount;
     final gameNumber =
         (DateTime.now().difference(DateTime(2024, 1, 1)).inDays % safeGameCount) +
             1;
 
-    final board = await _databaseHelper.getGame(level.name, gameNumber);
-    final solution = await _databaseHelper.getSolution(level.name, gameNumber);
+    final board = await _loadGame(level.name, gameNumber);
+    final solution = await _loadSolution(level.name, gameNumber);
 
     return SudokuGame(
       board: board,
@@ -206,6 +249,16 @@ class HomeDashboardService {
         if (originalBoard[row][col] == 0 && savedBoard[row][col] != 0) {
           count++;
         }
+      }
+    }
+    return count;
+  }
+
+  int _countNotes(List<List<Set<int>>> notes) {
+    int count = 0;
+    for (final row in notes) {
+      for (final cell in row) {
+        count += cell.length;
       }
     }
     return count;

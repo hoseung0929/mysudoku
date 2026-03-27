@@ -3,12 +3,12 @@ import 'package:mysudoku/l10n/achievement_l10n.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
 import 'package:mysudoku/l10n/quick_start_option_l10n.dart';
 import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
-import 'package:mysudoku/database/database_helper.dart';
 import 'package:mysudoku/model/sudoku_game.dart';
 import 'package:mysudoku/model/sudoku_level.dart';
 import 'package:mysudoku/services/achievement_service.dart';
 import 'package:mysudoku/services/challenge_progress_service.dart';
 import 'package:mysudoku/services/home_dashboard_service.dart';
+import 'package:mysudoku/services/quick_game_service.dart';
 import 'package:mysudoku/view/achievement_collection_screen.dart';
 import 'package:mysudoku/view/sudoku_game_screen.dart';
 
@@ -21,6 +21,7 @@ class ChallengeScreen extends StatefulWidget {
 
 class _ChallengeScreenState extends State<ChallengeScreen> {
   final HomeDashboardService _homeDashboardService = HomeDashboardService();
+  final QuickGameService _quickGameService = QuickGameService();
   bool _isLoading = true;
   HomeDashboardData? _data;
 
@@ -75,28 +76,15 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
   }
 
   Future<void> _startQuickGame(SudokuLevel level) async {
-    final dbHelper = DatabaseHelper();
-    final gameCount = await dbHelper.getGameCount(level.name);
-    if (gameCount == 0) return;
-    final targetGameNumber = (level.clearedGames % gameCount) + 1;
-    final board = await dbHelper.getGame(level.name, targetGameNumber);
-    final solution = await dbHelper.getSolution(level.name, targetGameNumber);
-    if (board.isEmpty || solution.isEmpty) return;
-
-    await _openGame(
-      SudokuGame(
-        board: board,
-        solution: solution,
-        emptyCells: level.emptyCells,
-        levelName: level.name,
-        gameNumber: targetGameNumber,
-      ),
-    );
+    final game = await _quickGameService.createQuickGame(level);
+    if (game == null) return;
+    await _openGame(game);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -115,10 +103,10 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
         children: [
           Text(
             l10n.challengeScreenTitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF2C3E50),
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 12),
@@ -141,10 +129,10 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                 children: [
                   Text(
                     l10n.challengeTodaysChallengeTitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF2C3E50),
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -163,8 +151,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                     challenge.isTodayChallengeCleared
                         ? l10n.challengeTodayDoneHint
                         : l10n.challengeTodayPendingHint,
-                    style: const TextStyle(
-                      color: Color(0xFF7F8C8D),
+                    style: TextStyle(
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -205,10 +193,10 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                 children: [
                   Text(
                     l10n.challengeSuggestedActions,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF2C3E50),
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -269,6 +257,7 @@ class _WeeklyGoalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final progress = challenge.weeklyGoalTarget == 0
         ? 0.0
         : (challenge.weeklyClearCount / challenge.weeklyGoalTarget)
@@ -282,10 +271,10 @@ class _WeeklyGoalCard extends StatelessWidget {
           children: [
             Text(
               l10n.challengeWeeklyGoalHeading,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2C3E50),
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
@@ -301,11 +290,11 @@ class _WeeklyGoalCard extends StatelessWidget {
               value: progress,
               minHeight: 10,
               borderRadius: BorderRadius.circular(999),
-              backgroundColor: const Color(0xFFE9EEF2),
+              backgroundColor: colorScheme.surfaceContainerHighest,
               valueColor: AlwaysStoppedAnimation<Color>(
                 challenge.isWeeklyGoalAchieved
-                    ? const Color(0xFF3FAE7C)
-                    : const Color(0xFFDAA520),
+                    ? colorScheme.primary
+                    : colorScheme.tertiary,
               ),
             ),
             const SizedBox(height: 10),
@@ -338,8 +327,8 @@ class _WeeklyGoalCard extends StatelessWidget {
                   : l10n.challengeWeeklyAlmostFooter(
                       challenge.remainingWeeklyGoal,
                     ),
-              style: const TextStyle(
-                color: Color(0xFF7F8C8D),
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -360,23 +349,24 @@ class _GoalStatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FA),
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: const Color(0xFF5C6E7E)),
+          Icon(icon, size: 18, color: colorScheme.primary),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF2C3E50),
+                color: colorScheme.onSurface,
               ),
             ),
           ),
@@ -399,16 +389,17 @@ class _NextMilestoneTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FA),
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: const Color(0xFF5C6E7E)),
+          Icon(icon, color: colorScheme.primary),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -416,16 +407,16 @@ class _NextMilestoneTile extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF2C3E50),
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   description,
-                  style: const TextStyle(
-                    color: Color(0xFF7F8C8D),
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -450,6 +441,7 @@ class _AchievementSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final unlocked = summary.unlockedBadges.take(3).toList();
     final upcoming = summary.inProgressBadges.take(2).toList();
 
@@ -461,10 +453,10 @@ class _AchievementSection extends StatelessWidget {
           children: [
             Text(
               l10n.challengeAchievementsHeading,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2C3E50),
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
@@ -476,8 +468,8 @@ class _AchievementSection extends StatelessWidget {
                       summary.unlockedBadges.length,
                       summary.badges.length,
                     ),
-                    style: const TextStyle(
-                      color: Color(0xFF7F8C8D),
+                    style: TextStyle(
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -491,9 +483,9 @@ class _AchievementSection extends StatelessWidget {
               const SizedBox(height: 14),
               Text(
                 l10n.challengeEarnedBadgesHeading,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF2C3E50),
+                  color: colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 10),
@@ -513,9 +505,9 @@ class _AchievementSection extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 l10n.challengeNextBadgeTargets,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF2C3E50),
+                  color: colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 10),
@@ -550,16 +542,19 @@ class _AchievementBadgeChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: 150,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: badge.unlocked ? badge.surfaceColor : const Color(0xFFF3F4F6),
+        color: badge.unlocked
+            ? badge.surfaceColor
+            : colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: badge.unlocked
               ? badge.accentColor.withValues(alpha: 0.35)
-              : const Color(0xFFE5E7EB),
+              : colorScheme.outlineVariant,
         ),
       ),
       child: Column(
@@ -567,21 +562,25 @@ class _AchievementBadgeChip extends StatelessWidget {
         children: [
           Icon(
             badge.unlocked ? badge.icon : Icons.workspace_premium_outlined,
-            color: badge.unlocked ? badge.accentColor : const Color(0xFF7F8C8D),
+            color: badge.unlocked
+                ? badge.accentColor
+                : colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 8),
           Text(
             badge.title,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w700,
-              color: Color(0xFF2C3E50),
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             '${badge.progressLabel} · ${badge.rarity.localizedName(l10n)}',
             style: TextStyle(
-              color: badge.unlocked ? badge.accentColor : const Color(0xFF7F8C8D),
+              color: badge.unlocked
+                  ? badge.accentColor
+                  : colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -607,35 +606,36 @@ class _ChallengeHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           colors: [
-            Color(0xFFFFF3D6),
-            Color(0xFFFFFFFF),
+            colorScheme.primaryContainer.withValues(alpha: 0.55),
+            colorScheme.surface,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFF0D48A)),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.local_fire_department, color: Color(0xFFDA8B00)),
+              Icon(Icons.local_fire_department, color: colorScheme.primary),
               const SizedBox(width: 8),
               Text(
                 streakDays > 0
                     ? l10n.challengeStreakDays(streakDays)
                     : l10n.challengeStreakStartToday,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF6A4C00),
+                  color: colorScheme.onSurface,
                 ),
               ),
             ],
@@ -643,9 +643,9 @@ class _ChallengeHeroCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             todayLabel,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: Color(0xFF2C3E50),
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 6),
@@ -653,8 +653,8 @@ class _ChallengeHeroCard extends StatelessWidget {
             isTodayCleared
                 ? l10n.challengeHeroDoneCaption
                 : l10n.challengeHeroPendingCaption,
-            style: const TextStyle(
-              color: Color(0xFF7A642D),
+            style: TextStyle(
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 14),

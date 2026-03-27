@@ -14,11 +14,18 @@
   "settingsSectionGame": "게임",
   "settingsSectionInfo": "정보",
   "settingsNotificationsTitle": "알림 설정",
-  "settingsNotificationsSubtitle": "게임 알림을 관리합니다",
+  "settingsNotificationsSubtitle": "오늘의 도전을 아직 끝내지 않았을 때 리마인드를 보냅니다",
+  "settingsStreakReminderTitle": "연속 플레이 리마인드",
+  "settingsStreakReminderSubtitle": "연속 기록이 있을 때 한 번 더 이어서 플레이를 알려줍니다",
   "settingsNotificationTimeTitle": "알림 시간",
   "settingsNotificationTimeSubtitle": "알림을 받을 시간을 설정합니다",
+  "settingsNotificationsPermissionDenied": "알림 권한이 허용되지 않아 리마인드를 켤 수 없어요.",
   "settingsThemeTitle": "테마 설정",
   "settingsThemeSubtitle": "라이트, 다크, 시스템 설정",
+  "settingsLargeTextTitle": "큰 글씨 모드",
+  "settingsLargeTextSubtitle": "앱 전반의 글자를 조금 더 크게 표시합니다",
+  "settingsHighContrastTitle": "고대비 모드",
+  "settingsHighContrastSubtitle": "텍스트와 카드 경계를 더 선명하게 표시합니다",
   "settingsDarkModeTitle": "다크 모드",
   "settingsDarkModeSubtitle": "다크 모드를 켜거나 끕니다",
   "settingsLanguageTitle": "언어 설정",
@@ -29,6 +36,14 @@
   "settingsLanguagePickerTitle": "언어 선택",
   "settingsVibrationTitle": "입력 진동",
   "settingsVibrationSubtitle": "숫자 입력 시 진동 피드백을 사용합니다",
+  "settingsKeepScreenAwakeTitle": "화면 깨우기 유지",
+  "settingsKeepScreenAwakeSubtitle": "게임 화면이 자동으로 꺼지지 않도록 유지합니다",
+  "settingsOneHandModeTitle": "한 손 모드",
+  "settingsOneHandModeSubtitle": "모바일 게임 화면의 버튼과 간격을 더 조밀하게 표시합니다",
+  "settingsMemoHighlightTitle": "메모 탐색 강조",
+  "settingsMemoHighlightSubtitle": "메모 후보, 포커스 숫자, 유일 후보 강조를 표시합니다",
+  "settingsSmartHintTitle": "완성 가능 칸 강조",
+  "settingsSmartHintSubtitle": "규칙상 바로 넣을 수 있는 칸을 약하게 강조합니다",
   "settingsAppInfoTitle": "앱 정보",
   "settingsAppInfoSubtitle": "앱 버전 및 개발자 정보",
   "settingsPrivacyTitle": "개인정보처리방침",
@@ -38,7 +53,7 @@
   "settingsGameCompleteNotifTitle": "게임 완료 알림",
   "settingsGameCompleteNotifSubtitle": "게임을 완료했을 때 알림을 받습니다",
   "settingsDailyGoalNotifTitle": "일일 목표 알림",
-  "settingsDailyGoalNotifSubtitle": "일일 목표 달성 시 알림을 받습니다",
+  "settingsDailyGoalNotifSubtitle": "주간 목표를 막 달성했을 때 축하 알림을 받습니다",
   "settingsHintNotifTitle": "힌트 사용 알림",
   "settingsHintNotifSubtitle": "힌트를 사용할 때 알림을 받습니다",
   "levelBeginner": "초급",
@@ -70,10 +85,33 @@
   "gameMemoOnShort": "메모 ON",
   "gameMemoStateOn": "ON",
   "gameMemoStateOff": "OFF",
+  "gameMemoFocusShort": "탐색",
+  "gameMemoFocusIdle": "없음",
   "gameWrongShort": "오답",
+  "gamePerfectShort": "퍼펙트",
+  "gamePerfectReady": "유지 중",
+  "gamePerfectMissed": "깨짐",
   "gameProgressShort": "진행율",
   "gameTimeShort": "시간",
   "gameNumberInputTitle": "숫자 입력",
+  "gameRowsCompleted": "행 {count}개 완성",
+  "@gameRowsCompleted": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "gameColsCompleted": "열 {count}개 완성",
+  "@gameColsCompleted": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "gameBoxesCompleted": "박스 {count}개 완성",
+  "@gameBoxesCompleted": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "gamePause": "일시정지",
   "gameResume": "계속",
   "gameAnswerPreview": "정답",
@@ -158,12 +196,27 @@
     }
   },
   "recordsSummaryTitle": "요약 통계",
+  "recordsTrendTitle": "최근 7일 추세",
+  "recordsTrendEmpty": "최근 7일 추세를 만들 기록이 없습니다.",
+  "recordsTrendClears": "최근 클리어",
+  "recordsTrendActiveDays": "플레이한 날",
   "recordsMetricClears": "클리어",
   "recordsMetricClearRate": "클리어율",
+  "recordsMetricPerfectRate": "퍼펙트율",
   "recordsMetricAvgTime": "평균 시간",
   "recordsMetricAvgWrong": "평균 오답",
   "recordsByLevelTitle": "레벨별 통계",
   "recordsByLevelEmpty": "표시할 레벨 통계가 없습니다.",
+  "recordsBestByLevelTitle": "난이도별 최고 기록",
+  "recordsBestByLevelEmpty": "표시할 난이도별 최고 기록이 없습니다.",
+  "recordsBestByLevelDetail": "{time} · 오답 {wrongCount}",
+  "@recordsBestByLevelDetail": {
+    "placeholders": {
+      "time": {"type": "String"},
+      "wrongCount": {"type": "int"}
+    }
+  },
+  "recordsPerfectBadge": "퍼펙트",
   "recordsAvgTimeDetail": "평균 시간 {time}",
   "@recordsAvgTimeDetail": {
     "placeholders": {

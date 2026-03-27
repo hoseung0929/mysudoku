@@ -16,7 +16,7 @@ class SudokuGameActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color backgroundColor;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {

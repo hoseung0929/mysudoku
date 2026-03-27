@@ -45,7 +45,7 @@ void main() {
         {'level_name': '중급', 'total_count': 100},
       ];
       final recent = [
-        {'level_name': '초급', 'clear_time': 100, 'wrong_count': 1},
+        {'level_name': '초급', 'clear_time': 100, 'wrong_count': 0},
         {'level_name': '초급', 'clear_time': 200, 'wrong_count': 3},
         {'level_name': '중급', 'clear_time': 300, 'wrong_count': 2},
       ];
@@ -59,8 +59,10 @@ void main() {
 
       expect(stats['total_cleared'], 2);
       expect(stats['total_games'], 100);
+      expect(stats['perfect_clears'], 1);
+      expect(stats['perfect_clear_rate'], 50.0);
       expect(stats['total_average_time'], 150.0);
-      expect(stats['total_average_wrong_count'], 2.0);
+      expect(stats['total_average_wrong_count'], 1.5);
     });
 
     test('sorts top records by clear time then wrong count', () {
@@ -91,6 +93,108 @@ void main() {
       );
 
       expect(topRecords.map((record) => record['game_number']).toList(), [3, 2, 1]);
+    });
+
+    test('builds best record list by level', () {
+      final recent = [
+        {
+          'level_name': '초급',
+          'game_number': 1,
+          'clear_time': 150,
+          'wrong_count': 1,
+        },
+        {
+          'level_name': '초급',
+          'game_number': 2,
+          'clear_time': 120,
+          'wrong_count': 0,
+        },
+        {
+          'level_name': '중급',
+          'game_number': 5,
+          'clear_time': 220,
+          'wrong_count': 2,
+        },
+      ];
+
+      final bestByLevel = service.buildBestByLevel(
+        recent: recent,
+        selectedLevel: RecordsLevelFilter.allLevels,
+      );
+
+      expect(bestByLevel.length, 2);
+      expect(bestByLevel.first['level_name'], '초급');
+      expect(bestByLevel.first['game_number'], 2);
+      expect(bestByLevel.first['is_perfect'], isTrue);
+      expect(bestByLevel.last['level_name'], '중급');
+    });
+
+    test('builds daily trend for the recent seven days', () {
+      final today = DateTime.now();
+      String fmt(DateTime date) =>
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+      final recent = [
+        {
+          'level_name': '초급',
+          'clear_date': fmt(today),
+          'clear_time': 120,
+          'wrong_count': 1,
+        },
+        {
+          'level_name': '초급',
+          'clear_date': fmt(today),
+          'clear_time': 180,
+          'wrong_count': 0,
+        },
+        {
+          'level_name': '초급',
+          'clear_date': fmt(today.subtract(const Duration(days: 2))),
+          'clear_time': 200,
+          'wrong_count': 2,
+        },
+      ];
+
+      final trend = service.buildDailyTrend(
+        recent: recent,
+        selectedLevel: '초급',
+      );
+
+      expect(trend.length, 7);
+      expect(trend.last['clears'], 2);
+      expect(trend.last['average_time'], 150.0);
+      expect(trend[4]['clears'], 1);
+    });
+
+    test('builds trend summary from recent daily trend window', () {
+      final today = DateTime.now();
+      String fmt(DateTime date) =>
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+      final recent = [
+        {
+          'level_name': '초급',
+          'clear_date': fmt(today),
+          'clear_time': 100,
+          'wrong_count': 1,
+        },
+        {
+          'level_name': '초급',
+          'clear_date': fmt(today.subtract(const Duration(days: 1))),
+          'clear_time': 140,
+          'wrong_count': 0,
+        },
+      ];
+
+      final summary = service.buildTrendSummary(
+        recent: recent,
+        selectedLevel: '초급',
+      );
+
+      expect(summary['total_clears'], 2);
+      expect(summary['active_days'], 2);
+      expect(summary['average_time'], 120.0);
+      expect(summary['average_wrong'], 0.5);
     });
   });
 }

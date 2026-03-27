@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
 import 'package:mysudoku/l10n/quick_start_option_l10n.dart';
 import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
@@ -8,10 +9,13 @@ import 'package:mysudoku/model/sudoku_game.dart';
 import 'package:mysudoku/model/sudoku_level.dart';
 import 'package:mysudoku/services/achievement_service.dart';
 import 'package:mysudoku/services/challenge_progress_service.dart';
+import 'package:mysudoku/services/game_state_service.dart';
 import 'package:mysudoku/services/home_dashboard_service.dart';
 import 'package:mysudoku/services/level_progress_service.dart';
 import 'package:mysudoku/services/onboarding_service.dart';
+import 'package:mysudoku/services/quick_game_service.dart';
 import 'package:mysudoku/view/level_selection_screen.dart';
+import 'package:mysudoku/view/saved_games_screen.dart';
 import 'package:mysudoku/view/settings_screen.dart';
 import 'package:mysudoku/view/sudoku_game_screen.dart';
 
@@ -27,6 +31,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   final LevelProgressService _levelProgressService = LevelProgressService();
   final HomeDashboardService _homeDashboardService = HomeDashboardService();
   final OnboardingService _onboardingService = OnboardingService();
+  final QuickGameService _quickGameService = QuickGameService();
   int? _selectedIndex;
   final ScrollController _scrollController = ScrollController();
   bool _isTop = true;
@@ -35,6 +40,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   /// 레벨별 전체 게임 수 (DB 기준)
   Map<String, int> _levelTotal = {};
   ContinueGameSummary? _continueGame;
+  List<ContinueGameSummary> _continueGames = [];
   SudokuGame? _todayChallenge;
   List<QuickStartOption> _quickStartOptions = [];
   ChallengeProgressSummary? _challengeProgress;
@@ -87,6 +93,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
       if (mounted) {
         setState(() {
           _continueGame = data.continueGame;
+          _continueGames = data.continueGames;
           _todayChallenge = data.todayChallenge;
           _quickStartOptions = data.quickStartOptions;
           _challengeProgress = data.challengeProgress;
@@ -114,15 +121,16 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
         barrierDismissible: false,
         builder: (dialogContext) {
           final l10n = AppLocalizations.of(dialogContext)!;
+          final colorScheme = Theme.of(dialogContext).colorScheme;
           return AlertDialog(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
             ),
             title: Text(
               l10n.homeOnboardingWelcomeTitle,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2C3E50),
+                color: colorScheme.onSurface,
               ),
             ),
             content: Column(
@@ -225,31 +233,90 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   }
 
   Future<void> _startQuickGame(SudokuLevel level) async {
-    final dbHelper = DatabaseHelper();
-    final gameCount = await dbHelper.getGameCount(level.name);
-    if (gameCount == 0) return;
-    final targetGameNumber = (level.clearedGames % gameCount) + 1;
-    final board = await dbHelper.getGame(level.name, targetGameNumber);
-    final solution = await dbHelper.getSolution(level.name, targetGameNumber);
-    if (board.isEmpty || solution.isEmpty) return;
-
-    final game = SudokuGame(
-      board: board,
-      solution: solution,
-      emptyCells: level.emptyCells,
-      levelName: level.name,
-      gameNumber: targetGameNumber,
-    );
+    final game = await _quickGameService.createQuickGame(level);
+    if (game == null) return;
     await _openGame(game, level);
+  }
+
+  Future<void> _openSavedGamesScreen() async {
+    if (_continueGames.isEmpty) return;
+    final l10n = AppLocalizations.of(context)!;
+    final selected = await Navigator.of(context).push<ContinueGameSummary>(
+      MaterialPageRoute(
+        builder: (context) => SavedGamesScreen(
+          initialGames: _continueGames,
+          title: _savedGamesTitle(),
+          description: _savedGamesDescription(),
+          itemTitleBuilder: (summary) => l10n.recordsGameNumberTitle(
+            summary.level.localizedName(l10n),
+            summary.game.gameNumber,
+          ),
+          itemSubtitleBuilder: (summary) =>
+              _buildSavedGameSubtitle(summary, l10n),
+          deleteTooltip: _deleteLabel(),
+          onDelete: (summary) async {
+            final shouldDelete = await _confirmDeleteSavedGame(summary);
+            if (!shouldDelete) {
+              return _continueGames;
+            }
+            await _deleteSavedGame(summary);
+            return _continueGames;
+          },
+        ),
+      ),
+    );
+    if (selected == null || !mounted) return;
+    await _openGame(selected.game, selected.level);
+  }
+
+  Future<bool> _confirmDeleteSavedGame(ContinueGameSummary summary) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        final l10n = AppLocalizations.of(dialogContext)!;
+        return AlertDialog(
+          title: Text(_deleteSavedGameTitle()),
+          content: Text(
+            _deleteSavedGameMessage(
+              l10n.recordsGameNumberTitle(
+                summary.level.localizedName(l10n),
+                summary.game.gameNumber,
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(_cancelLabel()),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(_deleteLabel()),
+            ),
+          ],
+        );
+      },
+    );
+    return result ?? false;
+  }
+
+  Future<void> _deleteSavedGame(ContinueGameSummary summary) async {
+    final gameStateService = GameStateService();
+    await gameStateService.clearBoard(
+      levelName: summary.level.name,
+      gameNumber: summary.game.gameNumber,
+    );
+    await _loadHomeDashboard();
   }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth > 600;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: colorScheme.surfaceContainerLowest,
       body: SafeArea(
         child: isTablet ? _buildTabletLayout() : _buildMobileLayout(),
       ),
@@ -323,23 +390,28 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
 
   Widget _buildHeader() {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         border: Border(
           bottom: BorderSide(
-            color: _isTop ? Colors.white : Colors.grey[300]!,
+            color: _isTop ? colorScheme.surface : colorScheme.outlineVariant,
             width: 2,
           ),
         ),
       ),
       child: Row(
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 28,
-            backgroundColor: Color(0xFFB8E6B8),
-            child: Icon(Icons.person, size: 36, color: Color(0xFF2C3E50)),
+            backgroundColor: colorScheme.primaryContainer,
+            child: Icon(
+              Icons.person,
+              size: 36,
+              color: colorScheme.onPrimaryContainer,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -348,17 +420,17 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
               children: [
                 Text(
                   l10n.homeGuestTitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 24,
-                    color: Color(0xFF2C3E50),
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   l10n.homeGuestSubtitle,
-                  style: const TextStyle(
-                    color: Color(0xFF7F8C8D),
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
                     fontSize: 16,
                   ),
                 ),
@@ -374,8 +446,11 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                 ),
               );
             },
-            child: const Icon(Icons.chevron_right,
-                size: 28, color: Color(0xFF7F8C8D)),
+            child: Icon(
+              Icons.chevron_right,
+              size: 28,
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -404,6 +479,10 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
 
   Widget _buildContinueCard(ContinueGameSummary summary) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final memoState = summary.isMemoMode
+        ? l10n.gameMemoStateOn
+        : l10n.gameMemoStateOff;
     return _HeroActionCard(
       title: l10n.homeContinueTitle,
       subtitle: l10n.homeContinueSubtitle(
@@ -419,22 +498,76 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 12),
+          if (_continueGames.length > 1)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: _openSavedGamesScreen,
+                icon: const Icon(Icons.folder_open, size: 18),
+                label: Text(_savedGamesCta(_continueGames.length)),
+              ),
+            ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _ContinueInfoChip(
+                icon: Icons.timer_outlined,
+                label: l10n.gameTimeShort,
+                value: _formatDuration(summary.elapsedSeconds),
+              ),
+              _ContinueInfoChip(
+                icon: Icons.lightbulb_outline,
+                label: l10n.gameHintShort,
+                value: '${summary.hintsRemaining}',
+              ),
+              _ContinueInfoChip(
+                icon: Icons.error_outline,
+                label: l10n.gameWrongShort,
+                value: '${summary.wrongCount}/3',
+              ),
+              _ContinueInfoChip(
+                icon: Icons.edit_note,
+                label: l10n.gameMemoShort,
+                value: memoState,
+              ),
+              if (summary.noteCount > 0)
+                _ContinueInfoChip(
+                  icon: Icons.apps,
+                  label: l10n.gameMemoShort,
+                  value: '${summary.noteCount}',
+                ),
+            ],
+          ),
+          if (_continueGames.length > 1) ...[
+            const SizedBox(height: 14),
+            ..._continueGames.skip(1).take(3).map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _SavedGameTile(
+                  summary: item,
+                  subtitle: _buildSavedGameSubtitle(item, l10n),
+                  onTap: () => _openGame(item.game, item.level),
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
             child: LinearProgressIndicator(
               minHeight: 10,
               value: summary.progress,
-              backgroundColor: const Color(0xFFE4EFE8),
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(Color(0xFF8DC6B0)),
+              backgroundColor: colorScheme.surfaceContainerHighest,
+              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
             ),
           ),
           const SizedBox(height: 8),
           Text(
             l10n.homeProgressPercent((summary.progress * 100).toInt()),
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: Color(0xFF2C3E50),
+              color: colorScheme.onSurface,
             ),
           ),
         ],
@@ -442,8 +575,68 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     );
   }
 
+  String _formatDuration(int seconds) {
+    final minutes = seconds ~/ 60;
+    final remainSeconds = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${remainSeconds.toString().padLeft(2, '0')}';
+  }
+
+  String _buildSavedGameSubtitle(
+    ContinueGameSummary summary,
+    AppLocalizations l10n,
+  ) {
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final playedAt = DateFormat.Md(locale).add_Hm().format(
+          DateTime.fromMillisecondsSinceEpoch(summary.lastPlayedAtMillis),
+        );
+    return '${l10n.homeProgressPercent((summary.progress * 100).toInt())} · ${_formatDuration(summary.elapsedSeconds)} · $playedAt';
+  }
+
+  String _savedGamesTitle() {
+    return Localizations.localeOf(context).languageCode == 'ko'
+        ? '저장된 게임'
+        : 'Saved games';
+  }
+
+  String _savedGamesDescription() {
+    return Localizations.localeOf(context).languageCode == 'ko'
+        ? '이어하고 싶은 퍼즐을 고르거나 정리할 수 있어요.'
+        : 'Choose a puzzle to resume or remove old saves.';
+  }
+
+  String _savedGamesCta(int count) {
+    return Localizations.localeOf(context).languageCode == 'ko'
+        ? '저장 게임 $count개'
+        : '$count saved';
+  }
+
+  String _deleteSavedGameTitle() {
+    return Localizations.localeOf(context).languageCode == 'ko'
+        ? '저장 게임 삭제'
+        : 'Delete saved game';
+  }
+
+  String _deleteSavedGameMessage(String label) {
+    return Localizations.localeOf(context).languageCode == 'ko'
+        ? '$label 저장 상태를 삭제할까요? 퍼즐 기록은 유지되고 이어하기 정보만 지워집니다.'
+        : 'Delete the saved state for $label? Puzzle records stay, but resume data will be removed.';
+  }
+
+  String _cancelLabel() {
+    return Localizations.localeOf(context).languageCode == 'ko'
+        ? '취소'
+        : 'Cancel';
+  }
+
+  String _deleteLabel() {
+    return Localizations.localeOf(context).languageCode == 'ko'
+        ? '삭제'
+        : 'Delete';
+  }
+
   Widget _buildTodayChallengeCard(SudokuGame game) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
     final level = SudokuLevel.levels.firstWhere(
       (item) => item.name == game.levelName,
       orElse: () => SudokuLevel.levels.first,
@@ -471,7 +664,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
           children: [
             Icon(
               challengeDone ? Icons.verified : Icons.bolt,
-              color: const Color(0xFF8A5A2B),
+              color: colorScheme.primary,
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -479,8 +672,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                 challengeDone
                     ? l10n.homeTodayChallengeFooterDoneStreak(streakDays)
                     : l10n.homeTodayChallengeFooterPending,
-                style: const TextStyle(
-                  color: Color(0xFF6B5A45),
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
@@ -492,15 +685,16 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
 
   Widget _buildQuickStartSection() {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           l10n.homeQuickStartSectionTitle,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 22,
-            color: Color(0xFF2C3E50),
+            color: colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 10),
@@ -544,15 +738,16 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
 
   Widget _buildLevelExplorer() {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           l10n.homeBrowseLevelsTitle,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 22,
-            color: Color(0xFF2C3E50),
+            color: colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 10),
@@ -563,15 +758,16 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
 
   Widget _buildLevelGrid() {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           l10n.homeBrowseLevelsTitle,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 22,
-            color: Color(0xFF2C3E50),
+            color: colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 12),
@@ -637,6 +833,121 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   }
 }
 
+class _ContinueInfoChip extends StatelessWidget {
+  const _ContinueInfoChip({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: colorScheme.surface.withValues(alpha: 0.84),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: colorScheme.primary),
+          const SizedBox(width: 6),
+          Text(
+            '$label $value',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SavedGameTile extends StatelessWidget {
+  const _SavedGameTile({
+    required this.summary,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final ContinueGameSummary summary;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    return Material(
+      color: colorScheme.surface.withValues(alpha: 0.9),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.play_circle_outline,
+                  color: colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.recordsGameNumberTitle(
+                        summary.level.localizedName(l10n),
+                        summary.game.gameNumber,
+                      ),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _HeroActionCard extends StatelessWidget {
   const _HeroActionCard({
     required this.title,
@@ -658,6 +969,7 @@ class _HeroActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -665,7 +977,7 @@ class _HeroActionCard extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             accentColor.withValues(alpha: 0.24),
-            Colors.white,
+            colorScheme.surface,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -680,27 +992,27 @@ class _HeroActionCard extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF5F6B6E),
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             subtitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF2C3E50),
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             description,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              color: Color(0xFF6B7780),
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
           child,
@@ -708,8 +1020,8 @@ class _HeroActionCard extends StatelessWidget {
           FilledButton(
             onPressed: onTap,
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF2C3E50),
-              foregroundColor: Colors.white,
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
             child: Text(actionLabel),
@@ -732,6 +1044,7 @@ class _QuickStartChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(18),
@@ -739,12 +1052,14 @@ class _QuickStartChip extends StatelessWidget {
         width: 180,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colorScheme.surface,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFE6EAED)),
+          border: Border.all(color: colorScheme.outlineVariant),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: Colors.black.withValues(
+                alpha: Theme.of(context).brightness == Brightness.dark ? 0.14 : 0.05,
+              ),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -756,18 +1071,18 @@ class _QuickStartChip extends StatelessWidget {
           children: [
             Text(
               option.localizedTitle(l10n),
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                color: Color(0xFF2C3E50),
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               option.localizedDescription(l10n),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: Color(0xFF7F8C8D),
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -790,18 +1105,19 @@ class _StreakCard extends StatelessWidget {
     final streakLabel = summary.streakDays > 0
         ? l10n.challengeStreakDays(summary.streakDays)
         : l10n.challengeStreakStartToday;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF7E8),
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFF0D48A)),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Row(
         children: [
-          const Icon(Icons.local_fire_department, color: Color(0xFFDA8B00)),
+          Icon(Icons.local_fire_department, color: colorScheme.primary),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -809,9 +1125,9 @@ class _StreakCard extends StatelessWidget {
               children: [
                 Text(
                   streakLabel,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF6A4C00),
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -819,8 +1135,8 @@ class _StreakCard extends StatelessWidget {
                   summary.isTodayChallengeCleared
                       ? l10n.homeStreakTodayDoneLine
                       : l10n.homeStreakTodayPendingLine,
-                  style: const TextStyle(
-                    color: Color(0xFF7A642D),
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -845,6 +1161,7 @@ class _GuideStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -852,10 +1169,10 @@ class _GuideStep extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: const Color(0xFFB8E6B8).withValues(alpha: 0.25),
+            color: colorScheme.primaryContainer.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: const Color(0xFF2C3E50), size: 20),
+          child: Icon(icon, color: colorScheme.onSurface, size: 20),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -864,16 +1181,16 @@ class _GuideStep extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF2C3E50),
+                  color: colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 description,
-                style: const TextStyle(
-                  color: Color(0xFF6B7780),
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -895,6 +1212,7 @@ class _AchievementPreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final featured = summary.unlockedBadges.isNotEmpty
         ? summary.unlockedBadges.take(2).toList()
         : summary.inProgressBadges.take(2).toList();
@@ -903,22 +1221,22 @@ class _AchievementPreviewCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF4F8FF),
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFD7E4F5)),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.military_tech, color: Color(0xFF476C9B)),
+              Icon(Icons.military_tech, color: colorScheme.primary),
               const SizedBox(width: 8),
               Text(
                 l10n.homeBadgeProgressTitle,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF2C3E50),
+                  color: colorScheme.onSurface,
                 ),
               ),
             ],
@@ -934,8 +1252,8 @@ class _AchievementPreviewCard extends StatelessWidget {
                     badge.unlocked ? Icons.verified : Icons.radio_button_unchecked,
                     size: 18,
                     color: badge.unlocked
-                        ? const Color(0xFF3FAE7C)
-                        : const Color(0xFF7F8C8D),
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -944,9 +1262,9 @@ class _AchievementPreviewCard extends StatelessWidget {
                       children: [
                         Text(
                           badge.title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF2C3E50),
+                            color: colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -955,8 +1273,8 @@ class _AchievementPreviewCard extends StatelessWidget {
                             badge.description,
                             badge.progressLabel,
                           ),
-                          style: const TextStyle(
-                            color: Color(0xFF6B7780),
+                          style: TextStyle(
+                            color: colorScheme.onSurfaceVariant,
                             fontSize: 13,
                           ),
                         ),
@@ -984,6 +1302,7 @@ class _CatalogProgressBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final progress = status.totalTarget == 0
         ? 0.0
         : (status.totalGenerated / status.totalTarget).clamp(0.0, 1.0);
@@ -992,22 +1311,22 @@ class _CatalogProgressBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF4F8FF),
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFD7E4F5)),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.auto_awesome, color: Color(0xFF476C9B)),
+              Icon(Icons.auto_awesome, color: colorScheme.primary),
               const SizedBox(width: 8),
               Text(
                 l10n.homeCatalogPreparingTitle,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF2C3E50),
+                  color: colorScheme.onSurface,
                 ),
               ),
             ],
@@ -1019,8 +1338,8 @@ class _CatalogProgressBanner extends StatelessWidget {
               status.totalTarget,
               status.remaining,
             ),
-            style: const TextStyle(
-              color: Color(0xFF6B7780),
+            style: TextStyle(
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 8),
@@ -1029,9 +1348,8 @@ class _CatalogProgressBanner extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 8,
-              backgroundColor: const Color(0xFFE4EBF5),
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(Color(0xFF6A95CC)),
+              backgroundColor: colorScheme.surfaceContainerHighest,
+              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
             ),
           ),
         ],
@@ -1089,6 +1407,7 @@ class _LevelCardState extends State<_LevelCard> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final total = widget.completed + widget.remaining;
     final percent = total == 0 ? 0.0 : widget.completed / total;
     return GestureDetector(
@@ -1099,15 +1418,19 @@ class _LevelCardState extends State<_LevelCard> {
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: _pressed ? const Color(0xFFF9F8F6) : Colors.white,
+          color: _pressed
+              ? colorScheme.surfaceContainerLow
+              : colorScheme.surface,
           borderRadius: BorderRadius.circular(28),
           border: Border.all(
-            color: Colors.white,
+            color: colorScheme.outlineVariant,
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
+              color: Colors.black.withValues(
+                alpha: Theme.of(context).brightness == Brightness.dark ? 0.16 : 0.08,
+              ),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -1122,7 +1445,11 @@ class _LevelCardState extends State<_LevelCard> {
                 color: widget.color,
                 borderRadius: BorderRadius.circular(18),
               ),
-              child: Icon(widget.icon, size: 36, color: Colors.white),
+              child: Icon(
+                widget.icon,
+                size: 36,
+                color: colorScheme.onPrimary,
+              ),
             ),
             const SizedBox(width: 20),
             Expanded(
@@ -1134,15 +1461,16 @@ class _LevelCardState extends State<_LevelCard> {
                     children: [
                       Text(
                         widget.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 24,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                       Text(
                         '${widget.completed} / ${widget.remaining}',
-                        style: const TextStyle(
-                          color: Colors.grey,
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
                           fontSize: 16,
                         ),
                       ),

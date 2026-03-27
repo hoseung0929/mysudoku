@@ -14,11 +14,18 @@
   "settingsSectionGame": "Game",
   "settingsSectionInfo": "About",
   "settingsNotificationsTitle": "Notification settings",
-  "settingsNotificationsSubtitle": "Manage game notifications",
+  "settingsNotificationsSubtitle": "Send a reminder when today’s challenge is still unfinished",
+  "settingsStreakReminderTitle": "Streak reminder",
+  "settingsStreakReminderSubtitle": "Send one more reminder when you already have an active streak",
   "settingsNotificationTimeTitle": "Notification time",
   "settingsNotificationTimeSubtitle": "Choose when to receive reminders",
+  "settingsNotificationsPermissionDenied": "Notification permission is required to turn reminders on.",
   "settingsThemeTitle": "Theme",
   "settingsThemeSubtitle": "Light, dark, or system default",
+  "settingsLargeTextTitle": "Large text",
+  "settingsLargeTextSubtitle": "Show slightly larger text across the app",
+  "settingsHighContrastTitle": "High contrast",
+  "settingsHighContrastSubtitle": "Make text and card boundaries more distinct",
   "settingsDarkModeTitle": "Dark mode",
   "settingsDarkModeSubtitle": "Turn dark mode on or off",
   "settingsLanguageTitle": "Language",
@@ -29,6 +36,14 @@
   "settingsLanguagePickerTitle": "Choose language",
   "settingsVibrationTitle": "Haptic feedback",
   "settingsVibrationSubtitle": "Vibrate when entering numbers",
+  "settingsKeepScreenAwakeTitle": "Keep screen awake",
+  "settingsKeepScreenAwakeSubtitle": "Prevent the game screen from sleeping automatically",
+  "settingsOneHandModeTitle": "One-hand mode",
+  "settingsOneHandModeSubtitle": "Use a denser button layout on the mobile game screen",
+  "settingsMemoHighlightTitle": "Memo highlight",
+  "settingsMemoHighlightSubtitle": "Show memo focus, candidate, and unique-note highlights",
+  "settingsSmartHintTitle": "Playable-cell highlight",
+  "settingsSmartHintSubtitle": "Softly highlight cells that can be filled immediately by rules",
   "settingsAppInfoTitle": "App info",
   "settingsAppInfoSubtitle": "Version and developer info",
   "settingsPrivacyTitle": "Privacy policy",
@@ -38,7 +53,7 @@
   "settingsGameCompleteNotifTitle": "Game complete notification",
   "settingsGameCompleteNotifSubtitle": "Notify when you finish a puzzle",
   "settingsDailyGoalNotifTitle": "Daily goal notification",
-  "settingsDailyGoalNotifSubtitle": "Notify when you reach your daily goal",
+  "settingsDailyGoalNotifSubtitle": "Celebrate the moment you reach your weekly goal",
   "settingsHintNotifTitle": "Hint usage notification",
   "settingsHintNotifSubtitle": "Notify when you use a hint",
   "levelBeginner": "Beginner",
@@ -70,10 +85,33 @@
   "gameMemoOnShort": "Memo ON",
   "gameMemoStateOn": "ON",
   "gameMemoStateOff": "OFF",
+  "gameMemoFocusShort": "Focus",
+  "gameMemoFocusIdle": "None",
   "gameWrongShort": "Wrong",
+  "gamePerfectShort": "Perfect",
+  "gamePerfectReady": "Active",
+  "gamePerfectMissed": "Lost",
   "gameProgressShort": "Progress",
   "gameTimeShort": "Time",
   "gameNumberInputTitle": "Number input",
+  "gameRowsCompleted": "{count} row cleared",
+  "@gameRowsCompleted": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "gameColsCompleted": "{count} column cleared",
+  "@gameColsCompleted": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "gameBoxesCompleted": "{count} box cleared",
+  "@gameBoxesCompleted": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "gamePause": "Pause",
   "gameResume": "Resume",
   "gameAnswerPreview": "Answer",
@@ -158,12 +196,27 @@
     }
   },
   "recordsSummaryTitle": "Summary",
+  "recordsTrendTitle": "Last 7 days",
+  "recordsTrendEmpty": "Not enough recent clears to show a 7-day trend.",
+  "recordsTrendClears": "Recent clears",
+  "recordsTrendActiveDays": "Active days",
   "recordsMetricClears": "Clears",
   "recordsMetricClearRate": "Clear rate",
+  "recordsMetricPerfectRate": "Perfect rate",
   "recordsMetricAvgTime": "Avg. time",
   "recordsMetricAvgWrong": "Avg. mistakes",
   "recordsByLevelTitle": "By level",
   "recordsByLevelEmpty": "No stats for this filter.",
+  "recordsBestByLevelTitle": "Best by level",
+  "recordsBestByLevelEmpty": "No best-by-level records for this filter.",
+  "recordsBestByLevelDetail": "{time} · Mistakes: {wrongCount}",
+  "@recordsBestByLevelDetail": {
+    "placeholders": {
+      "time": {"type": "String"},
+      "wrongCount": {"type": "int"}
+    }
+  },
+  "recordsPerfectBadge": "Perfect",
   "recordsAvgTimeDetail": "Avg. time {time}",
   "@recordsAvgTimeDetail": {
     "placeholders": {

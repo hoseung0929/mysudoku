@@ -20,6 +20,7 @@ class SudokuGamePresenter {
   final Function(int) onWrongCountChanged; // 오답 카운트 변경 시 호출
   final Function() onGameOver; // 게임 오버 시 호출
   final Function(int, int)? onCorrectAnswer; // 정답 입력 시 호출 (행, 열)
+  final Function(int, int)? onIncorrectAnswer; // 오답 입력 시 호출 (행, 열)
 
   // 게임 상태를 관리하는 private 변수들
   bool _isPaused = false; // 일시정지 상태
@@ -55,8 +56,15 @@ class SudokuGamePresenter {
     required this.onWrongCountChanged,
     required this.onGameOver,
     this.onCorrectAnswer,
+    this.onIncorrectAnswer,
     required List<List<int>> initialBoard,
     required List<List<int>>? solution,
+    int initialElapsedSeconds = 0,
+    int initialHintsRemaining = 3,
+    int initialWrongCount = 0,
+    bool initialMemoMode = false,
+    List<List<Set<int>>>? initialNotes,
+    Set<String> initialHintCells = const <String>{},
   }) {
     _timerController = GameTimerController(
       onTick: onTimeChanged,
@@ -67,6 +75,14 @@ class SudokuGamePresenter {
       solution: solution,
     );
     _initializeBoard(initialBoard);
+    _restoreSessionState(
+      elapsedSeconds: initialElapsedSeconds,
+      hintsRemaining: initialHintsRemaining,
+      wrongCount: initialWrongCount,
+      isMemoMode: initialMemoMode,
+      notes: initialNotes,
+      hintCells: initialHintCells,
+    );
     _startTimer();
   }
 
@@ -218,20 +234,7 @@ class SudokuGamePresenter {
   /// 게임 재시작 (현재 게임을 다시 시작)
   /// 모든 게임 상태를 초기화하고 현재 보드로 재시작
   void restartGame() {
-    _stopTimer();
-    _isPaused = false;
-    _hintsRemaining = 3;
-    _isGameComplete = false;
-    _isGameOver = false;
-    _isMemoMode = false;
-    _wrongCount = 0;
-    _boardController.clearSelection();
-
-    _timerController.reset();
-    onPauseStateChanged(_isPaused);
-    onHintsChanged(_hintsRemaining);
-    onGameCompleteChanged(_isGameComplete);
-    onWrongCountChanged(_wrongCount);
+    _resetSessionState();
 
     // 초기 보드로 초기화
     final restartBoard = List.generate(
@@ -245,6 +248,13 @@ class SudokuGamePresenter {
   /// 같은 레벨의 새로운 게임으로 재시작
   /// 모든 게임 상태를 초기화하고 새로운 보드 생성
   void restartWithNewGame() {
+    _resetSessionState();
+
+    _initializeBoard();
+    _startTimer();
+  }
+
+  void _resetSessionState() {
     _stopTimer();
     _isPaused = false;
     _hintsRemaining = 3;
@@ -255,13 +265,37 @@ class SudokuGamePresenter {
     _boardController.clearSelection();
 
     _timerController.reset();
+    _notifySessionReset();
+  }
+
+  void _notifySessionReset() {
     onPauseStateChanged(_isPaused);
     onHintsChanged(_hintsRemaining);
     onGameCompleteChanged(_isGameComplete);
     onWrongCountChanged(_wrongCount);
+  }
 
-    _initializeBoard();
-    _startTimer();
+  void _restoreSessionState({
+    required int elapsedSeconds,
+    required int hintsRemaining,
+    required int wrongCount,
+    required bool isMemoMode,
+    List<List<Set<int>>>? notes,
+    Set<String> hintCells = const <String>{},
+  }) {
+    _hintsRemaining = hintsRemaining.clamp(0, 3);
+    _wrongCount = wrongCount.clamp(0, 3);
+    _isMemoMode = isMemoMode;
+
+    if (notes != null) {
+      _boardController.restoreNotes(notes);
+    }
+    _boardController.restoreHintCells(hintCells);
+    _timerController.update(elapsedSeconds);
+    onHintsChanged(_hintsRemaining);
+    onWrongCountChanged(_wrongCount);
+    onPauseStateChanged(_isPaused);
+    onBoardChanged(_boardController.board);
   }
 
   /// 리소스 정리
@@ -304,6 +338,26 @@ class SudokuGamePresenter {
     _applySelectedCellValue(value);
   }
 
+  void clearSelectedCell() {
+    if (_boardController.selectedRow == null ||
+        _boardController.selectedCol == null ||
+        _isGameComplete ||
+        _isPaused ||
+        _isGameOver) {
+      return;
+    }
+
+    final row = _boardController.selectedRow!;
+    final col = _boardController.selectedCol!;
+    if (_boardController.isCellFixed(row, col)) {
+      return;
+    }
+
+    _boardController.setCellValue(row, col, 0);
+    onBoardChanged(_boardController.board);
+    _checkWrongNumbers();
+  }
+
   bool isSameNumber(int row, int col) {
     return _boardController.isSameNumber(row, col);
   }
@@ -328,6 +382,12 @@ class SudokuGamePresenter {
   Set<int> getCellNotes(int row, int col) {
     return _boardController.getCellNotes(row, col);
   }
+
+  List<List<Set<int>>> get allCellNotes {
+    return _boardController.getAllCellNotes();
+  }
+
+  Set<String> get hintCells => _boardController.hintCells;
 
   bool hasNote(int row, int col, int value) {
     return _boardController.hasNote(row, col, value);
@@ -356,6 +416,7 @@ class SudokuGamePresenter {
 
     final row = _boardController.selectedRow!;
     final col = _boardController.selectedCol!;
+    final wasWrongBefore = _boardController.isWrongNumber(row, col);
 
     if (_isMemoMode) {
       _boardController.toggleNote(row, col, value);
@@ -374,8 +435,14 @@ class SudokuGamePresenter {
     if (isCorrectAnswer && onCorrectAnswer != null) {
       onCorrectAnswer!(row, col);
     }
+    if (isWrongNow && onIncorrectAnswer != null) {
+      onIncorrectAnswer!(row, col);
+    }
 
-    if (_shouldIncreaseWrongCount(isWrongNow: isWrongNow)) {
+    if (_shouldIncreaseWrongCount(
+      wasWrongBefore: wasWrongBefore,
+      isWrongNow: isWrongNow,
+    )) {
       _wrongCount++;
       onWrongCountChanged(_wrongCount);
 
@@ -389,10 +456,10 @@ class SudokuGamePresenter {
   }
 
   bool _shouldIncreaseWrongCount({
+    required bool wasWrongBefore,
     required bool isWrongNow,
   }) {
-    // 기존 동작을 유지하기 위해, 오답 입력이면 이전 상태와 관계없이 카운트를 증가시킨다.
-    return isWrongNow;
+    return !wasWrongBefore && isWrongNow;
   }
 
   void _handleGameOver() {

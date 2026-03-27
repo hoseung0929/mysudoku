@@ -2,15 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'package:mysudoku/utils/app_logger.dart';
 import 'package:sqflite/sqflite.dart';
 import 'database_manager.dart';
+import 'package:mysudoku/utils/board_codec.dart';
 
 /// 게임 데이터 관리를 담당하는 클래스
 class GameRepository {
   final DatabaseManager _dbManager = DatabaseManager();
 
   List<List<int>> _parseBoardString(String boardStr) {
-    return boardStr.split(';').map((row) {
-      return row.split(',').map((cell) => int.parse(cell)).toList();
-    }).toList();
+    return BoardCodec.decode(boardStr);
   }
 
   /// 특정 레벨의 모든 게임 데이터를 반환합니다.

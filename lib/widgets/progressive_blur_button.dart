@@ -24,6 +24,7 @@ class ProgressiveBlurButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isEnabled = onPressed != null;
     final effectiveBlurColor =
         blurColor ?? backgroundColor.withValues(alpha: 0.6);
 
@@ -59,24 +60,36 @@ class ProgressiveBlurButton extends StatelessWidget {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            backgroundColor.withValues(alpha: 0.9),
-                            effectiveBlurColor.withValues(alpha: 0.7),
-                            effectiveBlurColor.withValues(alpha: 0.5),
+                            backgroundColor.withValues(
+                              alpha: isEnabled ? 0.9 : 0.45,
+                            ),
+                            effectiveBlurColor.withValues(
+                              alpha: isEnabled ? 0.7 : 0.35,
+                            ),
+                            effectiveBlurColor.withValues(
+                              alpha: isEnabled ? 0.5 : 0.25,
+                            ),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(borderRadius),
                         border: Border.all(
-                          color: backgroundColor.withValues(alpha: 0.2),
+                          color: backgroundColor.withValues(
+                            alpha: isEnabled ? 0.2 : 0.12,
+                          ),
                           width: 1,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: backgroundColor.withValues(alpha: 0.15),
+                            color: backgroundColor.withValues(
+                              alpha: isEnabled ? 0.15 : 0.08,
+                            ),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
                           BoxShadow(
-                            color: effectiveBlurColor.withValues(alpha: 0.6),
+                            color: effectiveBlurColor.withValues(
+                              alpha: isEnabled ? 0.6 : 0.2,
+                            ),
                             blurRadius: 8,
                             offset: const Offset(0, -1),
                           ),
@@ -88,7 +101,10 @@ class ProgressiveBlurButton extends StatelessWidget {
               ),
             ),
             // Main Content Layer
-            child,
+            Opacity(
+              opacity: isEnabled ? 1.0 : 0.55,
+              child: child,
+            ),
           ],
         ),
       ),
