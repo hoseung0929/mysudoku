@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mysudoku/l10n/achievement_l10n.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/l10n/quick_start_option_l10n.dart';
 import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
-import 'package:mysudoku/model/sudoku_game.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
 import 'package:mysudoku/services/achievement_service.dart';
 import 'package:mysudoku/services/challenge_progress_service.dart';
 import 'package:mysudoku/services/home_dashboard_service.dart';
-import 'package:mysudoku/services/quick_game_service.dart';
 import 'package:mysudoku/view/achievement_collection_screen.dart';
-import 'package:mysudoku/view/sudoku_game_screen.dart';
 
 class ChallengeScreen extends StatefulWidget {
   const ChallengeScreen({super.key});
@@ -21,7 +16,6 @@ class ChallengeScreen extends StatefulWidget {
 
 class _ChallengeScreenState extends State<ChallengeScreen> {
   final HomeDashboardService _homeDashboardService = HomeDashboardService();
-  final QuickGameService _quickGameService = QuickGameService();
   bool _isLoading = true;
   HomeDashboardData? _data;
 
@@ -57,188 +51,261 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
     }
   }
 
-  Future<void> _openGame(SudokuGame game) async {
-    final level = SudokuLevel.levels.firstWhere(
-      (item) => item.name == game.levelName,
-      orElse: () => SudokuLevel.levels.first,
-    );
-
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SudokuGameScreen(
-          game: game,
-          level: level,
-        ),
-      ),
-    );
-    await _load();
-  }
-
-  Future<void> _startQuickGame(SudokuLevel level) async {
-    final game = await _quickGameService.createQuickGame(level);
-    if (game == null) return;
-    await _openGame(game);
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
+    final bottomInset = MediaQuery.of(context).padding.bottom;
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const SafeArea(
+        bottom: false,
+        child: Center(child: CircularProgressIndicator()),
+      );
     }
 
     final data = _data;
     if (data == null) {
-      return Center(child: Text(l10n.challengeLoadError));
+      return SafeArea(
+        bottom: false,
+        child: Center(child: Text(l10n.challengeLoadError)),
+      );
     }
 
     final challenge = data.challengeProgress;
-    final todayGame = data.todayChallenge;
-    return RefreshIndicator(
-      onRefresh: _load,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFFDFBF6),
+            Color(0xFFF7F4E8),
+          ],
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: RefreshIndicator(
+          onRefresh: _load,
+          child: ListView(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 112 + bottomInset),
+            children: [
+              Text(
+                l10n.challengeScreenTitle,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                Localizations.localeOf(context).languageCode == 'ko'
+                    ? '연속 기록과 주간 목표, 배지 진행을 한곳에서 차분하게 확인할 수 있어요.'
+                    : 'A calm view of your streak, weekly goal, and badge progress.',
+                style: TextStyle(color: colorScheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 18),
+              _ChallengeHeroCard(
+                l10n: l10n,
+                streakDays: challenge.streakDays,
+                isTodayCleared: challenge.isTodayChallengeCleared,
+                todayLabel: l10n.recordsGameNumberTitle(
+                  challenge.todayChallengeLevelName.localizedSudokuLevelName(l10n),
+                  challenge.todayChallengeGameNumber,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: _ChallengeMiniStatCard(
+                      eyebrow: Localizations.localeOf(context).languageCode == 'ko'
+                          ? '연속 기록'
+                          : 'Streak',
+                      value: challenge.streakDays > 0
+                          ? l10n.challengeStreakDays(challenge.streakDays)
+                          : l10n.challengeStreakStartToday,
+                      tone: const Color(0xFFE7F0E8),
+                      accent: const Color(0xFF457B9D),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _ChallengeMiniStatCard(
+                      eyebrow: Localizations.localeOf(context).languageCode == 'ko'
+                          ? '이번 주 흐름'
+                          : 'This week',
+                      value: challenge.isWeeklyGoalAchieved
+                          ? l10n.challengeWeeklyGoalReachedTitle
+                          : l10n.challengeWeeklyGoalRemainingTitle(
+                              challenge.remainingWeeklyGoal,
+                            ),
+                      tone: const Color(0xFFF2E9DA),
+                      accent: const Color(0xFFF4A261),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              _WeeklyGoalCard(l10n: l10n, challenge: challenge),
+              const SizedBox(height: 22),
+              _AchievementSection(
+                l10n: l10n,
+                summary: data.achievementSummary,
+                onViewAll: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AchievementCollectionScreen(),
+                    ),
+                  );
+                  await _load();
+                },
+              ),
+              const SizedBox(height: 22),
+              _CalmSectionCard(
+                title: Localizations.localeOf(context).languageCode == 'ko'
+                    ? '다음 도전'
+                    : 'Next challenge',
+                subtitle: Localizations.localeOf(context).languageCode == 'ko'
+                    ? '지금 챌린지 흐름을 이어가기 위해 필요한 목표만 남겼어요.'
+                    : 'Only the milestones that matter for keeping your challenge flow.',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _NextMilestoneTile(
+                      title: challenge.isWeeklyGoalAchieved
+                          ? l10n.challengeWeeklyGoalReachedTitle
+                          : l10n.challengeWeeklyGoalRemainingTitle(
+                              challenge.remainingWeeklyGoal,
+                            ),
+                      description: challenge.isWeeklyGoalAchieved
+                          ? l10n.challengeWeeklyGoalReachedBody
+                          : l10n.challengeWeeklyGoalCatchUpBody,
+                      icon: challenge.isWeeklyGoalAchieved
+                          ? Icons.emoji_events
+                          : Icons.flag,
+                    ),
+                    const SizedBox(height: 8),
+                    _NextMilestoneTile(
+                      title: challenge.perfectClearCount > 0
+                          ? l10n.challengePerfectThisWeek(
+                              challenge.perfectClearCount,
+                            )
+                          : l10n.challengePerfectThisWeekFirst,
+                      description: challenge.perfectClearCount > 0
+                          ? l10n.challengePerfectPositiveBody
+                          : l10n.challengePerfectZeroBody,
+                      icon: Icons.auto_awesome,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CalmSectionCard extends StatelessWidget {
+  const _CalmSectionCard({
+    required this.title,
+    required this.child,
+    this.subtitle,
+  });
+
+  final String title;
+  final String? subtitle;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            if (subtitle != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                subtitle!,
+                style: TextStyle(color: colorScheme.onSurfaceVariant),
+              ),
+            ],
+            const SizedBox(height: 14),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ChallengeMiniStatCard extends StatelessWidget {
+  const _ChallengeMiniStatCard({
+    required this.eyebrow,
+    required this.value,
+    required this.tone,
+    required this.accent,
+  });
+
+  final String eyebrow;
+  final String value;
+  final Color tone;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: tone,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFE4DED3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.challengeScreenTitle,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
+          Container(
+            width: 28,
+            height: 4,
+            decoration: BoxDecoration(
+              color: accent,
+              borderRadius: BorderRadius.circular(999),
             ),
           ),
           const SizedBox(height: 12),
-          _ChallengeHeroCard(
-            l10n: l10n,
-            streakDays: challenge.streakDays,
-            isTodayCleared: challenge.isTodayChallengeCleared,
-            todayLabel: l10n.recordsGameNumberTitle(
-              challenge.todayChallengeLevelName.localizedSudokuLevelName(l10n),
-              challenge.todayChallengeGameNumber,
-            ),
-            onTap: () => _openGame(todayGame),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.challengeTodaysChallengeTitle,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.recordsGameNumberTitle(
-                      todayGame.levelName.localizedSudokuLevelName(l10n),
-                      todayGame.gameNumber,
-                    ),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    challenge.isTodayChallengeCleared
-                        ? l10n.challengeTodayDoneHint
-                        : l10n.challengeTodayPendingHint,
-                    style: TextStyle(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  FilledButton(
-                    onPressed: () => _openGame(todayGame),
-                    child: Text(
-                      challenge.isTodayChallengeCleared
-                          ? l10n.challengeTodayReviewButton
-                          : l10n.challengeTodayStartButton,
-                    ),
-                  ),
-                ],
-              ),
+          Text(
+            eyebrow,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF66776C),
             ),
           ),
-          const SizedBox(height: 16),
-          _WeeklyGoalCard(l10n: l10n, challenge: challenge),
-          const SizedBox(height: 16),
-          _AchievementSection(
-            l10n: l10n,
-            summary: data.achievementSummary,
-            onViewAll: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AchievementCollectionScreen(),
-                ),
-              );
-              await _load();
-            },
-          ),
-          const SizedBox(height: 16),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.challengeSuggestedActions,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _NextMilestoneTile(
-                    title: challenge.isWeeklyGoalAchieved
-                        ? l10n.challengeWeeklyGoalReachedTitle
-                        : l10n.challengeWeeklyGoalRemainingTitle(
-                            challenge.remainingWeeklyGoal,
-                          ),
-                    description: challenge.isWeeklyGoalAchieved
-                        ? l10n.challengeWeeklyGoalReachedBody
-                        : l10n.challengeWeeklyGoalCatchUpBody,
-                    icon: challenge.isWeeklyGoalAchieved
-                        ? Icons.emoji_events
-                        : Icons.flag,
-                  ),
-                  const SizedBox(height: 8),
-                  _NextMilestoneTile(
-                    title: challenge.perfectClearCount > 0
-                        ? l10n.challengePerfectThisWeek(
-                            challenge.perfectClearCount,
-                          )
-                        : l10n.challengePerfectThisWeekFirst,
-                    description: challenge.perfectClearCount > 0
-                        ? l10n.challengePerfectPositiveBody
-                        : l10n.challengePerfectZeroBody,
-                    icon: Icons.auto_awesome,
-                  ),
-                  const SizedBox(height: 12),
-                  ...data.quickStartOptions.map(
-                    (option) => ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.play_arrow),
-                      title: Text(option.localizedTitle(l10n)),
-                      subtitle: Text(option.localizedDescription(l10n)),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => _startQuickGame(option.level),
-                    ),
-                  ),
-                ],
-              ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF21382A),
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -258,14 +325,12 @@ class _WeeklyGoalCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final progress = challenge.weeklyGoalTarget == 0
-        ? 0.0
-        : (challenge.weeklyClearCount / challenge.weeklyGoalTarget)
-            .clamp(0.0, 1.0);
+    final goalSlots = challenge.weeklyGoalTarget.clamp(1, 7);
+    final filledSlots = challenge.weeklyClearCount.clamp(0, goalSlots);
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -285,23 +350,17 @@ class _WeeklyGoalCard extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 8),
-            LinearProgressIndicator(
-              value: progress,
-              minHeight: 10,
-              borderRadius: BorderRadius.circular(999),
-              backgroundColor: colorScheme.surfaceContainerHighest,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                challenge.isWeeklyGoalAchieved
-                    ? colorScheme.primary
-                    : colorScheme.tertiary,
-              ),
+            const SizedBox(height: 14),
+            _LeafProgressRow(
+              filledCount: filledSlots,
+              totalCount: goalSlots,
+              isComplete: challenge.isWeeklyGoalAchieved,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 14),
             Row(
               children: [
                 Expanded(
-                  child: _GoalStatChip(
+                  child: _GoalMetaLabel(
                     icon: Icons.check_circle_outline,
                     label: l10n.challengeWeeklyProgressShort(
                       challenge.weeklyClearCount,
@@ -311,7 +370,7 @@ class _WeeklyGoalCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: _GoalStatChip(
+                  child: _GoalMetaLabel(
                     icon: Icons.auto_awesome,
                     label: l10n.challengeWeeklyPerfectShort(
                       challenge.perfectClearCount,
@@ -338,8 +397,92 @@ class _WeeklyGoalCard extends StatelessWidget {
   }
 }
 
-class _GoalStatChip extends StatelessWidget {
-  const _GoalStatChip({
+class _GoalMetaLabel extends StatelessWidget {
+  const _GoalMetaLabel({
+    required this.icon,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: colorScheme.primary),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LeafProgressRow extends StatelessWidget {
+  const _LeafProgressRow({
+    required this.filledCount,
+    required this.totalCount,
+    required this.isComplete,
+  });
+
+  final int filledCount;
+  final int totalCount;
+  final bool isComplete;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final filledColor = isComplete
+        ? const Color(0xFF7AA874)
+        : const Color(0xFF8EBE99);
+    final emptyColor = colorScheme.surfaceContainerHighest;
+
+    return Row(
+      children: List.generate(totalCount, (index) {
+        final filled = index < filledCount;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(right: index == totalCount - 1 ? 0 : 8),
+            child: Container(
+              height: 52,
+              decoration: BoxDecoration(
+                color: filled ? filledColor.withValues(alpha: 0.16) : emptyColor,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: filled
+                      ? filledColor.withValues(alpha: 0.28)
+                      : colorScheme.outlineVariant,
+                ),
+              ),
+              child: Center(
+                child: Transform.rotate(
+                  angle: filled ? -0.25 : 0,
+                  child: Icon(
+                    filled ? Icons.spa_rounded : Icons.eco_outlined,
+                    size: 22,
+                    color: filled ? filledColor : colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+}
+
+class _ChallengeHeroPill extends StatelessWidget {
+  const _ChallengeHeroPill({
     required this.icon,
     required this.label,
   });
@@ -351,23 +494,21 @@ class _GoalStatChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colorScheme.outlineVariant),
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: colorScheme.primary),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurface,
-              ),
+          Icon(icon, size: 15, color: colorScheme.onPrimary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onPrimary,
             ),
           ),
         ],
@@ -394,7 +535,8 @@ class _NextMilestoneTile extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -447,7 +589,7 @@ class _AchievementSection extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -595,75 +737,89 @@ class _ChallengeHeroCard extends StatelessWidget {
     required this.streakDays,
     required this.isTodayCleared,
     required this.todayLabel,
-    required this.onTap,
   });
 
   final AppLocalizations l10n;
   final int streakDays;
   final bool isTodayCleared;
   final String todayLabel;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            colorScheme.primaryContainer.withValues(alpha: 0.55),
-            colorScheme.surface,
+            const Color(0xFF285B3F),
+            colorScheme.primary.withValues(alpha: 0.92),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.outlineVariant),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.primary.withValues(alpha: 0.16),
+            blurRadius: 26,
+            offset: const Offset(0, 14),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              Icon(Icons.local_fire_department, color: colorScheme.primary),
-              const SizedBox(width: 8),
-              Text(
-                streakDays > 0
+              _ChallengeHeroPill(
+                icon: Icons.local_florist_outlined,
+                label: Localizations.localeOf(context).languageCode == 'ko'
+                    ? '오늘의 흐름'
+                    : 'Today',
+              ),
+              _ChallengeHeroPill(
+                icon: Icons.self_improvement_outlined,
+                label: streakDays > 0
                     ? l10n.challengeStreakDays(streakDays)
                     : l10n.challengeStreakStartToday,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
-                ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
+          Text(
+            Localizations.localeOf(context).languageCode == 'ko'
+                ? '이번 주의 차분한 흐름을\n살펴보세요.'
+                : 'Take a calm look at\nthis week’s rhythm.',
+            style: TextStyle(
+              fontSize: 28,
+              height: 1.15,
+              fontWeight: FontWeight.w700,
+              color: colorScheme.onPrimary,
+            ),
+          ),
+          const SizedBox(height: 12),
           Text(
             todayLabel,
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: colorScheme.onSurface,
+              color: colorScheme.onPrimary.withValues(alpha: 0.88),
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
             isTodayCleared
-                ? l10n.challengeHeroDoneCaption
-                : l10n.challengeHeroPendingCaption,
+                ? (Localizations.localeOf(context).languageCode == 'ko'
+                    ? '오늘 퍼즐을 마쳤어요. 이제 배지와 주간 목표를 천천히 확인해보세요.'
+                    : 'Today is complete. Check your badges and weekly goal at an easy pace.')
+                : (Localizations.localeOf(context).languageCode == 'ko'
+                    ? '오늘 퍼즐은 홈에서 시작하고, 여기서는 흐름만 확인해보세요.'
+                    : 'Start today’s puzzle from Home, then return here for progress.'),
             style: TextStyle(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 14),
-          FilledButton(
-            onPressed: onTap,
-            child: Text(
-              isTodayCleared
-                  ? l10n.challengeHeroReviewAction
-                  : l10n.challengeHeroStartAction,
+              color: colorScheme.onPrimary.withValues(alpha: 0.8),
+              height: 1.45,
             ),
           ),
         ],

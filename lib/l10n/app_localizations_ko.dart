@@ -77,18 +77,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsThemeSubtitle => '라이트, 다크, 시스템 설정';
 
   @override
-  String get settingsLargeTextTitle => '큰 글씨 모드';
-
-  @override
-  String get settingsLargeTextSubtitle => '앱 전반의 글자를 조금 더 크게 표시합니다';
-
-  @override
-  String get settingsHighContrastTitle => '고대비 모드';
-
-  @override
-  String get settingsHighContrastSubtitle => '텍스트와 카드 경계를 더 선명하게 표시합니다';
-
-  @override
   String get settingsDarkModeTitle => '다크 모드';
 
   @override
@@ -537,13 +525,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get challengeTodayPendingHint => '오늘의 대표 퍼즐로 연속 플레이를 이어가세요.';
 
   @override
-  String get challengeTodayReviewButton => '다시 보기';
+  String get challengeTodayReviewButton => '나만의 속도로 다시 풀기';
 
   @override
-  String get challengeTodayStartButton => '도전 시작';
-
-  @override
-  String get challengeSuggestedActions => '추천 액션';
+  String get challengeTodayStartButton => '나만의 속도로 몰입';
 
   @override
   String get challengeWeeklyGoalReachedTitle => '이번 주 목표를 달성했어요';
@@ -638,32 +623,6 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get challengeHeroPendingCaption =>
       '오늘의 도전이 아직 남아 있어요. 지금 시작하면 스트릭을 이어갈 수 있어요.';
-
-  @override
-  String get challengeHeroReviewAction => '기록 다시 보기';
-
-  @override
-  String get challengeHeroStartAction => '오늘의 도전 시작';
-
-  @override
-  String get challengeQuickStartRecommendedTitle => '빠른 시작';
-
-  @override
-  String challengeQuickStartRecommendedBody(String level) {
-    return '$level 난이도 추천';
-  }
-
-  @override
-  String get challengeQuickStartBeginnerTitle => '초급 시작';
-
-  @override
-  String get challengeQuickStartBeginnerBody => '부담 없이 한 판 시작';
-
-  @override
-  String get challengeQuickStartRandomTitle => '랜덤 도전';
-
-  @override
-  String get challengeQuickStartRandomBody => '오늘 기분대로 가볍게 플레이';
 
   @override
   String get homeOnboardingWelcomeTitle => '처음 오셨네요';

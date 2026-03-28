@@ -18,8 +18,8 @@ class GameCompleteDialog extends StatelessWidget {
   /// 같은 난이도의 다음 게임이 있을 때만 전달합니다.
   final VoidCallback? onNextPuzzle;
 
-  static const Color mintColor = Color(0xFFB8E6B8);
-  static const Color goldColor = Color(0xFFFFD700);
+  static const Color mintColor = Color(0xFF285B3F);
+  static const Color goldColor = Color(0xFFF4A261);
 
   const GameCompleteDialog({
     super.key,
@@ -50,8 +50,10 @@ class GameCompleteDialog extends StatelessWidget {
     final onVar = cs.onSurfaceVariant;
     final shareBg = cs.surfaceContainerHighest;
     return AlertDialog(
+      backgroundColor: const Color(0xFFFFFDF9),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(28),
+        side: const BorderSide(color: Color(0xFFE4DED3)),
       ),
       title: Row(
         children: [
@@ -79,8 +81,8 @@ class GameCompleteDialog extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: goldColor.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(10),
+                color: goldColor.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 l10n.dialogNewBest,
@@ -103,8 +105,8 @@ class GameCompleteDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
-                color: mintColor.withValues(alpha: 0.16),
-                borderRadius: BorderRadius.circular(10),
+                color: const Color(0xFFE7F0E8),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Row(
                 children: [
@@ -130,8 +132,8 @@ class GameCompleteDialog extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: goldColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
+                color: const Color(0xFFF6F0E5),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: goldColor.withValues(alpha: 0.35)),
               ),
               child: Column(
@@ -187,9 +189,9 @@ class GameCompleteDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: mintColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: mintColor.withValues(alpha: 0.3)),
+              color: const Color(0xFFEFF4EF),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE4DED3)),
             ),
             child: Column(
               children: [
@@ -263,7 +265,7 @@ class GameCompleteDialog extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: shareBg,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -341,9 +343,9 @@ class GameCompleteDialog extends StatelessWidget {
           onPressed: onRestart,
           style: ElevatedButton.styleFrom(
             backgroundColor: mintColor,
-            foregroundColor: const Color(0xFF1A2E24),
+            foregroundColor: const Color(0xFFFDFBF6),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
             ),
           ),
           child: Text(

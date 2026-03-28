@@ -91,7 +91,7 @@ class DatabaseManager {
   Future<void> _onCreate(Database db, int version) async {
     // 게임 테이블 생성
     await db.execute('''
-      CREATE TABLE games(
+      CREATE TABLE IF NOT EXISTS games(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         level_name TEXT NOT NULL,
         game_number INTEGER NOT NULL,
@@ -103,7 +103,7 @@ class DatabaseManager {
 
     // 클리어 기록 테이블 생성
     await db.execute('''
-      CREATE TABLE clear_records(
+      CREATE TABLE IF NOT EXISTS clear_records(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         level_name TEXT NOT NULL,
         game_number INTEGER NOT NULL,
@@ -127,7 +127,7 @@ class DatabaseManager {
     if (oldVersion < 2) {
       // 클리어 기록 테이블 추가
       await db.execute('''
-        CREATE TABLE clear_records(
+        CREATE TABLE IF NOT EXISTS clear_records(
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           level_name TEXT NOT NULL,
           game_number INTEGER NOT NULL,

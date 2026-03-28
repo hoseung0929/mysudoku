@@ -22,10 +22,6 @@
   "settingsNotificationsPermissionDenied": "알림 권한이 허용되지 않아 리마인드를 켤 수 없어요.",
   "settingsThemeTitle": "테마 설정",
   "settingsThemeSubtitle": "라이트, 다크, 시스템 설정",
-  "settingsLargeTextTitle": "큰 글씨 모드",
-  "settingsLargeTextSubtitle": "앱 전반의 글자를 조금 더 크게 표시합니다",
-  "settingsHighContrastTitle": "고대비 모드",
-  "settingsHighContrastSubtitle": "텍스트와 카드 경계를 더 선명하게 표시합니다",
   "settingsDarkModeTitle": "다크 모드",
   "settingsDarkModeSubtitle": "다크 모드를 켜거나 끕니다",
   "settingsLanguageTitle": "언어 설정",
@@ -254,9 +250,8 @@
   "challengeTodaysChallengeTitle": "오늘의 도전",
   "challengeTodayDoneHint": "오늘 도전은 이미 완료했어요. 기록을 다시 확인해보세요.",
   "challengeTodayPendingHint": "오늘의 대표 퍼즐로 연속 플레이를 이어가세요.",
-  "challengeTodayReviewButton": "다시 보기",
-  "challengeTodayStartButton": "도전 시작",
-  "challengeSuggestedActions": "추천 액션",
+  "challengeTodayReviewButton": "나만의 속도로 다시 풀기",
+  "challengeTodayStartButton": "나만의 속도로 몰입",
   "challengeWeeklyGoalReachedTitle": "이번 주 목표를 달성했어요",
   "challengeWeeklyGoalRemainingTitle": "주간 목표까지 {count}판 남았어요",
   "@challengeWeeklyGoalRemainingTitle": {
@@ -329,19 +324,6 @@
   "challengeStreakStartToday": "오늘 첫 클리어 도전",
   "challengeHeroDoneCaption": "오늘의 도전을 완료했습니다. 내일도 이어서 기록을 쌓아보세요.",
   "challengeHeroPendingCaption": "오늘의 도전이 아직 남아 있어요. 지금 시작하면 스트릭을 이어갈 수 있어요.",
-  "challengeHeroReviewAction": "기록 다시 보기",
-  "challengeHeroStartAction": "오늘의 도전 시작",
-  "challengeQuickStartRecommendedTitle": "빠른 시작",
-  "challengeQuickStartRecommendedBody": "{level} 난이도 추천",
-  "@challengeQuickStartRecommendedBody": {
-    "placeholders": {
-      "level": {"type": "String"}
-    }
-  },
-  "challengeQuickStartBeginnerTitle": "초급 시작",
-  "challengeQuickStartBeginnerBody": "부담 없이 한 판 시작",
-  "challengeQuickStartRandomTitle": "랜덤 도전",
-  "challengeQuickStartRandomBody": "오늘 기분대로 가볍게 플레이",
   "homeOnboardingWelcomeTitle": "처음 오셨네요",
   "homeOnboardingStepQuickTitle": "빠른 시작",
   "homeOnboardingStepQuickBody": "추천 난이도로 바로 한 판 시작할 수 있어요.",

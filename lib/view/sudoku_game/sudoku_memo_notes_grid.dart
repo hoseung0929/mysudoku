@@ -9,12 +9,14 @@ class SudokuMemoNotesGrid extends StatelessWidget {
     this.highlightedNote,
     this.isSingleCandidate = false,
     this.isHiddenSingleCandidate = false,
+    this.cellExtent = 16,
   });
 
   final Set<int> notes;
   final int? highlightedNote;
   final bool isSingleCandidate;
   final bool isHiddenSingleCandidate;
+  final double cellExtent;
 
   @override
   Widget build(BuildContext context) {
@@ -26,9 +28,13 @@ class SudokuMemoNotesGrid extends StatelessWidget {
         .colorScheme
         .onSurfaceVariant
         .withValues(alpha: 0.85);
+    final noteFontSize = (cellExtent * 0.62).clamp(7.0, 10.0);
+    final emphasizedNoteFontSize = (cellExtent * 0.7).clamp(8.0, 11.0);
+    final noteRadius = (cellExtent * 0.38).clamp(4.0, 6.0);
+    final gridPadding = (cellExtent * 0.18).clamp(1.5, 3.0);
 
     return Padding(
-      padding: const EdgeInsets.all(3),
+      padding: EdgeInsets.all(gridPadding),
       child: GridView.count(
         crossAxisCount: 3,
         physics: const NeverScrollableScrollPhysics(),
@@ -44,8 +50,8 @@ class SudokuMemoNotesGrid extends StatelessWidget {
           return Center(
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
-              width: 16,
-              height: 16,
+              width: cellExtent,
+              height: cellExtent,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: isHiddenSingleNote
@@ -53,17 +59,17 @@ class SudokuMemoNotesGrid extends StatelessWidget {
                     : isHighlighted
                     ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.18)
                     : isSingleCandidateNote
-                        ? Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.22)
+                        ? const Color(0xFFF1E5CD)
                         : Colors.transparent,
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(noteRadius),
               ),
               child: Text(
                 isVisible ? '$noteValue' : '',
                 style: GoogleFonts.notoSans(
                   fontSize:
                       isHighlighted || isSingleCandidateNote || isHiddenSingleNote
-                          ? 10
-                          : 9,
+                          ? emphasizedNoteFontSize
+                          : noteFontSize,
                   fontWeight:
                       isHighlighted || isSingleCandidateNote || isHiddenSingleNote
                       ? FontWeight.w800
@@ -73,8 +79,8 @@ class SudokuMemoNotesGrid extends StatelessWidget {
                       : isHighlighted
                       ? Theme.of(context).colorScheme.primary
                       : isSingleCandidateNote
-                          ? Theme.of(context).colorScheme.tertiary
-                      : noteColor,
+                          ? const Color(0xFFB87638)
+                          : noteColor,
                 ),
               ),
             ),

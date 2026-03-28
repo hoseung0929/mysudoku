@@ -16,32 +16,32 @@ class SudokuInfoCard extends StatelessWidget {
   final IconData icon;
   final Color? accentColor;
 
-  static const Color _onPastel = Color(0xFF2C3E50);
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final Color bg = accentColor ?? cs.surfaceContainerHigh;
-    final Color fg = accentColor != null ? _onPastel : cs.onSurface;
-    final Color ic = accentColor != null ? _onPastel : cs.onSurfaceVariant;
+    final Color bg = accentColor?.withValues(alpha: 0.18) ?? cs.surfaceContainerHigh;
+    final Color fg = accentColor ?? cs.onSurface;
+    final Color ic = accentColor ?? cs.onSurfaceVariant;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: cs.outlineVariant),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: accentColor?.withValues(alpha: 0.28) ?? cs.outlineVariant,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 16, color: ic),
-          const SizedBox(width: 4),
+          const SizedBox(width: 6),
           Text(
             '$label: $value',
             style: GoogleFonts.notoSans(
               fontSize: 14,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
               color: fg,
             ),
           ),

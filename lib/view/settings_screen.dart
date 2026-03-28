@@ -6,7 +6,6 @@ import 'package:mysudoku/services/app_settings_service.dart';
 import 'package:mysudoku/services/notification_service.dart';
 import 'package:mysudoku/theme/app_theme.dart';
 import 'package:mysudoku/theme/app_theme_scope.dart';
-import 'package:mysudoku/widgets/custom_app_bar.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -23,8 +22,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _streakReminderEnabled = false;
   bool _gameCompleteNotificationEnabled = false;
   bool _dailyGoalNotificationEnabled = false;
-  bool _highContrastEnabled = false;
-  bool _largeTextEnabled = false;
   bool _keepScreenAwake = false;
   bool _oneHandModeEnabled = false;
   bool _memoHighlightEnabled = true;
@@ -73,14 +70,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       AppSettingsService.keepScreenAwakeKey,
       defaultValue: false,
     );
-    final highContrastEnabled = await _settingsService.getBool(
-      AppSettingsService.highContrastEnabledKey,
-      defaultValue: false,
-    );
-    final largeTextEnabled = await _settingsService.getBool(
-      AppSettingsService.largeTextEnabledKey,
-      defaultValue: false,
-    );
     final oneHandModeEnabled = await _settingsService.getBool(
       AppSettingsService.oneHandModeEnabledKey,
       defaultValue: false,
@@ -104,8 +93,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         minute: notificationMinute,
       );
       _isVibrationEnabled = vibrationEnabled;
-      _highContrastEnabled = highContrastEnabled;
-      _largeTextEnabled = largeTextEnabled;
       _keepScreenAwake = keepScreenAwake;
       _oneHandModeEnabled = oneHandModeEnabled;
       _memoHighlightEnabled = memoHighlightEnabled;
@@ -269,22 +256,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     setState(() {
       _keepScreenAwake = value;
-    });
-  }
-
-  Future<void> _setHighContrastEnabled(bool value) async {
-    await AppThemeScope.of(context).setHighContrastEnabled(value);
-    if (!mounted) return;
-    setState(() {
-      _highContrastEnabled = value;
-    });
-  }
-
-  Future<void> _setLargeTextEnabled(bool value) async {
-    await AppThemeScope.of(context).setLargeTextEnabled(value);
-    if (!mounted) return;
-    setState(() {
-      _largeTextEnabled = value;
     });
   }
 
@@ -469,19 +440,72 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth > 600;
 
-    return Scaffold(
-      appBar: _buildAppBar(),
-      body: isTablet ? _buildTabletLayout() : _buildMobileLayout(),
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFFDFBF6),
+            Color(0xFFF7F4E8),
+          ],
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildTopHeader(),
+              Expanded(
+                child: isTablet ? _buildTabletLayout() : _buildMobileLayout(),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  /// 앱바 위젯
-  PreferredSizeWidget _buildAppBar() {
+  Widget _buildTopHeader() {
     final l10n = AppLocalizations.of(context)!;
-    return CustomAppBar(
-      title: l10n.settingsTitle,
-      showNotificationIcon: false,
-      showLogoutIcon: false,
+    final colorScheme = Theme.of(context).colorScheme;
+    final canPop = Navigator.of(context).canPop();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      child: Row(
+        children: [
+          if (canPop)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          Text(
+            l10n.settingsTitle,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            Localizations.localeOf(context).languageCode == 'ko'
+                ? '차분한 플레이 환경'
+                : 'Calm play setup',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -602,54 +626,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 24),
         _buildSettingsSection(
-          l10n.settingsSectionAppearance,
-          [
-            SwitchListTile(
-              value: _largeTextEnabled,
-              onChanged: _setLargeTextEnabled,
-              secondary: _buildGameOptionIcon(Icons.text_fields_rounded),
-              title: Text(
-                l10n.settingsLargeTextTitle,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-              ),
-              subtitle: Text(
-                l10n.settingsLargeTextSubtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-            ),
-            SwitchListTile(
-              value: _highContrastEnabled,
-              onChanged: _setHighContrastEnabled,
-              secondary: _buildGameOptionIcon(Icons.contrast_outlined),
-              title: Text(
-                l10n.settingsHighContrastTitle,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-              ),
-              subtitle: Text(
-                l10n.settingsHighContrastSubtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-            ),
-            _buildSettingsTile(
-              icon: Icons.palette_outlined,
-              title: l10n.settingsThemeTitle,
-              subtitle: l10n.settingsThemeSubtitle,
-              onTap: _showAppearancePicker,
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        _buildSettingsSection(
           l10n.settingsSectionLanguage,
           [
             _buildSettingsTile(
@@ -671,8 +647,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppTheme.mintColor.withValues(alpha: 0.35),
-                  borderRadius: BorderRadius.circular(8),
+                  color: AppTheme.mintColor.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   Icons.vibration,
@@ -727,8 +703,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 l10n.settingsOneHandModeSubtitle,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                ),
               ),
+            ),
+            _buildSettingsTile(
+              icon: Icons.palette_outlined,
+              title: l10n.settingsThemeTitle,
+              subtitle: l10n.settingsThemeSubtitle,
+              onTap: _showAppearancePicker,
             ),
             SwitchListTile(
               value: _memoHighlightEnabled,
@@ -820,8 +802,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: AppTheme.mintColor.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(8),
+        color: AppTheme.mintColor.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(
         icon,
@@ -844,8 +826,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppTheme.mintColor.withValues(alpha: 0.35),
-          borderRadius: BorderRadius.circular(8),
+          color: AppTheme.mintColor.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(
           icon,

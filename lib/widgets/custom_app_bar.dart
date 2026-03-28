@@ -20,15 +20,20 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final canPop = Navigator.of(context).canPop();
+
     return AppBar(
       title: titleWidget ?? (title != null ? Text(title!) : const Text('미사용')),
+      automaticallyImplyLeading: false,
       leading: leading ??
-          IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
+          (canPop
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                )
+              : null),
       actions: actions ?? _buildDefaultActions(context),
     );
   }

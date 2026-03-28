@@ -3,8 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AppSettingsService {
   static const String vibrationEnabledKey = 'vibration_enabled';
   static const String keepScreenAwakeKey = 'keep_screen_awake';
-  static const String highContrastEnabledKey = 'high_contrast_enabled';
-  static const String largeTextEnabledKey = 'large_text_enabled';
   static const String memoHighlightEnabledKey = 'memo_highlight_enabled';
   static const String smartHintHighlightEnabledKey =
       'smart_hint_highlight_enabled';

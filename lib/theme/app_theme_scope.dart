@@ -6,24 +6,12 @@ class AppThemeScope extends InheritedWidget {
     super.key,
     required this.themeMode,
     required this.setThemeMode,
-    required this.highContrastEnabled,
-    required this.setHighContrastEnabled,
-    required this.largeTextEnabled,
-    required this.setLargeTextEnabled,
     required super.child,
   });
 
   final ThemeMode themeMode;
 
   final Future<void> Function(ThemeMode mode) setThemeMode;
-
-  final bool highContrastEnabled;
-
-  final Future<void> Function(bool enabled) setHighContrastEnabled;
-
-  final bool largeTextEnabled;
-
-  final Future<void> Function(bool enabled) setLargeTextEnabled;
 
   static AppThemeScope of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<AppThemeScope>();
@@ -33,8 +21,6 @@ class AppThemeScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(covariant AppThemeScope oldWidget) {
-    return oldWidget.themeMode != themeMode ||
-        oldWidget.highContrastEnabled != highContrastEnabled ||
-        oldWidget.largeTextEnabled != largeTextEnabled;
+    return oldWidget.themeMode != themeMode;
   }
 }

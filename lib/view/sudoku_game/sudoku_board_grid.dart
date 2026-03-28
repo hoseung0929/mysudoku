@@ -30,10 +30,10 @@ class SudokuBoardGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final borderColor = cs.outlineVariant;
+    const borderColor = Color(0xFFE4DED3);
     final relatedFill = Theme.of(context).brightness == Brightness.dark
         ? cs.surfaceContainerHigh
-        : Colors.grey.shade100;
+        : const Color(0xFFF7F3EB);
     final digitOnBoard = cs.onSurface;
     final selectedRow = presenter.selectedRow;
     final selectedCol = presenter.selectedCol;
@@ -44,23 +44,31 @@ class SudokuBoardGrid extends StatelessWidget {
         ? (selectedValue == 0 ? highlightedMemoNumber : selectedValue)
         : null;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: cs.shadow.withValues(alpha: 0.12),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cellExtent = constraints.maxWidth / 9;
+        final digitFontSize = (cellExtent * 0.62).clamp(18.0, 28.0);
+        final memoCellExtent = (cellExtent * 0.54).clamp(10.0, 16.0);
+        final boardRadius = (cellExtent * 0.55).clamp(14.0, 20.0);
+
+        return Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFFDF9),
+            borderRadius: BorderRadius.circular(boardRadius),
+            border: Border.all(color: const Color(0xFFE4DED3)),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF21382A).withValues(alpha: 0.06),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        children: List.generate(9, (row) {
-          return Expanded(
-            child: Row(
-              children: List.generate(9, (col) {
+          child: Column(
+            children: List.generate(9, (row) {
+              return Expanded(
+                child: Row(
+                  children: List.generate(9, (col) {
                 final value = presenter.getCellValue(row, col);
                 final isFixed = presenter.isCellFixed(row, col);
                 final isSelected = presenter.isCellSelected(row, col);
@@ -91,109 +99,113 @@ class SudokuBoardGrid extends StatelessWidget {
                 final isErrorActive = errorActive['$row,$col'] == true;
                 final horizontalOffset = isErrorActive ? 6.0 : 0.0;
 
-                return Expanded(
-                  child: GestureDetector(
-                    onTap: () => onCellTapped(row, col),
-                    child: AnimatedSlide(
-                      duration: const Duration(milliseconds: 70),
-                      offset: Offset(horizontalOffset / 48, 0),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            top: BorderSide(
-                              color: borderColor,
-                              width:
-                                  (row == 0 || row == 3 || row == 6) ? 1.5 : 0.5,
+                    return Expanded(
+                      child: GestureDetector(
+                        onTap: () => onCellTapped(row, col),
+                        child: AnimatedSlide(
+                          duration: const Duration(milliseconds: 70),
+                          offset: Offset(horizontalOffset / 48, 0),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            decoration: BoxDecoration(
+                              border: Border(
+                                top: BorderSide(
+                                  color: borderColor,
+                                  width:
+                                      (row == 0 || row == 3 || row == 6) ? 1.2 : 0.35,
+                                ),
+                                left: BorderSide(
+                                  color: borderColor,
+                                  width:
+                                      (col == 0 || col == 3 || col == 6) ? 1.2 : 0.35,
+                                ),
+                                right: BorderSide(
+                                  color: borderColor,
+                                  width:
+                                      (col == 2 || col == 5 || col == 8) ? 1.2 : 0.35,
+                                ),
+                                bottom: BorderSide(
+                                  color: borderColor,
+                                  width:
+                                      (row == 2 || row == 5 || row == 8) ? 1.2 : 0.35,
+                                ),
+                              ),
+                              color: isErrorActive
+                                  ? AppTheme.pinkColor.withValues(alpha: 0.28)
+                                  : isWave
+                                      ? AppTheme.mintColor.withValues(alpha: 0.22)
+                                      : isLineComplete
+                                          ? AppTheme.yellowColor.withValues(alpha: 0.26)
+                                          : isSelected
+                                              ? AppTheme.lightBlueColor.withValues(alpha: 0.22)
+                                              : isWrong
+                                                  ? AppTheme.pinkColor.withValues(alpha: 0.18)
+                                                  : isHint
+                                                      ? AppTheme.yellowColor.withValues(alpha: 0.28)
+                                                      : isSameNumber
+                                                          ? AppTheme.lightBlueColor.withValues(alpha: 0.14)
+                                                          : isHiddenSingleForHighlightedMemo
+                                                              ? AppTheme.lightBlueColor
+                                                                  .withValues(alpha: 0.24)
+                                                          : hasHighlightedMemoCandidate
+                                                              ? AppTheme.lightBlueColor
+                                                                  .withValues(alpha: 0.14)
+                                                          : isRuleSingleCandidateCell
+                                                              ? AppTheme.mintColor
+                                                                  .withValues(alpha: 0.18)
+                                                          : isSingleCandidateCell
+                                                              ? AppTheme.yellowColor
+                                                                  .withValues(alpha: 0.16)
+                                                          : isRelated
+                                                              ? relatedFill
+                                                              : null,
                             ),
-                            left: BorderSide(
-                              color: borderColor,
-                              width:
-                                  (col == 0 || col == 3 || col == 6) ? 1.5 : 0.5,
-                            ),
-                            right: BorderSide(
-                              color: borderColor,
-                              width:
-                                  (col == 2 || col == 5 || col == 8) ? 1.5 : 0.5,
-                            ),
-                            bottom: BorderSide(
-                              color: borderColor,
-                              width:
-                                  (row == 2 || row == 5 || row == 8) ? 1.5 : 0.5,
+                            child: Center(
+                              child: value != 0
+                                  ? Text(
+                                      value.toString(),
+                                      style: isWrong
+                                          ? AppTheme.sudokuWrongNumberStyle.copyWith(
+                                              fontSize: digitFontSize,
+                                            )
+                                          : isHint
+                                              ? GoogleFonts.notoSans(
+                                                  fontSize: digitFontSize,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: const Color(0xFFB87638),
+                                                )
+                                              : isFixed
+                                                  ? GoogleFonts.notoSans(
+                                                      fontSize: digitFontSize,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: digitOnBoard,
+                                                    )
+                                                  : GoogleFonts.notoSans(
+                                                      fontSize: digitFontSize,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: const Color(0xFF285B3F),
+                                                    ),
+                                    )
+                                  : SudokuMemoNotesGrid(
+                                      notes: notes,
+                                      highlightedNote: highlightedMemo,
+                                      isSingleCandidate: isSingleCandidateCell,
+                                      isHiddenSingleCandidate:
+                                          isHiddenSingleForHighlightedMemo,
+                                      cellExtent: memoCellExtent,
+                                    ),
                             ),
                           ),
-                          color: isErrorActive
-                              ? AppTheme.pinkColor.withValues(alpha: 0.55)
-                              : isWave
-                                  ? Colors.green.withValues(alpha: 0.4)
-                                  : isLineComplete
-                                      ? Colors.amber.withValues(alpha: 0.35)
-                                      : isSelected
-                                          ? AppTheme.sudokuSelectedNumberColor
-                                          : isWrong
-                                              ? AppTheme.sudokuWrongNumberColor
-                                                  .withValues(alpha: 0.3)
-                                              : isHint
-                                                  ? AppTheme.sudokuHintNumberColor
-                                                  : isSameNumber
-                                                      ? AppTheme.sudokuSameNumberColor
-                                                      : isHiddenSingleForHighlightedMemo
-                                                          ? AppTheme.lightBlueColor
-                                                              .withValues(alpha: 0.3)
-                                                      : hasHighlightedMemoCandidate
-                                                          ? AppTheme.lightBlueColor
-                                                              .withValues(alpha: 0.18)
-                                                      : isRuleSingleCandidateCell
-                                                          ? AppTheme.mintColor
-                                                              .withValues(alpha: 0.2)
-                                                      : isSingleCandidateCell
-                                                          ? Colors.amber
-                                                              .withValues(alpha: 0.16)
-                                                      : isRelated
-                                                          ? relatedFill
-                                                          : null,
-                        ),
-                        child: Center(
-                          child: value != 0
-                              ? Text(
-                                  value.toString(),
-                                  style: isWrong
-                                      ? AppTheme.sudokuWrongNumberStyle
-                                      : isHint
-                                          ? GoogleFonts.notoSans(
-                                              fontSize: 28,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.orange.shade700,
-                                            )
-                                          : isFixed
-                                              ? GoogleFonts.notoSans(
-                                                  fontSize: 28,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: digitOnBoard,
-                                                )
-                                              : GoogleFonts.notoSans(
-                                                  fontSize: 28,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: digitOnBoard,
-                                                ),
-                                )
-                              : SudokuMemoNotesGrid(
-                                  notes: notes,
-                                  highlightedNote: highlightedMemo,
-                                  isSingleCandidate: isSingleCandidateCell,
-                                  isHiddenSingleCandidate:
-                                      isHiddenSingleForHighlightedMemo,
-                                ),
                         ),
                       ),
-                    ),
-                  ),
-                );
-              }),
-            ),
-          );
-        }),
-      ),
+                    );
+                  }),
+                ),
+              );
+            }),
+          ),
+        );
+      },
     );
   }
 

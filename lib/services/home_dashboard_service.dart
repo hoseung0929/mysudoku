@@ -6,9 +6,6 @@ import 'package:mysudoku/services/achievement_service.dart';
 import 'package:mysudoku/services/challenge_progress_service.dart';
 import 'package:mysudoku/services/game_state_service.dart';
 
-/// 빠른 시작 행의 종류 (표시 문자열은 UI에서 로케일 매핑).
-enum QuickStartKind { recommended, beginner, random }
-
 class ContinueGameSummary {
   const ContinueGameSummary({
     required this.level,
@@ -35,32 +32,22 @@ class ContinueGameSummary {
   final int noteCount;
 }
 
-class QuickStartOption {
-  const QuickStartOption({
-    required this.kind,
-    required this.level,
-  });
-
-  final QuickStartKind kind;
-  final SudokuLevel level;
-}
-
 class HomeDashboardData {
   const HomeDashboardData({
     required this.continueGame,
     required this.continueGames,
     required this.todayChallenge,
-    required this.quickStartOptions,
     required this.challengeProgress,
     required this.achievementSummary,
+    required this.averageClearTimeSeconds,
   });
 
   final ContinueGameSummary? continueGame;
   final List<ContinueGameSummary> continueGames;
   final SudokuGame todayChallenge;
-  final List<QuickStartOption> quickStartOptions;
   final ChallengeProgressSummary challengeProgress;
   final AchievementSummary achievementSummary;
+  final int averageClearTimeSeconds;
 }
 
 class HomeDashboardService {
@@ -72,6 +59,7 @@ class HomeDashboardService {
     Future<List<List<int>>> Function(String levelName, int gameNumber)? loadGame,
     Future<List<List<int>>> Function(String levelName, int gameNumber)? loadSolution,
     Future<int> Function(String levelName)? loadGameCount,
+    Future<Map<String, dynamic>> Function()? loadOverallStatistics,
   })  : _gameStateService = gameStateService ?? GameStateService(),
         _challengeProgressService =
             challengeProgressService ?? ChallengeProgressService(databaseHelper: databaseHelper),
@@ -82,7 +70,10 @@ class HomeDashboardService {
         _loadSolution =
             loadSolution ?? (databaseHelper ?? DatabaseHelper()).getSolution,
         _loadGameCount =
-            loadGameCount ?? (databaseHelper ?? DatabaseHelper()).getGameCount;
+            loadGameCount ?? (databaseHelper ?? DatabaseHelper()).getGameCount,
+        _loadOverallStatistics =
+            loadOverallStatistics ??
+                (databaseHelper ?? DatabaseHelper()).getOverallStatistics;
 
   final GameStateService _gameStateService;
   final ChallengeProgressService _challengeProgressService;
@@ -92,22 +83,25 @@ class HomeDashboardService {
   final Future<List<List<int>>> Function(String levelName, int gameNumber)
       _loadSolution;
   final Future<int> Function(String levelName) _loadGameCount;
+  final Future<Map<String, dynamic>> Function() _loadOverallStatistics;
 
   Future<HomeDashboardData> load(AppLocalizations l10n) async {
     final continueGames = await _loadContinueGames();
     final continueGame = continueGames.isEmpty ? null : continueGames.first;
     final todayChallenge = await _loadTodayChallenge();
-    final quickStartOptions = _buildQuickStartOptions();
     final challengeProgress = await _challengeProgressService.load();
     final achievementSummary = await _achievementService.load(l10n);
+    final overallStatistics = await _loadOverallStatistics();
+    final averageClearTimeSeconds =
+        (overallStatistics['total_average_time'] as num?)?.round() ?? 0;
 
     return HomeDashboardData(
       continueGame: continueGame,
       continueGames: continueGames,
       todayChallenge: todayChallenge,
-      quickStartOptions: quickStartOptions,
       challengeProgress: challengeProgress,
       achievementSummary: achievementSummary,
+      averageClearTimeSeconds: averageClearTimeSeconds,
     );
   }
 
@@ -189,34 +183,6 @@ class HomeDashboardService {
       levelName: level.name,
       gameNumber: gameNumber,
     );
-  }
-
-  List<QuickStartOption> _buildQuickStartOptions() {
-    final recommendedLevel = _recommendedLevel();
-    return [
-      QuickStartOption(
-        kind: QuickStartKind.recommended,
-        level: recommendedLevel,
-      ),
-      QuickStartOption(
-        kind: QuickStartKind.beginner,
-        level: SudokuLevel.levels.first,
-      ),
-      QuickStartOption(
-        kind: QuickStartKind.random,
-        level: SudokuLevel.levels[(DateTime.now().millisecond) %
-            SudokuLevel.levels.length],
-      ),
-    ];
-  }
-
-  SudokuLevel _recommendedLevel() {
-    for (final level in SudokuLevel.levels) {
-      if (level.clearedGames < 5) {
-        return level;
-      }
-    }
-    return SudokuLevel.levels[SudokuLevel.levels.length ~/ 2];
   }
 
   double _calculateProgress({

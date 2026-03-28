@@ -24,18 +24,18 @@ class SudokuGameActionButton extends StatelessWidget {
       onPressed: onPressed,
       width: 92,
       height: 64,
-      borderRadius: 20,
+      borderRadius: 22,
       backgroundColor: backgroundColor,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: AppTheme.textColor, size: 26),
+          Icon(icon, color: AppTheme.textColor, size: 24),
           const SizedBox(height: 4),
           Text(
             label,
             style: GoogleFonts.notoSans(
               fontSize: 11,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: AppTheme.textColor,
             ),
           ),

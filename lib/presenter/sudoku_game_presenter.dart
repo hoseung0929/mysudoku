@@ -231,6 +231,17 @@ class SudokuGamePresenter {
     return _timerController.formattedTime;
   }
 
+  /// 시간을 분 단위 중심으로 부드럽게 표시
+  String get calmFormattedTime {
+    final totalSeconds = _timerController.seconds;
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    final seconds = totalSeconds % 60;
+    return '${hours.toString().padLeft(2, '0')}:'
+        '${minutes.toString().padLeft(2, '0')}:'
+        '${seconds.toString().padLeft(2, '0')}';
+  }
+
   /// 게임 재시작 (현재 게임을 다시 시작)
   /// 모든 게임 상태를 초기화하고 현재 보드로 재시작
   void restartGame() {
@@ -400,9 +411,15 @@ class SudokuGamePresenter {
   }
 
   void toggleMemoMode() {
-    if (_isGameComplete || _isGameOver) return;
+    if (_isGameComplete || _isGameOver || _isPaused) return;
     _isMemoMode = !_isMemoMode;
     onBoardChanged(_boardController.board);
+  }
+
+  void clearSelection() {
+    _boardController.clearSelection();
+    onBoardChanged(_boardController.board);
+    onWrongNumbersChanged(_boardController.wrongNumbers);
   }
 
   void _applySelectedCellValue(int value) {

@@ -230,30 +230,6 @@ abstract class AppLocalizations {
   /// **'Light, dark, or system default'**
   String get settingsThemeSubtitle;
 
-  /// No description provided for @settingsLargeTextTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Large text'**
-  String get settingsLargeTextTitle;
-
-  /// No description provided for @settingsLargeTextSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Show slightly larger text across the app'**
-  String get settingsLargeTextSubtitle;
-
-  /// No description provided for @settingsHighContrastTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'High contrast'**
-  String get settingsHighContrastTitle;
-
-  /// No description provided for @settingsHighContrastSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Make text and card boundaries more distinct'**
-  String get settingsHighContrastSubtitle;
-
   /// No description provided for @settingsDarkModeTitle.
   ///
   /// In en, this message translates to:
@@ -1085,20 +1061,14 @@ abstract class AppLocalizations {
   /// No description provided for @challengeTodayReviewButton.
   ///
   /// In en, this message translates to:
-  /// **'Review'**
+  /// **'Solve again gently'**
   String get challengeTodayReviewButton;
 
   /// No description provided for @challengeTodayStartButton.
   ///
   /// In en, this message translates to:
-  /// **'Start challenge'**
+  /// **'Start at your pace'**
   String get challengeTodayStartButton;
-
-  /// No description provided for @challengeSuggestedActions.
-  ///
-  /// In en, this message translates to:
-  /// **'Suggested next steps'**
-  String get challengeSuggestedActions;
 
   /// No description provided for @challengeWeeklyGoalReachedTitle.
   ///
@@ -1243,54 +1213,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Today\'s puzzle is still open—start now to keep your streak alive.'**
   String get challengeHeroPendingCaption;
-
-  /// No description provided for @challengeHeroReviewAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Review results'**
-  String get challengeHeroReviewAction;
-
-  /// No description provided for @challengeHeroStartAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Start today\'s challenge'**
-  String get challengeHeroStartAction;
-
-  /// No description provided for @challengeQuickStartRecommendedTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Quick start'**
-  String get challengeQuickStartRecommendedTitle;
-
-  /// No description provided for @challengeQuickStartRecommendedBody.
-  ///
-  /// In en, this message translates to:
-  /// **'{level} — recommended'**
-  String challengeQuickStartRecommendedBody(String level);
-
-  /// No description provided for @challengeQuickStartBeginnerTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Beginner start'**
-  String get challengeQuickStartBeginnerTitle;
-
-  /// No description provided for @challengeQuickStartBeginnerBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Start an easy, low-pressure game'**
-  String get challengeQuickStartBeginnerBody;
-
-  /// No description provided for @challengeQuickStartRandomTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Random challenge'**
-  String get challengeQuickStartRandomTitle;
-
-  /// No description provided for @challengeQuickStartRandomBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Play something light to match your mood'**
-  String get challengeQuickStartRandomBody;
 
   /// No description provided for @homeOnboardingWelcomeTitle.
   ///

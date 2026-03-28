@@ -4,47 +4,47 @@ import 'package:google_fonts/google_fonts.dart';
 /// 앱 전체에서 사용할 테마 클래스
 class AppTheme {
   // 색상 정의
-  static const Color backgroundColor = Color(0xFFF8F9FA);
-  static const Color cardColor = Colors.white;
-  static const Color mintColor = Color(0xFFB8E6B8);
-  static const Color lightBlueColor = Color(0xFFB8D4E6);
-  static const Color yellowColor = Color(0xFFF4E4A6);
-  static const Color pinkColor = Color(0xFFE6B8C8);
-  static const Color hintYellowColor = Color(0xFFFFF2CC);
-  static const Color textColor = Color(0xFF2C3E50);
-  static const Color lightTextColor = Color(0xFF34495E);
+  static const Color backgroundColor = Color(0xFFFDFBF6);
+  static const Color surfaceTint = Color(0xFFF8F4E8);
+  static const Color cardColor = Color(0xFFFFFDF9);
+  static const Color mintColor = Color(0xFF285B3F);
+  static const Color lightBlueColor = Color(0xFF457B9D);
+  static const Color yellowColor = Color(0xFFF1E5CD);
+  static const Color pinkColor = Color(0xFFF4A261);
+  static const Color hintYellowColor = Color(0xFFE8F1F8);
+  static const Color textColor = Color(0xFF21382A);
+  static const Color lightTextColor = Color(0xFF66776C);
+  static const Color lineColor = Color(0xFFE4DED3);
 
   /// 라이트 테마
-  static ThemeData lightTheme({bool highContrast = false}) {
-    final base = ColorScheme.fromSeed(
+  static ThemeData lightTheme() {
+    final colorScheme = ColorScheme.fromSeed(
       seedColor: mintColor,
       brightness: Brightness.light,
+    ).copyWith(
+      primary: mintColor,
+      onPrimary: const Color(0xFFFDFBF6),
+      secondary: lightBlueColor,
+      tertiary: pinkColor,
+      surface: cardColor,
+      surfaceContainerLowest: backgroundColor,
+      surfaceContainerLow: const Color(0xFFF9F6EF),
+      surfaceContainer: surfaceTint,
+      surfaceContainerHigh: const Color(0xFFF4EFE5),
+      surfaceContainerHighest: const Color(0xFFEFE8DC),
+      outline: lineColor,
+      outlineVariant: const Color(0xFFE9E3D8),
+      onSurface: textColor,
+      onSurfaceVariant: lightTextColor,
     );
-    final colorScheme = highContrast
-        ? base.copyWith(
-            primary: const Color(0xFF005A36),
-            onPrimary: Colors.white,
-            secondary: const Color(0xFF004D73),
-            tertiary: const Color(0xFF8A4B00),
-            surface: Colors.white,
-            surfaceContainerLow: const Color(0xFFF7F9FB),
-            surfaceContainerHigh: Colors.white,
-            surfaceContainerHighest: const Color(0xFFF0F4F7),
-            onSurface: const Color(0xFF101418),
-            onSurfaceVariant: const Color(0xFF27313A),
-            outline: const Color(0xFF3B4A57),
-          )
-        : base;
-    final primaryTextColor =
-        highContrast ? colorScheme.onSurface : textColor;
-    final secondaryTextColor =
-        highContrast ? colorScheme.onSurfaceVariant : lightTextColor;
+    const primaryTextColor = textColor;
+    const secondaryTextColor = lightTextColor;
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor:
-          highContrast ? colorScheme.surface : backgroundColor,
+      scaffoldBackgroundColor: backgroundColor,
+      canvasColor: backgroundColor,
       textTheme: GoogleFonts.notoSansTextTheme().copyWith(
         // 제목 스타일
         displayLarge: GoogleFonts.notoSans(
@@ -129,11 +129,11 @@ class AppTheme {
       ),
       // 앱바 테마
       appBarTheme: AppBarTheme(
-        backgroundColor: highContrast ? colorScheme.surface : cardColor,
+        backgroundColor: cardColor,
         foregroundColor: primaryTextColor,
-        elevation: 2,
-        shadowColor:
-            highContrast ? colorScheme.outline.withValues(alpha: 0.3) : Colors.black12,
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         titleTextStyle: GoogleFonts.notoSans(
           fontSize: 20,
           fontWeight: FontWeight.w600,
@@ -142,25 +142,21 @@ class AppTheme {
       ),
       // 카드 테마
       cardTheme: CardThemeData(
-        color: highContrast ? colorScheme.surface : cardColor,
-        elevation: 2,
-        shadowColor: Colors.black.withValues(alpha: 0.1),
+        color: cardColor,
+        elevation: 0,
+        shadowColor: Colors.black.withValues(alpha: 0.05),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: highContrast
-              ? BorderSide(color: colorScheme.outline, width: 1.2)
-              : BorderSide.none,
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: lineColor),
         ),
       ),
       // 버튼 테마
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor:
-              highContrast ? colorScheme.primary : mintColor,
-          foregroundColor:
-              highContrast ? colorScheme.onPrimary : textColor,
+          backgroundColor: mintColor,
+          foregroundColor: textColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(18),
           ),
           textStyle: GoogleFonts.notoSans(
             fontSize: 16,
@@ -181,24 +177,23 @@ class AppTheme {
       // 입력 필드 테마
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor:
-            highContrast ? colorScheme.surfaceContainerHighest : backgroundColor,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+        fillColor: backgroundColor,
+        border: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(18)),
           borderSide: BorderSide(
-            color: highContrast ? colorScheme.outline : Colors.grey.shade300,
+            color: lineColor,
           ),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+        enabledBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(18)),
           borderSide: BorderSide(
-            color: highContrast ? colorScheme.outline : Colors.grey.shade300,
+            color: lineColor,
           ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+        focusedBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(18)),
           borderSide: BorderSide(
-            color: highContrast ? colorScheme.primary : mintColor,
+            color: lightBlueColor,
             width: 2,
           ),
         ),
@@ -210,32 +205,22 @@ class AppTheme {
   }
 
   /// 다크 테마
-  static ThemeData darkTheme({bool highContrast = false}) {
-    final base = ColorScheme.fromSeed(
+  static ThemeData darkTheme() {
+    final colorScheme = ColorScheme.fromSeed(
       seedColor: mintColor,
       brightness: Brightness.dark,
+    ).copyWith(
+      primary: const Color(0xFF88B79C),
+      onPrimary: const Color(0xFF102117),
+      secondary: const Color(0xFF86AFC5),
+      tertiary: const Color(0xFFE0A070),
+      outline: const Color(0xFF38453D),
+      outlineVariant: const Color(0xFF2D372F),
     );
-    final colorScheme = highContrast
-        ? base.copyWith(
-            primary: const Color(0xFF7EF0B0),
-            onPrimary: const Color(0xFF082014),
-            secondary: const Color(0xFF8ED8FF),
-            tertiary: const Color(0xFFFFD58A),
-            surface: const Color(0xFF0F141A),
-            surfaceContainerLow: const Color(0xFF141A21),
-            surfaceContainerHigh: const Color(0xFF1A2028),
-            surfaceContainerHighest: const Color(0xFF222A34),
-            onSurface: Colors.white,
-            onSurfaceVariant: const Color(0xFFE5E7EB),
-            outline: const Color(0xFFB6C0CC),
-          )
-        : base;
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: highContrast
-          ? colorScheme.surface
-          : colorScheme.surfaceContainerLowest,
+      scaffoldBackgroundColor: colorScheme.surfaceContainerLowest,
       textTheme: GoogleFonts.notoSansTextTheme(ThemeData.dark().textTheme).apply(
         bodyColor: colorScheme.onSurface,
         displayColor: colorScheme.onSurface,
@@ -254,22 +239,16 @@ class AppTheme {
         color: colorScheme.surfaceContainerHigh,
         elevation: 1,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: highContrast
-              ? BorderSide(color: colorScheme.outline, width: 1.2)
-              : BorderSide.none,
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: colorScheme.outlineVariant),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: highContrast
-              ? colorScheme.primary
-              : mintColor.withValues(alpha: 0.85),
-          foregroundColor: highContrast
-              ? colorScheme.onPrimary
-              : const Color(0xFF1A1A1A),
+          backgroundColor: mintColor.withValues(alpha: 0.85),
+          foregroundColor: const Color(0xFF1A1A1A),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(18),
           ),
           textStyle: GoogleFonts.notoSans(
             fontSize: 16,

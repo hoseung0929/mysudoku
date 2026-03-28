@@ -47,6 +47,7 @@ class GameSessionState {
 class GameStateService {
   static const String _gamePrefix = 'game_';
   static const String _metaPrefix = 'game_meta_';
+  static final RegExp _savedGameKeyPattern = RegExp(r'^game_(.+)_(\d+)$');
 
   String _gameKey(String levelName, int gameNumber) {
     return 'game_${levelName}_$gameNumber';
@@ -205,22 +206,18 @@ class GameStateService {
         continue;
       }
 
-      final payload = prefs.getString(key);
-      if (payload == null) {
+      final match = _savedGameKeyPattern.firstMatch(key);
+      if (match == null) {
         continue;
       }
 
-      final identifier = key.substring(_gamePrefix.length);
-      final separatorIndex = identifier.lastIndexOf('_');
-      if (separatorIndex <= 0 || separatorIndex == identifier.length - 1) {
+      final payload = prefs.get(key);
+      if (payload is! String) {
         continue;
       }
 
-      final levelName = identifier.substring(0, separatorIndex);
-      final gameNumber = int.tryParse(identifier.substring(separatorIndex + 1));
-      if (gameNumber == null) {
-        continue;
-      }
+      final levelName = match.group(1)!;
+      final gameNumber = int.parse(match.group(2)!);
 
       final session = _decodeSessionPayload(payload);
 

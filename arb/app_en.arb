@@ -22,10 +22,6 @@
   "settingsNotificationsPermissionDenied": "Notification permission is required to turn reminders on.",
   "settingsThemeTitle": "Theme",
   "settingsThemeSubtitle": "Light, dark, or system default",
-  "settingsLargeTextTitle": "Large text",
-  "settingsLargeTextSubtitle": "Show slightly larger text across the app",
-  "settingsHighContrastTitle": "High contrast",
-  "settingsHighContrastSubtitle": "Make text and card boundaries more distinct",
   "settingsDarkModeTitle": "Dark mode",
   "settingsDarkModeSubtitle": "Turn dark mode on or off",
   "settingsLanguageTitle": "Language",
@@ -254,9 +250,8 @@
   "challengeTodaysChallengeTitle": "Today's challenge",
   "challengeTodayDoneHint": "You've already finished today. Open it again anytime to review.",
   "challengeTodayPendingHint": "Keep your streak with today's featured puzzle.",
-  "challengeTodayReviewButton": "Review",
-  "challengeTodayStartButton": "Start challenge",
-  "challengeSuggestedActions": "Suggested next steps",
+  "challengeTodayReviewButton": "Solve again gently",
+  "challengeTodayStartButton": "Start at your pace",
   "challengeWeeklyGoalReachedTitle": "Weekly goal reached",
   "challengeWeeklyGoalRemainingTitle": "{count} more clears to hit your weekly goal",
   "@challengeWeeklyGoalRemainingTitle": {
@@ -329,19 +324,6 @@
   "challengeStreakStartToday": "Chase your first clear today",
   "challengeHeroDoneCaption": "You finished today's challenge. Come back tomorrow to extend your streak.",
   "challengeHeroPendingCaption": "Today's puzzle is still open—start now to keep your streak alive.",
-  "challengeHeroReviewAction": "Review results",
-  "challengeHeroStartAction": "Start today's challenge",
-  "challengeQuickStartRecommendedTitle": "Quick start",
-  "challengeQuickStartRecommendedBody": "{level} — recommended",
-  "@challengeQuickStartRecommendedBody": {
-    "placeholders": {
-      "level": {"type": "String"}
-    }
-  },
-  "challengeQuickStartBeginnerTitle": "Beginner start",
-  "challengeQuickStartBeginnerBody": "Start an easy, low-pressure game",
-  "challengeQuickStartRandomTitle": "Random challenge",
-  "challengeQuickStartRandomBody": "Play something light to match your mood",
   "homeOnboardingWelcomeTitle": "Welcome!",
   "homeOnboardingStepQuickTitle": "Quick start",
   "homeOnboardingStepQuickBody": "Jump into a recommended difficulty right away.",

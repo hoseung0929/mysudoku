@@ -79,20 +79,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsThemeSubtitle => 'Light, dark, or system default';
 
   @override
-  String get settingsLargeTextTitle => 'Large text';
-
-  @override
-  String get settingsLargeTextSubtitle =>
-      'Show slightly larger text across the app';
-
-  @override
-  String get settingsHighContrastTitle => 'High contrast';
-
-  @override
-  String get settingsHighContrastSubtitle =>
-      'Make text and card boundaries more distinct';
-
-  @override
   String get settingsDarkModeTitle => 'Dark mode';
 
   @override
@@ -554,13 +540,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Keep your streak with today\'s featured puzzle.';
 
   @override
-  String get challengeTodayReviewButton => 'Review';
+  String get challengeTodayReviewButton => 'Solve again gently';
 
   @override
-  String get challengeTodayStartButton => 'Start challenge';
-
-  @override
-  String get challengeSuggestedActions => 'Suggested next steps';
+  String get challengeTodayStartButton => 'Start at your pace';
 
   @override
   String get challengeWeeklyGoalReachedTitle => 'Weekly goal reached';
@@ -659,34 +642,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get challengeHeroPendingCaption =>
       'Today\'s puzzle is still open—start now to keep your streak alive.';
-
-  @override
-  String get challengeHeroReviewAction => 'Review results';
-
-  @override
-  String get challengeHeroStartAction => 'Start today\'s challenge';
-
-  @override
-  String get challengeQuickStartRecommendedTitle => 'Quick start';
-
-  @override
-  String challengeQuickStartRecommendedBody(String level) {
-    return '$level — recommended';
-  }
-
-  @override
-  String get challengeQuickStartBeginnerTitle => 'Beginner start';
-
-  @override
-  String get challengeQuickStartBeginnerBody =>
-      'Start an easy, low-pressure game';
-
-  @override
-  String get challengeQuickStartRandomTitle => 'Random challenge';
-
-  @override
-  String get challengeQuickStartRandomBody =>
-      'Play something light to match your mood';
 
   @override
   String get homeOnboardingWelcomeTitle => 'Welcome!';
