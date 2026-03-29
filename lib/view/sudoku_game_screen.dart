@@ -1088,7 +1088,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
 
   Future<void> _vibrateOnNumberInput(int number) async {
     if (!_isVibrationEnabled || !_presenterReady) return;
-    final hasVibrator = await Vibration.hasVibrator() ?? false;
+    final hasVibrator = await Vibration.hasVibrator();
     if (!hasVibrator) return;
 
     final selectedRow = _presenter.selectedRow;
@@ -1109,7 +1109,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
     }
 
     final supportsCustomPattern =
-        await Vibration.hasCustomVibrationsSupport() ?? false;
+        await Vibration.hasCustomVibrationsSupport();
     if (supportsCustomPattern) {
       await Vibration.vibrate(pattern: [0, 45, 30, 65]);
       return;
