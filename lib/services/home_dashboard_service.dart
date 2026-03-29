@@ -62,7 +62,8 @@ class HomeDashboardService {
     Future<Map<String, dynamic>> Function()? loadOverallStatistics,
   })  : _gameStateService = gameStateService ?? GameStateService(),
         _challengeProgressService =
-            challengeProgressService ?? ChallengeProgressService(databaseHelper: databaseHelper),
+            challengeProgressService ??
+                ChallengeProgressService(databaseHelper: databaseHelper),
         _achievementService =
             achievementService ?? AchievementService(databaseHelper: databaseHelper),
         _loadGame =
@@ -73,7 +74,9 @@ class HomeDashboardService {
             loadGameCount ?? (databaseHelper ?? DatabaseHelper()).getGameCount,
         _loadOverallStatistics =
             loadOverallStatistics ??
-                (databaseHelper ?? DatabaseHelper()).getOverallStatistics;
+                (achievementService != null && databaseHelper == null
+                    ? (() async => const <String, dynamic>{})
+                    : (databaseHelper ?? DatabaseHelper()).getOverallStatistics);
 
   final GameStateService _gameStateService;
   final ChallengeProgressService _challengeProgressService;
