@@ -29,7 +29,7 @@ void main() {
     expect(find.text('기록'), findsOneWidget);
     expect(find.text('설정'), findsOneWidget);
 
-    await _waitUntilFound(tester, find.text('게스트'));
+    await _waitUntilFound(tester, find.text('게스트1'));
     expect(find.text('스도쿠에 오신 것을 환영합니다 👋'), findsOneWidget);
 
     await tester.tap(find.text('설정'));

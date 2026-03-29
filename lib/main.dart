@@ -205,6 +205,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
           IndexedStack(
@@ -218,9 +219,15 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
         ],
       ),
-      bottomNavigationBar: BottomNavBar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
+      bottomNavigationBar: Material(
+        color: Colors.transparent,
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        child: BottomNavBar(
+          selectedIndex: _selectedIndex,
+          onItemTapped: _onItemTapped,
+        ),
       ),
     );
   }

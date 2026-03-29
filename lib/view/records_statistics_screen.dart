@@ -6,6 +6,7 @@ import 'package:mysudoku/database/database_helper.dart';
 import 'package:mysudoku/model/sudoku_game.dart';
 import 'package:mysudoku/model/sudoku_level.dart';
 import 'package:mysudoku/services/records_statistics_service.dart';
+import 'package:mysudoku/view/settings_screen.dart';
 import 'package:mysudoku/view/sudoku_game_screen.dart';
 
 class RecordsStatisticsScreen extends StatefulWidget {
@@ -113,20 +114,51 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           child: ListView(
             padding: EdgeInsets.fromLTRB(20, 16, 20, 112 + bottomInset),
             children: [
-              Text(
-                l10n.recordsScreenTitle,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                Localizations.localeOf(context).languageCode == 'ko'
-                    ? 'Progress at a glance. 숫자보다 흐름과 추세를 먼저 보여줍니다.'
-                    : 'Progress at a glance, with rhythm and trends before raw numbers.',
-                style: TextStyle(color: colorScheme.onSurfaceVariant),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.recordsScreenTitle,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsScreen(),
+                          ),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(18),
+                      child: Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: colorScheme.surface.withValues(alpha: 0.86),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color:
+                                colorScheme.outlineVariant.withValues(alpha: 0.85),
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.tune_rounded,
+                          size: 20,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               _RecordsHeroCard(

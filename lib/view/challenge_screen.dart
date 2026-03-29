@@ -6,6 +6,7 @@ import 'package:mysudoku/services/achievement_service.dart';
 import 'package:mysudoku/services/challenge_progress_service.dart';
 import 'package:mysudoku/services/home_dashboard_service.dart';
 import 'package:mysudoku/view/achievement_collection_screen.dart';
+import 'package:mysudoku/view/settings_screen.dart';
 
 class ChallengeScreen extends StatefulWidget {
   const ChallengeScreen({super.key});
@@ -90,22 +91,53 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
           child: ListView(
             padding: EdgeInsets.fromLTRB(16, 16, 16, 112 + bottomInset),
             children: [
-              Text(
-                l10n.challengeScreenTitle,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.challengeScreenTitle,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsScreen(),
+                          ),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(18),
+                      child: Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: colorScheme.surface.withValues(alpha: 0.86),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color:
+                                colorScheme.outlineVariant.withValues(alpha: 0.85),
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.tune_rounded,
+                          size: 20,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                Localizations.localeOf(context).languageCode == 'ko'
-                    ? '연속 기록과 주간 목표, 배지 진행을 한곳에서 차분하게 확인할 수 있어요.'
-                    : 'A calm view of your streak, weekly goal, and badge progress.',
-                style: TextStyle(color: colorScheme.onSurfaceVariant),
-              ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
               _ChallengeHeroCard(
                 l10n: l10n,
                 streakDays: challenge.streakDays,

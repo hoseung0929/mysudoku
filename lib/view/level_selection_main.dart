@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
 import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
@@ -27,6 +29,9 @@ class LevelSelectionMain extends StatefulWidget {
 }
 
 class _LevelSelectionMainState extends State<LevelSelectionMain> {
+  /// 상태바 아래 프로필 바 본문 높이 (padding 22+18 + 아바타 열 ~56). 상태바 높이는 별도 합산.
+  static const double _kProfileHeaderExtent = 96;
+
   static const Color _cpSage = Color(0xFFE7F0E8);
   static const Color _cpOat = Color(0xFFF2E9DA);
   static const Color _cpForest = Color(0xFF285B3F);
@@ -538,37 +543,59 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth > 600;
 
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFFFDFBF6),
-            Color(0xFFF7F4E8),
-          ],
-        ),
+    final topInset = MediaQuery.paddingOf(context).top;
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness:
+            Theme.of(context).brightness == Brightness.dark
+                ? Brightness.light
+                : Brightness.dark,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness:
+            Theme.of(context).brightness == Brightness.dark
+                ? Brightness.light
+                : Brightness.dark,
       ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: SafeArea(
-          bottom: false,
-          child: isTablet ? _buildTabletLayout() : _buildMobileLayout(),
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFFDFBF6),
+              Color(0xFFF7F4E8),
+            ],
+          ),
+        ),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: SafeArea(
+            top: false,
+            bottom: false,
+            child: isTablet ? _buildTabletLayout(topInset) : _buildMobileLayout(topInset),
+          ),
         ),
       ),
     );
   }
 
   /// 태블릿 레이아웃
-  Widget _buildTabletLayout() {
+  Widget _buildTabletLayout(double topInset) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
-    return Column(
+    return Stack(
+      clipBehavior: Clip.none,
       children: [
-        _buildHeader(),
-        Expanded(
+        Positioned.fill(
           child: SingleChildScrollView(
             controller: _scrollController,
-            padding: EdgeInsets.fromLTRB(24, 24, 24, 76 + bottomInset),
+            padding: EdgeInsets.fromLTRB(
+              24,
+              topInset + _kProfileHeaderExtent + 12,
+              24,
+              76 + bottomInset,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -579,21 +606,31 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
             ),
           ),
         ),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: _buildGlassProfileHeader(),
+        ),
       ],
     );
   }
 
   /// 모바일 레이아웃
-  Widget _buildMobileLayout() {
+  Widget _buildMobileLayout(double topInset) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Stack(
+      clipBehavior: Clip.none,
       children: [
-        _buildHeader(),
-        Expanded(
+        Positioned.fill(
           child: SingleChildScrollView(
             controller: _scrollController,
-            padding: EdgeInsets.fromLTRB(16, 8, 16, 72 + bottomInset),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              topInset + _kProfileHeaderExtent + 12,
+              16,
+              72 + bottomInset,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -617,11 +654,45 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
             ),
           ),
         ),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: _buildGlassProfileHeader(),
+        ),
       ],
     );
   }
 
-  Widget _buildHeader() {
+  /// 스크롤 콘텐츠가 아래로 지나갈 때 블러로 비치는 상단 프로필 바 (상태바 영역까지 동일 글래스)
+  Widget _buildGlassProfileHeader() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final topInset = MediaQuery.paddingOf(context).top;
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: const Color(0xFFFDFBF6).withValues(alpha: 0.34),
+            border: Border(
+              bottom: BorderSide(
+                color: _isTop
+                    ? Colors.transparent
+                    : colorScheme.outlineVariant.withValues(alpha: 0.28),
+                width: 0.8,
+              ),
+            ),
+          ),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16, 22 + topInset, 16, 18),
+            child: _buildProfileHeaderRow(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileHeaderRow() {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final hasProfileImage =
@@ -636,29 +707,28 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
         : (Localizations.localeOf(context).languageCode == 'ko'
             ? '안녕! 오늘 하루는 어땠나요?'
             : 'One calm puzzle for today.');
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 22, 16, 18),
-      decoration: BoxDecoration(
-        color: colorScheme.surface.withValues(alpha: 0.72),
-        border: Border(
-          bottom: BorderSide(
-            color: _isTop ? colorScheme.surface : colorScheme.outlineVariant,
-            width: 1,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      CircleAvatar(
-                        radius: 22,
+    return Row(
+      children: [
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: colorScheme.surface,
+                        border: Border.all(
+                          color: colorScheme.outlineVariant.withValues(alpha: 0.9),
+                          width: 2.5,
+                        ),
+                      ),
+                      child: CircleAvatar(
+                        radius: 25,
                         backgroundColor: colorScheme.primaryContainer,
                         backgroundImage: hasProfileImage
                             ? FileImage(File(_profileImagePath!))
@@ -667,109 +737,105 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                             ? null
                             : Icon(
                                 Icons.person,
-                                size: 28,
+                                size: 31,
                                 color: colorScheme.onPrimaryContainer,
                               ),
                       ),
-                      Positioned(
-                        right: -2,
-                        bottom: -2,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: _openProfileEditor,
-                            customBorder: const CircleBorder(),
-                            child: Container(
-                              width: 20,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                color: colorScheme.primary,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: colorScheme.surface,
-                                  width: 2,
-                                ),
+                    ),
+                    Positioned(
+                      right: -2,
+                      bottom: -2,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: _openProfileEditor,
+                          customBorder: const CircleBorder(),
+                          child: Container(
+                            width: 20,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: colorScheme.surface,
+                                width: 2,
                               ),
-                              child: Icon(
-                                Icons.edit,
-                                size: 10,
-                                color: colorScheme.onPrimary,
-                              ),
+                            ),
+                            child: Icon(
+                              Icons.edit,
+                              size: 10,
+                              color: colorScheme.onPrimary,
                             ),
                           ),
                         ),
                       ),
-                      Positioned(
-                        right: -2,
-                        top: -2,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const SettingsScreen(),
-                                ),
-                              );
-                            },
-                            customBorder: const CircleBorder(),
-                            child: Container(
-                              width: 20,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                color: colorScheme.surface,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: colorScheme.outlineVariant,
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: Icon(
-                                Icons.tune_rounded,
-                                size: 10,
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 18),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        displayName,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 20,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        subtitleText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          displayName,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 18,
-                            color: colorScheme.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          subtitleText,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: colorScheme.onSurfaceVariant,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
+            },
+            borderRadius: BorderRadius.circular(18),
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.42),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.55),
+                ),
+              ),
+              child: Icon(
+                Icons.tune_rounded,
+                size: 20,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

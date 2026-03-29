@@ -5,7 +5,9 @@ allprojects {
     }
 }
 
-val newBuildDir: Directory = rootProject.layout.buildDirectory.dir("../../build").get()
+val buildDirPath = System.getenv("MYSUDOKU_BUILD_DIR") ?: "../../build"
+val newBuildDir: Directory = rootProject.layout.dir(rootProject.provider { rootProject.file(buildDirPath) })
+    .get()
 rootProject.layout.buildDirectory.value(newBuildDir)
 
 subprojects {

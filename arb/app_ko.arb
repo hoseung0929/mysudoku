@@ -332,7 +332,7 @@
   "homeOnboardingStepResumeTitle": "이어하기",
   "homeOnboardingStepResumeBody": "중단한 게임은 홈 상단 카드에서 곧바로 이어집니다.",
   "homeOnboardingStartButton": "시작하기",
-  "homeGuestTitle": "게스트",
+  "homeGuestTitle": "게스트1",
   "homeGuestSubtitle": "지금 바로 한 판 시작해보세요",
   "homeContinueTitle": "이어하기",
   "homeContinueSubtitle": "{level} · 게임 {gameNumber} · {cells}칸 진행",

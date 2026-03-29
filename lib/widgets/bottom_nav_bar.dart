@@ -15,6 +15,7 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final items = [
       const _BottomNavItemData(
         icon: Icons.cottage_rounded,
@@ -27,6 +28,9 @@ class BottomNavBar extends StatelessWidget {
       ),
     ];
 
+    /// 홈 상단 프로필 글래스 바와 동일 톤 (level_selection_main)
+    const creamGlass = Color(0xFFFDFBF6);
+
     return SafeArea(
       top: false,
       minimum: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -36,36 +40,39 @@ class BottomNavBar extends StatelessWidget {
           borderRadius: BorderRadius.circular(52),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF21382A).withValues(alpha: 0.08),
-              blurRadius: 30,
-              offset: const Offset(0, 14),
+              color: const Color(0xFF21382A).withValues(alpha: 0.04),
+              blurRadius: 24,
+              offset: const Offset(0, 12),
             ),
           ],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(52),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: const Color(0xFFFDFBF6).withValues(alpha: 0.78),
-                border: Border.all(
-                  color: const Color(0xFFE7E0D3),
+          child: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: creamGlass.withValues(alpha: 0.34),
+                  borderRadius: BorderRadius.circular(52),
+                  border: Border.all(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.28),
+                  ),
                 ),
-              ),
-              child: SizedBox(
-                height: 68,
-                child: Row(
-                  children: [
-                    for (var index = 0; index < items.length; index++)
-                      Expanded(
-                        child: _BottomNavButton(
-                          data: items[index],
-                          selected: selectedIndex == index,
-                          onTap: () => onItemTapped(index),
+                child: SizedBox(
+                  height: 68,
+                  child: Row(
+                    children: [
+                      for (var index = 0; index < items.length; index++)
+                        Expanded(
+                          child: _BottomNavButton(
+                            data: items[index],
+                            selected: selectedIndex == index,
+                            onTap: () => onItemTapped(index),
+                          ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -109,12 +116,12 @@ class _BottomNavButton extends StatelessWidget {
         transform: Matrix4.translationValues(0, selected ? -2 : 0, 0),
         decoration: BoxDecoration(
           color: selected
-              ? const Color(0xFFE7F0E8)
+              ? const Color(0xFFE7F0E8).withValues(alpha: 0.42)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(26),
           border: selected
               ? Border.all(
-                  color: const Color(0xFFD3E2D6),
+                  color: const Color(0xFFDDE8DF).withValues(alpha: 0.38),
                 )
               : null,
         ),

@@ -649,7 +649,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get homeOnboardingStartButton => '시작하기';
 
   @override
-  String get homeGuestTitle => '게스트';
+  String get homeGuestTitle => '게스트1';
 
   @override
   String get homeGuestSubtitle => '지금 바로 한 판 시작해보세요';
