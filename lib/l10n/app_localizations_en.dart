@@ -526,6 +526,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsGameLoadError => 'Could not load puzzle data.';
 
   @override
+  String get recordsChallengeTabHint =>
+      'Weekly goals and streaks are on the Challenge tab.';
+
+  @override
+  String get recordsGoToChallengeTab => 'Open Challenge tab';
+
+  @override
   String get challengeLoadError => 'Couldn\'t load challenge data.';
 
   @override
@@ -636,6 +643,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get challengeStreakStartToday => 'Chase your first clear today';
 
   @override
+  String get challengeTabHeroHeadline =>
+      'Today\'s puzzle and weekly rhythm,\nin one calm view.';
+
+  @override
+  String get challengeHeroPendingDetail =>
+      'Start playing from Home, or use the button below.';
+
+  @override
+  String get challengeHeroDoneDetail =>
+      'Today\'s challenge is complete. Badges and weekly progress stay on this tab.';
+
+  @override
+  String get challengeOpenTodayOnHomeButton => 'Open today\'s puzzle on Home';
+
+  @override
   String get challengeHeroDoneCaption =>
       'You finished today\'s challenge. Come back tomorrow to extend your streak.';
 
@@ -687,6 +709,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get homeContinueDescription =>
       'Pick up your paused puzzle where you left off.';
+
+  @override
+  String get homeContinueSameAsSpotlightSupporting => 'Resume today\'s puzzle';
 
   @override
   String get homeContinueActionButton => 'Continue';

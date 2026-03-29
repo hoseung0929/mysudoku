@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mysudoku/l10n/achievement_l10n.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
 import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
+import 'package:mysudoku/navigation/root_nav_scope.dart';
 import 'package:mysudoku/services/achievement_service.dart';
 import 'package:mysudoku/services/challenge_progress_service.dart';
 import 'package:mysudoku/services/home_dashboard_service.dart';
@@ -140,7 +141,6 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
               const SizedBox(height: 16),
               _ChallengeHeroCard(
                 l10n: l10n,
-                streakDays: challenge.streakDays,
                 isTodayCleared: challenge.isTodayChallengeCleared,
                 todayLabel: l10n.recordsGameNumberTitle(
                   challenge.todayChallengeLevelName.localizedSudokuLevelName(l10n),
@@ -195,91 +195,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                   await _load();
                 },
               ),
-              const SizedBox(height: 22),
-              _CalmSectionCard(
-                title: Localizations.localeOf(context).languageCode == 'ko'
-                    ? '다음 도전'
-                    : 'Next challenge',
-                subtitle: Localizations.localeOf(context).languageCode == 'ko'
-                    ? '지금 챌린지 흐름을 이어가기 위해 필요한 목표만 남겼어요.'
-                    : 'Only the milestones that matter for keeping your challenge flow.',
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _NextMilestoneTile(
-                      title: challenge.isWeeklyGoalAchieved
-                          ? l10n.challengeWeeklyGoalReachedTitle
-                          : l10n.challengeWeeklyGoalRemainingTitle(
-                              challenge.remainingWeeklyGoal,
-                            ),
-                      description: challenge.isWeeklyGoalAchieved
-                          ? l10n.challengeWeeklyGoalReachedBody
-                          : l10n.challengeWeeklyGoalCatchUpBody,
-                      icon: challenge.isWeeklyGoalAchieved
-                          ? Icons.emoji_events
-                          : Icons.flag,
-                    ),
-                    const SizedBox(height: 8),
-                    _NextMilestoneTile(
-                      title: challenge.perfectClearCount > 0
-                          ? l10n.challengePerfectThisWeek(
-                              challenge.perfectClearCount,
-                            )
-                          : l10n.challengePerfectThisWeekFirst,
-                      description: challenge.perfectClearCount > 0
-                          ? l10n.challengePerfectPositiveBody
-                          : l10n.challengePerfectZeroBody,
-                      icon: Icons.auto_awesome,
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CalmSectionCard extends StatelessWidget {
-  const _CalmSectionCard({
-    required this.title,
-    required this.child,
-    this.subtitle,
-  });
-
-  final String title;
-  final String? subtitle;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            if (subtitle != null) ...[
-              const SizedBox(height: 6),
-              Text(
-                subtitle!,
-                style: TextStyle(color: colorScheme.onSurfaceVariant),
-              ),
-            ],
-            const SizedBox(height: 14),
-            child,
-          ],
         ),
       ),
     );
@@ -766,13 +683,11 @@ class _AchievementBadgeChip extends StatelessWidget {
 class _ChallengeHeroCard extends StatelessWidget {
   const _ChallengeHeroCard({
     required this.l10n,
-    required this.streakDays,
     required this.isTodayCleared,
     required this.todayLabel,
   });
 
   final AppLocalizations l10n;
-  final int streakDays;
   final bool isTodayCleared;
   final String todayLabel;
 
@@ -802,29 +717,15 @@ class _ChallengeHeroCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _ChallengeHeroPill(
-                icon: Icons.local_florist_outlined,
-                label: Localizations.localeOf(context).languageCode == 'ko'
-                    ? '오늘의 흐름'
-                    : 'Today',
-              ),
-              _ChallengeHeroPill(
-                icon: Icons.self_improvement_outlined,
-                label: streakDays > 0
-                    ? l10n.challengeStreakDays(streakDays)
-                    : l10n.challengeStreakStartToday,
-              ),
-            ],
+          _ChallengeHeroPill(
+            icon: Icons.local_florist_outlined,
+            label: Localizations.localeOf(context).languageCode == 'ko'
+                ? '오늘의 흐름'
+                : 'Today',
           ),
           const SizedBox(height: 16),
           Text(
-            Localizations.localeOf(context).languageCode == 'ko'
-                ? '이번 주의 차분한 흐름을\n살펴보세요.'
-                : 'Take a calm look at\nthis week’s rhythm.',
+            l10n.challengeTabHeroHeadline,
             style: TextStyle(
               fontSize: 28,
               height: 1.15,
@@ -843,15 +744,33 @@ class _ChallengeHeroCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             isTodayCleared
-                ? (Localizations.localeOf(context).languageCode == 'ko'
-                    ? '오늘 퍼즐을 마쳤어요. 이제 배지와 주간 목표를 천천히 확인해보세요.'
-                    : 'Today is complete. Check your badges and weekly goal at an easy pace.')
-                : (Localizations.localeOf(context).languageCode == 'ko'
-                    ? '오늘 퍼즐은 홈에서 시작하고, 여기서는 흐름만 확인해보세요.'
-                    : 'Start today’s puzzle from Home, then return here for progress.'),
+                ? l10n.challengeHeroDoneDetail
+                : l10n.challengeHeroPendingDetail,
             style: TextStyle(
               color: colorScheme.onPrimary.withValues(alpha: 0.8),
               height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 200),
+            child: FilledButton(
+              onPressed: () =>
+                  RootNavScope.maybeOf(context)?.goToTab(0),
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFF8F4E8),
+                foregroundColor: const Color(0xFF285B3F),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+                textStyle: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+              ),
+              child: Text(l10n.challengeOpenTodayOnHomeButton),
             ),
           ),
         ],

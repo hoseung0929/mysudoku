@@ -8,7 +8,7 @@ void main() {
 
   group('LevelProgressService', () {
     test('refreshes cleared game count for a level', () async {
-      final level = SudokuLevel(
+      const level = SudokuLevel(
         name: '초급',
         description: 'test',
         difficulty: 1,
@@ -19,9 +19,10 @@ void main() {
         loadClearedGameCount: (levelName) async => levelName == '초급' ? 12 : 0,
       );
 
-      await service.refreshLevel(level);
+      final refreshed = await service.refreshLevel(level);
 
-      expect(level.clearedGames, 12);
+      expect(refreshed.clearedGames, 12);
+      expect(level.clearedGames, 0);
     });
 
     test('falls back to zero when loading cleared count fails', () async {
@@ -35,7 +36,7 @@ void main() {
     });
 
     test('resets level progress', () async {
-      final level = SudokuLevel(
+      const level = SudokuLevel(
         name: '초급',
         description: 'test',
         difficulty: 1,
@@ -50,10 +51,11 @@ void main() {
         },
       );
 
-      await service.resetLevel(level);
+      final resetLevel = await service.resetLevel(level);
 
       expect(clearedLevelName, '초급');
-      expect(level.clearedGames, 0);
+      expect(resetLevel.clearedGames, 0);
+      expect(level.clearedGames, 5);
     });
   });
 }

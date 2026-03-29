@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:mysudoku/l10n/app_locale_scope.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/services/app_settings_service.dart';
-import 'package:mysudoku/services/notification_service.dart';
 import 'package:mysudoku/theme/app_theme.dart';
 import 'package:mysudoku/theme/app_theme_scope.dart';
+import 'package:mysudoku/view/settings/settings_controller.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -15,21 +14,8 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final AppSettingsService _settingsService = AppSettingsService();
-  final NotificationService _notificationService = NotificationService();
-  bool _isVibrationEnabled = true;
-  bool _notificationsEnabled = false;
-  bool _streakReminderEnabled = false;
-  bool _gameCompleteNotificationEnabled = false;
-  bool _dailyGoalNotificationEnabled = false;
-  bool _keepScreenAwake = false;
-  bool _oneHandModeEnabled = false;
-  bool _memoHighlightEnabled = true;
-  bool _smartHintHighlightEnabled = true;
-  TimeOfDay _notificationTime = const TimeOfDay(
-    hour: NotificationService.defaultReminderHour,
-    minute: NotificationService.defaultReminderMinute,
-  );
+  final SettingsController _settingsController = SettingsController();
+  SettingsState _state = SettingsState.initial;
 
   @override
   void initState() {
@@ -38,80 +24,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadSettings() async {
-    final notificationsEnabled = await _settingsService.getBool(
-      AppSettingsService.notificationsEnabledKey,
-      defaultValue: false,
-    );
-    final streakReminderEnabled = await _settingsService.getBool(
-      AppSettingsService.streakReminderEnabledKey,
-      defaultValue: false,
-    );
-    final gameCompleteNotificationEnabled = await _settingsService.getBool(
-      AppSettingsService.gameCompleteNotificationEnabledKey,
-      defaultValue: false,
-    );
-    final dailyGoalNotificationEnabled = await _settingsService.getBool(
-      AppSettingsService.dailyGoalNotificationEnabledKey,
-      defaultValue: false,
-    );
-    final notificationHour = await _settingsService.getInt(
-      AppSettingsService.notificationHourKey,
-      defaultValue: NotificationService.defaultReminderHour,
-    );
-    final notificationMinute = await _settingsService.getInt(
-      AppSettingsService.notificationMinuteKey,
-      defaultValue: NotificationService.defaultReminderMinute,
-    );
-    final vibrationEnabled = await _settingsService.getBool(
-      AppSettingsService.vibrationEnabledKey,
-      defaultValue: true,
-    );
-    final keepScreenAwake = await _settingsService.getBool(
-      AppSettingsService.keepScreenAwakeKey,
-      defaultValue: false,
-    );
-    final oneHandModeEnabled = await _settingsService.getBool(
-      AppSettingsService.oneHandModeEnabledKey,
-      defaultValue: false,
-    );
-    final memoHighlightEnabled = await _settingsService.getBool(
-      AppSettingsService.memoHighlightEnabledKey,
-      defaultValue: true,
-    );
-    final smartHintHighlightEnabled = await _settingsService.getBool(
-      AppSettingsService.smartHintHighlightEnabledKey,
-      defaultValue: true,
-    );
+    final loaded = await _settingsController.load();
     if (!mounted) return;
     setState(() {
-      _notificationsEnabled = notificationsEnabled;
-      _streakReminderEnabled = streakReminderEnabled;
-      _gameCompleteNotificationEnabled = gameCompleteNotificationEnabled;
-      _dailyGoalNotificationEnabled = dailyGoalNotificationEnabled;
-      _notificationTime = TimeOfDay(
-        hour: notificationHour,
-        minute: notificationMinute,
-      );
-      _isVibrationEnabled = vibrationEnabled;
-      _keepScreenAwake = keepScreenAwake;
-      _oneHandModeEnabled = oneHandModeEnabled;
-      _memoHighlightEnabled = memoHighlightEnabled;
-      _smartHintHighlightEnabled = smartHintHighlightEnabled;
+      _state = loaded;
     });
   }
 
   Future<void> _setVibrationEnabled(bool value) async {
-    await _settingsService.setBool(AppSettingsService.vibrationEnabledKey, value);
+    final nextState = await _settingsController.setVibrationEnabled(_state, value);
     if (!mounted) return;
     setState(() {
-      _isVibrationEnabled = value;
+      _state = nextState;
     });
   }
 
   Future<void> _setNotificationsEnabled(bool value) async {
     final l10n = AppLocalizations.of(context)!;
     if (value) {
-      final granted = await _notificationService.requestPermissions();
+      final granted = await _settingsController.requestNotificationPermissions();
       if (!granted) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -123,26 +54,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     }
 
-    await _settingsService.setBool(
-      AppSettingsService.notificationsEnabledKey,
+    final nextState = await _settingsController.setNotificationsEnabled(
+      _state,
       value,
-    );
-    await _notificationService.syncReminders(
-      challengeReminderEnabled: value,
-      streakReminderEnabled: _streakReminderEnabled,
-      hour: _notificationTime.hour,
-      minute: _notificationTime.minute,
     );
     if (!mounted) return;
     setState(() {
-      _notificationsEnabled = value;
+      _state = nextState;
     });
   }
 
   Future<void> _setStreakReminderEnabled(bool value) async {
     final l10n = AppLocalizations.of(context)!;
-    if (value && !_notificationsEnabled) {
-      final granted = await _notificationService.requestPermissions();
+    if (value && !_state.notificationsEnabled) {
+      final granted = await _settingsController.requestNotificationPermissions();
       if (!granted) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -154,26 +79,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     }
 
-    await _settingsService.setBool(
-      AppSettingsService.streakReminderEnabledKey,
+    final nextState = await _settingsController.setStreakReminderEnabled(
+      _state,
       value,
-    );
-    await _notificationService.syncReminders(
-      challengeReminderEnabled: _notificationsEnabled,
-      streakReminderEnabled: value,
-      hour: _notificationTime.hour,
-      minute: _notificationTime.minute,
     );
     if (!mounted) return;
     setState(() {
-      _streakReminderEnabled = value;
+      _state = nextState;
     });
   }
 
   Future<void> _setGameCompleteNotificationEnabled(bool value) async {
     final l10n = AppLocalizations.of(context)!;
     if (value) {
-      final granted = await _notificationService.requestPermissions();
+      final granted = await _settingsController.requestNotificationPermissions();
       if (!granted) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -185,20 +104,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     }
 
-    await _settingsService.setBool(
-      AppSettingsService.gameCompleteNotificationEnabledKey,
+    final nextState = await _settingsController.setGameCompleteNotificationEnabled(
+      _state,
       value,
     );
     if (!mounted) return;
     setState(() {
-      _gameCompleteNotificationEnabled = value;
+      _state = nextState;
     });
   }
 
   Future<void> _setDailyGoalNotificationEnabled(bool value) async {
     final l10n = AppLocalizations.of(context)!;
     if (value) {
-      final granted = await _notificationService.requestPermissions();
+      final granted = await _settingsController.requestNotificationPermissions();
       if (!granted) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -210,85 +129,77 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     }
 
-    await _settingsService.setBool(
-      AppSettingsService.dailyGoalNotificationEnabledKey,
+    final nextState = await _settingsController.setDailyGoalNotificationEnabled(
+      _state,
       value,
     );
     if (!mounted) return;
     setState(() {
-      _dailyGoalNotificationEnabled = value;
+      _state = nextState;
     });
   }
 
   Future<void> _pickNotificationTime() async {
     final selected = await showTimePicker(
       context: context,
-      initialTime: _notificationTime,
+      initialTime: _state.notificationTime,
     );
     if (selected == null) return;
 
-    await _settingsService.setInt(
-      AppSettingsService.notificationHourKey,
-      selected.hour,
-    );
-    await _settingsService.setInt(
-      AppSettingsService.notificationMinuteKey,
-      selected.minute,
-    );
-    await _notificationService.syncReminders(
-      challengeReminderEnabled: _notificationsEnabled,
-      streakReminderEnabled: _streakReminderEnabled,
-      hour: selected.hour,
-      minute: selected.minute,
+    final nextState = await _settingsController.setNotificationTime(
+      _state,
+      selected,
     );
     if (!mounted) return;
     setState(() {
-      _notificationTime = selected;
+      _state = nextState;
     });
   }
 
   String _formatNotificationTime(BuildContext context) {
-    return MaterialLocalizations.of(context).formatTimeOfDay(_notificationTime);
+    return MaterialLocalizations.of(context).formatTimeOfDay(
+      _state.notificationTime,
+    );
   }
 
   Future<void> _setKeepScreenAwake(bool value) async {
-    await _settingsService.setBool(AppSettingsService.keepScreenAwakeKey, value);
+    final nextState = await _settingsController.setKeepScreenAwake(_state, value);
     if (!mounted) return;
     setState(() {
-      _keepScreenAwake = value;
+      _state = nextState;
     });
   }
 
   Future<void> _setOneHandModeEnabled(bool value) async {
-    await _settingsService.setBool(
-      AppSettingsService.oneHandModeEnabledKey,
+    final nextState = await _settingsController.setOneHandModeEnabled(
+      _state,
       value,
     );
     if (!mounted) return;
     setState(() {
-      _oneHandModeEnabled = value;
+      _state = nextState;
     });
   }
 
   Future<void> _setMemoHighlightEnabled(bool value) async {
-    await _settingsService.setBool(
-      AppSettingsService.memoHighlightEnabledKey,
+    final nextState = await _settingsController.setMemoHighlightEnabled(
+      _state,
       value,
     );
     if (!mounted) return;
     setState(() {
-      _memoHighlightEnabled = value;
+      _state = nextState;
     });
   }
 
   Future<void> _setSmartHintHighlightEnabled(bool value) async {
-    await _settingsService.setBool(
-      AppSettingsService.smartHintHighlightEnabledKey,
+    final nextState = await _settingsController.setSmartHintHighlightEnabled(
+      _state,
       value,
     );
     if (!mounted) return;
     setState(() {
-      _smartHintHighlightEnabled = value;
+      _state = nextState;
     });
   }
 
@@ -544,7 +455,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           l10n.settingsSectionNotifications,
           [
             SwitchListTile(
-              value: _gameCompleteNotificationEnabled,
+              value: _state.gameCompleteNotificationEnabled,
               onChanged: _setGameCompleteNotificationEnabled,
               secondary: _buildGameOptionIcon(Icons.emoji_events_outlined),
               title: Text(
@@ -562,7 +473,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             SwitchListTile(
-              value: _dailyGoalNotificationEnabled,
+              value: _state.dailyGoalNotificationEnabled,
               onChanged: _setDailyGoalNotificationEnabled,
               secondary: _buildGameOptionIcon(Icons.flag_outlined),
               title: Text(
@@ -580,7 +491,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             SwitchListTile(
-              value: _notificationsEnabled,
+              value: _state.notificationsEnabled,
               onChanged: _setNotificationsEnabled,
               secondary: _buildGameOptionIcon(Icons.notifications_active_outlined),
               title: Text(
@@ -598,7 +509,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             SwitchListTile(
-              value: _streakReminderEnabled,
+              value: _state.streakReminderEnabled,
               onChanged: _setStreakReminderEnabled,
               secondary: _buildGameOptionIcon(Icons.local_fire_department_outlined),
               title: Text(
@@ -641,7 +552,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           l10n.settingsSectionGame,
           [
             SwitchListTile(
-              value: _isVibrationEnabled,
+              value: _state.isVibrationEnabled,
               onChanged: _setVibrationEnabled,
               secondary: Container(
                 width: 40,
@@ -671,7 +582,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             SwitchListTile(
-              value: _keepScreenAwake,
+              value: _state.keepScreenAwake,
               onChanged: _setKeepScreenAwake,
               secondary: _buildGameOptionIcon(Icons.screen_lock_portrait),
               title: Text(
@@ -689,7 +600,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             SwitchListTile(
-              value: _oneHandModeEnabled,
+              value: _state.oneHandModeEnabled,
               onChanged: _setOneHandModeEnabled,
               secondary: _buildGameOptionIcon(Icons.pan_tool_alt_outlined),
               title: Text(
@@ -713,7 +624,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onTap: _showAppearancePicker,
             ),
             SwitchListTile(
-              value: _memoHighlightEnabled,
+              value: _state.memoHighlightEnabled,
               onChanged: _setMemoHighlightEnabled,
               secondary: _buildGameOptionIcon(Icons.filter_center_focus),
               title: Text(
@@ -731,7 +642,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             SwitchListTile(
-              value: _smartHintHighlightEnabled,
+              value: _state.smartHintHighlightEnabled,
               onChanged: _setSmartHintHighlightEnabled,
               secondary: _buildGameOptionIcon(Icons.tips_and_updates_outlined),
               title: Text(
@@ -888,7 +799,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
-                    '${l10n.settingsTabletNotificationsBody}\n${l10n.settingsNotificationTimeTitle}: ${_formatNotificationTime(context)}\n${l10n.settingsStreakReminderTitle}: ${_streakReminderEnabled ? l10n.gameMemoStateOn : l10n.gameMemoStateOff}',
+                    '${l10n.settingsTabletNotificationsBody}\n${l10n.settingsNotificationTimeTitle}: ${_formatNotificationTime(context)}\n${l10n.settingsStreakReminderTitle}: ${_state.streakReminderEnabled ? l10n.gameMemoStateOn : l10n.gameMemoStateOff}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),

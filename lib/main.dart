@@ -10,6 +10,7 @@ import 'package:mysudoku/services/level_progress_service.dart';
 import 'package:mysudoku/services/notification_service.dart';
 import 'package:mysudoku/theme/app_theme.dart';
 import 'package:mysudoku/theme/app_theme_scope.dart';
+import 'package:mysudoku/navigation/root_nav_scope.dart';
 import 'package:mysudoku/view/challenge_screen.dart';
 import 'package:mysudoku/view/level_selection_main.dart';
 import 'package:mysudoku/view/records_statistics_screen.dart';
@@ -203,30 +204,33 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBody: true,
-      backgroundColor: Colors.transparent,
-      body: Stack(
-        children: [
-          IndexedStack(
-            index: _selectedIndex,
-            children: List.generate(3, _buildPage),
-          ),
-          if (_isInitializingApp)
-            const Align(
-              alignment: Alignment.topCenter,
-              child: LinearProgressIndicator(minHeight: 3),
+    return RootNavScope(
+      goToTab: _onItemTapped,
+      child: Scaffold(
+        extendBody: true,
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            IndexedStack(
+              index: _selectedIndex,
+              children: List.generate(3, _buildPage),
             ),
-        ],
-      ),
-      bottomNavigationBar: Material(
-        color: Colors.transparent,
-        elevation: 0,
-        shadowColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        child: BottomNavBar(
-          selectedIndex: _selectedIndex,
-          onItemTapped: _onItemTapped,
+            if (_isInitializingApp)
+              const Align(
+                alignment: Alignment.topCenter,
+                child: LinearProgressIndicator(minHeight: 3),
+              ),
+          ],
+        ),
+        bottomNavigationBar: Material(
+          color: Colors.transparent,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          child: BottomNavBar(
+            selectedIndex: _selectedIndex,
+            onItemTapped: _onItemTapped,
+          ),
         ),
       ),
     );

@@ -1034,6 +1034,18 @@ abstract class AppLocalizations {
   /// **'Could not load puzzle data.'**
   String get recordsGameLoadError;
 
+  /// No description provided for @recordsChallengeTabHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly goals and streaks are on the Challenge tab.'**
+  String get recordsChallengeTabHint;
+
+  /// No description provided for @recordsGoToChallengeTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Challenge tab'**
+  String get recordsGoToChallengeTab;
+
   /// No description provided for @challengeLoadError.
   ///
   /// In en, this message translates to:
@@ -1202,6 +1214,30 @@ abstract class AppLocalizations {
   /// **'Chase your first clear today'**
   String get challengeStreakStartToday;
 
+  /// No description provided for @challengeTabHeroHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s puzzle and weekly rhythm,\nin one calm view.'**
+  String get challengeTabHeroHeadline;
+
+  /// No description provided for @challengeHeroPendingDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Start playing from Home, or use the button below.'**
+  String get challengeHeroPendingDetail;
+
+  /// No description provided for @challengeHeroDoneDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s challenge is complete. Badges and weekly progress stay on this tab.'**
+  String get challengeHeroDoneDetail;
+
+  /// No description provided for @challengeOpenTodayOnHomeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Open today\'s puzzle on Home'**
+  String get challengeOpenTodayOnHomeButton;
+
   /// No description provided for @challengeHeroDoneCaption.
   ///
   /// In en, this message translates to:
@@ -1291,6 +1327,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pick up your paused puzzle where you left off.'**
   String get homeContinueDescription;
+
+  /// No description provided for @homeContinueSameAsSpotlightSupporting.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume today\'s puzzle'**
+  String get homeContinueSameAsSpotlightSupporting;
 
   /// No description provided for @homeContinueActionButton.
   ///

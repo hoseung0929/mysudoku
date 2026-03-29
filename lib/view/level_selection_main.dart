@@ -54,6 +54,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   bool _isShowingOnboarding = false;
   String? _profileImagePath;
   String? _profileName;
+  List<SudokuLevel> _levels = List<SudokuLevel>.from(SudokuLevel.levels);
   /// 레벨별 전체 게임 수 (DB 기준)
   Map<String, int> _levelTotal = {};
   ContinueGameSummary? _continueGame;
@@ -77,6 +78,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
       }
     });
     _loadLevelTotals();
+    _refreshLevels();
     _loadProfile();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -96,6 +98,14 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
         _levelTotal = totals;
       });
     }
+  }
+
+  Future<void> _refreshLevels() async {
+    final refreshedLevels = await _levelProgressService.refreshAllLevels(_levels);
+    if (!mounted) return;
+    setState(() {
+      _levels = refreshedLevels;
+    });
   }
 
   Future<void> _loadProfile() async {
@@ -403,9 +413,9 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   }
 
   SudokuLevel getLevel(String title) {
-    return SudokuLevel.levels.firstWhere(
+    return _levels.firstWhere(
       (level) => level.name == _levelNameKor(title),
-      orElse: () => SudokuLevel.levels.first,
+      orElse: () => _levels.first,
     );
   }
 
@@ -436,7 +446,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
       ),
     );
     // 게임 화면에서 돌아온 뒤 클리어 수 갱신
-    await _levelProgressService.refreshAllLevels(SudokuLevel.levels);
+    await _refreshLevels();
     await _loadHomeDashboard();
     if (mounted) setState(() {});
   }
@@ -456,7 +466,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
         ),
       ),
     );
-    await _levelProgressService.refreshAllLevels(SudokuLevel.levels);
+    await _refreshLevels();
     await _loadHomeDashboard();
     if (mounted) {
       setState(() {});
@@ -464,12 +474,13 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   }
 
   Future<void> _openSavedGamesScreen() async {
-    if (_continueGames.isEmpty) return;
+    final allContinueGames = await _homeDashboardService.loadContinueGames();
+    if (allContinueGames.isEmpty || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
     final selected = await Navigator.of(context).push<ContinueGameSummary>(
       MaterialPageRoute(
         builder: (context) => SavedGamesScreen(
-          initialGames: _continueGames,
+          initialGames: allContinueGames,
           title: _savedGamesTitle(),
           description: _savedGamesDescription(),
           itemTitleBuilder: (summary) => l10n.recordsGameNumberTitle(
@@ -482,10 +493,10 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
           onDelete: (summary) async {
             final shouldDelete = await _confirmDeleteSavedGame(summary);
             if (!shouldDelete) {
-              return _continueGames;
+              return allContinueGames;
             }
             await _deleteSavedGame(summary);
-            return _continueGames;
+            return _homeDashboardService.loadContinueGames();
           },
         ),
       ),
@@ -1009,20 +1020,33 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     );
   }
 
+  bool _continueMatchesTodaySpotlight(ContinueGameSummary summary) {
+    final today = _todayChallenge;
+    if (today == null) return false;
+    return summary.game.levelName == today.levelName &&
+        summary.game.gameNumber == today.gameNumber;
+  }
+
   Widget _buildContinueCard(ContinueGameSummary summary) {
     final l10n = AppLocalizations.of(context)!;
+    final sameAsSpotlight = _continueMatchesTodaySpotlight(summary);
+    final progressPercent = (summary.progress * 100).round().clamp(0, 100);
     return _ResumeActionCard(
       title: Localizations.localeOf(context).languageCode == 'ko'
           ? '마음의 퍼즐 잇기'
           : 'Resume gently',
-      subtitle: l10n.recordsGameNumberTitle(
-        summary.level.localizedName(l10n),
-        summary.game.gameNumber,
-      ),
+      subtitle: sameAsSpotlight
+          ? l10n.homeProgressPercent(progressPercent)
+          : l10n.recordsGameNumberTitle(
+              summary.level.localizedName(l10n),
+              summary.game.gameNumber,
+            ),
       metaLabel: _savedGameListSubtitle(summary),
-      supportingLabel: Localizations.localeOf(context).languageCode == 'ko'
-          ? '최근 퍼즐'
-          : 'Recent puzzle',
+      supportingLabel: sameAsSpotlight
+          ? l10n.homeContinueSameAsSpotlightSupporting
+          : (Localizations.localeOf(context).languageCode == 'ko'
+              ? '최근 퍼즐'
+              : 'Recent puzzle'),
       savedGamesLabel:
           _continueGames.length > 1 ? _savedGamesCta(_continueGames.length) : null,
       onTap: () => _openGame(
@@ -1184,7 +1208,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
       'Expert',
       'Master'
     ];
-    final level = SudokuLevel.levels[index];
+    final level = _levels[index];
     final total = _levelTotal[level.name] ?? 100;
     final completed = level.clearedGames;
     final remaining = total - completed;

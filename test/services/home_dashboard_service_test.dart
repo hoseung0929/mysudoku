@@ -21,8 +21,10 @@ void main() {
           },
           loadRecentRecords: () async => const [],
         ),
-        loadGame: (levelName, gameNumber) async {
-          return [
+        loadGameEntry: (levelName, gameNumber) async {
+          return {
+            'game_number': gameNumber,
+            'board': [
             [5, 0, 0, 6, 7, 8, 9, 1, 2],
             [0, 3, 4, 1, 9, 5, 6, 7, 8],
             [6, 7, 8, 2, 3, 4, 1, 5, 9],
@@ -32,10 +34,8 @@ void main() {
             [2, 1, 5, 8, 6, 7, 3, 9, 4],
             [3, 4, 7, 9, 2, 1, 5, 8, 6],
             [8, 9, 6, 5, 4, 3, 0, 2, 7],
-          ];
-        },
-        loadSolution: (levelName, gameNumber) async {
-          return [
+            ],
+            'solution': [
             [5, 4, 1, 6, 7, 8, 9, 1, 2],
             [9, 3, 4, 1, 9, 5, 6, 7, 8],
             [6, 7, 8, 2, 3, 4, 1, 5, 9],
@@ -45,7 +45,8 @@ void main() {
             [2, 1, 5, 8, 6, 7, 3, 9, 4],
             [3, 4, 7, 9, 2, 1, 5, 8, 6],
             [8, 9, 6, 5, 4, 3, 1, 2, 7],
-          ];
+            ],
+          };
         },
         loadGameCount: (levelName) async => 1,
       );
@@ -87,6 +88,37 @@ class _FakeGameStateService extends GameStateService {
           [8, 9, 6, 5, 4, 3, 0, 2, 7],
         ],
         lastPlayedAtMillis: 20,
+        session: GameSessionState(
+          board: [
+            [5, 4, 0, 6, 7, 8, 9, 1, 2],
+            [9, 3, 4, 1, 9, 5, 6, 7, 8],
+            [6, 7, 8, 2, 3, 4, 1, 5, 9],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9],
+            [4, 5, 6, 7, 8, 9, 2, 3, 1],
+            [7, 8, 9, 3, 1, 2, 4, 6, 5],
+            [2, 1, 5, 8, 6, 7, 3, 9, 4],
+            [3, 4, 7, 9, 2, 1, 5, 8, 6],
+            [8, 9, 6, 5, 4, 3, 0, 2, 7],
+          ],
+          notes: [
+            [<int>{}, <int>{}, <int>{2, 4}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
+            [<int>{1}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
+            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
+            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
+            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
+            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
+            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
+            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
+            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
+          ],
+          elapsedSeconds: 185,
+          hintsRemaining: 2,
+          wrongCount: 1,
+          isMemoMode: true,
+          hintCells: {'0,1'},
+          isGameComplete: false,
+          isGameOver: false,
+        ),
       ),
       SavedGameState(
         levelName: '중급',
@@ -103,80 +135,39 @@ class _FakeGameStateService extends GameStateService {
           [8, 9, 6, 5, 4, 3, 0, 2, 7],
         ],
         lastPlayedAtMillis: 10,
+        session: GameSessionState(
+          board: [
+            [5, 4, 0, 6, 7, 8, 9, 1, 2],
+            [9, 3, 4, 1, 9, 5, 6, 7, 8],
+            [6, 7, 8, 2, 3, 4, 1, 5, 9],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9],
+            [4, 5, 6, 7, 8, 9, 2, 3, 1],
+            [7, 8, 9, 3, 1, 2, 4, 6, 5],
+            [2, 1, 5, 8, 6, 7, 3, 9, 4],
+            [3, 4, 7, 9, 2, 1, 5, 8, 6],
+            [8, 9, 6, 5, 4, 3, 0, 2, 7],
+          ],
+          notes: [
+            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
+            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
+            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
+            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
+            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
+            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
+            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
+            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
+            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
+          ],
+          elapsedSeconds: 90,
+          hintsRemaining: 3,
+          wrongCount: 0,
+          isMemoMode: false,
+          hintCells: {},
+          isGameComplete: false,
+          isGameOver: false,
+        ),
       ),
     ];
-  }
-
-  @override
-  Future<GameSessionState?> loadSession({
-    required String levelName,
-    required int gameNumber,
-  }) async {
-    if (gameNumber == 2) {
-      return const GameSessionState(
-        board: [
-          [5, 4, 0, 6, 7, 8, 9, 1, 2],
-          [9, 3, 4, 1, 9, 5, 6, 7, 8],
-          [6, 7, 8, 2, 3, 4, 1, 5, 9],
-          [1, 2, 3, 4, 5, 6, 7, 8, 9],
-          [4, 5, 6, 7, 8, 9, 2, 3, 1],
-          [7, 8, 9, 3, 1, 2, 4, 6, 5],
-          [2, 1, 5, 8, 6, 7, 3, 9, 4],
-          [3, 4, 7, 9, 2, 1, 5, 8, 6],
-          [8, 9, 6, 5, 4, 3, 0, 2, 7],
-        ],
-        notes: [
-          [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-          [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-          [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-          [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-          [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-          [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-          [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-          [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-          [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-        ],
-        elapsedSeconds: 90,
-        hintsRemaining: 3,
-        wrongCount: 0,
-        isMemoMode: false,
-        hintCells: {},
-        isGameComplete: false,
-        isGameOver: false,
-      );
-    }
-
-    return const GameSessionState(
-      board: [
-        [5, 4, 0, 6, 7, 8, 9, 1, 2],
-        [9, 3, 4, 1, 9, 5, 6, 7, 8],
-        [6, 7, 8, 2, 3, 4, 1, 5, 9],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9],
-        [4, 5, 6, 7, 8, 9, 2, 3, 1],
-        [7, 8, 9, 3, 1, 2, 4, 6, 5],
-        [2, 1, 5, 8, 6, 7, 3, 9, 4],
-        [3, 4, 7, 9, 2, 1, 5, 8, 6],
-        [8, 9, 6, 5, 4, 3, 0, 2, 7],
-      ],
-      notes: [
-        [<int>{}, <int>{}, <int>{2, 4}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-        [<int>{1}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-        [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-        [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-        [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-        [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-        [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-        [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-        [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-      ],
-      elapsedSeconds: 185,
-      hintsRemaining: 2,
-      wrongCount: 1,
-      isMemoMode: true,
-      hintCells: {'0,1'},
-      isGameComplete: false,
-      isGameOver: false,
-    );
   }
 }
 

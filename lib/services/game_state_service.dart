@@ -12,12 +12,14 @@ class SavedGameState {
     required this.gameNumber,
     required this.board,
     required this.lastPlayedAtMillis,
+    required this.session,
   });
 
   final String levelName;
   final int gameNumber;
   final List<List<int>> board;
   final int lastPlayedAtMillis;
+  final GameSessionState session;
 }
 
 class GameSessionState {
@@ -227,6 +229,7 @@ class GameStateService {
           gameNumber: gameNumber,
           board: session.board,
           lastPlayedAtMillis: prefs.getInt(_metaKey(levelName, gameNumber)) ?? 0,
+          session: session,
         ),
       );
     }

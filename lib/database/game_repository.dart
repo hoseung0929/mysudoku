@@ -50,16 +50,31 @@ class GameRepository {
 
   /// 특정 레벨의 특정 게임 데이터를 반환합니다.
   Future<List<List<int>>> getGame(String levelName, int gameNumber) async {
+    final entry = await getGameEntry(levelName, gameNumber);
+    return entry == null ? [] : entry['board'] as List<List<int>>;
+  }
+
+  /// 특정 레벨의 특정 게임/해답 데이터를 함께 반환합니다.
+  Future<Map<String, dynamic>?> getGameEntry(
+    String levelName,
+    int gameNumber,
+  ) async {
     final db = await _dbManager.database;
     final List<Map<String, dynamic>> maps = await db.query(
       'games',
+      columns: ['game_number', 'board', 'solution'],
       where: 'level_name = ? AND game_number = ?',
       whereArgs: [levelName, gameNumber],
     );
 
-    if (maps.isEmpty) return [];
+    if (maps.isEmpty) return null;
 
-    return _parseBoardString(maps.first['board'] as String);
+    final entry = maps.first;
+    return {
+      'game_number': entry['game_number'] as int,
+      'board': _parseBoardString(entry['board'] as String),
+      'solution': _parseBoardString(entry['solution'] as String),
+    };
   }
 
   /// 특정 레벨의 특정 게임의 해답을 반환합니다.
@@ -68,21 +83,15 @@ class GameRepository {
       AppLogger.debug('해답 조회 요청: $levelName 게임 $gameNumber');
     }
 
-    final db = await _dbManager.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'games',
-      where: 'level_name = ? AND game_number = ?',
-      whereArgs: [levelName, gameNumber],
-    );
-
-    if (maps.isEmpty) {
+    final entry = await getGameEntry(levelName, gameNumber);
+    if (entry == null) {
       if (kDebugMode) {
         AppLogger.debug('해답 조회 결과 없음: $levelName 게임 $gameNumber');
       }
       return [];
     }
 
-    final solution = _parseBoardString(maps.first['solution'] as String);
+    final solution = entry['solution'] as List<List<int>>;
 
     if (kDebugMode) {
       AppLogger.debug('해답 조회 성공: $levelName 게임 $gameNumber');

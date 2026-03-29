@@ -51,13 +51,15 @@ class HomeDashboardData {
 }
 
 class HomeDashboardService {
+  static const int defaultContinueGamesLimit = 3;
+
   HomeDashboardService({
     DatabaseHelper? databaseHelper,
     GameStateService? gameStateService,
     ChallengeProgressService? challengeProgressService,
     AchievementService? achievementService,
-    Future<List<List<int>>> Function(String levelName, int gameNumber)? loadGame,
-    Future<List<List<int>>> Function(String levelName, int gameNumber)? loadSolution,
+    Future<Map<String, dynamic>?> Function(String levelName, int gameNumber)?
+        loadGameEntry,
     Future<int> Function(String levelName)? loadGameCount,
     Future<Map<String, dynamic>> Function()? loadOverallStatistics,
   })  : _gameStateService = gameStateService ?? GameStateService(),
@@ -66,10 +68,8 @@ class HomeDashboardService {
                 ChallengeProgressService(databaseHelper: databaseHelper),
         _achievementService =
             achievementService ?? AchievementService(databaseHelper: databaseHelper),
-        _loadGame =
-            loadGame ?? (databaseHelper ?? DatabaseHelper()).getGame,
-        _loadSolution =
-            loadSolution ?? (databaseHelper ?? DatabaseHelper()).getSolution,
+        _loadGameEntry =
+            loadGameEntry ?? (databaseHelper ?? DatabaseHelper()).getGameEntry,
         _loadGameCount =
             loadGameCount ?? (databaseHelper ?? DatabaseHelper()).getGameCount,
         _loadOverallStatistics =
@@ -81,15 +81,16 @@ class HomeDashboardService {
   final GameStateService _gameStateService;
   final ChallengeProgressService _challengeProgressService;
   final AchievementService _achievementService;
-  final Future<List<List<int>>> Function(String levelName, int gameNumber)
-      _loadGame;
-  final Future<List<List<int>>> Function(String levelName, int gameNumber)
-      _loadSolution;
+  final Future<Map<String, dynamic>?> Function(String levelName, int gameNumber)
+      _loadGameEntry;
   final Future<int> Function(String levelName) _loadGameCount;
   final Future<Map<String, dynamic>> Function() _loadOverallStatistics;
 
-  Future<HomeDashboardData> load(AppLocalizations l10n) async {
-    final continueGames = await _loadContinueGames();
+  Future<HomeDashboardData> load(
+    AppLocalizations l10n, {
+    int continueGamesLimit = defaultContinueGamesLimit,
+  }) async {
+    final continueGames = await loadContinueGames(limit: continueGamesLimit);
     final continueGame = continueGames.isEmpty ? null : continueGames.first;
     final todayChallenge = await _loadTodayChallenge();
     final challengeProgress = await _challengeProgressService.load();
@@ -108,28 +109,27 @@ class HomeDashboardService {
     );
   }
 
-  Future<List<ContinueGameSummary>> _loadContinueGames() async {
+  Future<List<ContinueGameSummary>> loadContinueGames({int? limit}) async {
     final savedGames = await _gameStateService.getSavedGames();
     if (savedGames.isEmpty) {
       return const [];
     }
 
     final summaries = <ContinueGameSummary>[];
+    final targetCount = limit == null || limit <= 0 ? null : limit;
+    final levelsByName = {
+      for (final level in SudokuLevel.levels) level.name: level,
+    };
 
     for (final saved in savedGames) {
-      final session = await _gameStateService.loadSession(
-        levelName: saved.levelName,
-        gameNumber: saved.gameNumber,
-      );
-      if (session == null) {
+      final session = saved.session;
+      final level = levelsByName[saved.levelName] ?? SudokuLevel.levels.first;
+      final entry = await _loadGameEntry(saved.levelName, saved.gameNumber);
+      if (entry == null) {
         continue;
       }
-      final level = SudokuLevel.levels.firstWhere(
-        (item) => item.name == saved.levelName,
-        orElse: () => SudokuLevel.levels.first,
-      );
-      final board = await _loadGame(saved.levelName, saved.gameNumber);
-      final solution = await _loadSolution(saved.levelName, saved.gameNumber);
+      final board = entry['board'] as List<List<int>>;
+      final solution = entry['solution'] as List<List<int>>;
       if (board.isEmpty || solution.isEmpty) {
         continue;
       }
@@ -161,6 +161,10 @@ class HomeDashboardService {
         isMemoMode: session.isMemoMode,
         noteCount: _countNotes(session.notes),
       ));
+
+      if (targetCount != null && summaries.length >= targetCount) {
+        break;
+      }
     }
 
     return summaries;
@@ -176,8 +180,9 @@ class HomeDashboardService {
         (DateTime.now().difference(DateTime(2024, 1, 1)).inDays % safeGameCount) +
             1;
 
-    final board = await _loadGame(level.name, gameNumber);
-    final solution = await _loadSolution(level.name, gameNumber);
+    final entry = await _loadGameEntry(level.name, gameNumber);
+    final board = entry?['board'] as List<List<int>>? ?? const [];
+    final solution = entry?['solution'] as List<List<int>>? ?? const [];
 
     return SudokuGame(
       board: board,

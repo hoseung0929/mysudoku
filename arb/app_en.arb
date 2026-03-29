@@ -246,6 +246,8 @@
     }
   },
   "recordsGameLoadError": "Could not load puzzle data.",
+  "recordsChallengeTabHint": "Weekly goals and streaks are on the Challenge tab.",
+  "recordsGoToChallengeTab": "Open Challenge tab",
   "challengeLoadError": "Couldn't load challenge data.",
   "challengeTodaysChallengeTitle": "Today's challenge",
   "challengeTodayDoneHint": "You've already finished today. Open it again anytime to review.",
@@ -322,6 +324,10 @@
     }
   },
   "challengeStreakStartToday": "Chase your first clear today",
+  "challengeTabHeroHeadline": "Today's puzzle and weekly rhythm,\nin one calm view.",
+  "challengeHeroPendingDetail": "Start playing from Home, or use the button below.",
+  "challengeHeroDoneDetail": "Today's challenge is complete. Badges and weekly progress stay on this tab.",
+  "challengeOpenTodayOnHomeButton": "Open today's puzzle on Home",
   "challengeHeroDoneCaption": "You finished today's challenge. Come back tomorrow to extend your streak.",
   "challengeHeroPendingCaption": "Today's puzzle is still open—start now to keep your streak alive.",
   "homeOnboardingWelcomeTitle": "Welcome!",
@@ -344,6 +350,7 @@
     }
   },
   "homeContinueDescription": "Pick up your paused puzzle where you left off.",
+  "homeContinueSameAsSpotlightSupporting": "Resume today's puzzle",
   "homeContinueActionButton": "Continue",
   "homeProgressPercent": "Progress {percent}%",
   "@homeProgressPercent": {

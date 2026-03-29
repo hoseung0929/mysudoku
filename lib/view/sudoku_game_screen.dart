@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,25 +9,21 @@ import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
 import 'package:mysudoku/model/sudoku_game.dart';
 import 'package:mysudoku/model/sudoku_level.dart';
 import 'package:mysudoku/presenter/sudoku_game_presenter.dart';
-import 'package:mysudoku/services/game_state_service.dart';
 import 'package:mysudoku/services/onboarding_service.dart';
-import 'package:mysudoku/services/app_settings_service.dart';
 import 'package:mysudoku/services/result_share_service.dart';
 import 'package:mysudoku/theme/app_theme.dart';
 import 'package:mysudoku/utils/app_logger.dart';
-import 'package:mysudoku/view/sudoku_game/game_completion_coordinator.dart';
+import 'package:mysudoku/view/sudoku_game/game_end_flow.dart';
 import 'package:mysudoku/view/sudoku_game/game_guide_flow.dart';
-import 'package:mysudoku/view/sudoku_game/game_over_flow.dart';
-import 'package:mysudoku/view/sudoku_game/game_result_actions.dart';
+import 'package:mysudoku/view/sudoku_game/game_session_controller.dart';
+import 'package:mysudoku/view/sudoku_game/game_settings_controller.dart';
 import 'package:mysudoku/view/sudoku_game/sudoku_answer_box.dart';
 import 'package:mysudoku/view/sudoku_game/sudoku_board_grid.dart';
 import 'package:mysudoku/view/sudoku_game/game_effects_controller.dart';
 import 'package:mysudoku/view/sudoku_game/sudoku_game_action_button.dart';
 import 'package:mysudoku/widgets/custom_app_bar.dart';
-import 'package:mysudoku/widgets/game_complete_dialog.dart';
 import 'package:mysudoku/widgets/progressive_blur_button.dart';
 import 'package:vibration/vibration.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 
 /// 스도쿠 게임의 메인 화면
 /// MVP 패턴에서 View 역할을 수행하며, 사용자 인터페이스를 담당
@@ -46,19 +43,17 @@ class SudokuGameScreen extends StatefulWidget {
   State<SudokuGameScreen> createState() => _SudokuGameScreenState();
 }
 
-class _SudokuGameScreenState extends State<SudokuGameScreen> {
-  final AppSettingsService _appSettingsService = AppSettingsService();
-  final GameStateService _gameStateService = GameStateService();
+class _SudokuGameScreenState extends State<SudokuGameScreen>
+    with WidgetsBindingObserver {
   final OnboardingService _onboardingService = OnboardingService();
   final ResultShareService _resultShareService = ResultShareService();
-  late final GameResultActions _resultActions =
-      GameResultActions(resultShareService: _resultShareService);
-  final GameCompletionCoordinator _completionCoordinator =
-      GameCompletionCoordinator();
+  late final GameEndFlow _gameEndFlow =
+      GameEndFlow(resultShareService: _resultShareService);
+  final GameSessionController _sessionController = GameSessionController();
+  final GameSettingsController _settingsController = GameSettingsController();
   late final SudokuGamePresenter _presenter;
   bool _presenterReady = false;
   bool _isVibrationEnabled = true;
-  bool _keepScreenAwake = false;
   bool _oneHandModeEnabled = false;
   bool _memoHighlightEnabled = true;
   bool _smartHintHighlightEnabled = true;
@@ -99,15 +94,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
     return _presenter.getCellValue(row, col) != 0;
   }
 
-  Future<void> _persistCurrentSession() async {
-    if (!_presenterReady) return;
-    if (_presenter.isGameComplete || _presenter.isGameOver) {
-      await _clearCurrentGameState();
-      return;
-    }
-    await _gameStateService.saveSession(
-      levelName: widget.level.name,
-      gameNumber: widget.game.gameNumber,
+  GameSessionSnapshot _buildSessionSnapshot() {
+    return GameSessionSnapshot(
       board: List.generate(
         9,
         (row) => List.generate(9, (col) => _presenter.getCellValue(row, col)),
@@ -123,9 +111,28 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
     );
   }
 
+  void _scheduleSessionSave() {
+    if (!_presenterReady) return;
+    _sessionController.scheduleSave(
+      level: widget.level,
+      gameNumber: widget.game.gameNumber,
+      snapshot: _buildSessionSnapshot(),
+    );
+  }
+
+  Future<void> _flushPendingSessionSave() async {
+    if (!_presenterReady) return;
+    await _sessionController.flushSave(
+      level: widget.level,
+      gameNumber: widget.game.gameNumber,
+      snapshot: _buildSessionSnapshot(),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializeGame();
   }
 
@@ -139,64 +146,16 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
 
     await _loadGameSettings();
 
-    // 저장된 게임 상태 복원
-    final restoredSession = widget.restoreSavedSession
-        ? await _gameStateService.loadSession(
-            levelName: widget.level.name,
-            gameNumber: widget.game.gameNumber,
-          )
-        : null;
-    final activeSession = restoredSession != null &&
-            _shouldDiscardRestoredSession(restoredSession)
-        ? null
-        : restoredSession;
-    if (restoredSession != null && activeSession == null) {
-      await _gameStateService.clearBoard(
-        levelName: widget.level.name,
-        gameNumber: widget.game.gameNumber,
-      );
-    }
-    if (!widget.restoreSavedSession) {
-      await _gameStateService.clearBoard(
-        levelName: widget.level.name,
-        gameNumber: widget.game.gameNumber,
-      );
-    }
-    List<List<int>>? restoredBoard = activeSession?.board;
-    if (restoredBoard != null && kDebugMode) {
+    final sessionBootstrap = await _sessionController.prepareSession(
+      game: widget.game,
+      level: widget.level,
+      restoreSavedSession: widget.restoreSavedSession,
+    );
+    final activeSession = sessionBootstrap.activeSession;
+    final initialBoard = sessionBootstrap.initialBoard;
+    if (activeSession != null && kDebugMode) {
       AppLogger.debug('저장된 게임 상태 발견');
     }
-    if (restoredBoard != null &&
-        !_gameStateService.isBoardCompatible(
-          originalBoard: widget.game.board,
-          restoredBoard: restoredBoard,
-        )) {
-      if (kDebugMode) {
-        for (int row = 0; row < restoredBoard.length; row++) {
-          for (int col = 0; col < restoredBoard[row].length; col++) {
-            if (row >= widget.game.board.length ||
-                col >= widget.game.board[row].length ||
-                (widget.game.board[row][col] != 0 &&
-                    restoredBoard[row][col] != widget.game.board[row][col])) {
-              AppLogger.debug(
-                '다른 게임 감지: [$row][$col], 원본=${row < widget.game.board.length && col < widget.game.board[row].length ? widget.game.board[row][col] : 'N/A'}, 저장=${restoredBoard[row][col]}',
-              );
-              break;
-            }
-          }
-        }
-      }
-      if (kDebugMode) {
-        AppLogger.debug('저장된 게임 상태가 현재 퍼즐과 달라 무시합니다');
-      }
-      await _gameStateService.clearBoard(
-        levelName: widget.level.name,
-        gameNumber: widget.game.gameNumber,
-      );
-      restoredBoard = null;
-    }
-
-    final initialBoard = restoredBoard ?? widget.game.board;
     _effectsController.initializeCompletedLineState(
       board: initialBoard,
       solution: widget.game.solution,
@@ -221,7 +180,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
         );
         setState(() {});
         _showCompletionFeedback(completionDelta);
-        _persistCurrentSession();
+        _scheduleSessionSave();
       },
       onFixedNumbersChanged: (fixedNumbers) {
         setState(() {});
@@ -231,15 +190,15 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
       },
       onTimeChanged: (time) {
         setState(() {});
-        _persistCurrentSession();
+        _scheduleSessionSave();
       },
       onHintsChanged: (hints) {
         setState(() {});
-        _persistCurrentSession();
+        _scheduleSessionSave();
       },
       onPauseStateChanged: (isPaused) {
         setState(() {});
-        _persistCurrentSession();
+        _scheduleSessionSave();
       },
       onGameCompleteChanged: (isComplete) {
         if (isComplete) {
@@ -249,7 +208,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
       },
       onWrongCountChanged: (wrongCount) {
         setState(() {});
-        _persistCurrentSession();
+        _scheduleSessionSave();
       },
       onGameOver: () {
         _showGameOverDialog();
@@ -278,22 +237,25 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
       });
     }
     _presenter.clearSelection();
-    await _persistCurrentSession();
+    await _flushPendingSessionSave();
     await _maybeShowGameGuide();
     if (kDebugMode) {
       AppLogger.debug('게임 초기화 완료');
     }
   }
 
-  bool _shouldDiscardRestoredSession(GameSessionState session) {
-    if (session.isGameComplete || session.isGameOver || session.wrongCount >= 3) {
-      return true;
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+      case AppLifecycleState.hidden:
+        unawaited(_flushPendingSessionSave());
+        return;
+      case AppLifecycleState.resumed:
+        return;
     }
-
-    return _gameStateService.isBoardCompatible(
-      originalBoard: widget.game.solution,
-      restoredBoard: session.board,
-    );
   }
 
   Future<void> _maybeShowGameGuide() async {
@@ -339,8 +301,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
   }
 
   Future<void> _clearCurrentGameState() async {
-    await _gameStateService.clearBoard(
-      levelName: widget.level.name,
+    await _sessionController.clear(
+      level: widget.level,
       gameNumber: widget.game.gameNumber,
     );
   }
@@ -359,42 +321,22 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
   }
 
   Future<void> _loadGameSettings() async {
-    final vibrationEnabled = await _appSettingsService.getBool(
-      AppSettingsService.vibrationEnabledKey,
-      defaultValue: true,
-    );
-    final keepScreenAwake = await _appSettingsService.getBool(
-      AppSettingsService.keepScreenAwakeKey,
-      defaultValue: false,
-    );
-    final oneHandModeEnabled = await _appSettingsService.getBool(
-      AppSettingsService.oneHandModeEnabledKey,
-      defaultValue: false,
-    );
-    final memoHighlightEnabled = await _appSettingsService.getBool(
-      AppSettingsService.memoHighlightEnabledKey,
-      defaultValue: true,
-    );
-    final smartHintHighlightEnabled = await _appSettingsService.getBool(
-      AppSettingsService.smartHintHighlightEnabledKey,
-      defaultValue: true,
-    );
-    await WakelockPlus.toggle(enable: keepScreenAwake);
+    final settings = await _settingsController.load();
     if (!mounted) return;
     setState(() {
-      _isVibrationEnabled = vibrationEnabled;
-      _keepScreenAwake = keepScreenAwake;
-      _oneHandModeEnabled = oneHandModeEnabled;
-      _memoHighlightEnabled = memoHighlightEnabled;
-      _smartHintHighlightEnabled = smartHintHighlightEnabled;
+      _isVibrationEnabled = settings.isVibrationEnabled;
+      _oneHandModeEnabled = settings.oneHandModeEnabled;
+      _memoHighlightEnabled = settings.memoHighlightEnabled;
+      _smartHintHighlightEnabled = settings.smartHintHighlightEnabled;
     });
   }
 
   @override
   void dispose() {
-    if (_keepScreenAwake) {
-      WakelockPlus.disable();
-    }
+    WidgetsBinding.instance.removeObserver(this);
+    unawaited(_flushPendingSessionSave());
+    _sessionController.dispose();
+    unawaited(_settingsController.dispose());
     if (_presenterReady) {
       _presenter.dispose();
     }
@@ -1177,105 +1119,31 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
   /// 게임 완료 다이얼로그 표시
   void _showGameCompleteDialog() async {
     if (!mounted) return;
-    final l10n = AppLocalizations.of(context)!;
-    final completionData = await _completionCoordinator.prepare(
-      l10n: l10n,
+    await _gameEndFlow.showCompletion(
+      context: context,
       level: widget.level,
       game: widget.game,
       clearTimeSeconds: _presenter.seconds,
       wrongCount: _presenter.wrongCount,
-    );
-    if (!mounted) return;
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext dialogContext) {
-        return GameCompleteDialog(
-          shareSummary: _resultShareService.formatClearSummary(
-            l10n: l10n,
-            clearTimeSeconds: _presenter.seconds,
-            wrongCount: _presenter.wrongCount,
+      onRestart: _resetAndRestartCurrentGame,
+      onGoToLevelSelection: _exitToLevelSelection,
+      onNextPuzzle: (nextGame) async {
+        if (!mounted) return;
+        await Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(
+            builder: (ctx) => SudokuGameScreen(
+              game: nextGame,
+              level: widget.level,
+            ),
           ),
-          timeInSeconds: _presenter.seconds,
-          wrongCount: _presenter.wrongCount,
-          isNewBestRecord: completionData.isNewBestRecord,
-          challengeMessage: completionData.challengeMessage,
-          unlockedBadges: completionData.newlyUnlockedBadges,
-          onCopyResult: () => _copyClearResult(completionData.isNewBestRecord),
-          onShareResult: () => _shareClearResult(completionData.isNewBestRecord),
-          onNextPuzzle: completionData.nextGame == null
-              ? null
-              : () => _openNextPuzzle(dialogContext, completionData.nextGame!),
-          onRestart: () async {
-            Navigator.of(dialogContext).pop();
-            await _resetAndRestartCurrentGame();
-          },
-          onGoToLevelSelection: () async {
-            Navigator.of(dialogContext).pop();
-            await _exitToLevelSelection();
-          },
         );
       },
     );
   }
 
-  /// 클리어 후 같은 난이도의 다음 퍼즐로 이동합니다.
-  Future<void> _openNextPuzzle(
-    BuildContext dialogContext,
-    SudokuGame next,
-  ) async {
-    Navigator.of(dialogContext).pop();
-    await Future<void>.delayed(Duration.zero);
-    if (!mounted) return;
-    await Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(
-        builder: (ctx) => SudokuGameScreen(
-          game: next,
-          level: widget.level,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _copyClearResult(bool isNewBestRecord) async {
-    final l10n = AppLocalizations.of(context)!;
-    final resultText = _resultActions.buildResultText(
-      l10n: l10n,
-      localizedLevelName: widget.level.localizedName(l10n),
-      gameNumber: widget.game.gameNumber,
-      clearTimeSeconds: _presenter.seconds,
-      wrongCount: _presenter.wrongCount,
-      isNewBestRecord: isNewBestRecord,
-    );
-
-    await _resultActions.copyResultText(resultText);
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.shareCopySuccess)),
-    );
-  }
-
-  Future<void> _shareClearResult(bool isNewBestRecord) async {
-    final l10n = AppLocalizations.of(context)!;
-    final resultText = _resultActions.buildResultText(
-      l10n: l10n,
-      localizedLevelName: widget.level.localizedName(l10n),
-      gameNumber: widget.game.gameNumber,
-      clearTimeSeconds: _presenter.seconds,
-      wrongCount: _presenter.wrongCount,
-      isNewBestRecord: isNewBestRecord,
-    );
-
-    await _resultActions.shareResultText(
-      resultText: resultText,
-      subject: l10n.shareSubject,
-    );
-  }
-
   /// 게임 오버 다이얼로그 표시
   void _showGameOverDialog() {
-    GameOverFlow.show(
+    _gameEndFlow.showGameOver(
       context: context,
       wrongCount: _presenter.wrongCount,
       onRestart: _resetAndRestartCurrentGame,

@@ -34,6 +34,14 @@ class DatabaseHelper {
     return await _gameRepository.getGame(levelName, gameNumber);
   }
 
+  /// 특정 레벨의 특정 게임/해답 데이터를 함께 반환합니다.
+  Future<Map<String, dynamic>?> getGameEntry(
+    String levelName,
+    int gameNumber,
+  ) async {
+    return await _gameRepository.getGameEntry(levelName, gameNumber);
+  }
+
   /// 특정 레벨의 특정 게임의 해답을 반환합니다.
   Future<List<List<int>>> getSolution(String levelName, int gameNumber) async {
     return await _gameRepository.getSolution(levelName, gameNumber);

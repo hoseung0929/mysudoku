@@ -4,9 +4,9 @@ class SudokuLevel {
   final int difficulty; // 1-5 (쉬움-어려움)
   final int emptyCells; // 비워둘 셀의 개수
   final int gameCount; // 해당 레벨의 게임 수
-  int clearedGames; // 클리어한 게임 수
+  final int clearedGames; // 클리어한 게임 수
 
-  SudokuLevel({
+  const SudokuLevel({
     required this.name,
     required this.description,
     required this.difficulty,
@@ -15,7 +15,25 @@ class SudokuLevel {
     this.clearedGames = 0,
   });
 
-  static List<SudokuLevel> levels = [
+  SudokuLevel copyWith({
+    String? name,
+    String? description,
+    int? difficulty,
+    int? emptyCells,
+    int? gameCount,
+    int? clearedGames,
+  }) {
+    return SudokuLevel(
+      name: name ?? this.name,
+      description: description ?? this.description,
+      difficulty: difficulty ?? this.difficulty,
+      emptyCells: emptyCells ?? this.emptyCells,
+      gameCount: gameCount ?? this.gameCount,
+      clearedGames: clearedGames ?? this.clearedGames,
+    );
+  }
+
+  static const List<SudokuLevel> levels = [
     SudokuLevel(
       name: '초급',
       description: '스도쿠를 처음 시작하는 분들을 위한 레벨',
@@ -52,5 +70,4 @@ class SudokuLevel {
       gameCount: 100,
     ),
   ];
-
 }

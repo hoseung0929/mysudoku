@@ -28,12 +28,14 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   final Map<String, List<SudokuGame>> _gameCache = {};
   final Map<String, int> _levelTotal = {};
   final Map<String, Set<int>> _clearedGameNumbers = {};
+  List<SudokuLevel> _levels = List<SudokuLevel>.from(SudokuLevel.levels);
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _loadLevelTotals();
+    _refreshLevels();
     // 특정 레벨이 전달된 경우 미리 게임 데이터 로딩
     if (widget.level != null) {
       _preloadGames();
@@ -42,12 +44,20 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
 
   Future<void> _loadLevelTotals() async {
     final dbHelper = DatabaseHelper();
-    for (final level in SudokuLevel.levels) {
+    for (final level in _levels) {
       _levelTotal[level.name] = await dbHelper.getGameCount(level.name);
     }
     if (mounted) {
       setState(() {});
     }
+  }
+
+  Future<void> _refreshLevels() async {
+    final refreshedLevels = await _levelProgressService.refreshAllLevels(_levels);
+    if (!mounted) return;
+    setState(() {
+      _levels = refreshedLevels;
+    });
   }
 
   /// 게임 데이터 미리 로딩
@@ -120,11 +130,18 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     );
 
     await _loadClearedGameNumbers(level.name);
-    final currentLevel = SudokuLevel.levels.firstWhere(
+    final currentLevel = _levels.firstWhere(
       (item) => item.name == level.name,
       orElse: () => level,
     );
-    await _levelProgressService.refreshLevel(currentLevel);
+    final refreshedLevel = await _levelProgressService.refreshLevel(currentLevel);
+    if (mounted) {
+      setState(() {
+        _levels = _levels
+            .map((item) => item.name == refreshedLevel.name ? refreshedLevel : item)
+            .toList();
+      });
+    }
 
     if (mounted) {
       setState(() {});
@@ -221,9 +238,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                     mainAxisSpacing: 20,
                     childAspectRatio: 1.5,
                   ),
-                  itemCount: SudokuLevel.levels.length,
+                  itemCount: _levels.length,
                   itemBuilder: (context, index) {
-                    final level = SudokuLevel.levels[index];
+                    final level = _levels[index];
                     return _buildLevelCard(level, true, l10n);
                   },
                 ),

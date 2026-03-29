@@ -513,6 +513,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsGameLoadError => '게임 데이터를 불러올 수 없습니다.';
 
   @override
+  String get recordsChallengeTabHint => '주간 목표·연속 기록은 챌린지 탭에서 확인할 수 있어요.';
+
+  @override
+  String get recordsGoToChallengeTab => '챌린지 탭으로 이동';
+
+  @override
   String get challengeLoadError => '챌린지 정보를 불러올 수 없습니다.';
 
   @override
@@ -618,6 +624,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get challengeStreakStartToday => '오늘 첫 클리어 도전';
 
   @override
+  String get challengeTabHeroHeadline => '오늘의 퍼즐과 주간 리듬을\n한곳에서 살펴보세요.';
+
+  @override
+  String get challengeHeroPendingDetail => '플레이는 홈 상단 카드에서 시작할 수 있어요.';
+
+  @override
+  String get challengeHeroDoneDetail => '오늘 도전은 끝났어요. 배지와 주간 진행은 이 탭에 모아두었어요.';
+
+  @override
+  String get challengeOpenTodayOnHomeButton => '홈에서 오늘 퍼즐 열기';
+
+  @override
   String get challengeHeroDoneCaption => '오늘의 도전을 완료했습니다. 내일도 이어서 기록을 쌓아보세요.';
 
   @override
@@ -664,6 +682,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get homeContinueDescription => '중단한 퍼즐을 바로 이어서 플레이할 수 있어요.';
+
+  @override
+  String get homeContinueSameAsSpotlightSupporting => '오늘 퍼즐 이어하기';
 
   @override
   String get homeContinueActionButton => '계속하기';

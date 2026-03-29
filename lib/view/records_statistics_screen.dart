@@ -6,6 +6,7 @@ import 'package:mysudoku/database/database_helper.dart';
 import 'package:mysudoku/model/sudoku_game.dart';
 import 'package:mysudoku/model/sudoku_level.dart';
 import 'package:mysudoku/services/records_statistics_service.dart';
+import 'package:mysudoku/navigation/root_nav_scope.dart';
 import 'package:mysudoku/view/settings_screen.dart';
 import 'package:mysudoku/view/sudoku_game_screen.dart';
 
@@ -203,6 +204,26 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                l10n.recordsChallengeTabHint,
+                style: TextStyle(
+                  fontSize: 13,
+                  height: 1.4,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              TextButton(
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  alignment: Alignment.centerLeft,
+                ),
+                onPressed: () =>
+                    RootNavScope.maybeOf(context)?.goToTab(1),
+                child: Text(l10n.recordsGoToChallengeTab),
               ),
               const SizedBox(height: 18),
               _buildFilterSection(l10n),

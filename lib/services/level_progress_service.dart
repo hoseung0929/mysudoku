@@ -31,24 +31,28 @@ class LevelProgressService {
     }
   }
 
-  Future<void> refreshLevel(SudokuLevel level) async {
-    level.clearedGames = await loadClearedGameCount(level.name);
+  Future<SudokuLevel> refreshLevel(SudokuLevel level) async {
+    final clearedGames = await loadClearedGameCount(level.name);
+    return level.copyWith(clearedGames: clearedGames);
   }
 
-  Future<void> refreshAllLevels(List<SudokuLevel> levels) async {
+  Future<List<SudokuLevel>> refreshAllLevels(List<SudokuLevel> levels) async {
+    final refreshedLevels = <SudokuLevel>[];
     for (final level in levels) {
-      await refreshLevel(level);
+      refreshedLevels.add(await refreshLevel(level));
     }
+    return refreshedLevels;
   }
 
-  Future<void> resetLevel(SudokuLevel level) async {
+  Future<SudokuLevel> resetLevel(SudokuLevel level) async {
     try {
       await _clearRecordsForLevel(level.name);
-      level.clearedGames = 0;
+      return level.copyWith(clearedGames: 0);
     } catch (e) {
       if (kDebugMode) {
         AppLogger.debug('클리어된 게임 수 초기화 실패: $e');
       }
+      return level;
     }
   }
 }
