@@ -107,6 +107,35 @@ class AchievementService {
     final records = await _loadRecentRecords();
     final progress = await _challengeProgressService.load();
 
+    return _buildSummary(
+      l10n,
+      overall: overall,
+      records: records,
+      progress: progress,
+    );
+  }
+
+  Future<AchievementSummary> loadFromData(
+    AppLocalizations l10n, {
+    required Map<String, dynamic> overall,
+    required List<Map<String, dynamic>> records,
+    required ChallengeProgressSummary progress,
+  }) async {
+    return _buildSummary(
+      l10n,
+      overall: overall,
+      records: records,
+      progress: progress,
+    );
+  }
+
+  AchievementSummary _buildSummary(
+    AppLocalizations l10n, {
+    required Map<String, dynamic> overall,
+    required List<Map<String, dynamic>> records,
+    required ChallengeProgressSummary progress,
+  }) {
+
     final totalCleared = overall['total_cleared'] as int? ?? 0;
     final streakDays = progress.streakDays;
     final weeklyClearCount = progress.weeklyClearCount;

@@ -64,5 +64,33 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 320));
       expect(controller.errorActive['2,4'], isFalse);
     });
+
+    test('ignores stale delayed effects after board reset', () async {
+      final controller = GameEffectsController();
+      final board = List.generate(9, (_) => List.filled(9, 0));
+
+      controller.resetForBoard(board: board, solution: board);
+      controller.triggerErrorEffect(
+        row: 2,
+        col: 4,
+        setState: (fn) => fn(),
+        isMounted: () => true,
+      );
+      controller.triggerWaveEffect(
+        row: 2,
+        col: 4,
+        setState: (fn) => fn(),
+        isMounted: () => true,
+      );
+
+      controller.resetForBoard(board: board, solution: board);
+
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(const Duration(milliseconds: 320));
+
+      expect(controller.errorActive, isEmpty);
+      expect(controller.waveActive, isEmpty);
+      expect(controller.lineCompleteActive, isEmpty);
+    });
   });
 }

@@ -77,6 +77,8 @@
     }
   },
   "gameHintShort": "Hint",
+  "gameUndoShort": "Undo",
+  "gameRedoShort": "Redo",
   "gameMemoShort": "Memo",
   "gameMemoOnShort": "Memo ON",
   "gameMemoStateOn": "ON",

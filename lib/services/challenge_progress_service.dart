@@ -83,12 +83,15 @@ class ChallengeProgressService {
     return streak;
   }
 
-  Future<ChallengeProgressSummary> load() async {
+  Future<ChallengeProgressSummary> load({
+    List<Map<String, dynamic>>? recentRecords,
+  }) async {
     await _ensureBackfillDailyCompletions();
     final challengeTarget = await getTodayChallengeTarget();
     final todayStr = formatLocalDate(DateTime.now());
     final isTodayCleared = await _dailyRepo.hasCompletionForDate(todayStr);
-    final recent = await _databaseHelper.getRecentClearRecords(limit: 365);
+    final recent =
+        recentRecords ?? await _databaseHelper.getRecentClearRecords(limit: 365);
     final completionDates = await _dailyRepo.getCompletionDatesDescending();
     final streak = calculateDailyChallengeStreakFromDates(completionDates);
     final weeklyClearCount = calculateWeeklyClearCount(recent);

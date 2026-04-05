@@ -48,6 +48,7 @@ class DatabaseManager {
   static const int _targetGamesPerLevel = 100;
   static const int _initialSeedGamesPerLevel = 12;
   bool _isTopUpRunning = false;
+  bool _shouldShowInitialCatalogIntro = false;
   final ValueNotifier<PuzzleCatalogStatus> catalogStatus =
       ValueNotifier<PuzzleCatalogStatus>(
     PuzzleCatalogStatus(
@@ -63,6 +64,12 @@ class DatabaseManager {
 
   DatabaseManager._internal();
 
+  bool get shouldShowInitialCatalogIntro => _shouldShowInitialCatalogIntro;
+
+  void markInitialCatalogIntroSeen() {
+    _shouldShowInitialCatalogIntro = false;
+  }
+
   /// 데이터베이스 인스턴스를 반환합니다.
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -73,6 +80,7 @@ class DatabaseManager {
   /// 데이터베이스를 초기화합니다.
   Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), 'sudoku_games.db');
+    _shouldShowInitialCatalogIntro = false;
 
     return await openDatabase(
       path,
@@ -89,6 +97,8 @@ class DatabaseManager {
 
   /// 데이터베이스 테이블을 생성하고 초기 데이터를 삽입합니다.
   Future<void> _onCreate(Database db, int version) async {
+    _shouldShowInitialCatalogIntro = true;
+
     // 게임 테이블 생성
     await db.execute('''
       CREATE TABLE IF NOT EXISTS games(
@@ -163,6 +173,7 @@ class DatabaseManager {
       return;
     }
 
+    _shouldShowInitialCatalogIntro = true;
     await _insertInitialGames(
       db,
       gamesPerLevel: _initialSeedGamesPerLevel,

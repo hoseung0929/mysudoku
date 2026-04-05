@@ -13,7 +13,6 @@ class SudokuBoardGrid extends StatelessWidget {
     required this.lineCompleteActive,
     required this.errorActive,
     this.enableMemoHighlights = true,
-    this.enableSmartHintHighlights = true,
     this.highlightedMemoNumber,
     required this.onCellTapped,
   });
@@ -23,7 +22,6 @@ class SudokuBoardGrid extends StatelessWidget {
   final Map<String, bool> lineCompleteActive;
   final Map<String, bool> errorActive;
   final bool enableMemoHighlights;
-  final bool enableSmartHintHighlights;
   final int? highlightedMemoNumber;
   final void Function(int row, int col) onCellTapped;
 
@@ -75,11 +73,8 @@ class SudokuBoardGrid extends StatelessWidget {
                 final isSameNumber = presenter.isSameNumber(row, col);
                 final isRelated = presenter.isRelated(row, col);
                 final isWrong = presenter.isWrongNumber(row, col);
-                final isHint = presenter.isHintNumber(row, col);
+                final isHint = presenter.isHintCell(row, col);
                 final notes = presenter.getCellNotes(row, col);
-                final isRuleSingleCandidateCell =
-                    enableSmartHintHighlights &&
-                    value == 0 && _countValidCandidates(row, col) == 1;
                 final isSingleCandidateCell =
                     enableMemoHighlights && value == 0 && notes.length == 1;
                 final hasHighlightedMemoCandidate =
@@ -134,15 +129,13 @@ class SudokuBoardGrid extends StatelessWidget {
                                   ? AppTheme.pinkColor.withValues(alpha: 0.28)
                                   : isWave
                                       ? AppTheme.mintColor.withValues(alpha: 0.22)
-                                      : isLineComplete
+                                              : isLineComplete
                                           ? AppTheme.yellowColor.withValues(alpha: 0.26)
                                           : isSelected
                                               ? AppTheme.lightBlueColor.withValues(alpha: 0.22)
-                                              : isWrong
+                                          : isWrong
                                                   ? AppTheme.pinkColor.withValues(alpha: 0.18)
-                                                  : isHint
-                                                      ? AppTheme.yellowColor.withValues(alpha: 0.28)
-                                                      : isSameNumber
+                                                  : isSameNumber
                                                           ? AppTheme.lightBlueColor.withValues(alpha: 0.14)
                                                           : isHiddenSingleForHighlightedMemo
                                                               ? AppTheme.lightBlueColor
@@ -150,9 +143,6 @@ class SudokuBoardGrid extends StatelessWidget {
                                                           : hasHighlightedMemoCandidate
                                                               ? AppTheme.lightBlueColor
                                                                   .withValues(alpha: 0.14)
-                                                          : isRuleSingleCandidateCell
-                                                              ? AppTheme.mintColor
-                                                                  .withValues(alpha: 0.18)
                                                           : isSingleCandidateCell
                                                               ? AppTheme.yellowColor
                                                                   .withValues(alpha: 0.16)
@@ -168,23 +158,23 @@ class SudokuBoardGrid extends StatelessWidget {
                                           ? AppTheme.sudokuWrongNumberStyle.copyWith(
                                               fontSize: digitFontSize,
                                             )
-                                          : isHint
-                                              ? GoogleFonts.notoSans(
-                                                  fontSize: digitFontSize,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: const Color(0xFFB87638),
-                                                )
-                                              : isFixed
+                                          : isFixed
                                                   ? GoogleFonts.notoSans(
                                                       fontSize: digitFontSize,
                                                       fontWeight: FontWeight.bold,
                                                       color: digitOnBoard,
                                                     )
-                                                  : GoogleFonts.notoSans(
-                                                      fontSize: digitFontSize,
-                                                      fontWeight: FontWeight.w600,
-                                                      color: const Color(0xFF285B3F),
-                                                    ),
+                                                  : isHint
+                                                      ? GoogleFonts.notoSans(
+                                                          fontSize: digitFontSize,
+                                                          fontWeight: FontWeight.w600,
+                                                          color: const Color(0xFF457B9D),
+                                                        )
+                                                      : GoogleFonts.notoSans(
+                                                          fontSize: digitFontSize,
+                                                          fontWeight: FontWeight.w600,
+                                                          color: const Color(0xFF285B3F),
+                                                        ),
                                     )
                                   : SudokuMemoNotesGrid(
                                       notes: notes,
@@ -254,42 +244,5 @@ class SudokuBoardGrid extends StatelessWidget {
       }
     }
     return count;
-  }
-
-  int _countValidCandidates(int row, int col) {
-    int count = 0;
-    for (int candidate = 1; candidate <= 9; candidate++) {
-      if (_isValueAllowed(row, col, candidate)) {
-        count++;
-      }
-    }
-    return count;
-  }
-
-  bool _isValueAllowed(int row, int col, int candidate) {
-    for (int checkCol = 0; checkCol < 9; checkCol++) {
-      if (checkCol != col && presenter.getCellValue(row, checkCol) == candidate) {
-        return false;
-      }
-    }
-
-    for (int checkRow = 0; checkRow < 9; checkRow++) {
-      if (checkRow != row && presenter.getCellValue(checkRow, col) == candidate) {
-        return false;
-      }
-    }
-
-    final startRow = (row ~/ 3) * 3;
-    final startCol = (col ~/ 3) * 3;
-    for (int checkRow = startRow; checkRow < startRow + 3; checkRow++) {
-      for (int checkCol = startCol; checkCol < startCol + 3; checkCol++) {
-        if ((checkRow != row || checkCol != col) &&
-            presenter.getCellValue(checkRow, checkCol) == candidate) {
-          return false;
-        }
-      }
-    }
-
-    return true;
   }
 }

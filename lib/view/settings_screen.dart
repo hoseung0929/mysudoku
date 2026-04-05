@@ -192,17 +192,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  Future<void> _setSmartHintHighlightEnabled(bool value) async {
-    final nextState = await _settingsController.setSmartHintHighlightEnabled(
-      _state,
-      value,
-    );
-    if (!mounted) return;
-    setState(() {
-      _state = nextState;
-    });
-  }
-
   Future<void> _showLanguagePicker() async {
     final l10n = AppLocalizations.of(context)!;
     await showModalBottomSheet<void>(
@@ -636,24 +625,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               subtitle: Text(
                 l10n.settingsMemoHighlightSubtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-            ),
-            SwitchListTile(
-              value: _state.smartHintHighlightEnabled,
-              onChanged: _setSmartHintHighlightEnabled,
-              secondary: _buildGameOptionIcon(Icons.tips_and_updates_outlined),
-              title: Text(
-                l10n.settingsSmartHintTitle,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-              ),
-              subtitle: Text(
-                l10n.settingsSmartHintSubtitle,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),

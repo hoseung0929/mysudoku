@@ -12,7 +12,6 @@ class SettingsState {
     required this.keepScreenAwake,
     required this.oneHandModeEnabled,
     required this.memoHighlightEnabled,
-    required this.smartHintHighlightEnabled,
     required this.notificationTime,
   });
 
@@ -24,7 +23,6 @@ class SettingsState {
   final bool keepScreenAwake;
   final bool oneHandModeEnabled;
   final bool memoHighlightEnabled;
-  final bool smartHintHighlightEnabled;
   final TimeOfDay notificationTime;
 
   SettingsState copyWith({
@@ -36,7 +34,6 @@ class SettingsState {
     bool? keepScreenAwake,
     bool? oneHandModeEnabled,
     bool? memoHighlightEnabled,
-    bool? smartHintHighlightEnabled,
     TimeOfDay? notificationTime,
   }) {
     return SettingsState(
@@ -53,8 +50,6 @@ class SettingsState {
       oneHandModeEnabled: oneHandModeEnabled ?? this.oneHandModeEnabled,
       memoHighlightEnabled:
           memoHighlightEnabled ?? this.memoHighlightEnabled,
-      smartHintHighlightEnabled:
-          smartHintHighlightEnabled ?? this.smartHintHighlightEnabled,
       notificationTime: notificationTime ?? this.notificationTime,
     );
   }
@@ -68,7 +63,6 @@ class SettingsState {
     keepScreenAwake: false,
     oneHandModeEnabled: false,
     memoHighlightEnabled: true,
-    smartHintHighlightEnabled: true,
     notificationTime: TimeOfDay(
       hour: NotificationService.defaultReminderHour,
       minute: NotificationService.defaultReminderMinute,
@@ -127,10 +121,6 @@ class SettingsController {
       AppSettingsService.memoHighlightEnabledKey,
       defaultValue: true,
     );
-    final smartHintHighlightEnabled = await _settingsService.getBool(
-      AppSettingsService.smartHintHighlightEnabledKey,
-      defaultValue: true,
-    );
 
     return SettingsState(
       notificationsEnabled: notificationsEnabled,
@@ -145,7 +135,6 @@ class SettingsController {
       keepScreenAwake: keepScreenAwake,
       oneHandModeEnabled: oneHandModeEnabled,
       memoHighlightEnabled: memoHighlightEnabled,
-      smartHintHighlightEnabled: smartHintHighlightEnabled,
     );
   }
 
@@ -266,16 +255,5 @@ class SettingsController {
       value,
     );
     return state.copyWith(memoHighlightEnabled: value);
-  }
-
-  Future<SettingsState> setSmartHintHighlightEnabled(
-    SettingsState state,
-    bool value,
-  ) async {
-    await _settingsService.setBool(
-      AppSettingsService.smartHintHighlightEnabledKey,
-      value,
-    );
-    return state.copyWith(smartHintHighlightEnabled: value);
   }
 }

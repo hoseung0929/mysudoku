@@ -9,23 +9,23 @@ class GameSessionSnapshot {
     required this.board,
     required this.notes,
     required this.elapsedSeconds,
-    required this.hintsRemaining,
     required this.wrongCount,
     required this.isMemoMode,
-    required this.hintCells,
     required this.isGameComplete,
     required this.isGameOver,
+    required this.hintsRemaining,
+    required this.hintCells,
   });
 
   final List<List<int>> board;
   final List<List<Set<int>>> notes;
   final int elapsedSeconds;
-  final int hintsRemaining;
   final int wrongCount;
   final bool isMemoMode;
-  final Set<String> hintCells;
   final bool isGameComplete;
   final bool isGameOver;
+  final int hintsRemaining;
+  final Set<String> hintCells;
 }
 
 class GameSessionBootstrap {

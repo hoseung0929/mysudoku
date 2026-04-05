@@ -52,6 +52,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   bool _isTop = true;
   bool _isLoadingHome = true;
   bool _isShowingOnboarding = false;
+  bool _hasResolvedHomeOnboarding = false;
+  bool _showCatalogIntro = false;
   String? _profileImagePath;
   String? _profileName;
   List<SudokuLevel> _levels = List<SudokuLevel>.from(SudokuLevel.levels);
@@ -66,6 +68,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   @override
   void initState() {
     super.initState();
+    _databaseManager.catalogStatus.addListener(_handleCatalogStatusChanged);
     _scrollController.addListener(() {
       if (_scrollController.offset <= 0 && !_isTop) {
         setState(() {
@@ -347,7 +350,12 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
 
   Future<void> _maybeShowHomeOnboarding() async {
     final shouldShow = await _onboardingService.shouldShowHomeOnboarding();
-    if (!shouldShow || !mounted || _isShowingOnboarding) return;
+    if (!mounted) return;
+    if (!shouldShow || _isShowingOnboarding) {
+      _hasResolvedHomeOnboarding = true;
+      _syncCatalogIntroVisibility();
+      return;
+    }
 
     _isShowingOnboarding = true;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -403,13 +411,45 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
       );
       await _onboardingService.markHomeOnboardingSeen();
       _isShowingOnboarding = false;
+      _hasResolvedHomeOnboarding = true;
+      _syncCatalogIntroVisibility();
     });
   }
 
   @override
   void dispose() {
+    _databaseManager.catalogStatus.removeListener(_handleCatalogStatusChanged);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _handleCatalogStatusChanged() {
+    if (!mounted) return;
+    _syncCatalogIntroVisibility();
+  }
+
+  void _syncCatalogIntroVisibility() {
+    final status = _databaseManager.catalogStatus.value;
+    final shouldShow =
+        _hasResolvedHomeOnboarding &&
+        !_isShowingOnboarding &&
+        _databaseManager.shouldShowInitialCatalogIntro &&
+        status.isRunning;
+
+    if (_showCatalogIntro == shouldShow) {
+      return;
+    }
+
+    setState(() {
+      _showCatalogIntro = shouldShow;
+    });
+  }
+
+  void _dismissCatalogIntro() {
+    _databaseManager.markInitialCatalogIntroSeen();
+    setState(() {
+      _showCatalogIntro = false;
+    });
   }
 
   SudokuLevel getLevel(String title) {
@@ -582,10 +622,16 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
         ),
         child: Scaffold(
           backgroundColor: Colors.transparent,
-          body: SafeArea(
-            top: false,
-            bottom: false,
-            child: isTablet ? _buildTabletLayout(topInset) : _buildMobileLayout(topInset),
+          body: Stack(
+            children: [
+              SafeArea(
+                top: false,
+                bottom: false,
+                child:
+                    isTablet ? _buildTabletLayout(topInset) : _buildMobileLayout(topInset),
+              ),
+              if (_showCatalogIntro) _buildCatalogIntroOverlay(),
+            ],
           ),
         ),
       ),
@@ -908,6 +954,158 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
           _buildContinueCard(_continueGame!),
         ],
       ],
+    );
+  }
+
+  Widget _buildCatalogIntroOverlay() {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
+    return Positioned.fill(
+      child: ColoredBox(
+        color: Colors.black.withValues(alpha: 0.28),
+        child: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: Material(
+                  color: Colors.transparent,
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFDFBF6),
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.12),
+                          blurRadius: 28,
+                          offset: const Offset(0, 20),
+                        ),
+                      ],
+                      border: Border.all(
+                        color: colorScheme.outlineVariant.withValues(alpha: 0.65),
+                      ),
+                    ),
+                    child: ValueListenableBuilder<PuzzleCatalogStatus>(
+                      valueListenable: _databaseManager.catalogStatus,
+                      builder: (context, status, child) {
+                        final progress = status.totalTarget == 0
+                            ? 0.0
+                            : (status.totalGenerated / status.totalTarget)
+                                .clamp(0.0, 1.0);
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 52,
+                              height: 52,
+                              decoration: BoxDecoration(
+                                color: colorScheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              child: Icon(
+                                Icons.auto_awesome_rounded,
+                                color: colorScheme.onPrimaryContainer,
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            Text(
+                              isKorean
+                                  ? '첫 퍼즐 세트를 준비하고 있어요'
+                                  : 'Preparing your first puzzle set',
+                              style: TextStyle(
+                                fontSize: 24,
+                                height: 1.2,
+                                fontWeight: FontWeight.w800,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              isKorean
+                                  ? '처음 실행에서는 스도쿠 문제를 기기에 저장해요. 잠시만 기다리면 이후부터는 훨씬 빠르게 열려요.'
+                                  : 'On your first launch, Sudoku puzzles are saved on your device. After this, the app opens much faster.',
+                              style: TextStyle(
+                                fontSize: 15,
+                                height: 1.5,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: colorScheme.surfaceContainerLow,
+                                borderRadius: BorderRadius.circular(22),
+                                border: Border.all(
+                                  color: colorScheme.outlineVariant.withValues(alpha: 0.72),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.homeCatalogProgressDetail(
+                                      status.totalGenerated,
+                                      status.totalTarget,
+                                      status.remaining,
+                                    ),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      color: colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(999),
+                                    child: LinearProgressIndicator(
+                                      value: progress,
+                                      minHeight: 10,
+                                      backgroundColor:
+                                          colorScheme.surfaceContainerHighest,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        colorScheme.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              isKorean
+                                  ? '준비는 백그라운드에서도 계속돼요. 지금 바로 둘러봐도 괜찮아요.'
+                                  : 'Preparation continues in the background, so you can keep exploring right away.',
+                              style: TextStyle(
+                                color: colorScheme.onSurfaceVariant,
+                                height: 1.45,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: FilledButton(
+                                onPressed: _dismissCatalogIntro,
+                                child: Text(
+                                  isKorean ? '홈으로 계속' : 'Continue to home',
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

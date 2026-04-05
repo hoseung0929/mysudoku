@@ -61,7 +61,6 @@ void main() {
       expect(continueGame.progress, closeTo(2 / 4, 0.0001));
       expect(continueGame.lastPlayedAtMillis, 20);
       expect(continueGame.elapsedSeconds, 185);
-      expect(continueGame.hintsRemaining, 2);
       expect(continueGame.wrongCount, 1);
       expect(continueGame.isMemoMode, isTrue);
       expect(continueGame.noteCount, 3);
@@ -174,7 +173,9 @@ class _FakeGameStateService extends GameStateService {
 
 class _FakeChallengeProgressService extends ChallengeProgressService {
   @override
-  Future<ChallengeProgressSummary> load() async {
+  Future<ChallengeProgressSummary> load({
+    List<Map<String, dynamic>>? recentRecords,
+  }) async {
     return const ChallengeProgressSummary(
       streakDays: 0,
       isTodayChallengeCleared: false,

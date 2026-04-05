@@ -240,6 +240,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gameHintShort => 'Hint';
 
   @override
+  String get gameUndoShort => 'Undo';
+
+  @override
+  String get gameRedoShort => 'Redo';
+
+  @override
   String get gameMemoShort => 'Memo';
 
   @override

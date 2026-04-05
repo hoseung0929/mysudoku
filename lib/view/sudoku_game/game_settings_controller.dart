@@ -7,14 +7,12 @@ class GameViewSettings {
     required this.keepScreenAwake,
     required this.oneHandModeEnabled,
     required this.memoHighlightEnabled,
-    required this.smartHintHighlightEnabled,
   });
 
   final bool isVibrationEnabled;
   final bool keepScreenAwake;
   final bool oneHandModeEnabled;
   final bool memoHighlightEnabled;
-  final bool smartHintHighlightEnabled;
 }
 
 class GameSettingsController {
@@ -41,10 +39,6 @@ class GameSettingsController {
       AppSettingsService.memoHighlightEnabledKey,
       defaultValue: true,
     );
-    final smartHintHighlightEnabled = await _appSettingsService.getBool(
-      AppSettingsService.smartHintHighlightEnabledKey,
-      defaultValue: true,
-    );
 
     await WakelockPlus.toggle(enable: keepScreenAwake);
     _keepScreenAwakeApplied = keepScreenAwake;
@@ -54,7 +48,6 @@ class GameSettingsController {
       keepScreenAwake: keepScreenAwake,
       oneHandModeEnabled: oneHandModeEnabled,
       memoHighlightEnabled: memoHighlightEnabled,
-      smartHintHighlightEnabled: smartHintHighlightEnabled,
     );
   }
 

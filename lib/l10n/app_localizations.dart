@@ -530,6 +530,18 @@ abstract class AppLocalizations {
   /// **'Hint'**
   String get gameHintShort;
 
+  /// No description provided for @gameUndoShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get gameUndoShort;
+
+  /// No description provided for @gameRedoShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Redo'**
+  String get gameRedoShort;
+
   /// No description provided for @gameMemoShort.
   ///
   /// In en, this message translates to:

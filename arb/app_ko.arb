@@ -77,6 +77,8 @@
     }
   },
   "gameHintShort": "힌트",
+  "gameUndoShort": "되돌리기",
+  "gameRedoShort": "다시실행",
   "gameMemoShort": "메모",
   "gameMemoOnShort": "메모 ON",
   "gameMemoStateOn": "ON",

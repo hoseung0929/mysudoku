@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -5,8 +7,6 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:mysudoku/l10n/app_locale_scope.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
-import 'package:mysudoku/services/level_progress_service.dart';
 import 'package:mysudoku/services/notification_service.dart';
 import 'package:mysudoku/theme/app_theme.dart';
 import 'package:mysudoku/theme/app_theme_scope.dart';
@@ -55,8 +55,6 @@ class _MySudokuAppState extends State<MySudokuApp> {
   }
 
   Future<void> _loadSavedPreferences() async {
-    await _notificationService.initialize();
-    await _notificationService.resyncFromStoredSettings();
     final prefs = await SharedPreferences.getInstance();
     final code = prefs.getString(_prefsLocaleKey);
     final themeCode = prefs.getString(_prefsThemeModeKey);
@@ -70,6 +68,19 @@ class _MySudokuAppState extends State<MySudokuApp> {
       _themeMode = _themeModeFromStorage(themeCode);
       _prefsLoaded = true;
     });
+
+    unawaited(_bootstrapNotificationState());
+  }
+
+  Future<void> _bootstrapNotificationState() async {
+    try {
+      await _notificationService.initialize();
+      await _notificationService.resyncFromStoredSettings();
+    } catch (e) {
+      if (kDebugMode) {
+        AppLogger.debug('알림 초기화 실패: $e');
+      }
+    }
   }
 
   static ThemeMode _themeModeFromStorage(String? code) {
@@ -159,33 +170,13 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final LevelProgressService _levelProgressService = LevelProgressService();
   int _selectedIndex = 0;
-  bool _isInitializingApp = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeAppData();
-  }
-
-  Future<void> _initializeAppData() async {
-    try {
-      await _levelProgressService.refreshAllLevels(SudokuLevel.levels);
-    } catch (e) {
-      AppLogger.debug('앱 초기 진행도 로드 실패: $e');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isInitializingApp = false;
-        });
-      }
-    }
-  }
+  final Set<int> _loadedTabs = <int>{0};
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+      _loadedTabs.add(index);
     });
   }
 
@@ -209,18 +200,14 @@ class _MyHomePageState extends State<MyHomePage> {
       child: Scaffold(
         extendBody: true,
         backgroundColor: Colors.transparent,
-        body: Stack(
-          children: [
-            IndexedStack(
-              index: _selectedIndex,
-              children: List.generate(3, _buildPage),
-            ),
-            if (_isInitializingApp)
-              const Align(
-                alignment: Alignment.topCenter,
-                child: LinearProgressIndicator(minHeight: 3),
-              ),
-          ],
+        body: IndexedStack(
+          index: _selectedIndex,
+          children: List.generate(
+            3,
+            (index) => _loadedTabs.contains(index)
+                ? _buildPage(index)
+                : const SizedBox.shrink(),
+          ),
         ),
         bottomNavigationBar: Material(
           color: Colors.transparent,

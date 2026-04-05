@@ -14,7 +14,6 @@ class ContinueGameSummary {
     required this.elapsedFilledCells,
     required this.lastPlayedAtMillis,
     required this.elapsedSeconds,
-    required this.hintsRemaining,
     required this.wrongCount,
     required this.isMemoMode,
     required this.noteCount,
@@ -26,7 +25,6 @@ class ContinueGameSummary {
   final int elapsedFilledCells;
   final int lastPlayedAtMillis;
   final int elapsedSeconds;
-  final int hintsRemaining;
   final int wrongCount;
   final bool isMemoMode;
   final int noteCount;
@@ -61,6 +59,7 @@ class HomeDashboardService {
     Future<Map<String, dynamic>?> Function(String levelName, int gameNumber)?
         loadGameEntry,
     Future<Map<String, dynamic>> Function()? loadOverallStatistics,
+    Future<List<Map<String, dynamic>>> Function()? loadRecentRecords,
   })  : _gameStateService = gameStateService ?? GameStateService(),
         _challengeProgressService =
             challengeProgressService ??
@@ -73,7 +72,12 @@ class HomeDashboardService {
             loadOverallStatistics ??
                 (achievementService != null && databaseHelper == null
                     ? (() async => const <String, dynamic>{})
-                    : (databaseHelper ?? DatabaseHelper()).getOverallStatistics);
+                    : (databaseHelper ?? DatabaseHelper()).getOverallStatistics),
+        _loadRecentRecords =
+            loadRecentRecords ??
+                (achievementService != null && databaseHelper == null
+                    ? (() async => const <Map<String, dynamic>>[])
+                    : (() => (databaseHelper ?? DatabaseHelper()).getRecentClearRecords(limit: 10000)));
 
   final GameStateService _gameStateService;
   final ChallengeProgressService _challengeProgressService;
@@ -81,17 +85,33 @@ class HomeDashboardService {
   final Future<Map<String, dynamic>?> Function(String levelName, int gameNumber)
       _loadGameEntry;
   final Future<Map<String, dynamic>> Function() _loadOverallStatistics;
+  final Future<List<Map<String, dynamic>>> Function() _loadRecentRecords;
 
   Future<HomeDashboardData> load(
     AppLocalizations l10n, {
     int continueGamesLimit = defaultContinueGamesLimit,
   }) async {
-    final continueGames = await loadContinueGames(limit: continueGamesLimit);
+    final continueGamesFuture = loadContinueGames(limit: continueGamesLimit);
+    final overallStatisticsFuture = _loadOverallStatistics();
+    final recentRecordsFuture = _loadRecentRecords();
+
+    final continueGames = await continueGamesFuture;
     final continueGame = continueGames.isEmpty ? null : continueGames.first;
-    final todayChallenge = await _loadTodayChallenge();
-    final challengeProgress = await _challengeProgressService.load();
-    final achievementSummary = await _achievementService.load(l10n);
-    final overallStatistics = await _loadOverallStatistics();
+    final overallStatistics = await overallStatisticsFuture;
+    final recentRecords = await recentRecordsFuture;
+    final challengeProgress = await _challengeProgressService.load(
+      recentRecords: recentRecords,
+    );
+    final achievementSummary = await _achievementService.loadFromData(
+      l10n,
+      overall: overallStatistics,
+      records: recentRecords,
+      progress: challengeProgress,
+    );
+    final todayChallenge = await _loadTodayChallenge(
+      levelName: challengeProgress.todayChallengeLevelName,
+      gameNumber: challengeProgress.todayChallengeGameNumber,
+    );
     final averageClearTimeSeconds =
         (overallStatistics['total_average_time'] as num?)?.round() ?? 0;
 
@@ -152,7 +172,6 @@ class HomeDashboardService {
         ),
         lastPlayedAtMillis: saved.lastPlayedAtMillis,
         elapsedSeconds: session.elapsedSeconds,
-        hintsRemaining: session.hintsRemaining,
         wrongCount: session.wrongCount,
         isMemoMode: session.isMemoMode,
         noteCount: _countNotes(session.notes),
@@ -166,13 +185,15 @@ class HomeDashboardService {
     return summaries;
   }
 
-  Future<SudokuGame> _loadTodayChallenge() async {
-    final target = await _challengeProgressService.getTodayChallengeTarget();
+  Future<SudokuGame> _loadTodayChallenge({
+    required String levelName,
+    required int gameNumber,
+  }) async {
     final level = SudokuLevel.levels.firstWhere(
-      (l) => l.name == target.levelName,
+      (l) => l.name == levelName,
       orElse: () => SudokuLevel.levels.first,
     );
-    final entry = await _loadGameEntry(target.levelName, target.gameNumber);
+    final entry = await _loadGameEntry(levelName, gameNumber);
     final board = entry?['board'] as List<List<int>>? ?? const [];
     final solution = entry?['solution'] as List<List<int>>? ?? const [];
 
@@ -180,8 +201,8 @@ class HomeDashboardService {
       board: board,
       solution: solution,
       emptyCells: level.emptyCells,
-      levelName: target.levelName,
-      gameNumber: target.gameNumber,
+      levelName: levelName,
+      gameNumber: gameNumber,
     );
   }
 

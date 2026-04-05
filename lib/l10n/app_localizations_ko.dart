@@ -229,6 +229,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gameHintShort => '힌트';
 
   @override
+  String get gameUndoShort => '되돌리기';
+
+  @override
+  String get gameRedoShort => '다시실행';
+
+  @override
   String get gameMemoShort => '메모';
 
   @override

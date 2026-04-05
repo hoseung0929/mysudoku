@@ -55,17 +55,6 @@ void main() {
       expect(controller.isSameNumber(0, 2), isFalse);
     });
 
-    test('applies hints and clears hint flag after manual overwrite', () {
-      controller.applyHint(0, 1);
-
-      expect(controller.getCellValue(0, 1), 3);
-      expect(controller.isHintNumber(0, 1), isTrue);
-
-      controller.setCellValue(0, 1, 4);
-
-      expect(controller.isHintNumber(0, 1), isFalse);
-    });
-
     test('updates wrong-number status from sudoku rule conflicts', () {
       controller.setCellValue(0, 1, 5);
       controller.updateWrongStatus(0, 1);
@@ -102,16 +91,104 @@ void main() {
       expect(controller.getCellNotes(0, 0), isEmpty);
     });
 
-    test('clears candidate notes when a value or hint is applied', () {
+    test('clears candidate notes when a value is applied', () {
       controller.toggleNote(0, 1, 3);
       controller.toggleNote(0, 1, 7);
 
       controller.setCellValue(0, 1, 4);
       expect(controller.getCellNotes(0, 1), isEmpty);
+    });
 
-      controller.toggleNote(0, 2, 4);
-      controller.applyHint(0, 2);
-      expect(controller.getCellNotes(0, 2), isEmpty);
+    test('undo reverts a cell value change and restores notes', () {
+      controller.toggleNote(0, 1, 3);
+      controller.toggleNote(0, 1, 7);
+      expect(controller.getCellNotes(0, 1), equals({3, 7}));
+
+      controller.setCellValue(0, 1, 4);
+      expect(controller.getCellValue(0, 1), 4);
+      expect(controller.getCellNotes(0, 1), isEmpty);
+
+      final action = controller.undoAction();
+      expect(action, isA<CellValueAction>());
+      expect(controller.getCellValue(0, 1), 0);
+      expect(controller.getCellNotes(0, 1), equals({3, 7}));
+    });
+
+    test('undo restores related notes that were cleared', () {
+      final boardWithEmpties = List.generate(
+        9,
+        (row) => List<int>.from(board[row]),
+      );
+      boardWithEmpties[1][1] = 0;
+      final localController = SudokuBoardController(
+        initialBoard: boardWithEmpties,
+        solution: solution,
+      );
+
+      localController.toggleNote(1, 1, 4);
+      localController.toggleNote(0, 2, 4);
+
+      localController.setCellValue(0, 1, 4);
+      expect(localController.getCellNotes(1, 1), isEmpty);
+      expect(localController.getCellNotes(0, 2), isEmpty);
+
+      localController.undoAction();
+      expect(localController.getCellValue(0, 1), 0);
+      expect(localController.getCellNotes(1, 1), equals({4}));
+      expect(localController.getCellNotes(0, 2), equals({4}));
+    });
+
+    test('redo re-applies the undone action', () {
+      controller.setCellValue(0, 1, 3);
+      expect(controller.getCellValue(0, 1), 3);
+
+      controller.undoAction();
+      expect(controller.getCellValue(0, 1), 0);
+      expect(controller.canRedo, isTrue);
+
+      controller.redoAction();
+      expect(controller.getCellValue(0, 1), 3);
+      expect(controller.canRedo, isFalse);
+    });
+
+    test('undo reverts a note toggle', () {
+      controller.toggleNote(0, 1, 5);
+      expect(controller.hasNote(0, 1, 5), isTrue);
+
+      final action = controller.undoAction();
+      expect(action, isA<NoteToggleAction>());
+      expect(controller.hasNote(0, 1, 5), isFalse);
+    });
+
+    test('new action clears the redo stack', () {
+      controller.setCellValue(0, 1, 3);
+      controller.undoAction();
+      expect(controller.canRedo, isTrue);
+
+      controller.setCellValue(0, 1, 4);
+      expect(controller.canRedo, isFalse);
+    });
+
+    test('canUndo and canRedo reflect stack state', () {
+      expect(controller.canUndo, isFalse);
+      expect(controller.canRedo, isFalse);
+
+      controller.setCellValue(0, 1, 3);
+      expect(controller.canUndo, isTrue);
+
+      controller.undoAction();
+      expect(controller.canUndo, isFalse);
+      expect(controller.canRedo, isTrue);
+    });
+
+    test('clearHistory empties both stacks', () {
+      controller.setCellValue(0, 1, 3);
+      controller.undoAction();
+      expect(controller.canRedo, isTrue);
+
+      controller.clearHistory();
+      expect(controller.canUndo, isFalse);
+      expect(controller.canRedo, isFalse);
     });
 
     test('removes matching candidate notes from related cells on value commit', () {
@@ -141,7 +218,7 @@ void main() {
       expect(localController.getCellNotes(4, 4), equals({4, 8}));
     });
 
-    test('removes matching candidate notes from related cells on hint apply', () {
+    test('removes matching candidate notes from column and box on value commit', () {
       final boardWithMoreEmpties = List.generate(
         9,
         (row) => List<int>.from(board[row]),
@@ -160,7 +237,7 @@ void main() {
       localController.toggleNote(4, 4, 4);
       localController.toggleNote(4, 4, 9);
 
-      localController.applyHint(0, 2);
+      localController.setCellValue(0, 2, 4);
 
       expect(localController.getCellNotes(0, 2), isEmpty);
       expect(localController.getCellNotes(0, 1), isEmpty);

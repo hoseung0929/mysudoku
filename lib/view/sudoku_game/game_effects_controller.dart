@@ -17,6 +17,7 @@ class GameEffectsController {
   Set<int> _completedRows = <int>{};
   Set<int> _completedCols = <int>{};
   Set<int> _completedBoxes = <int>{};
+  int _effectGeneration = 0;
 
   final Map<String, bool> _waveActive = <String, bool>{};
   final Map<String, bool> _lineCompleteActive = <String, bool>{};
@@ -25,6 +26,24 @@ class GameEffectsController {
   Map<String, bool> get waveActive => _waveActive;
   Map<String, bool> get lineCompleteActive => _lineCompleteActive;
   Map<String, bool> get errorActive => _errorActive;
+
+  void resetForBoard({
+    required List<List<int>> board,
+    required List<List<int>> solution,
+  }) {
+    _effectGeneration++;
+    _waveActive.clear();
+    _lineCompleteActive.clear();
+    _errorActive.clear();
+    initializeCompletedLineState(board: board, solution: solution);
+  }
+
+  void dispose() {
+    _effectGeneration++;
+    _waveActive.clear();
+    _lineCompleteActive.clear();
+    _errorActive.clear();
+  }
 
   void initializeCompletedLineState({
     required List<List<int>> board,
@@ -82,6 +101,7 @@ class GameEffectsController {
     required void Function(void Function()) setState,
     required bool Function() isMounted,
   }) {
+    final effectGeneration = _effectGeneration;
     const int waveSpeed = 30;
     const int returnDelay = 100;
 
@@ -112,7 +132,7 @@ class GameEffectsController {
         final distance = (r == row) ? (c - col).abs() : (r - row).abs();
         final delay = Duration(milliseconds: waveSpeed * distance);
         Future.delayed(delay, () {
-          if (!isMounted()) {
+          if (!isMounted() || effectGeneration != _effectGeneration) {
             return;
           }
           setState(() {
@@ -123,7 +143,7 @@ class GameEffectsController {
         final returnDelayTime =
             totalWaveTime + returnDelay + (waveSpeed * (maxDistance - distance));
         Future.delayed(Duration(milliseconds: returnDelayTime), () {
-          if (!isMounted()) {
+          if (!isMounted() || effectGeneration != _effectGeneration) {
             return;
           }
           setState(() {
@@ -140,13 +160,14 @@ class GameEffectsController {
     required void Function(void Function()) setState,
     required bool Function() isMounted,
   }) {
+    final effectGeneration = _effectGeneration;
     final key = '$row,$col';
     setState(() {
       _errorActive[key] = false;
     });
 
     Future<void>.delayed(Duration.zero, () {
-      if (!isMounted()) {
+      if (!isMounted() || effectGeneration != _effectGeneration) {
         return;
       }
       setState(() {
@@ -155,7 +176,7 @@ class GameEffectsController {
     });
 
     Future<void>.delayed(const Duration(milliseconds: 280), () {
-      if (!isMounted()) {
+      if (!isMounted() || effectGeneration != _effectGeneration) {
         return;
       }
       setState(() {
@@ -258,6 +279,7 @@ class GameEffectsController {
     required void Function(void Function()) setState,
     required bool Function() isMounted,
   }) {
+    final effectGeneration = _effectGeneration;
     final targets = <String>{};
     for (final row in rows) {
       for (int col = 0; col < 9; col++) {
@@ -289,7 +311,7 @@ class GameEffectsController {
     });
 
     Future.delayed(const Duration(milliseconds: 650), () {
-      if (!isMounted()) {
+      if (!isMounted() || effectGeneration != _effectGeneration) {
         return;
       }
       setState(() {
