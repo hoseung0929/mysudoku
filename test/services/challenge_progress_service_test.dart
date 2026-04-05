@@ -6,37 +6,36 @@ void main() {
   AppLogger.setMuted(true);
 
   group('ChallengeProgressService', () {
-    final service = ChallengeProgressService();
-
-    test('calculates consecutive streak from recent clear dates', () {
+    test('calculates consecutive streak from daily completion dates', () {
       final today = DateTime.now();
       String format(DateTime value) =>
           '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
 
-      final streak = service.calculateStreakFromRecords([
-        {'clear_date': format(today)},
-        {'clear_date': format(today.subtract(const Duration(days: 1)))},
-        {'clear_date': format(today.subtract(const Duration(days: 2)))},
-        {'clear_date': format(today.subtract(const Duration(days: 4)))},
+      final streak = ChallengeProgressService.calculateDailyChallengeStreakFromDates([
+        format(today),
+        format(today.subtract(const Duration(days: 1))),
+        format(today.subtract(const Duration(days: 2))),
+        format(today.subtract(const Duration(days: 4))),
       ]);
 
       expect(streak, 3);
     });
 
-    test('returns zero when latest clear is stale', () {
+    test('returns zero when latest completion is stale', () {
       final today = DateTime.now();
       String format(DateTime value) =>
           '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
 
-      final streak = service.calculateStreakFromRecords([
-        {'clear_date': format(today.subtract(const Duration(days: 3)))},
-        {'clear_date': format(today.subtract(const Duration(days: 4)))},
+      final streak = ChallengeProgressService.calculateDailyChallengeStreakFromDates([
+        format(today.subtract(const Duration(days: 3))),
+        format(today.subtract(const Duration(days: 4))),
       ]);
 
       expect(streak, 0);
     });
 
     test('counts weekly clears within the recent seven-day window', () {
+      final service = ChallengeProgressService();
       final today = DateTime.now();
       String format(DateTime value) =>
           '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
@@ -52,6 +51,7 @@ void main() {
     });
 
     test('counts only perfect clears inside the weekly window', () {
+      final service = ChallengeProgressService();
       final today = DateTime.now();
       String format(DateTime value) =>
           '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';

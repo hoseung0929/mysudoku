@@ -105,11 +105,11 @@ class AchievementService {
   Future<AchievementSummary> load(AppLocalizations l10n) async {
     final overall = await _loadOverallStatistics();
     final records = await _loadRecentRecords();
+    final progress = await _challengeProgressService.load();
 
     final totalCleared = overall['total_cleared'] as int? ?? 0;
-    final streakDays = _challengeProgressService.calculateStreakFromRecords(records);
-    final weeklyClearCount =
-        _challengeProgressService.calculateWeeklyClearCount(records);
+    final streakDays = progress.streakDays;
+    final weeklyClearCount = progress.weeklyClearCount;
     final hasPerfectClear = records.any((record) {
       return (record['wrong_count'] as int? ?? 0) == 0;
     });

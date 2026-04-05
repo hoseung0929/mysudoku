@@ -38,6 +38,12 @@ class ClearRecordRepository {
     }
   }
 
+  /// 모든 클리어 기록을 반환합니다 (백필·마이그레이션용).
+  Future<List<Map<String, dynamic>>> getAllClearRecords() async {
+    final db = await _dbManager.database;
+    return db.query('clear_records');
+  }
+
   /// 특정 레벨의 클리어 기록을 조회합니다.
   Future<List<Map<String, dynamic>>> getClearRecordsForLevel(
       String levelName) async {

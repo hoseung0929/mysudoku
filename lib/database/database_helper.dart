@@ -1,4 +1,5 @@
 import 'database_manager.dart';
+import 'daily_challenge_completion_repository.dart';
 import 'game_repository.dart';
 import 'clear_record_repository.dart';
 import 'statistics_repository.dart';
@@ -10,6 +11,8 @@ class DatabaseHelper {
 
   final GameRepository _gameRepository = GameRepository();
   final ClearRecordRepository _clearRecordRepository = ClearRecordRepository();
+  final DailyChallengeCompletionRepository _dailyChallengeCompletionRepository =
+      DailyChallengeCompletionRepository();
   final StatisticsRepository _statisticsRepository = StatisticsRepository();
 
   factory DatabaseHelper() => _instance;
@@ -104,6 +107,24 @@ class DatabaseHelper {
   /// 모든 클리어 기록을 삭제합니다.
   Future<void> clearAllRecords() async {
     await _clearRecordRepository.clearAllRecords();
+    await _dailyChallengeCompletionRepository.clearAll();
+  }
+
+  /// `clear_records` 전체 행 (백필용).
+  Future<List<Map<String, dynamic>>> getAllClearRecords() async {
+    return _clearRecordRepository.getAllClearRecords();
+  }
+
+  /// 오늘의 도전을 깬 로컬 일자를 기록합니다 (같은 날 중복은 무시).
+  Future<void> recordDailyChallengeCompletion(DateTime clearedAtLocal) async {
+    final d = DateTime(clearedAtLocal.year, clearedAtLocal.month, clearedAtLocal.day);
+    final dateStr =
+        '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    await _dailyChallengeCompletionRepository.addCompletionForDate(dateStr);
+  }
+
+  Future<bool> hasDailyChallengeCompletionForDate(String yyyyMmDd) async {
+    return _dailyChallengeCompletionRepository.hasCompletionForDate(yyyyMmDd);
   }
 
   /// 특정 레벨의 클리어 기록을 삭제합니다.

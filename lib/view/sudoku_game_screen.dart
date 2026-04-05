@@ -803,9 +803,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           enableMemoHighlights: _memoHighlightEnabled,
           enableSmartHintHighlights: _smartHintHighlightEnabled,
           onCellTapped: (row, col) {
-            setState(() {
-              _presenter.selectCell(row, col);
-            });
+            _presenter.selectCell(row, col);
           },
         ),
       ),
@@ -929,15 +927,14 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
 
     return ProgressiveBlurButton(
       onPressed: isEnabled
-          ? () async {
-              if (!_presenter.isMemoMode) {
-                await _vibrateOnNumberInput(number);
-              }
-
+          ? () {
               setState(() {
                 _memoFocusNumber = _presenter.isMemoMode ? number : null;
-                _presenter.setSelectedCellValue(number);
               });
+              if (!_presenter.isMemoMode) {
+                unawaited(_vibrateOnNumberInput(number));
+              }
+              _presenter.setSelectedCellValue(number);
             }
           : null,
       backgroundColor: effectiveBackgroundColor,

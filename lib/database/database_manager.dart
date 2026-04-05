@@ -76,7 +76,7 @@ class DatabaseManager {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onOpen: (db) async {
@@ -114,6 +114,12 @@ class DatabaseManager {
       )
     ''');
 
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS daily_challenge_completions(
+        completion_date TEXT PRIMARY KEY NOT NULL
+      )
+    ''');
+
     // 초기 게임 데이터 삽입
     await _insertInitialGames(
       db,
@@ -135,6 +141,13 @@ class DatabaseManager {
           wrong_count INTEGER NOT NULL,
           clear_date TEXT NOT NULL,
           UNIQUE(level_name, game_number)
+        )
+      ''');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS daily_challenge_completions(
+          completion_date TEXT PRIMARY KEY NOT NULL
         )
       ''');
     }

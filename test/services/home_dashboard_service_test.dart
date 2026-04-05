@@ -11,10 +11,12 @@ void main() {
 
   group('HomeDashboardService', () {
     test('builds continue summary from saved session details', () async {
+      final challengeFake = _FakeChallengeProgressService();
       final service = HomeDashboardService(
         gameStateService: _FakeGameStateService(),
-        challengeProgressService: _FakeChallengeProgressService(),
+        challengeProgressService: challengeFake,
         achievementService: AchievementService(
+          challengeProgressService: challengeFake,
           loadOverallStatistics: () async => const {
             'total_cleared': 0,
             'total_games': 1,
@@ -48,7 +50,6 @@ void main() {
             ],
           };
         },
-        loadGameCount: (levelName) async => 1,
       );
 
       final data = await service.load(AppLocalizationsEn());
@@ -184,5 +185,10 @@ class _FakeChallengeProgressService extends ChallengeProgressService {
       weeklyGoalTarget: 5,
       perfectClearCount: 0,
     );
+  }
+
+  @override
+  Future<TodayChallengeTarget> getTodayChallengeTarget() async {
+    return const TodayChallengeTarget(levelName: '초급', gameNumber: 1);
   }
 }

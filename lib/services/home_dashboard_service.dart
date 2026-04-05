@@ -60,7 +60,6 @@ class HomeDashboardService {
     AchievementService? achievementService,
     Future<Map<String, dynamic>?> Function(String levelName, int gameNumber)?
         loadGameEntry,
-    Future<int> Function(String levelName)? loadGameCount,
     Future<Map<String, dynamic>> Function()? loadOverallStatistics,
   })  : _gameStateService = gameStateService ?? GameStateService(),
         _challengeProgressService =
@@ -70,8 +69,6 @@ class HomeDashboardService {
             achievementService ?? AchievementService(databaseHelper: databaseHelper),
         _loadGameEntry =
             loadGameEntry ?? (databaseHelper ?? DatabaseHelper()).getGameEntry,
-        _loadGameCount =
-            loadGameCount ?? (databaseHelper ?? DatabaseHelper()).getGameCount,
         _loadOverallStatistics =
             loadOverallStatistics ??
                 (achievementService != null && databaseHelper == null
@@ -83,7 +80,6 @@ class HomeDashboardService {
   final AchievementService _achievementService;
   final Future<Map<String, dynamic>?> Function(String levelName, int gameNumber)
       _loadGameEntry;
-  final Future<int> Function(String levelName) _loadGameCount;
   final Future<Map<String, dynamic>> Function() _loadOverallStatistics;
 
   Future<HomeDashboardData> load(
@@ -171,16 +167,12 @@ class HomeDashboardService {
   }
 
   Future<SudokuGame> _loadTodayChallenge() async {
-    final levelIndex = DateTime.now().difference(DateTime(2024, 1, 1)).inDays %
-        SudokuLevel.levels.length;
-    final level = SudokuLevel.levels[levelIndex];
-    final gameCount = await _loadGameCount(level.name);
-    final safeGameCount = gameCount == 0 ? 1 : gameCount;
-    final gameNumber =
-        (DateTime.now().difference(DateTime(2024, 1, 1)).inDays % safeGameCount) +
-            1;
-
-    final entry = await _loadGameEntry(level.name, gameNumber);
+    final target = await _challengeProgressService.getTodayChallengeTarget();
+    final level = SudokuLevel.levels.firstWhere(
+      (l) => l.name == target.levelName,
+      orElse: () => SudokuLevel.levels.first,
+    );
+    final entry = await _loadGameEntry(target.levelName, target.gameNumber);
     final board = entry?['board'] as List<List<int>>? ?? const [];
     final solution = entry?['solution'] as List<List<int>>? ?? const [];
 
@@ -188,8 +180,8 @@ class HomeDashboardService {
       board: board,
       solution: solution,
       emptyCells: level.emptyCells,
-      levelName: level.name,
-      gameNumber: gameNumber,
+      levelName: target.levelName,
+      gameNumber: target.gameNumber,
     );
   }
 

@@ -4,6 +4,15 @@ import 'package:mysudoku/services/achievement_service.dart';
 import 'package:mysudoku/services/challenge_progress_service.dart';
 import 'package:mysudoku/utils/app_logger.dart';
 
+class _FixedChallengeProgressService extends ChallengeProgressService {
+  _FixedChallengeProgressService(this._summary);
+
+  final ChallengeProgressSummary _summary;
+
+  @override
+  Future<ChallengeProgressSummary> load() async => _summary;
+}
+
 void main() {
   AppLogger.setMuted(true);
   final l10nKo = AppLocalizationsKo();
@@ -15,7 +24,18 @@ void main() {
           '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
 
       final service = AchievementService(
-        challengeProgressService: ChallengeProgressService(),
+        challengeProgressService: _FixedChallengeProgressService(
+          const ChallengeProgressSummary(
+            streakDays: 5,
+            isTodayChallengeCleared: false,
+            todayChallengeLevelName: '초급',
+            todayChallengeGameNumber: 1,
+            lastClearDate: null,
+            weeklyClearCount: 5,
+            weeklyGoalTarget: 5,
+            perfectClearCount: 0,
+          ),
+        ),
         loadOverallStatistics: () async => {
           'total_cleared': 7,
         },
@@ -40,7 +60,18 @@ void main() {
           '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
 
       final service = AchievementService(
-        challengeProgressService: ChallengeProgressService(),
+        challengeProgressService: _FixedChallengeProgressService(
+          const ChallengeProgressSummary(
+            streakDays: 0,
+            isTodayChallengeCleared: false,
+            todayChallengeLevelName: '초급',
+            todayChallengeGameNumber: 1,
+            lastClearDate: null,
+            weeklyClearCount: 0,
+            weeklyGoalTarget: 5,
+            perfectClearCount: 0,
+          ),
+        ),
         loadOverallStatistics: () async => {
           'total_cleared': 0,
         },

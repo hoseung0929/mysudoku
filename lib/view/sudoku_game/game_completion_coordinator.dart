@@ -2,6 +2,7 @@ import 'package:mysudoku/l10n/app_localizations.dart';
 import 'package:mysudoku/model/sudoku_game.dart';
 import 'package:mysudoku/model/sudoku_game_set.dart';
 import 'package:mysudoku/model/sudoku_level.dart';
+import 'package:mysudoku/database/database_helper.dart';
 import 'package:mysudoku/services/achievement_service.dart';
 import 'package:mysudoku/services/challenge_progress_service.dart';
 import 'package:mysudoku/services/game_record_service.dart';
@@ -27,16 +28,19 @@ class GameCompletionCoordinator {
     ChallengeProgressService? challengeProgressService,
     AchievementService? achievementService,
     NotificationService? notificationService,
+    DatabaseHelper? databaseHelper,
   })  : _gameRecordService = gameRecordService ?? GameRecordService(),
         _challengeProgressService =
             challengeProgressService ?? ChallengeProgressService(),
         _achievementService = achievementService ?? AchievementService(),
-        _notificationService = notificationService ?? NotificationService();
+        _notificationService = notificationService ?? NotificationService(),
+        _databaseHelper = databaseHelper ?? DatabaseHelper();
 
   final GameRecordService _gameRecordService;
   final ChallengeProgressService _challengeProgressService;
   final AchievementService _achievementService;
   final NotificationService _notificationService;
+  final DatabaseHelper _databaseHelper;
 
   Future<GameCompletionData> prepare({
     required AppLocalizations l10n,
@@ -53,6 +57,13 @@ class GameCompletionCoordinator {
       clearTime: clearTimeSeconds,
       wrongCount: wrongCount,
     );
+    final isTodayChallenge = await _challengeProgressService.isTodayChallenge(
+      levelName: level.name,
+      gameNumber: game.gameNumber,
+    );
+    if (isTodayChallenge) {
+      await _databaseHelper.recordDailyChallengeCompletion(DateTime.now());
+    }
     final afterAchievements = await _achievementService.load(l10n);
     final newlyUnlockedBadges = _achievementService.getNewlyUnlockedBadges(
       before: beforeAchievements,
@@ -60,10 +71,6 @@ class GameCompletionCoordinator {
     );
     final challengeAfter = await _challengeProgressService.load();
 
-    final isTodayChallenge = await _challengeProgressService.isTodayChallenge(
-      levelName: level.name,
-      gameNumber: game.gameNumber,
-    );
     await _notificationService.showGameCompleteNotification(
       levelName: level.name,
       gameNumber: game.gameNumber,
