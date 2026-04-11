@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mysudoku/model/today_challenge_target.dart';
 import 'package:mysudoku/services/challenge_progress_service.dart';
+import 'package:mysudoku/services/remote_puzzle_service.dart';
 import 'package:mysudoku/utils/app_logger.dart';
 
 void main() {
@@ -65,5 +67,52 @@ void main() {
 
       expect(perfectCount, 2);
     });
+
+    test('selects an existing challenge game number when numbering has holes', () async {
+      final service = ChallengeProgressService(
+        loadGameNumbersForLevel: (levelName) async {
+          if (levelName == '초급') {
+            return [1, 3, 7];
+          }
+          return [1];
+        },
+      );
+
+      final target = await service.getChallengeTargetForCalendarDay(
+        DateTime(2026, 4, 10),
+      );
+
+      expect(target.levelName, '초급');
+      expect([1, 3, 7], contains(target.gameNumber));
+    });
+
+    test('uses remote daily challenge when remote catalog is active', () async {
+      final service = ChallengeProgressService(
+        remotePuzzleService: _FakeRemotePuzzleService(
+          target: const TodayChallengeTarget(levelName: '마스터', gameNumber: 42),
+        ),
+        shouldUseRemoteDailyChallenge: () async => true,
+      );
+
+      final target = await service.getChallengeTargetForCalendarDay(
+        DateTime(2026, 4, 12),
+      );
+
+      expect(target.levelName, '마스터');
+      expect(target.gameNumber, 42);
+    });
   });
+}
+
+class _FakeRemotePuzzleService extends RemotePuzzleService {
+  _FakeRemotePuzzleService({required this.target}) : super(baseUrl: 'https://example.com');
+
+  final TodayChallengeTarget target;
+
+  @override
+  Future<TodayChallengeTarget?> fetchDailyChallengeTarget({
+    required DateTime date,
+  }) async {
+    return target;
+  }
 }

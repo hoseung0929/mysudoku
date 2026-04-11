@@ -1,6 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:mysudoku/services/app_settings_service.dart';
+import 'package:mysudoku/services/firebase_identity_service.dart';
+import 'package:mysudoku/services/game_state_service.dart';
 import 'package:mysudoku/services/notification_service.dart';
+
+class CloudAccountState {
+  const CloudAccountState({
+    required this.isAvailable,
+    required this.isSignedIn,
+    required this.isAnonymous,
+    this.email,
+    this.uid,
+  });
+
+  const CloudAccountState.unavailable()
+      : isAvailable = false,
+        isSignedIn = false,
+        isAnonymous = false,
+        email = null,
+        uid = null;
+
+  final bool isAvailable;
+  final bool isSignedIn;
+  final bool isAnonymous;
+  final String? email;
+  final String? uid;
+
+  bool get isCrossDeviceReady => isAvailable && isSignedIn && !isAnonymous;
+
+  String? get identifier => email ?? uid;
+
+  factory CloudAccountState.fromIdentity(FirebaseIdentityStatus status) {
+    return CloudAccountState(
+      isAvailable: status.isAvailable,
+      isSignedIn: status.isSignedIn,
+      isAnonymous: status.isAnonymous,
+      email: status.email,
+      uid: status.uid,
+    );
+  }
+}
 
 class SettingsState {
   const SettingsState({
@@ -13,6 +52,7 @@ class SettingsState {
     required this.oneHandModeEnabled,
     required this.memoHighlightEnabled,
     required this.notificationTime,
+    required this.cloudAccount,
   });
 
   final bool isVibrationEnabled;
@@ -24,6 +64,7 @@ class SettingsState {
   final bool oneHandModeEnabled;
   final bool memoHighlightEnabled;
   final TimeOfDay notificationTime;
+  final CloudAccountState cloudAccount;
 
   SettingsState copyWith({
     bool? isVibrationEnabled,
@@ -35,6 +76,7 @@ class SettingsState {
     bool? oneHandModeEnabled,
     bool? memoHighlightEnabled,
     TimeOfDay? notificationTime,
+    CloudAccountState? cloudAccount,
   }) {
     return SettingsState(
       isVibrationEnabled: isVibrationEnabled ?? this.isVibrationEnabled,
@@ -51,6 +93,7 @@ class SettingsState {
       memoHighlightEnabled:
           memoHighlightEnabled ?? this.memoHighlightEnabled,
       notificationTime: notificationTime ?? this.notificationTime,
+      cloudAccount: cloudAccount ?? this.cloudAccount,
     );
   }
 
@@ -67,6 +110,7 @@ class SettingsState {
       hour: NotificationService.defaultReminderHour,
       minute: NotificationService.defaultReminderMinute,
     ),
+    cloudAccount: CloudAccountState.unavailable(),
   );
 }
 
@@ -74,11 +118,17 @@ class SettingsController {
   SettingsController({
     AppSettingsService? settingsService,
     NotificationService? notificationService,
+    FirebaseIdentityService? identityService,
+    GameStateService? gameStateService,
   })  : _settingsService = settingsService ?? AppSettingsService(),
-        _notificationService = notificationService ?? NotificationService();
+        _notificationService = notificationService ?? NotificationService(),
+        _identityService = identityService ?? FirebaseIdentityService(),
+        _gameStateService = gameStateService ?? GameStateService();
 
   final AppSettingsService _settingsService;
   final NotificationService _notificationService;
+  final FirebaseIdentityService _identityService;
+  final GameStateService _gameStateService;
 
   Future<SettingsState> load() async {
     final notificationsEnabled = await _settingsService.getBool(
@@ -121,6 +171,9 @@ class SettingsController {
       AppSettingsService.memoHighlightEnabledKey,
       defaultValue: true,
     );
+    final cloudAccount = CloudAccountState.fromIdentity(
+      await _identityService.loadStatus(),
+    );
 
     return SettingsState(
       notificationsEnabled: notificationsEnabled,
@@ -135,6 +188,57 @@ class SettingsController {
       keepScreenAwake: keepScreenAwake,
       oneHandModeEnabled: oneHandModeEnabled,
       memoHighlightEnabled: memoHighlightEnabled,
+      cloudAccount: cloudAccount,
+    );
+  }
+
+  Future<SettingsState> refreshCloudAccount(SettingsState state) async {
+    return state.copyWith(
+      cloudAccount: CloudAccountState.fromIdentity(
+        await _identityService.loadStatus(),
+      ),
+    );
+  }
+
+  Future<SettingsState> signInWithEmail(
+    SettingsState state, {
+    required String email,
+    required String password,
+  }) async {
+    final status = await _identityService.signInWithEmail(
+      email: email,
+      password: password,
+    );
+    await _gameStateService.syncBidirectional();
+    return state.copyWith(
+      cloudAccount: CloudAccountState.fromIdentity(status),
+    );
+  }
+
+  Future<SettingsState> createCloudAccount(
+    SettingsState state, {
+    required String email,
+    required String password,
+  }) async {
+    final status = await _identityService.createOrLinkWithEmail(
+      email: email,
+      password: password,
+    );
+    await _gameStateService.syncBidirectional();
+    return state.copyWith(
+      cloudAccount: CloudAccountState.fromIdentity(status),
+    );
+  }
+
+  Future<SettingsState> syncCloudProgress(SettingsState state) async {
+    await _gameStateService.syncBidirectional();
+    return refreshCloudAccount(state);
+  }
+
+  Future<SettingsState> signOutCloudAccount(SettingsState state) async {
+    final status = await _identityService.signOut();
+    return state.copyWith(
+      cloudAccount: CloudAccountState.fromIdentity(status),
     );
   }
 

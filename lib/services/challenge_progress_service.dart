@@ -2,7 +2,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:mysudoku/database/daily_challenge_completion_repository.dart';
 import 'package:mysudoku/database/database_helper.dart';
+import 'package:mysudoku/database/database_manager.dart';
 import 'package:mysudoku/model/sudoku_level.dart';
+import 'package:mysudoku/model/today_challenge_target.dart';
+import 'package:mysudoku/services/firestore_puzzle_service.dart';
+import 'package:mysudoku/services/remote_puzzle_service.dart';
 
 class ChallengeProgressSummary {
   const ChallengeProgressSummary({
@@ -34,14 +38,37 @@ class ChallengeProgressService {
   ChallengeProgressService({
     DatabaseHelper? databaseHelper,
     DailyChallengeCompletionRepository? dailyChallengeCompletionRepository,
+    Future<List<int>> Function(String levelName)? loadGameNumbersForLevel,
+    FirestorePuzzleService? firestorePuzzleService,
+    RemotePuzzleService? remotePuzzleService,
+    Future<bool> Function()? shouldUseRemoteDailyChallenge,
   })  : _databaseHelper = databaseHelper ?? DatabaseHelper(),
         _dailyRepo =
-            dailyChallengeCompletionRepository ?? DailyChallengeCompletionRepository();
+            dailyChallengeCompletionRepository ?? DailyChallengeCompletionRepository(),
+        _loadGameNumbersForLevel =
+            loadGameNumbersForLevel ??
+                (databaseHelper ?? DatabaseHelper()).getGameNumbersForLevel,
+        _firestorePuzzleService =
+            firestorePuzzleService ?? FirestorePuzzleService(),
+        _remotePuzzleService = remotePuzzleService ?? RemotePuzzleService(),
+        _shouldUseRemoteDailyChallenge =
+            shouldUseRemoteDailyChallenge ??
+                (() async {
+                  try {
+                    return await DatabaseManager().isRemoteCatalogActive();
+                  } catch (_) {
+                    return false;
+                  }
+                });
 
   static const _backfillPrefsKey = 'daily_challenge_backfill_v1';
 
   final DatabaseHelper _databaseHelper;
   final DailyChallengeCompletionRepository _dailyRepo;
+  final Future<List<int>> Function(String levelName) _loadGameNumbersForLevel;
+  final FirestorePuzzleService _firestorePuzzleService;
+  final RemotePuzzleService _remotePuzzleService;
+  final Future<bool> Function() _shouldUseRemoteDailyChallenge;
 
   static String formatLocalDate(DateTime date) {
     final d = DateTime(date.year, date.month, date.day);
@@ -135,14 +162,36 @@ class ChallengeProgressService {
   Future<TodayChallengeTarget> getChallengeTargetForCalendarDay(
     DateTime calendarDay,
   ) async {
+    if (await _shouldUseRemoteDailyChallenge()) {
+      final firestoreTarget =
+          await _firestorePuzzleService.fetchDailyChallengeTarget(
+        date: calendarDay,
+      );
+      if (firestoreTarget != null) {
+        return firestoreTarget;
+      }
+      if (_remotePuzzleService.isConfigured) {
+        final remoteTarget = await _remotePuzzleService.fetchDailyChallengeTarget(
+          date: calendarDay,
+        );
+        if (remoteTarget != null) {
+          return remoteTarget;
+        }
+      }
+    }
+
     final dayOnly = DateTime(calendarDay.year, calendarDay.month, calendarDay.day);
     final epoch = DateTime(2024, 1, 1);
     final daysSinceEpoch = dayOnly.difference(epoch).inDays;
     final levelIndex = daysSinceEpoch % SudokuLevel.levels.length;
     final level = SudokuLevel.levels[levelIndex];
-    final gameCount = await _databaseHelper.getGameCount(level.name);
-    final safeGameCount = gameCount == 0 ? 1 : gameCount;
-    final gameNumber = (daysSinceEpoch % safeGameCount) + 1;
+    final gameNumbers = await _loadGameNumbersForLevel(level.name);
+    final safeGameNumbers = gameNumbers.where((gameNumber) => gameNumber > 0).toList()
+      ..sort();
+    final gameNumber =
+        safeGameNumbers.isEmpty
+            ? 1
+            : safeGameNumbers[daysSinceEpoch % safeGameNumbers.length];
 
     return TodayChallengeTarget(
       levelName: level.name,
@@ -195,14 +244,4 @@ class ChallengeProgressService {
 
   static DateTime _dateOnly(DateTime date) =>
       DateTime(date.year, date.month, date.day);
-}
-
-class TodayChallengeTarget {
-  const TodayChallengeTarget({
-    required this.levelName,
-    required this.gameNumber,
-  });
-
-  final String levelName;
-  final int gameNumber;
 }

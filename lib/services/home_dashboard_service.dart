@@ -5,6 +5,7 @@ import 'package:mysudoku/model/sudoku_level.dart';
 import 'package:mysudoku/services/achievement_service.dart';
 import 'package:mysudoku/services/challenge_progress_service.dart';
 import 'package:mysudoku/services/game_state_service.dart';
+import 'package:mysudoku/utils/sudoku_generator.dart';
 
 class ContinueGameSummary {
   const ContinueGameSummary({
@@ -58,6 +59,8 @@ class HomeDashboardService {
     AchievementService? achievementService,
     Future<Map<String, dynamic>?> Function(String levelName, int gameNumber)?
         loadGameEntry,
+    Future<List<Map<String, dynamic>>> Function(String levelName)?
+        loadGameEntriesForLevel,
     Future<Map<String, dynamic>> Function()? loadOverallStatistics,
     Future<List<Map<String, dynamic>>> Function()? loadRecentRecords,
   })  : _gameStateService = gameStateService ?? GameStateService(),
@@ -68,6 +71,9 @@ class HomeDashboardService {
             achievementService ?? AchievementService(databaseHelper: databaseHelper),
         _loadGameEntry =
             loadGameEntry ?? (databaseHelper ?? DatabaseHelper()).getGameEntry,
+        _loadGameEntriesForLevel =
+            loadGameEntriesForLevel ??
+                (databaseHelper ?? DatabaseHelper()).getGameEntriesForLevel,
         _loadOverallStatistics =
             loadOverallStatistics ??
                 (achievementService != null && databaseHelper == null
@@ -84,6 +90,8 @@ class HomeDashboardService {
   final AchievementService _achievementService;
   final Future<Map<String, dynamic>?> Function(String levelName, int gameNumber)
       _loadGameEntry;
+  final Future<List<Map<String, dynamic>>> Function(String levelName)
+      _loadGameEntriesForLevel;
   final Future<Map<String, dynamic>> Function() _loadOverallStatistics;
   final Future<List<Map<String, dynamic>>> Function() _loadRecentRecords;
 
@@ -146,7 +154,10 @@ class HomeDashboardService {
       }
       final board = entry['board'] as List<List<int>>;
       final solution = entry['solution'] as List<List<int>>;
-      if (board.isEmpty || solution.isEmpty) {
+      if (!_isPlayableBoard(board) || !_isPlayableBoard(solution)) {
+        continue;
+      }
+      if (!_isPlayableBoard(session.board)) {
         continue;
       }
 
@@ -193,13 +204,33 @@ class HomeDashboardService {
       (l) => l.name == levelName,
       orElse: () => SudokuLevel.levels.first,
     );
-    final entry = await _loadGameEntry(levelName, gameNumber);
-    final board = entry?['board'] as List<List<int>>? ?? const [];
-    final solution = entry?['solution'] as List<List<int>>? ?? const [];
+    final directMatch = await _loadPlayableEntry(levelName, gameNumber);
+    if (directMatch != null) {
+      return _gameFromEntry(
+        level: level,
+        levelName: levelName,
+        gameNumber: gameNumber,
+        entry: directMatch,
+      );
+    }
 
+    final sameLevelEntries = await _loadGameEntriesForLevel(levelName);
+    final fallbackEntry = _firstPlayableEntry(sameLevelEntries);
+    if (fallbackEntry != null) {
+      final fallbackGameNumber = fallbackEntry['game_number'] as int? ?? gameNumber;
+      return _gameFromEntry(
+        level: level,
+        levelName: levelName,
+        gameNumber: fallbackGameNumber,
+        entry: fallbackEntry,
+      );
+    }
+
+    final emergencyBoard = SudokuGenerator.generateSudoku(level.emptyCells);
+    final emergencySolution = SudokuGenerator.getSolution(emergencyBoard);
     return SudokuGame(
-      board: board,
-      solution: solution,
+      board: emergencyBoard,
+      solution: emergencySolution,
       emptyCells: level.emptyCells,
       levelName: levelName,
       gameNumber: gameNumber,
@@ -249,5 +280,67 @@ class HomeDashboardService {
       }
     }
     return count;
+  }
+
+  Future<Map<String, dynamic>?> _loadPlayableEntry(
+    String levelName,
+    int gameNumber,
+  ) async {
+    final entry = await _loadGameEntry(levelName, gameNumber);
+    if (entry == null) {
+      return null;
+    }
+
+    final board = entry['board'] as List<List<int>>?;
+    final solution = entry['solution'] as List<List<int>>?;
+    if (board == null || solution == null) {
+      return null;
+    }
+    if (!_isPlayableBoard(board) || !_isPlayableBoard(solution)) {
+      return null;
+    }
+
+    return entry;
+  }
+
+  Map<String, dynamic>? _firstPlayableEntry(List<Map<String, dynamic>> entries) {
+    for (final entry in entries) {
+      final board = entry['board'] as List<List<int>>?;
+      final solution = entry['solution'] as List<List<int>>?;
+      if (board == null || solution == null) {
+        continue;
+      }
+      if (_isPlayableBoard(board) && _isPlayableBoard(solution)) {
+        return entry;
+      }
+    }
+    return null;
+  }
+
+  SudokuGame _gameFromEntry({
+    required SudokuLevel level,
+    required String levelName,
+    required int gameNumber,
+    required Map<String, dynamic> entry,
+  }) {
+    return SudokuGame(
+      board: entry['board'] as List<List<int>>,
+      solution: entry['solution'] as List<List<int>>,
+      emptyCells: level.emptyCells,
+      levelName: levelName,
+      gameNumber: gameNumber,
+    );
+  }
+
+  bool _isPlayableBoard(List<List<int>> board) {
+    if (board.length != 9) {
+      return false;
+    }
+    for (final row in board) {
+      if (row.length != 9) {
+        return false;
+      }
+    }
+    return true;
   }
 }

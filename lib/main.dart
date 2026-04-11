@@ -7,6 +7,9 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:mysudoku/l10n/app_locale_scope.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
+import 'package:mysudoku/services/firebase_bootstrap_service.dart';
+import 'package:mysudoku/services/firebase_identity_service.dart';
+import 'package:mysudoku/services/game_state_service.dart';
 import 'package:mysudoku/services/notification_service.dart';
 import 'package:mysudoku/theme/app_theme.dart';
 import 'package:mysudoku/theme/app_theme_scope.dart';
@@ -22,6 +25,10 @@ const String _prefsThemeModeKey = 'app_theme_mode';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await FirebaseBootstrapService.instance.initialize();
+  await FirebaseIdentityService().ensureSignedIn();
+  await GameStateService().syncBidirectional();
 
   if (kDebugMode) {
     try {

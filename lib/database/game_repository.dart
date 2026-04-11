@@ -110,4 +110,21 @@ class GameRepository {
 
     return Sqflite.firstIntValue(result) ?? 0;
   }
+
+  /// 특정 레벨에 실제로 존재하는 게임 번호 목록을 반환합니다.
+  Future<List<int>> getGameNumbersForLevel(String levelName) async {
+    final db = await _dbManager.database;
+    final maps = await db.query(
+      'games',
+      columns: ['game_number'],
+      where: 'level_name = ?',
+      whereArgs: [levelName],
+      orderBy: 'game_number ASC',
+    );
+
+    return maps
+        .map((map) => map['game_number'] as int)
+        .where((gameNumber) => gameNumber > 0)
+        .toList();
+  }
 }

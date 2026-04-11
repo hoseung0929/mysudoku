@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mysudoku/services/cloud_game_sync_service.dart';
 import 'package:mysudoku/services/game_state_service.dart';
 import 'package:mysudoku/utils/app_logger.dart';
 import 'package:mysudoku/utils/board_codec.dart';
@@ -10,17 +11,19 @@ void main() {
 
   group('GameStateService', () {
     late GameStateService service;
+    late _FakeCloudGameSyncService cloudSyncService;
 
     setUp(() {
       SharedPreferences.setMockInitialValues({});
-      service = GameStateService();
+      cloudSyncService = _FakeCloudGameSyncService();
+      service = GameStateService(cloudSyncService: cloudSyncService);
     });
 
     test('saves and loads board state', () async {
       const levelName = '초급';
       const gameNumber = 7;
       final board =
-          List.generate(9, (row) => List.generate(9, (col) => row + col));
+          List.generate(9, (row) => List.generate(9, (col) => (row + col) % 10));
 
       await service.saveBoard(
         levelName: levelName,
@@ -122,7 +125,7 @@ void main() {
       SharedPreferences.setMockInitialValues({
         'game_${levelName}_$gameNumber': BoardCodec.encode(board),
       });
-      service = GameStateService();
+      service = GameStateService(cloudSyncService: cloudSyncService);
 
       final restored = await service.loadSession(
         levelName: levelName,
@@ -160,5 +163,121 @@ void main() {
 
       expect(isCompatible, isFalse);
     });
+
+    test('drops corrupted session payloads during load', () async {
+      const levelName = '초급';
+      const gameNumber = 9;
+      SharedPreferences.setMockInitialValues({
+        'game_${levelName}_$gameNumber': '{"board":[[1,2,3]],"notes":[]}',
+      });
+      service = GameStateService();
+
+      final restored = await service.loadSession(
+        levelName: levelName,
+        gameNumber: gameNumber,
+      );
+
+      expect(restored, isNull);
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('game_${levelName}_$gameNumber'), isNull);
+    });
+
+    test('uploads local saves to cloud sync service', () async {
+      await service.saveSession(
+        levelName: '초급',
+        gameNumber: 1,
+        board: List.generate(9, (_) => List.filled(9, 0)),
+        notes: List.generate(9, (_) => List.generate(9, (_) => <int>{})),
+        elapsedSeconds: 10,
+        hintsRemaining: 3,
+        wrongCount: 0,
+        isMemoMode: false,
+      );
+
+      await Future<void>.delayed(Duration.zero);
+
+      expect(cloudSyncService.upserts, hasLength(1));
+      expect(cloudSyncService.upserts.first.levelName, '초급');
+      expect(cloudSyncService.upserts.first.gameNumber, 1);
+    });
+
+    test('hydrates newer cloud saves into local storage', () async {
+      cloudSyncService.fetchedSaves = [
+        CloudGameSavePayload(
+          levelName: '중급',
+          gameNumber: 4,
+          board: List.generate(9, (_) => List.filled(9, 0)),
+          notes: List.generate(9, (_) => List.generate(9, (_) => <int>{})),
+          elapsedSeconds: 33,
+          hintsRemaining: 2,
+          wrongCount: 1,
+          isMemoMode: true,
+          hintCells: const {'0,0'},
+          isGameComplete: false,
+          isGameOver: false,
+          updatedAtMillis: 999,
+        ),
+      ];
+
+      await service.syncFromCloud();
+
+      final restored = await service.loadSession(
+        levelName: '중급',
+        gameNumber: 4,
+      );
+
+      expect(restored, isNotNull);
+      expect(restored!.elapsedSeconds, 33);
+      expect(restored.hintsRemaining, 2);
+      expect(restored.isMemoMode, isTrue);
+    });
+
+    test('syncs local saves back to cloud after pull', () async {
+      await service.saveSession(
+        levelName: '초급',
+        gameNumber: 8,
+        board: List.generate(9, (_) => List.filled(9, 0)),
+        notes: List.generate(9, (_) => List.generate(9, (_) => <int>{})),
+        elapsedSeconds: 77,
+        hintsRemaining: 1,
+        wrongCount: 2,
+        isMemoMode: false,
+      );
+
+      await Future<void>.delayed(Duration.zero);
+      cloudSyncService.upserts.clear();
+
+      await service.syncBidirectional();
+
+      expect(cloudSyncService.upserts, hasLength(1));
+      expect(cloudSyncService.upserts.first.levelName, '초급');
+      expect(cloudSyncService.upserts.first.gameNumber, 8);
+      expect(cloudSyncService.upserts.first.elapsedSeconds, 77);
+    });
   });
+}
+
+class _FakeCloudGameSyncService implements CloudGameSyncService {
+  final List<CloudGameSavePayload> upserts = [];
+  final List<String> deletions = [];
+  List<CloudGameSavePayload> fetchedSaves = [];
+
+  @override
+  Future<void> deleteSave({
+    required String levelName,
+    required int gameNumber,
+  }) async {
+    deletions.add('${levelName}_$gameNumber');
+  }
+
+  @override
+  Future<List<CloudGameSavePayload>> fetchSaves() async {
+    return fetchedSaves;
+  }
+
+  @override
+  Future<void> upsertSave(CloudGameSavePayload payload) async {
+    upserts.add(payload);
+  }
 }

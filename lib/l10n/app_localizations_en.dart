@@ -45,7 +45,117 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSectionGame => 'Game';
 
   @override
+  String get settingsSectionCloud => 'Cloud save';
+
+  @override
   String get settingsSectionInfo => 'About';
+
+  @override
+  String get settingsCloudAccountTitle => 'Cloud save account';
+
+  @override
+  String get settingsCloudUnavailableSubtitle =>
+      'Firebase setup is not available in this build.';
+
+  @override
+  String get settingsCloudAnonymousSubtitle =>
+      'Using a temporary device account. Connect an email account to carry progress across devices.';
+
+  @override
+  String get settingsCloudDisconnectedSubtitle =>
+      'Sign in to sync your progress across devices.';
+
+  @override
+  String settingsCloudConnectedSubtitle(String email) {
+    return 'Signed in as $email. Your progress can follow you to other devices.';
+  }
+
+  @override
+  String get settingsCloudSyncNowTitle => 'Sync now';
+
+  @override
+  String get settingsCloudSyncNowSubtitle =>
+      'Upload local progress and pull the latest cloud saves.';
+
+  @override
+  String get settingsCloudConnectSheetTitle =>
+      'Keep your progress across devices';
+
+  @override
+  String get settingsCloudConnectSheetBody =>
+      'Create an account or sign in with an existing email account to keep playing on another device.';
+
+  @override
+  String get settingsCloudManageSheetTitle => 'Cloud save account';
+
+  @override
+  String get settingsCloudManageSheetBody =>
+      'Your linked account is ready. You can sync now or sign out on this device.';
+
+  @override
+  String get settingsCloudSignInAction => 'Sign in';
+
+  @override
+  String get settingsCloudCreateAccountAction => 'Create account';
+
+  @override
+  String get settingsCloudSignOutAction => 'Sign out';
+
+  @override
+  String get settingsCloudEmailLabel => 'Email';
+
+  @override
+  String get settingsCloudPasswordLabel => 'Password';
+
+  @override
+  String get settingsCloudCreateDialogTitle => 'Create cloud account';
+
+  @override
+  String get settingsCloudSignInDialogTitle => 'Sign in to sync';
+
+  @override
+  String get settingsCloudAuthSuccessSignIn =>
+      'Signed in and synced your progress.';
+
+  @override
+  String get settingsCloudAuthSuccessCreate =>
+      'Cloud account connected and synced.';
+
+  @override
+  String get settingsCloudSyncSuccess => 'Cloud sync completed.';
+
+  @override
+  String get settingsCloudSignOutSuccess => 'Signed out on this device.';
+
+  @override
+  String get settingsCloudValidationMissingCredentials =>
+      'Enter both an email address and password.';
+
+  @override
+  String get settingsCloudErrorGeneric =>
+      'We couldn\'t complete that cloud account request.';
+
+  @override
+  String get settingsCloudErrorFirebaseUnavailable =>
+      'Firebase is not configured in this build.';
+
+  @override
+  String get settingsCloudErrorInvalidEmail => 'Enter a valid email address.';
+
+  @override
+  String get settingsCloudErrorWrongPassword => 'The password is incorrect.';
+
+  @override
+  String get settingsCloudErrorUserNotFound =>
+      'No account matches that email address.';
+
+  @override
+  String get settingsCloudErrorEmailAlreadyInUse =>
+      'That email address is already in use.';
+
+  @override
+  String get settingsCloudErrorWeakPassword =>
+      'Use a password with at least 6 characters.';
 
   @override
   String get settingsNotificationsTitle => 'Notification settings';
@@ -415,6 +525,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commonOk => 'OK';
+
+  @override
+  String get commonCancel => 'Cancel';
 
   @override
   String get gameOverTitle => 'Game over';

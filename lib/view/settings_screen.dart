@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:mysudoku/l10n/app_locale_scope.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
+import 'package:mysudoku/services/firebase_identity_service.dart';
 import 'package:mysudoku/theme/app_theme.dart';
 import 'package:mysudoku/theme/app_theme_scope.dart';
 import 'package:mysudoku/view/settings/settings_controller.dart';
@@ -16,6 +17,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final SettingsController _settingsController = SettingsController();
   SettingsState _state = SettingsState.initial;
+  bool _isCloudActionInProgress = false;
 
   @override
   void initState() {
@@ -190,6 +192,329 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _state = nextState;
     });
+  }
+
+  Future<void> _showCloudAccountSheet() async {
+    final l10n = AppLocalizations.of(context)!;
+    if (!_state.cloudAccount.isAvailable) {
+      _showSnackBar(l10n.settingsCloudErrorFirebaseUnavailable);
+      return;
+    }
+
+    if (_state.cloudAccount.isCrossDeviceReady) {
+      await showModalBottomSheet<void>(
+        context: context,
+        builder: (sheetContext) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    l10n.settingsCloudManageSheetTitle,
+                    style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.settingsCloudManageSheetBody,
+                    style: Theme.of(sheetContext).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 20),
+                  FilledButton.icon(
+                    onPressed: () {
+                      Navigator.of(sheetContext).pop();
+                      _syncCloudProgress();
+                    },
+                    icon: const Icon(Icons.sync),
+                    label: Text(l10n.settingsCloudSyncNowTitle),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(sheetContext).pop();
+                      _signOutCloudAccount();
+                    },
+                    child: Text(l10n.settingsCloudSignOutAction),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.settingsCloudConnectSheetTitle,
+                  style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.settingsCloudConnectSheetBody,
+                  style: Theme.of(sheetContext).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 20),
+                FilledButton.icon(
+                  onPressed: () {
+                    Navigator.of(sheetContext).pop();
+                    _promptCloudAuth(isCreateAccount: true);
+                  },
+                  icon: const Icon(Icons.person_add_alt_1),
+                  label: Text(l10n.settingsCloudCreateAccountAction),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(sheetContext).pop();
+                    _promptCloudAuth(isCreateAccount: false);
+                  },
+                  icon: const Icon(Icons.login),
+                  label: Text(l10n.settingsCloudSignInAction),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _promptCloudAuth({required bool isCreateAccount}) async {
+    final credentials = await _showCloudAuthDialog(
+      isCreateAccount: isCreateAccount,
+    );
+    if (!mounted || credentials == null) {
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    if (credentials.email.isEmpty || credentials.password.isEmpty) {
+      _showSnackBar(l10n.settingsCloudValidationMissingCredentials);
+      return;
+    }
+
+    await _runCloudAction(
+      action: () => isCreateAccount
+          ? _settingsController.createCloudAccount(
+              _state,
+              email: credentials.email,
+              password: credentials.password,
+            )
+          : _settingsController.signInWithEmail(
+              _state,
+              email: credentials.email,
+              password: credentials.password,
+            ),
+      successMessage: isCreateAccount
+          ? l10n.settingsCloudAuthSuccessCreate
+          : l10n.settingsCloudAuthSuccessSignIn,
+    );
+  }
+
+  Future<_CloudCredentials?> _showCloudAuthDialog({
+    required bool isCreateAccount,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final emailController = TextEditingController(
+      text: _state.cloudAccount.email ?? '',
+    );
+    final passwordController = TextEditingController();
+
+    final result = await showDialog<_CloudCredentials>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(
+            isCreateAccount
+                ? l10n.settingsCloudCreateDialogTitle
+                : l10n.settingsCloudSignInDialogTitle,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.username],
+                decoration: InputDecoration(
+                  labelText: l10n.settingsCloudEmailLabel,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                autofillHints: const [AutofillHints.password],
+                decoration: InputDecoration(
+                  labelText: l10n.settingsCloudPasswordLabel,
+                ),
+                onSubmitted: (_) {
+                  Navigator.of(dialogContext).pop(
+                    _CloudCredentials(
+                      email: emailController.text.trim(),
+                      password: passwordController.text,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(l10n.commonCancel),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(
+                  _CloudCredentials(
+                    email: emailController.text.trim(),
+                    password: passwordController.text,
+                  ),
+                );
+              },
+              child: Text(
+                isCreateAccount
+                    ? l10n.settingsCloudCreateAccountAction
+                    : l10n.settingsCloudSignInAction,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    emailController.dispose();
+    passwordController.dispose();
+    return result;
+  }
+
+  Future<void> _syncCloudProgress() async {
+    final l10n = AppLocalizations.of(context)!;
+    if (!_state.cloudAccount.isAvailable) {
+      _showSnackBar(l10n.settingsCloudErrorFirebaseUnavailable);
+      return;
+    }
+    if (!_state.cloudAccount.isSignedIn) {
+      await _showCloudAccountSheet();
+      return;
+    }
+
+    await _runCloudAction(
+      action: () => _settingsController.syncCloudProgress(_state),
+      successMessage: l10n.settingsCloudSyncSuccess,
+    );
+  }
+
+  Future<void> _signOutCloudAccount() async {
+    final l10n = AppLocalizations.of(context)!;
+    await _runCloudAction(
+      action: () => _settingsController.signOutCloudAccount(_state),
+      successMessage: l10n.settingsCloudSignOutSuccess,
+    );
+  }
+
+  Future<void> _runCloudAction({
+    required Future<SettingsState> Function() action,
+    required String successMessage,
+  }) async {
+    if (_isCloudActionInProgress) {
+      return;
+    }
+
+    setState(() {
+      _isCloudActionInProgress = true;
+    });
+
+    try {
+      final nextState = await action();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _state = nextState;
+      });
+      _showSnackBar(successMessage);
+    } on FirebaseIdentityException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      _showSnackBar(_mapCloudErrorMessage(error));
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      _showSnackBar(AppLocalizations.of(context)!.settingsCloudErrorGeneric);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCloudActionInProgress = false;
+        });
+      }
+    }
+  }
+
+  String _mapCloudErrorMessage(FirebaseIdentityException error) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (error.code) {
+      case 'firebase-unavailable':
+        return l10n.settingsCloudErrorFirebaseUnavailable;
+      case 'invalid-email':
+        return l10n.settingsCloudErrorInvalidEmail;
+      case 'wrong-password':
+      case 'invalid-credential':
+        return l10n.settingsCloudErrorWrongPassword;
+      case 'user-not-found':
+        return l10n.settingsCloudErrorUserNotFound;
+      case 'email-already-in-use':
+        return l10n.settingsCloudErrorEmailAlreadyInUse;
+      case 'weak-password':
+        return l10n.settingsCloudErrorWeakPassword;
+      default:
+        return error.message ?? l10n.settingsCloudErrorGeneric;
+    }
+  }
+
+  String _cloudAccountSubtitle(AppLocalizations l10n) {
+    final cloudAccount = _state.cloudAccount;
+    if (!cloudAccount.isAvailable) {
+      return l10n.settingsCloudUnavailableSubtitle;
+    }
+    if (cloudAccount.isCrossDeviceReady) {
+      return l10n.settingsCloudConnectedSubtitle(
+        cloudAccount.identifier ?? 'account',
+      );
+    }
+    if (cloudAccount.isAnonymous) {
+      return l10n.settingsCloudAnonymousSubtitle;
+    }
+    return l10n.settingsCloudDisconnectedSubtitle;
+  }
+
+  void _showSnackBar(String message) {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   Future<void> _showLanguagePicker() async {
@@ -634,6 +959,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 24),
         _buildSettingsSection(
+          l10n.settingsSectionCloud,
+          [
+            _buildSettingsTile(
+              icon: _state.cloudAccount.isCrossDeviceReady
+                  ? Icons.cloud_done_outlined
+                  : Icons.cloud_sync_outlined,
+              title: l10n.settingsCloudAccountTitle,
+              subtitle: _cloudAccountSubtitle(l10n),
+              onTap: _showCloudAccountSheet,
+            ),
+            _buildSettingsTile(
+              icon: Icons.sync_outlined,
+              title: l10n.settingsCloudSyncNowTitle,
+              subtitle: l10n.settingsCloudSyncNowSubtitle,
+              onTap: _syncCloudProgress,
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        _buildSettingsSection(
           l10n.settingsSectionInfo,
           [
             _buildSettingsTile(
@@ -783,4 +1128,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ],
     );
   }
+}
+
+class _CloudCredentials {
+  const _CloudCredentials({
+    required this.email,
+    required this.password,
+  });
+
+  final String email;
+  final String password;
 }

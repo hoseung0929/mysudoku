@@ -1,0 +1,40 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    match /puzzle_catalog/{catalogVersion} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+
+      match /levels/{levelName}/games/{gameId} {
+        allow read: if signedIn();
+        allow write: if isAdmin();
+      }
+    }
+
+    match /daily_challenges/{date} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+
+      match /save_games/{saveId} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+  }
+}

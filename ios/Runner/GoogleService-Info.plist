@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyB0BwUg9KVtUaoSvzb7l0ZxJP88oossqfc</string>
+	<key>GCM_SENDER_ID</key>
+	<string>638773305398</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.hoseung.mysudoku</string>
+	<key>PROJECT_ID</key>
+	<string>mysudoku-386bc</string>
+	<key>STORAGE_BUCKET</key>
+	<string>mysudoku-386bc.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:638773305398:ios:ad0bdbc4662c4f8daaf897</string>
+</dict>
+</plist>

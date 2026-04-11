@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "638773305398",
+    "project_id": "mysudoku-386bc",
+    "storage_bucket": "mysudoku-386bc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:638773305398:android:f5f6eabcdf5d7090aaf897",
+        "android_client_info": {
+          "package_name": "com.example.mysudoku"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgf46yyivoqgJWmSm61ARTBJ0bU1ikpXg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

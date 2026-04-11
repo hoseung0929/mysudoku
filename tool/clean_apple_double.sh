@@ -1,11 +1,24 @@
 #!/usr/bin/env bash
-# macOS가 FAT/exFAT 등에 만드는 AppleDouble(._*) 파일은 flutter gen-l10n·dart test가
-# UTF-8이 아니라고 실패하게 할 수 있습니다. 소스 트리 일부만 안전하게 지웁니다.
+# macOS가 만드는 AppleDouble(._*) 파일은 Flutter/Dart 도구와 CocoaPods/Xcode 작업에
+# 예상치 못한 오류를 일으킬 수 있습니다. 저장소 전반을 정리하되, .git 및 외부/생성물
+# 심볼릭 링크 트리는 제외해 권한 오류를 피합니다.
 set -euo pipefail
+
 cd "$(dirname "$0")/.."
-for d in arb lib test integration_test; do
-  if [[ -d "$d" ]]; then
-    find "$d" -name '._*' -type f -delete 2>/dev/null || true
-  fi
-done
-echo "Done: removed ._ files under arb, lib, test, integration_test (if present)."
+
+find . \
+  \( \
+    -path './.git' -o \
+    -path './build' -o \
+    -path './.dart_tool' -o \
+    -path './linux/flutter/ephemeral' -o \
+    -path './ios/Pods' -o \
+    -path './macos/Pods' -o \
+    -path './ios/.symlinks' -o \
+    -path './ios/Flutter/ephemeral' -o \
+    -path './macos/Flutter/ephemeral' -o \
+    -path './windows/flutter/ephemeral' \
+  \) -prune -o \
+  -name '._*' -type f -exec rm -f {} +
+
+echo "Done: removed ._ files across the repository (excluding .git and generated symlink trees)."

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mysudoku/l10n/app_localizations_en.dart';
+import 'package:mysudoku/model/today_challenge_target.dart';
 import 'package:mysudoku/services/achievement_service.dart';
 import 'package:mysudoku/services/challenge_progress_service.dart';
 import 'package:mysudoku/services/game_state_service.dart';
@@ -65,6 +66,69 @@ void main() {
       expect(continueGame.isMemoMode, isTrue);
       expect(continueGame.noteCount, 3);
       expect(data.continueGames[1].lastPlayedAtMillis, 10);
+    });
+
+    test('skips continue entries with invalid saved board shape', () async {
+      final challengeFake = _FakeChallengeProgressService();
+      final service = HomeDashboardService(
+        gameStateService: _InvalidSavedBoardGameStateService(),
+        challengeProgressService: challengeFake,
+        achievementService: AchievementService(
+          challengeProgressService: challengeFake,
+          loadOverallStatistics: () async => const <String, dynamic>{},
+          loadRecentRecords: () async => const [],
+        ),
+        loadGameEntry: (levelName, gameNumber) async {
+          return {
+            'game_number': gameNumber,
+            'board': List.generate(9, (_) => List.filled(9, 0)),
+            'solution': List.generate(9, (_) => List.filled(9, 1)),
+          };
+        },
+      );
+
+      final summaries = await service.loadContinueGames();
+
+      expect(summaries, isEmpty);
+    });
+
+    test('falls back to first playable challenge entry when target is missing', () async {
+      final challengeFake = _FakeChallengeProgressService(
+        target: const TodayChallengeTarget(levelName: '초급', gameNumber: 99),
+      );
+      final fallbackBoard = List.generate(
+        9,
+        (row) => List.generate(9, (col) => row == col ? 0 : ((row + col) % 9) + 1),
+      );
+      final fallbackSolution = List.generate(
+        9,
+        (row) => List.generate(9, (col) => ((row * 3) + col) % 9 + 1),
+      );
+      final service = HomeDashboardService(
+        gameStateService: _FakeGameStateService(),
+        challengeProgressService: challengeFake,
+        achievementService: AchievementService(
+          challengeProgressService: challengeFake,
+          loadOverallStatistics: () async => const <String, dynamic>{},
+          loadRecentRecords: () async => const [],
+        ),
+        loadGameEntry: (levelName, gameNumber) async => null,
+        loadGameEntriesForLevel: (levelName) async {
+          return [
+            {
+              'game_number': 3,
+              'board': fallbackBoard,
+              'solution': fallbackSolution,
+            },
+          ];
+        },
+      );
+
+      final data = await service.load(AppLocalizationsEn());
+
+      expect(data.todayChallenge.gameNumber, 3);
+      expect(data.todayChallenge.board, fallbackBoard);
+      expect(data.todayChallenge.solution, fallbackSolution);
     });
   });
 }
@@ -172,15 +236,21 @@ class _FakeGameStateService extends GameStateService {
 }
 
 class _FakeChallengeProgressService extends ChallengeProgressService {
+  _FakeChallengeProgressService({
+    this.target = const TodayChallengeTarget(levelName: '초급', gameNumber: 1),
+  });
+
+  final TodayChallengeTarget target;
+
   @override
   Future<ChallengeProgressSummary> load({
     List<Map<String, dynamic>>? recentRecords,
   }) async {
-    return const ChallengeProgressSummary(
+    return ChallengeProgressSummary(
       streakDays: 0,
       isTodayChallengeCleared: false,
-      todayChallengeLevelName: '초급',
-      todayChallengeGameNumber: 1,
+      todayChallengeLevelName: target.levelName,
+      todayChallengeGameNumber: target.gameNumber,
       lastClearDate: null,
       weeklyClearCount: 0,
       weeklyGoalTarget: 5,
@@ -190,6 +260,37 @@ class _FakeChallengeProgressService extends ChallengeProgressService {
 
   @override
   Future<TodayChallengeTarget> getTodayChallengeTarget() async {
-    return const TodayChallengeTarget(levelName: '초급', gameNumber: 1);
+    return target;
+  }
+}
+
+class _InvalidSavedBoardGameStateService extends GameStateService {
+  @override
+  Future<List<SavedGameState>> getSavedGames() async {
+    return const [
+      SavedGameState(
+        levelName: '초급',
+        gameNumber: 1,
+        board: [
+          [1, 2, 3],
+        ],
+        lastPlayedAtMillis: 1,
+        session: GameSessionState(
+          board: [
+            [1, 2, 3],
+          ],
+          notes: [
+            [<int>{}],
+          ],
+          elapsedSeconds: 10,
+          hintsRemaining: 3,
+          wrongCount: 0,
+          isMemoMode: false,
+          hintCells: <String>{},
+          isGameComplete: false,
+          isGameOver: false,
+        ),
+      ),
+    ];
   }
 }

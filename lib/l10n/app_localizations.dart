@@ -170,11 +170,197 @@ abstract class AppLocalizations {
   /// **'Game'**
   String get settingsSectionGame;
 
+  /// No description provided for @settingsSectionCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud save'**
+  String get settingsSectionCloud;
+
   /// No description provided for @settingsSectionInfo.
   ///
   /// In en, this message translates to:
   /// **'About'**
   String get settingsSectionInfo;
+
+  /// No description provided for @settingsCloudAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud save account'**
+  String get settingsCloudAccountTitle;
+
+  /// No description provided for @settingsCloudUnavailableSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Firebase setup is not available in this build.'**
+  String get settingsCloudUnavailableSubtitle;
+
+  /// No description provided for @settingsCloudAnonymousSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Using a temporary device account. Connect an email account to carry progress across devices.'**
+  String get settingsCloudAnonymousSubtitle;
+
+  /// No description provided for @settingsCloudDisconnectedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to sync your progress across devices.'**
+  String get settingsCloudDisconnectedSubtitle;
+
+  /// No description provided for @settingsCloudConnectedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as {email}. Your progress can follow you to other devices.'**
+  String settingsCloudConnectedSubtitle(String email);
+
+  /// No description provided for @settingsCloudSyncNowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get settingsCloudSyncNowTitle;
+
+  /// No description provided for @settingsCloudSyncNowSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload local progress and pull the latest cloud saves.'**
+  String get settingsCloudSyncNowSubtitle;
+
+  /// No description provided for @settingsCloudConnectSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your progress across devices'**
+  String get settingsCloudConnectSheetTitle;
+
+  /// No description provided for @settingsCloudConnectSheetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Create an account or sign in with an existing email account to keep playing on another device.'**
+  String get settingsCloudConnectSheetBody;
+
+  /// No description provided for @settingsCloudManageSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud save account'**
+  String get settingsCloudManageSheetTitle;
+
+  /// No description provided for @settingsCloudManageSheetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your linked account is ready. You can sync now or sign out on this device.'**
+  String get settingsCloudManageSheetBody;
+
+  /// No description provided for @settingsCloudSignInAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get settingsCloudSignInAction;
+
+  /// No description provided for @settingsCloudCreateAccountAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get settingsCloudCreateAccountAction;
+
+  /// No description provided for @settingsCloudSignOutAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get settingsCloudSignOutAction;
+
+  /// No description provided for @settingsCloudEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get settingsCloudEmailLabel;
+
+  /// No description provided for @settingsCloudPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get settingsCloudPasswordLabel;
+
+  /// No description provided for @settingsCloudCreateDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create cloud account'**
+  String get settingsCloudCreateDialogTitle;
+
+  /// No description provided for @settingsCloudSignInDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to sync'**
+  String get settingsCloudSignInDialogTitle;
+
+  /// No description provided for @settingsCloudAuthSuccessSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in and synced your progress.'**
+  String get settingsCloudAuthSuccessSignIn;
+
+  /// No description provided for @settingsCloudAuthSuccessCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud account connected and synced.'**
+  String get settingsCloudAuthSuccessCreate;
+
+  /// No description provided for @settingsCloudSyncSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud sync completed.'**
+  String get settingsCloudSyncSuccess;
+
+  /// No description provided for @settingsCloudSignOutSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed out on this device.'**
+  String get settingsCloudSignOutSuccess;
+
+  /// No description provided for @settingsCloudValidationMissingCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter both an email address and password.'**
+  String get settingsCloudValidationMissingCredentials;
+
+  /// No description provided for @settingsCloudErrorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t complete that cloud account request.'**
+  String get settingsCloudErrorGeneric;
+
+  /// No description provided for @settingsCloudErrorFirebaseUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Firebase is not configured in this build.'**
+  String get settingsCloudErrorFirebaseUnavailable;
+
+  /// No description provided for @settingsCloudErrorInvalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address.'**
+  String get settingsCloudErrorInvalidEmail;
+
+  /// No description provided for @settingsCloudErrorWrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'The password is incorrect.'**
+  String get settingsCloudErrorWrongPassword;
+
+  /// No description provided for @settingsCloudErrorUserNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No account matches that email address.'**
+  String get settingsCloudErrorUserNotFound;
+
+  /// No description provided for @settingsCloudErrorEmailAlreadyInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'That email address is already in use.'**
+  String get settingsCloudErrorEmailAlreadyInUse;
+
+  /// No description provided for @settingsCloudErrorWeakPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a password with at least 6 characters.'**
+  String get settingsCloudErrorWeakPassword;
 
   /// No description provided for @settingsNotificationsTitle.
   ///
@@ -847,6 +1033,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'OK'**
   String get commonOk;
+
+  /// No description provided for @commonCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get commonCancel;
 
   /// No description provided for @gameOverTitle.
   ///

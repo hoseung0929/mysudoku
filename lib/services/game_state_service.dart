@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:mysudoku/services/cloud_game_sync_service.dart';
 import 'package:mysudoku/utils/app_logger.dart';
 import 'package:mysudoku/utils/board_codec.dart';
 
@@ -47,9 +49,16 @@ class GameSessionState {
 }
 
 class GameStateService {
+  GameStateService({
+    CloudGameSyncService? cloudSyncService,
+  }) : _cloudSyncService = cloudSyncService ?? FirestoreCloudGameSyncService();
+
   static const String _gamePrefix = 'game_';
   static const String _metaPrefix = 'game_meta_';
+  static const int _boardSize = 9;
   static final RegExp _savedGameKeyPattern = RegExp(r'^game_(.+)_(\d+)$');
+
+  final CloudGameSyncService _cloudSyncService;
 
   String _gameKey(String levelName, int gameNumber) {
     return 'game_${levelName}_$gameNumber';
@@ -71,6 +80,56 @@ class GameStateService {
     Set<String> hintCells = const <String>{},
     bool isGameComplete = false,
     bool isGameOver = false,
+  }) async {
+    final updatedAtMillis = DateTime.now().millisecondsSinceEpoch;
+    await _persistLocalSession(
+      levelName: levelName,
+      gameNumber: gameNumber,
+      board: board,
+      notes: notes,
+      elapsedSeconds: elapsedSeconds,
+      hintsRemaining: hintsRemaining,
+      wrongCount: wrongCount,
+      isMemoMode: isMemoMode,
+      hintCells: hintCells,
+      isGameComplete: isGameComplete,
+      isGameOver: isGameOver,
+      updatedAtMillis: updatedAtMillis,
+    );
+
+    unawaited(
+      _cloudSyncService.upsertSave(
+        CloudGameSavePayload(
+          levelName: levelName,
+          gameNumber: gameNumber,
+          board: board,
+          notes: notes,
+          elapsedSeconds: elapsedSeconds,
+          hintsRemaining: hintsRemaining,
+          wrongCount: wrongCount,
+          isMemoMode: isMemoMode,
+          hintCells: hintCells,
+          isGameComplete: isGameComplete,
+          isGameOver: isGameOver,
+          updatedAtMillis: updatedAtMillis,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _persistLocalSession({
+    required String levelName,
+    required int gameNumber,
+    required List<List<int>> board,
+    required List<List<Set<int>>> notes,
+    required int elapsedSeconds,
+    required int hintsRemaining,
+    required int wrongCount,
+    required bool isMemoMode,
+    required Set<String> hintCells,
+    required bool isGameComplete,
+    required bool isGameOver,
+    required int updatedAtMillis,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final key = _gameKey(levelName, gameNumber);
@@ -94,7 +153,7 @@ class GameStateService {
     });
 
     await prefs.setString(key, payload);
-    await prefs.setInt(metaKey, DateTime.now().millisecondsSinceEpoch);
+    await prefs.setInt(metaKey, updatedAtMillis);
 
     if (kDebugMode) {
       AppLogger.debug('게임 세션 저장 완료: $key');
@@ -140,7 +199,14 @@ class GameStateService {
       return null;
     }
 
-    final session = _decodeSessionPayload(payload);
+    final session = _tryDecodeSessionPayload(payload);
+    if (session == null) {
+      await clearBoard(levelName: levelName, gameNumber: gameNumber);
+      if (kDebugMode) {
+        AppLogger.debug('손상된 게임 세션 삭제: $key');
+      }
+      return null;
+    }
 
     if (kDebugMode) {
       AppLogger.debug('게임 세션 복원 완료: $key');
@@ -170,6 +236,13 @@ class GameStateService {
 
     await prefs.remove(key);
     await prefs.remove(metaKey);
+
+    unawaited(
+      _cloudSyncService.deleteSave(
+        levelName: levelName,
+        gameNumber: gameNumber,
+      ),
+    );
 
     if (kDebugMode) {
       AppLogger.debug('게임 상태 삭제 완료: $key');
@@ -221,7 +294,12 @@ class GameStateService {
       final levelName = match.group(1)!;
       final gameNumber = int.parse(match.group(2)!);
 
-      final session = _decodeSessionPayload(payload);
+      final session = _tryDecodeSessionPayload(payload);
+      if (session == null) {
+        await prefs.remove(key);
+        await prefs.remove(_metaKey(levelName, gameNumber));
+        continue;
+      }
 
       savedGames.add(
         SavedGameState(
@@ -236,6 +314,62 @@ class GameStateService {
 
     savedGames.sort((a, b) => b.lastPlayedAtMillis.compareTo(a.lastPlayedAtMillis));
     return savedGames;
+  }
+
+  Future<void> syncFromCloud() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cloudSaves = await _cloudSyncService.fetchSaves();
+
+    for (final save in cloudSaves) {
+      final localUpdatedAt =
+          prefs.getInt(_metaKey(save.levelName, save.gameNumber)) ?? 0;
+      if (localUpdatedAt >= save.updatedAtMillis) {
+        continue;
+      }
+
+      await _persistLocalSession(
+        levelName: save.levelName,
+        gameNumber: save.gameNumber,
+        board: save.board,
+        notes: save.notes,
+        elapsedSeconds: save.elapsedSeconds,
+        hintsRemaining: save.hintsRemaining,
+        wrongCount: save.wrongCount,
+        isMemoMode: save.isMemoMode,
+        hintCells: save.hintCells,
+        isGameComplete: save.isGameComplete,
+        isGameOver: save.isGameOver,
+        updatedAtMillis: save.updatedAtMillis,
+      );
+    }
+  }
+
+  Future<void> syncToCloud() async {
+    final localSaves = await getSavedGames();
+
+    for (final save in localSaves) {
+      await _cloudSyncService.upsertSave(
+        CloudGameSavePayload(
+          levelName: save.levelName,
+          gameNumber: save.gameNumber,
+          board: save.session.board,
+          notes: save.session.notes,
+          elapsedSeconds: save.session.elapsedSeconds,
+          hintsRemaining: save.session.hintsRemaining,
+          wrongCount: save.session.wrongCount,
+          isMemoMode: save.session.isMemoMode,
+          hintCells: save.session.hintCells,
+          isGameComplete: save.session.isGameComplete,
+          isGameOver: save.session.isGameOver,
+          updatedAtMillis: save.lastPlayedAtMillis,
+        ),
+      );
+    }
+  }
+
+  Future<void> syncBidirectional() async {
+    await syncFromCloud();
+    await syncToCloud();
   }
 
   GameSessionState _decodeSessionPayload(String payload) {
@@ -281,5 +415,65 @@ class GameStateService {
       isGameComplete: json['isGameComplete'] as bool? ?? false,
       isGameOver: json['isGameOver'] as bool? ?? false,
     );
+  }
+
+  GameSessionState? _tryDecodeSessionPayload(String payload) {
+    try {
+      final session = _decodeSessionPayload(payload);
+      return _isValidSessionState(session) ? session : null;
+    } catch (e) {
+      if (kDebugMode) {
+        AppLogger.debug('게임 세션 디코드 실패: $e');
+      }
+      return null;
+    }
+  }
+
+  bool _isValidSessionState(GameSessionState session) {
+    return _isValidBoard(session.board) &&
+        _isValidNotes(session.notes) &&
+        session.elapsedSeconds >= 0 &&
+        session.hintsRemaining >= 0 &&
+        session.wrongCount >= 0;
+  }
+
+  bool _isValidBoard(List<List<int>> board) {
+    if (board.length != _boardSize) {
+      return false;
+    }
+
+    for (final row in board) {
+      if (row.length != _boardSize) {
+        return false;
+      }
+      for (final cell in row) {
+        if (cell < 0 || cell > 9) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  bool _isValidNotes(List<List<Set<int>>> notes) {
+    if (notes.length != _boardSize) {
+      return false;
+    }
+
+    for (final row in notes) {
+      if (row.length != _boardSize) {
+        return false;
+      }
+      for (final cellNotes in row) {
+        for (final value in cellNotes) {
+          if (value < 1 || value > 9) {
+            return false;
+          }
+        }
+      }
+    }
+
+    return true;
   }
 }

@@ -45,7 +45,109 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsSectionGame => '게임';
 
   @override
+  String get settingsSectionCloud => '클라우드 저장';
+
+  @override
   String get settingsSectionInfo => '정보';
+
+  @override
+  String get settingsCloudAccountTitle => '클라우드 저장 계정';
+
+  @override
+  String get settingsCloudUnavailableSubtitle =>
+      '이 빌드에는 Firebase 설정이 연결되지 않았어요.';
+
+  @override
+  String get settingsCloudAnonymousSubtitle =>
+      '임시 기기 계정으로 저장 중이에요. 이메일 계정을 연결하면 다른 기기에서도 이어할 수 있어요.';
+
+  @override
+  String get settingsCloudDisconnectedSubtitle => '다른 기기에서도 이어하려면 로그인해 주세요.';
+
+  @override
+  String settingsCloudConnectedSubtitle(String email) {
+    return '$email 계정으로 연결되어 있어요. 진행 상황을 다른 기기로 가져갈 수 있어요.';
+  }
+
+  @override
+  String get settingsCloudSyncNowTitle => '지금 동기화';
+
+  @override
+  String get settingsCloudSyncNowSubtitle =>
+      '로컬 진행 데이터를 올리고 최신 클라우드 저장을 받아옵니다.';
+
+  @override
+  String get settingsCloudConnectSheetTitle => '기기 간 이어하기 설정';
+
+  @override
+  String get settingsCloudConnectSheetBody =>
+      '새 계정을 만들거나 기존 이메일 계정으로 로그인하면 다른 기기에서도 이어서 플레이할 수 있어요.';
+
+  @override
+  String get settingsCloudManageSheetTitle => '클라우드 저장 관리';
+
+  @override
+  String get settingsCloudManageSheetBody =>
+      '연결된 계정이 준비되어 있어요. 지금 동기화하거나 이 기기에서 로그아웃할 수 있어요.';
+
+  @override
+  String get settingsCloudSignInAction => '로그인';
+
+  @override
+  String get settingsCloudCreateAccountAction => '계정 만들기';
+
+  @override
+  String get settingsCloudSignOutAction => '로그아웃';
+
+  @override
+  String get settingsCloudEmailLabel => '이메일';
+
+  @override
+  String get settingsCloudPasswordLabel => '비밀번호';
+
+  @override
+  String get settingsCloudCreateDialogTitle => '클라우드 계정 만들기';
+
+  @override
+  String get settingsCloudSignInDialogTitle => '동기화 로그인';
+
+  @override
+  String get settingsCloudAuthSuccessSignIn => '로그인 후 진행 데이터를 동기화했어요.';
+
+  @override
+  String get settingsCloudAuthSuccessCreate => '클라우드 계정을 연결하고 동기화했어요.';
+
+  @override
+  String get settingsCloudSyncSuccess => '클라우드 동기화를 마쳤어요.';
+
+  @override
+  String get settingsCloudSignOutSuccess => '이 기기에서 로그아웃했어요.';
+
+  @override
+  String get settingsCloudValidationMissingCredentials =>
+      '이메일과 비밀번호를 모두 입력해 주세요.';
+
+  @override
+  String get settingsCloudErrorGeneric => '클라우드 계정 작업을 완료하지 못했어요.';
+
+  @override
+  String get settingsCloudErrorFirebaseUnavailable =>
+      '이 빌드에는 Firebase 설정이 아직 없어요.';
+
+  @override
+  String get settingsCloudErrorInvalidEmail => '올바른 이메일 주소를 입력해 주세요.';
+
+  @override
+  String get settingsCloudErrorWrongPassword => '비밀번호가 올바르지 않아요.';
+
+  @override
+  String get settingsCloudErrorUserNotFound => '해당 이메일 계정을 찾지 못했어요.';
+
+  @override
+  String get settingsCloudErrorEmailAlreadyInUse => '이미 사용 중인 이메일이에요.';
+
+  @override
+  String get settingsCloudErrorWeakPassword => '비밀번호는 6자 이상으로 입력해 주세요.';
 
   @override
   String get settingsNotificationsTitle => '알림 설정';
@@ -404,6 +506,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get commonOk => '확인';
+
+  @override
+  String get commonCancel => '취소';
 
   @override
   String get gameOverTitle => '게임 오버';

@@ -55,6 +55,11 @@ class DatabaseHelper {
     return await _gameRepository.getGameCount(levelName);
   }
 
+  /// 특정 레벨에 실제로 존재하는 게임 번호 목록을 반환합니다.
+  Future<List<int>> getGameNumbersForLevel(String levelName) async {
+    return await _gameRepository.getGameNumbersForLevel(levelName);
+  }
+
   // ========== 클리어 기록 관련 메서드들 ==========
 
   /// 클리어 기록을 저장합니다.
