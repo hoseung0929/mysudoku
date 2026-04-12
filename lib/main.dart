@@ -16,6 +16,7 @@ import 'package:mysudoku/navigation/root_nav_scope.dart';
 import 'package:mysudoku/view/challenge_screen.dart';
 import 'package:mysudoku/view/level_selection_main.dart';
 import 'package:mysudoku/view/records_statistics_screen.dart';
+import 'package:mysudoku/view/startup_catalog_preparing_gate.dart';
 import 'package:mysudoku/widgets/bottom_nav_bar.dart';
 import 'package:mysudoku/utils/app_logger.dart';
 
@@ -160,7 +161,9 @@ class _MySudokuAppState extends State<MySudokuApp> {
             }
             return supported.first;
           },
-          home: const MyHomePage(),
+          home: const StartupCatalogPreparingGate(
+            child: MyHomePage(),
+          ),
         ),
       ),
     );

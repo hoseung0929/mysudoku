@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:isolate';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:mysudoku/utils/app_logger.dart';
@@ -52,6 +54,8 @@ class DatabaseManager {
   static const String _catalogSourceRemote = 'remote';
   static const int _targetGamesPerLevel = 100;
   static const int _initialSeedGamesPerLevel = 12;
+  static const int _generationChunkSize = 4;
+  static const int _progressUpdateStride = 4;
   bool _isTopUpRunning = false;
   bool _shouldShowInitialCatalogIntro = false;
   final FirestorePuzzleService _firestorePuzzleService = FirestorePuzzleService();
@@ -340,31 +344,18 @@ class DatabaseManager {
     required bool logProgress,
     void Function(int generatedCount)? onProgress,
   }) async {
-    for (var offset = 0; offset < count; offset++) {
-      final board = SudokuGenerator.generateSudoku(level.emptyCells);
-      final solution = SudokuGenerator.getSolution(board);
-
-      final boardStr = BoardCodec.encode(board);
-      final solutionStr = BoardCodec.encode(solution);
-
-      await db.insert(
-        'games',
-        {
-          'level_name': level.name,
-          'game_number': startGameNumber + offset,
-          'board': boardStr,
-          'solution': solutionStr,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-      onProgress?.call(startGameNumber + offset);
-
-      if (kDebugMode && logProgress && (offset + 1) == count) {
-        AppLogger.debug(
-          '${level.name} 레벨: ${startGameNumber + offset}/${startGameNumber + count - 1} 완료',
-        );
-      }
-    }
+    final gameNumbers = List<int>.generate(
+      count,
+      (offset) => startGameNumber + offset,
+    );
+    await _insertGeneratedGamesForLevel(
+      db,
+      level: level,
+      gameNumbers: gameNumbers,
+      progressBaseCount: startGameNumber - 1,
+      logProgress: logProgress,
+      onProgress: onProgress,
+    );
   }
 
   Future<void> _insertSpecificGamesForLevel(
@@ -375,30 +366,68 @@ class DatabaseManager {
     required bool logProgress,
     void Function(int generatedCount)? onProgress,
   }) async {
-    for (var index = 0; index < gameNumbers.length; index++) {
-      final board = SudokuGenerator.generateSudoku(level.emptyCells);
-      final solution = SudokuGenerator.getSolution(board);
+    await _insertGeneratedGamesForLevel(
+      db,
+      level: level,
+      gameNumbers: gameNumbers,
+      progressBaseCount: initialCount,
+      logProgress: logProgress,
+      onProgress: onProgress,
+    );
+  }
 
-      final boardStr = BoardCodec.encode(board);
-      final solutionStr = BoardCodec.encode(solution);
+  Future<void> _insertGeneratedGamesForLevel(
+    Database db, {
+    required SudokuLevel level,
+    required List<int> gameNumbers,
+    required int progressBaseCount,
+    required bool logProgress,
+    void Function(int generatedCount)? onProgress,
+  }) async {
+    if (gameNumbers.isEmpty) {
+      return;
+    }
 
-      await db.insert(
-        'games',
-        {
-          'level_name': level.name,
-          'game_number': gameNumbers[index],
-          'board': boardStr,
-          'solution': solutionStr,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
+    for (var start = 0; start < gameNumbers.length; start += _generationChunkSize) {
+      final end = min(start + _generationChunkSize, gameNumbers.length);
+      final chunk = gameNumbers.sublist(start, end);
+      final generatedChunk = await Isolate.run(
+        () => _generateEncodedPuzzleChunk(
+          emptyCells: level.emptyCells,
+          gameNumbers: chunk,
+        ),
       );
-      onProgress?.call(initialCount + index + 1);
 
-      if (kDebugMode && logProgress && (index + 1) == gameNumbers.length) {
-        AppLogger.debug(
-          '${level.name} 레벨: ${initialCount + index + 1}개 보충 완료',
+      final batch = db.batch();
+      for (final generated in generatedChunk) {
+        batch.insert(
+          'games',
+          {
+            'level_name': level.name,
+            'game_number': generated['game_number'],
+            'board': generated['board'],
+            'solution': generated['solution'],
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }
+      await batch.commit(noResult: true);
+
+      final generatedCount = progressBaseCount + end;
+      final insertedCount = end;
+      final shouldNotify = insertedCount == 1 ||
+          insertedCount == gameNumbers.length ||
+          insertedCount % _progressUpdateStride == 0;
+      if (shouldNotify) {
+        onProgress?.call(generatedCount);
+      }
+
+      if (kDebugMode && logProgress && insertedCount == gameNumbers.length) {
+        AppLogger.debug('${level.name} 레벨: ${gameNumbers.length}개 생성 완료');
+      }
+
+      // 장시간 백그라운드 생성 중에도 메인 isolate가 프레임을 처리할 시간을 확보한다.
+      await Future<void>.delayed(Duration.zero);
     }
   }
 
@@ -540,6 +569,46 @@ class DatabaseManager {
     return (await _ensureCatalogSource(db)) == _catalogSourceRemote;
   }
 
+  /// 앱 진입 전에 퍼즐 카탈로그를 목표 수량까지 확보한다.
+  /// 원격 동기화가 부족하면 로컬 생성으로 자동 보완한다.
+  Future<void> ensureCatalogFullyPrepared() async {
+    final db = await database;
+    while (true) {
+      await _refreshCatalogStatus(db, isRunning: _isTopUpRunning);
+      if (catalogStatus.value.isComplete) {
+        return;
+      }
+
+      final source = await _ensureCatalogSource(db);
+      if (source == _catalogSourceRemote) {
+        // 이미 동기화가 진행 중이면 종료될 때까지 기다린다.
+        await _syncRemoteCatalogInBackground(db);
+        await _waitForCatalogWorkerToIdle();
+        await _refreshCatalogStatus(db, isRunning: _isTopUpRunning);
+        if (catalogStatus.value.isComplete) {
+          return;
+        }
+      }
+
+      // 원격이 부족하거나 일시 실패한 경우, 메타데이터 소스는 유지한 채 로컬로 보완한다.
+      await _topUpGamesInBackground(db);
+      await _waitForCatalogWorkerToIdle();
+      await _refreshCatalogStatus(db, isRunning: _isTopUpRunning);
+      if (catalogStatus.value.isComplete) {
+        return;
+      }
+
+      // 예외적인 실패 루프에서 busy spin을 피한다.
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+    }
+  }
+
+  Future<void> _waitForCatalogWorkerToIdle() async {
+    while (_isTopUpRunning) {
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+    }
+  }
+
   Future<void> _refreshCatalogStatus(
     Database db, {
     required bool isRunning,
@@ -582,4 +651,21 @@ class DatabaseManager {
       _database = null;
     }
   }
+}
+
+List<Map<String, dynamic>> _generateEncodedPuzzleChunk({
+  required int emptyCells,
+  required List<int> gameNumbers,
+}) {
+  final generated = <Map<String, dynamic>>[];
+  for (final gameNumber in gameNumbers) {
+    final board = SudokuGenerator.generateSudoku(emptyCells);
+    final solution = SudokuGenerator.getSolution(board);
+    generated.add({
+      'game_number': gameNumber,
+      'board': BoardCodec.encode(board),
+      'solution': BoardCodec.encode(solution),
+    });
+  }
+  return generated;
 }
