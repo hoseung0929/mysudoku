@@ -413,6 +413,15 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                     l10n.recordsMetricAvgWrong, avgWrong.toStringAsFixed(1)),
               ],
             ),
+            const SizedBox(height: 10),
+            Text(
+              l10n.recordsSummaryMetricsFootnote,
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.35,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ),
       ),
@@ -443,6 +452,15 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                   ? '난이도별로 어느 구간에서 가장 편안해졌는지 볼 수 있어요.'
                   : 'See which levels are starting to feel more comfortable.',
               style: TextStyle(color: colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.recordsSummaryMetricsFootnote,
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.35,
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 10),
             if (stats.isEmpty)

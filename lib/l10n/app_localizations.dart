@@ -1121,13 +1121,13 @@ abstract class AppLocalizations {
   /// No description provided for @recordsMetricClears.
   ///
   /// In en, this message translates to:
-  /// **'Clears'**
+  /// **'Clears (filtered)'**
   String get recordsMetricClears;
 
   /// No description provided for @recordsMetricClearRate.
   ///
   /// In en, this message translates to:
-  /// **'Clear rate'**
+  /// **'Catalog share'**
   String get recordsMetricClearRate;
 
   /// No description provided for @recordsMetricPerfectRate.
@@ -1135,6 +1135,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Perfect rate'**
   String get recordsMetricPerfectRate;
+
+  /// No description provided for @recordsSummaryMetricsFootnote.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear counts follow your period and level filters. Catalog share divides those clears by the puzzle count stored in the catalog for the same scope.'**
+  String get recordsSummaryMetricsFootnote;
 
   /// No description provided for @recordsMetricAvgTime.
   ///

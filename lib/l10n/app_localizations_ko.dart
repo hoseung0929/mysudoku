@@ -554,13 +554,17 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsTrendActiveDays => '플레이한 날';
 
   @override
-  String get recordsMetricClears => '클리어';
+  String get recordsMetricClears => '클리어 (필터)';
 
   @override
-  String get recordsMetricClearRate => '클리어율';
+  String get recordsMetricClearRate => '퍼즐 대비 비율';
 
   @override
   String get recordsMetricPerfectRate => '퍼펙트율';
+
+  @override
+  String get recordsSummaryMetricsFootnote =>
+      '클리어 수는 기간·난이도 필터를 반영합니다. 퍼즐 대비 비율은 같은 범위의 클리어 수를 카탈로그에 있는 퍼즐 수로 나눈 값입니다.';
 
   @override
   String get recordsMetricAvgTime => '평균 시간';

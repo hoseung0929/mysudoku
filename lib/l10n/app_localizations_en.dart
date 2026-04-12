@@ -574,13 +574,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsTrendActiveDays => 'Active days';
 
   @override
-  String get recordsMetricClears => 'Clears';
+  String get recordsMetricClears => 'Clears (filtered)';
 
   @override
-  String get recordsMetricClearRate => 'Clear rate';
+  String get recordsMetricClearRate => 'Catalog share';
 
   @override
   String get recordsMetricPerfectRate => 'Perfect rate';
+
+  @override
+  String get recordsSummaryMetricsFootnote =>
+      'Clear counts follow your period and level filters. Catalog share divides those clears by the puzzle count stored in the catalog for the same scope.';
 
   @override
   String get recordsMetricAvgTime => 'Avg. time';

@@ -23,15 +23,16 @@ class GameRecordService {
           (clearTime == (existing['clear_time'] as int) &&
               wrongCount < (existing['wrong_count'] as int));
 
-      await _databaseHelper.saveClearRecord(
-        levelName: levelName,
-        gameNumber: gameNumber,
-        clearTime: clearTime,
-        wrongCount: wrongCount,
-      );
-
-      if (kDebugMode) {
-        AppLogger.debug('클리어 기록 저장 완료: $levelName 게임 $gameNumber');
+      if (isNewBestRecord) {
+        await _databaseHelper.saveClearRecord(
+          levelName: levelName,
+          gameNumber: gameNumber,
+          clearTime: clearTime,
+          wrongCount: wrongCount,
+        );
+        if (kDebugMode) {
+          AppLogger.debug('클리어 기록 저장 완료: $levelName 게임 $gameNumber');
+        }
       }
 
       return isNewBestRecord;

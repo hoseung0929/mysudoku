@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui' show ImageFilter;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -16,6 +17,7 @@ import 'package:mysudoku/services/home_dashboard_service.dart';
 import 'package:mysudoku/services/level_progress_service.dart';
 import 'package:mysudoku/services/onboarding_service.dart';
 import 'package:mysudoku/services/profile_image_service.dart';
+import 'package:mysudoku/utils/app_logger.dart';
 import 'package:mysudoku/view/level_selection_screen.dart';
 import 'package:mysudoku/view/saved_games_screen.dart';
 import 'package:mysudoku/view/settings_screen.dart';
@@ -327,6 +329,14 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     });
 
     try {
+      if (!mounted) return;
+      try {
+        await GameStateService().syncBidirectional();
+      } catch (e) {
+        if (kDebugMode) {
+          AppLogger.debug('클라우드 세이브 동기화 실패: $e');
+        }
+      }
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
       final data = await _homeDashboardService.load(l10n);

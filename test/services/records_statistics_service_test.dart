@@ -65,6 +65,58 @@ void main() {
       expect(stats['total_average_wrong_count'], 1.5);
     });
 
+    test('treats clear_time and wrong_count as num (e.g. SQLite double)', () {
+      final recent = [
+        {
+          'level_name': '초급',
+          'game_number': 1,
+          'clear_time': 120.0,
+          'wrong_count': 2.0,
+        },
+      ];
+
+      final topRecords = service.buildTopRecords(
+        recent: recent,
+        selectedLevel: '초급',
+      );
+
+      expect(topRecords, hasLength(1));
+      expect(topRecords.single['game_number'], 1);
+      final stats = service.buildOverallStats(
+        overall: const {'total_games': 10},
+        levels: const [
+          {'level_name': '초급', 'total_count': 10},
+        ],
+        recent: recent,
+        selectedLevel: '초급',
+      );
+      expect(stats['total_average_time'], 120.0);
+      expect(stats['total_average_wrong_count'], 2.0);
+    });
+
+    test('treats total_games and total_count as num', () {
+      final recent = [
+        {
+          'level_name': '초급',
+          'clear_time': 120,
+          'wrong_count': 0,
+        },
+      ];
+
+      final stats = service.buildOverallStats(
+        overall: const {'total_games': 10.0},
+        levels: const [
+          {'level_name': '초급', 'total_count': 10.0},
+        ],
+        recent: recent,
+        selectedLevel: '초급',
+      );
+
+      expect(stats['total_games'], 10);
+      expect(stats['total_clear_rate'], 10.0);
+      expect(stats['perfect_clears'], 1);
+    });
+
     test('sorts top records by clear time then wrong count', () {
       final recent = [
         {

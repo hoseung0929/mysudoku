@@ -75,12 +75,12 @@ class RecordsStatisticsService {
     final totalsByLevel = buildTotalByLevel(levels);
 
     final totalGames = RecordsLevelFilter.isAllLevels(selectedLevel)
-        ? (overall['total_games'] ?? 0) as int
+        ? _recordInt(overall, 'total_games')
         : totalsByLevel[selectedLevel] ?? 0;
 
     final cleared = filtered.length;
     final perfectClears = filtered.where((record) {
-      return (record['wrong_count'] as int? ?? 0) == 0;
+      return _recordInt(record, 'wrong_count') == 0;
     }).length;
     final avgTime = _averageIntField(filtered, 'clear_time');
     final avgWrong = _averageIntField(filtered, 'wrong_count');
@@ -141,13 +141,13 @@ class RecordsStatisticsService {
         selectedLevel: selectedLevel,
       ),
     )..sort((a, b) {
-        final clearTimeA = a['clear_time'] as int;
-        final clearTimeB = b['clear_time'] as int;
+        final clearTimeA = _recordInt(a, 'clear_time');
+        final clearTimeB = _recordInt(b, 'clear_time');
         if (clearTimeA != clearTimeB) {
           return clearTimeA.compareTo(clearTimeB);
         }
-        final wrongA = a['wrong_count'] as int;
-        final wrongB = b['wrong_count'] as int;
+        final wrongA = _recordInt(a, 'wrong_count');
+        final wrongB = _recordInt(b, 'wrong_count');
         return wrongA.compareTo(wrongB);
       });
 
@@ -170,13 +170,13 @@ class RecordsStatisticsService {
           .where((record) => record['level_name'] == level)
           .toList()
         ..sort((a, b) {
-          final clearTimeA = a['clear_time'] as int;
-          final clearTimeB = b['clear_time'] as int;
+          final clearTimeA = _recordInt(a, 'clear_time');
+          final clearTimeB = _recordInt(b, 'clear_time');
           if (clearTimeA != clearTimeB) {
             return clearTimeA.compareTo(clearTimeB);
           }
-          final wrongA = a['wrong_count'] as int;
-          final wrongB = b['wrong_count'] as int;
+          final wrongA = _recordInt(a, 'wrong_count');
+          final wrongB = _recordInt(b, 'wrong_count');
           return wrongA.compareTo(wrongB);
         });
 
@@ -190,7 +190,7 @@ class RecordsStatisticsService {
         'game_number': best['game_number'],
         'clear_time': best['clear_time'],
         'wrong_count': best['wrong_count'],
-        'is_perfect': (best['wrong_count'] as int? ?? 0) == 0,
+        'is_perfect': _recordInt(best, 'wrong_count') == 0,
       });
     }
 
@@ -272,7 +272,11 @@ class RecordsStatisticsService {
   Map<String, int> buildTotalByLevel(List<Map<String, dynamic>> levels) {
     final map = <String, int>{};
     for (final level in levels) {
-      map[level['level_name'] as String] = level['total_count'] as int;
+      final levelName = level['level_name']?.toString();
+      if (levelName == null || levelName.isEmpty) {
+        continue;
+      }
+      map[levelName] = _recordInt(level, 'total_count');
     }
     return map;
   }
@@ -282,9 +286,27 @@ class RecordsStatisticsService {
       return 0.0;
     }
     return items
-            .map((item) => (item[field] as int).toDouble())
+            .map((item) => _recordInt(item, field).toDouble())
             .reduce((a, b) => a + b) /
         items.length;
+  }
+
+  /// SQLite·JSON 등에서 `int` / `double`이 섞여 올 때 통계 연산을 안전하게 한다.
+  static int _recordInt(Map<String, dynamic> record, String field) {
+    final Object? value = record[field];
+    if (value == null) {
+      return 0;
+    }
+    if (value is int) {
+      return value;
+    }
+    if (value is double) {
+      return value.toInt();
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    return int.tryParse(value.toString()) ?? 0;
   }
 
   String _formatDate(DateTime date) {
