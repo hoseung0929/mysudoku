@@ -30,8 +30,9 @@ class ChallengeProgressSummary {
   final int perfectClearCount;
 
   bool get isWeeklyGoalAchieved => weeklyClearCount >= weeklyGoalTarget;
-  int get remainingWeeklyGoal =>
-      weeklyGoalTarget > weeklyClearCount ? weeklyGoalTarget - weeklyClearCount : 0;
+  int get remainingWeeklyGoal => weeklyGoalTarget > weeklyClearCount
+      ? weeklyGoalTarget - weeklyClearCount
+      : 0;
 }
 
 class ChallengeProgressService {
@@ -39,33 +40,37 @@ class ChallengeProgressService {
     DatabaseHelper? databaseHelper,
     DailyChallengeCompletionRepository? dailyChallengeCompletionRepository,
     Future<List<int>> Function(String levelName)? loadGameNumbersForLevel,
+    Future<List<Map<String, dynamic>>> Function({int limit})?
+        loadRecentClearEvents,
     FirestorePuzzleService? firestorePuzzleService,
     RemotePuzzleService? remotePuzzleService,
     Future<bool> Function()? shouldUseRemoteDailyChallenge,
   })  : _databaseHelper = databaseHelper ?? DatabaseHelper(),
-        _dailyRepo =
-            dailyChallengeCompletionRepository ?? DailyChallengeCompletionRepository(),
-        _loadGameNumbersForLevel =
-            loadGameNumbersForLevel ??
-                (databaseHelper ?? DatabaseHelper()).getGameNumbersForLevel,
+        _dailyRepo = dailyChallengeCompletionRepository ??
+            DailyChallengeCompletionRepository(),
+        _loadGameNumbersForLevel = loadGameNumbersForLevel ??
+            (databaseHelper ?? DatabaseHelper()).getGameNumbersForLevel,
+        _loadRecentClearEvents = loadRecentClearEvents ??
+            (databaseHelper ?? DatabaseHelper()).getRecentClearEvents,
         _firestorePuzzleService =
             firestorePuzzleService ?? FirestorePuzzleService(),
         _remotePuzzleService = remotePuzzleService ?? RemotePuzzleService(),
-        _shouldUseRemoteDailyChallenge =
-            shouldUseRemoteDailyChallenge ??
-                (() async {
-                  try {
-                    return await DatabaseManager().isRemoteCatalogActive();
-                  } catch (_) {
-                    return false;
-                  }
-                });
+        _shouldUseRemoteDailyChallenge = shouldUseRemoteDailyChallenge ??
+            (() async {
+              try {
+                return await DatabaseManager().isRemoteCatalogActive();
+              } catch (_) {
+                return false;
+              }
+            });
 
   static const _backfillPrefsKey = 'daily_challenge_backfill_v1';
 
   final DatabaseHelper _databaseHelper;
   final DailyChallengeCompletionRepository _dailyRepo;
   final Future<List<int>> Function(String levelName) _loadGameNumbersForLevel;
+  final Future<List<Map<String, dynamic>>> Function({int limit})
+      _loadRecentClearEvents;
   final FirestorePuzzleService _firestorePuzzleService;
   final RemotePuzzleService _remotePuzzleService;
   final Future<bool> Function() _shouldUseRemoteDailyChallenge;
@@ -88,9 +93,18 @@ class ChallengeProgressService {
         uniqueDesc.add(raw);
       }
     }
-    final parsed = uniqueDesc.map(DateTime.parse).toList();
+    final parsed = <DateTime>[];
+    for (final raw in uniqueDesc) {
+      final parsedDate = _tryParseDateOnly(raw);
+      if (parsedDate != null) {
+        parsed.add(parsedDate);
+      }
+    }
+    if (parsed.isEmpty) {
+      return 0;
+    }
     final today = _dateOnly(DateTime.now());
-    final latest = _dateOnly(parsed.first);
+    final latest = parsed.first;
 
     if (latest.isBefore(today.subtract(const Duration(days: 1)))) {
       return 0;
@@ -112,29 +126,56 @@ class ChallengeProgressService {
 
   Future<ChallengeProgressSummary> load({
     List<Map<String, dynamic>>? recentRecords,
+    List<Map<String, dynamic>>? recentClearEvents,
   }) async {
     await _ensureBackfillDailyCompletions();
     final challengeTarget = await getTodayChallengeTarget();
     final todayStr = formatLocalDate(DateTime.now());
     final isTodayCleared = await _dailyRepo.hasCompletionForDate(todayStr);
-    final recent =
-        recentRecords ?? await _databaseHelper.getRecentClearRecords(limit: 365);
+    final recent = recentRecords ??
+        await _databaseHelper.getRecentClearRecords(limit: 365);
+    final clearEvents =
+        recentClearEvents ?? await _loadRecentClearEvents(limit: 365);
     final completionDates = await _dailyRepo.getCompletionDatesDescending();
     final streak = calculateDailyChallengeStreakFromDates(completionDates);
-    final weeklyClearCount = calculateWeeklyClearCount(recent);
-    final perfectClearCount = calculatePerfectClearCount(recent);
-    const weeklyGoalTarget = 5;
+    final weeklyClearCount = calculateWeeklyClearCount(clearEvents);
+    final perfectClearCount = calculatePerfectClearCount(clearEvents);
+    final weeklyGoalTarget = calculateWeeklyGoalTarget(clearEvents);
 
     return ChallengeProgressSummary(
       streakDays: streak,
       isTodayChallengeCleared: isTodayCleared,
       todayChallengeLevelName: challengeTarget.levelName,
       todayChallengeGameNumber: challengeTarget.gameNumber,
-      lastClearDate: recent.isEmpty ? null : recent.first['clear_date'] as String?,
+      lastClearDate: _firstClearDate(clearEvents) ?? _firstClearDate(recent),
       weeklyClearCount: weeklyClearCount,
       weeklyGoalTarget: weeklyGoalTarget,
       perfectClearCount: perfectClearCount,
     );
+  }
+
+  int calculateWeeklyGoalTarget(List<Map<String, dynamic>> recent) {
+    final today = _dateOnly(DateTime.now());
+    final earliest = today.subtract(const Duration(days: 13));
+    final recentTwoWeekClears = recent.where((record) {
+      final rawDate = record['clear_date'] as String?;
+      if (rawDate == null) {
+        return false;
+      }
+      final clearDate = _tryParseDateOnly(rawDate);
+      if (clearDate == null) {
+        return false;
+      }
+      return !clearDate.isBefore(earliest) && !clearDate.isAfter(today);
+    }).length;
+
+    if (recentTwoWeekClears <= 4) {
+      return 3;
+    }
+    if (recentTwoWeekClears >= 15) {
+      return 7;
+    }
+    return 5;
   }
 
   Future<void> _ensureBackfillDailyCompletions() async {
@@ -148,8 +189,12 @@ class ChallengeProgressService {
       if (dateStr == null) {
         continue;
       }
-      final day = DateTime.parse(dateStr);
-      final target = await getChallengeTargetForCalendarDay(day);
+      final day = _tryParseDateOnly(dateStr);
+      if (day == null) {
+        continue;
+      }
+      // 백필은 기존 로컬 규칙만 사용해 초기 로드 시 원격 왕복 비용을 줄인다.
+      final target = await _getLocalChallengeTargetForCalendarDay(day);
       if (row['level_name'] == target.levelName &&
           row['game_number'] == target.gameNumber) {
         await _dailyRepo.addCompletionForDate(dateStr);
@@ -171,7 +216,8 @@ class ChallengeProgressService {
         return firestoreTarget;
       }
       if (_remotePuzzleService.isConfigured) {
-        final remoteTarget = await _remotePuzzleService.fetchDailyChallengeTarget(
+        final remoteTarget =
+            await _remotePuzzleService.fetchDailyChallengeTarget(
           date: calendarDay,
         );
         if (remoteTarget != null) {
@@ -180,18 +226,24 @@ class ChallengeProgressService {
       }
     }
 
-    final dayOnly = DateTime(calendarDay.year, calendarDay.month, calendarDay.day);
+    return _getLocalChallengeTargetForCalendarDay(calendarDay);
+  }
+
+  Future<TodayChallengeTarget> _getLocalChallengeTargetForCalendarDay(
+    DateTime calendarDay,
+  ) async {
+    final dayOnly =
+        DateTime(calendarDay.year, calendarDay.month, calendarDay.day);
     final epoch = DateTime(2024, 1, 1);
     final daysSinceEpoch = dayOnly.difference(epoch).inDays;
     final levelIndex = daysSinceEpoch % SudokuLevel.levels.length;
     final level = SudokuLevel.levels[levelIndex];
     final gameNumbers = await _loadGameNumbersForLevel(level.name);
-    final safeGameNumbers = gameNumbers.where((gameNumber) => gameNumber > 0).toList()
-      ..sort();
-    final gameNumber =
-        safeGameNumbers.isEmpty
-            ? 1
-            : safeGameNumbers[daysSinceEpoch % safeGameNumbers.length];
+    final safeGameNumbers =
+        gameNumbers.where((gameNumber) => gameNumber > 0).toList()..sort();
+    final gameNumber = safeGameNumbers.isEmpty
+        ? 1
+        : safeGameNumbers[daysSinceEpoch % safeGameNumbers.length];
 
     return TodayChallengeTarget(
       levelName: level.name,
@@ -220,7 +272,10 @@ class ChallengeProgressService {
       if (rawDate == null) {
         return false;
       }
-      final clearDate = _dateOnly(DateTime.parse(rawDate));
+      final clearDate = _tryParseDateOnly(rawDate);
+      if (clearDate == null) {
+        return false;
+      }
       return !clearDate.isBefore(earliest) && !clearDate.isAfter(today);
     }).length;
   }
@@ -234,14 +289,52 @@ class ChallengeProgressService {
       if (rawDate == null) {
         return false;
       }
-      final clearDate = _dateOnly(DateTime.parse(rawDate));
-      final wrongCount = record['wrong_count'] as int? ?? 0;
+      final clearDate = _tryParseDateOnly(rawDate);
+      if (clearDate == null) {
+        return false;
+      }
+      final wrongCount = _recordInt(record, 'wrong_count');
       return !clearDate.isBefore(earliest) &&
           !clearDate.isAfter(today) &&
           wrongCount == 0;
     }).length;
   }
 
+  static int _recordInt(Map<String, dynamic> record, String field) {
+    final value = record[field];
+    if (value == null) {
+      return 0;
+    }
+    if (value is int) {
+      return value;
+    }
+    if (value is double) {
+      return value.toInt();
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    return int.tryParse(value.toString()) ?? 0;
+  }
+
+  static DateTime? _tryParseDateOnly(String raw) {
+    try {
+      return _dateOnly(DateTime.parse(raw));
+    } catch (_) {
+      return null;
+    }
+  }
+
   static DateTime _dateOnly(DateTime date) =>
       DateTime(date.year, date.month, date.day);
+
+  static String? _firstClearDate(List<Map<String, dynamic>> records) {
+    for (final record in records) {
+      final rawDate = record['clear_date'];
+      if (rawDate is String && rawDate.isNotEmpty) {
+        return rawDate;
+      }
+    }
+    return null;
+  }
 }

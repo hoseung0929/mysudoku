@@ -9,31 +9,46 @@ class FirebaseBootstrapService {
 
   static final FirebaseBootstrapService instance = FirebaseBootstrapService._();
 
-  bool _initializeAttempted = false;
   bool _isReady = false;
+  Future<bool>? _initializing;
 
   bool get isReady => _isReady || Firebase.apps.isNotEmpty;
 
   Future<bool> initialize() async {
-    if (_initializeAttempted) {
-      return isReady;
-    }
-    _initializeAttempted = true;
-
-    try {
-      if (Firebase.apps.isEmpty) {
-        await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        );
-      }
+    if (isReady) {
       _isReady = true;
-    } catch (e) {
-      _isReady = false;
-      if (kDebugMode) {
-        AppLogger.debug('Firebase 초기화 건너뜀: $e');
-      }
+      return true;
+    }
+    final inFlight = _initializing;
+    if (inFlight != null) {
+      return inFlight;
     }
 
-    return isReady;
+    _initializing = () async {
+      try {
+        if (Firebase.apps.isEmpty) {
+          await Firebase.initializeApp(
+            options: DefaultFirebaseOptions.currentPlatform,
+          );
+        }
+        _isReady = true;
+      } catch (e) {
+        _isReady = false;
+        if (kDebugMode) {
+          AppLogger.debug('Firebase 초기화 건너뜀: $e');
+        }
+      }
+
+      return isReady;
+    }();
+
+    final result = await _initializing!;
+    if (result) {
+      _initializing = null;
+      return true;
+    }
+    // 실패한 경우에는 이후 호출에서 재시도할 수 있게 잠금을 해제한다.
+    _initializing = null;
+    return false;
   }
 }

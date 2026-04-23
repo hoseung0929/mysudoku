@@ -71,5 +71,25 @@ void main() {
       expect(target!.levelName, '중급');
       expect(target.gameNumber, 19);
     });
+
+    test('returns safe fallback when http request throws', () async {
+      final service = RemotePuzzleService(
+        baseUrl: 'https://example.com/api',
+        client: MockClient((request) async {
+          throw Exception('network down');
+        }),
+      );
+
+      final entries = await service.fetchCatalogForLevel(
+        levelName: '초급',
+        limit: 10,
+      );
+      final target = await service.fetchDailyChallengeTarget(
+        date: DateTime(2026, 4, 12),
+      );
+
+      expect(entries, isEmpty);
+      expect(target, isNull);
+    });
   });
 }

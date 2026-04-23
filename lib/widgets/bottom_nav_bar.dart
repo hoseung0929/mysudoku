@@ -21,10 +21,10 @@ class BottomNavBar extends StatelessWidget {
         icon: Icons.cottage_rounded,
       ),
       const _BottomNavItemData(
-        icon: Icons.local_florist_outlined,
+        icon: Icons.explore_rounded,
       ),
       const _BottomNavItemData(
-        icon: Icons.auto_stories_outlined,
+        icon: Icons.bar_chart_rounded,
       ),
     ];
 

@@ -670,10 +670,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Keep your streak with today\'s featured puzzle.';
 
   @override
-  String get challengeTodayReviewButton => 'Solve again gently';
+  String get challengeTodayReviewButton => 'Continue at your pace';
 
   @override
   String get challengeTodayStartButton => 'Start at your pace';
+
+  @override
+  String get myPaceNoPlayableTitle => 'No playable game';
+
+  @override
+  String get myPaceNoPlayableMessage =>
+      'There are no new puzzles left to play across all levels.';
 
   @override
   String get challengeWeeklyGoalReachedTitle => 'Weekly goal reached';

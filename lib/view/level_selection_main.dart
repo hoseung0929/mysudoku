@@ -1,6 +1,3 @@
-import 'dart:io';
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,18 +10,27 @@ import 'package:mysudoku/model/sudoku_game.dart';
 import 'package:mysudoku/model/sudoku_level.dart';
 import 'package:mysudoku/services/challenge_progress_service.dart';
 import 'package:mysudoku/services/game_state_service.dart';
+import 'package:mysudoku/services/game_record_notifier.dart';
 import 'package:mysudoku/services/home_dashboard_service.dart';
 import 'package:mysudoku/services/level_progress_service.dart';
+import 'package:mysudoku/services/my_pace_service.dart';
 import 'package:mysudoku/services/onboarding_service.dart';
-import 'package:mysudoku/services/profile_image_service.dart';
+import 'package:mysudoku/services/profile_state_service.dart';
 import 'package:mysudoku/utils/app_logger.dart';
 import 'package:mysudoku/view/level_selection_screen.dart';
 import 'package:mysudoku/view/saved_games_screen.dart';
 import 'package:mysudoku/view/settings_screen.dart';
 import 'package:mysudoku/view/sudoku_game_screen.dart';
+import 'package:mysudoku/widgets/profile_editor_sheet.dart';
+import 'package:mysudoku/widgets/profile_glass_header.dart';
 
 class LevelSelectionMain extends StatefulWidget {
-  const LevelSelectionMain({super.key});
+  const LevelSelectionMain({
+    super.key,
+    this.showExploreOnly = false,
+  });
+
+  final bool showExploreOnly;
 
   @override
   State<LevelSelectionMain> createState() => _LevelSelectionMainState();
@@ -34,21 +40,17 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   /// 상태바 아래 프로필 바 본문 높이 (padding 22+18 + 아바타 열 ~56). 상태바 높이는 별도 합산.
   static const double _kProfileHeaderExtent = 96;
 
-  static const Color _cpSage = Color(0xFFE7F0E8);
-  static const Color _cpOat = Color(0xFFF2E9DA);
   static const Color _cpForest = Color(0xFF285B3F);
   static const Color _cpForestSoft = Color(0xFF5D7A69);
   static const Color _cpInk = Color(0xFF21382A);
-  static const Color _cpText = Color(0xFF66776C);
-  static const Color _cpLine = Color(0xFFE4DED3);
-  static const Color _cpCoral = Color(0xFFF4A261);
   static const Color _cpBlue = Color(0xFF457B9D);
 
   final DatabaseManager _databaseManager = DatabaseManager();
   final LevelProgressService _levelProgressService = LevelProgressService();
   final HomeDashboardService _homeDashboardService = HomeDashboardService();
   final OnboardingService _onboardingService = OnboardingService();
-  final ProfileImageService _profileImageService = ProfileImageService();
+  final ProfileStateService _profileStateService = ProfileStateService();
+  final MyPaceService _myPaceService = MyPaceService();
   int? _selectedIndex;
   final ScrollController _scrollController = ScrollController();
   bool _isTop = true;
@@ -59,18 +61,19 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   String? _profileImagePath;
   String? _profileName;
   List<SudokuLevel> _levels = List<SudokuLevel>.from(SudokuLevel.levels);
+
   /// 레벨별 전체 게임 수 (DB 기준)
   Map<String, int> _levelTotal = {};
   ContinueGameSummary? _continueGame;
   List<ContinueGameSummary> _continueGames = [];
   SudokuGame? _todayChallenge;
   ChallengeProgressSummary? _challengeProgress;
-  int _averageClearTimeSeconds = 0;
 
   @override
   void initState() {
     super.initState();
     _databaseManager.catalogStatus.addListener(_handleCatalogStatusChanged);
+    GameRecordNotifier.instance.version.addListener(_handleRecordsChanged);
     _scrollController.addListener(() {
       if (_scrollController.offset <= 0 && !_isTop) {
         setState(() {
@@ -85,11 +88,50 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     _loadLevelTotals();
     _refreshLevels();
     _loadProfile();
+    if (widget.showExploreOnly) {
+      _isLoadingHome = false;
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _loadHomeDashboard();
+      });
+      _maybeShowHomeOnboarding();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant LevelSelectionMain oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.showExploreOnly == widget.showExploreOnly) {
+      return;
+    }
+
+    if (widget.showExploreOnly) {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingHome = false;
+        _showCatalogIntro = false;
+      });
+      return;
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _loadHomeDashboard();
+      if (_hasResolvedHomeOnboarding) {
+        _syncCatalogIntroVisibility();
+      } else {
+        _maybeShowHomeOnboarding();
+      }
     });
-    _maybeShowHomeOnboarding();
+  }
+
+  void _handleRecordsChanged() {
+    if (!mounted) return;
+    _refreshLevels();
+    if (!widget.showExploreOnly) {
+      _loadHomeDashboard();
+    }
   }
 
   Future<void> _loadLevelTotals() async {
@@ -106,7 +148,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   }
 
   Future<void> _refreshLevels() async {
-    final refreshedLevels = await _levelProgressService.refreshAllLevels(_levels);
+    final refreshedLevels =
+        await _levelProgressService.refreshAllLevels(_levels);
     if (!mounted) return;
     setState(() {
       _levels = refreshedLevels;
@@ -114,12 +157,11 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   }
 
   Future<void> _loadProfile() async {
-    final profileImagePath = await _profileImageService.getProfileImagePath();
-    final profileName = await _profileImageService.getProfileName();
+    final snapshot = await _profileStateService.load();
     if (!mounted) return;
     setState(() {
-      _profileImagePath = profileImagePath;
-      _profileName = profileName;
+      _profileImagePath = snapshot.imagePath;
+      _profileName = snapshot.name;
     });
   }
 
@@ -128,199 +170,47 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     required bool removeImage,
     String? pickedImagePath,
   }) async {
-    await _profileImageService.saveProfileName(name);
-    if (removeImage) {
-      await _profileImageService.clearProfileImage();
-    }
+    final snapshot = await _profileStateService.save(
+      name: name,
+      removeImage: removeImage,
+      currentImagePath: _profileImagePath,
+      pickedImagePath: pickedImagePath,
+    );
     if (!mounted) return;
     setState(() {
-      final trimmedName = name?.trim() ?? '';
-      _profileName = trimmedName.isEmpty ? null : trimmedName;
-      _profileImagePath = removeImage ? null : (pickedImagePath ?? _profileImagePath);
+      _profileName = snapshot.name;
+      _profileImagePath = snapshot.imagePath;
     });
   }
 
   Future<void> _openProfileEditor() async {
-    final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
-    final controller = TextEditingController(text: _profileName ?? '');
-    var draftImagePath = _profileImagePath;
-    var removeImage = false;
-    final hasSavedImage =
-        _profileImagePath != null && File(_profileImagePath!).existsSync();
-    await showModalBottomSheet<void>(
+    await showProfileEditorSheet(
       context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            final effectiveImagePath = removeImage ? null : draftImagePath;
-            final hasImage =
-                effectiveImagePath != null && File(effectiveImagePath).existsSync();
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  20,
-                  8,
-                  20,
-                  MediaQuery.of(sheetContext).viewInsets.bottom + 20,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      Localizations.localeOf(context).languageCode == 'ko'
-                          ? '프로필 편집'
-                          : 'Edit profile',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onSurface,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      Localizations.localeOf(context).languageCode == 'ko'
-                          ? '사진과 이름을 한 번에 바꿀 수 있어요.'
-                          : 'Update your photo and name together.',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                    ),
-                    const SizedBox(height: 20),
-                    Center(
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          CircleAvatar(
-                            radius: 42,
-                            backgroundColor: colorScheme.primaryContainer,
-                            backgroundImage:
-                                hasImage ? FileImage(File(effectiveImagePath)) : null,
-                            child: hasImage
-                                ? null
-                                : Icon(
-                                    Icons.person,
-                                    size: 46,
-                                    color: colorScheme.onPrimaryContainer,
-                                  ),
-                          ),
-                          Positioned(
-                            right: -2,
-                            bottom: -2,
-                            child: Container(
-                              width: 28,
-                              height: 28,
-                              decoration: BoxDecoration(
-                                color: colorScheme.primary,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: colorScheme.surface,
-                                  width: 2,
-                                ),
-                              ),
-                              child: Icon(
-                                Icons.photo_camera,
-                                size: 14,
-                                color: colorScheme.onPrimary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () async {
-                              final pickedPath =
-                                  await _profileImageService.pickAndSaveProfileImage();
-                              if (pickedPath == null) return;
-                              setSheetState(() {
-                                draftImagePath = pickedPath;
-                                removeImage = false;
-                              });
-                            },
-                            icon: const Icon(Icons.photo_library_outlined),
-                            label: Text(
-                              Localizations.localeOf(context).languageCode == 'ko'
-                                  ? '사진 변경'
-                                  : 'Change photo',
-                            ),
-                          ),
-                        ),
-                        if (hasSavedImage || hasImage) ...[
-                          const SizedBox(width: 12),
-                          TextButton(
-                            onPressed: () {
-                              setSheetState(() {
-                                removeImage = true;
-                                draftImagePath = null;
-                              });
-                            },
-                            child: Text(
-                              Localizations.localeOf(context).languageCode == 'ko'
-                                  ? '사진 제거'
-                                  : 'Remove',
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: controller,
-                      autofocus: true,
-                      maxLength: 20,
-                      textInputAction: TextInputAction.done,
-                      decoration: InputDecoration(
-                        labelText: Localizations.localeOf(context).languageCode == 'ko'
-                            ? '이름'
-                            : 'Name',
-                        hintText: l10n.homeGuestTitle,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        TextButton(
-                          onPressed: () => Navigator.of(sheetContext).pop(),
-                          child: Text(
-                            Localizations.localeOf(context).languageCode == 'ko'
-                                ? '취소'
-                                : 'Cancel',
-                          ),
-                        ),
-                        const Spacer(),
-                        FilledButton(
-                          onPressed: () async {
-                            await _saveProfile(
-                              name: controller.text,
-                              removeImage: removeImage,
-                              pickedImagePath: draftImagePath,
-                            );
-                            if (!sheetContext.mounted) return;
-                            Navigator.of(sheetContext).pop();
-                          },
-                          child: Text(
-                            Localizations.localeOf(context).languageCode == 'ko'
-                                ? '저장'
-                                : 'Save',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
+      profileImageService: _profileStateService.profileImageService,
+      initialProfileName: _profileName,
+      initialProfileImagePath: _profileImagePath,
+      onSave: ({
+        required String? name,
+        required bool removeImage,
+        String? pickedImagePath,
+      }) =>
+          _saveProfile(
+        name: name,
+        removeImage: removeImage,
+        pickedImagePath: pickedImagePath,
+      ),
     );
+  }
+
+  Future<void> _openSettings() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SettingsScreen(),
+      ),
+    );
+    if (!mounted) return;
+    await _loadProfile();
   }
 
   Future<void> _loadHomeDashboard() async {
@@ -346,7 +236,6 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
           _continueGames = data.continueGames;
           _todayChallenge = data.todayChallenge;
           _challengeProgress = data.challengeProgress;
-          _averageClearTimeSeconds = data.averageClearTimeSeconds;
         });
       }
     } finally {
@@ -429,6 +318,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   @override
   void dispose() {
     _databaseManager.catalogStatus.removeListener(_handleCatalogStatusChanged);
+    GameRecordNotifier.instance.version.removeListener(_handleRecordsChanged);
     _scrollController.dispose();
     super.dispose();
   }
@@ -440,9 +330,9 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
 
   void _syncCatalogIntroVisibility() {
     final status = _databaseManager.catalogStatus.value;
-    final shouldShow =
-        _hasResolvedHomeOnboarding &&
+    final shouldShow = _hasResolvedHomeOnboarding &&
         !_isShowingOnboarding &&
+        !widget.showExploreOnly &&
         _databaseManager.shouldShowInitialCatalogIntro &&
         status.isRunning;
 
@@ -537,8 +427,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
             summary.level.localizedName(l10n),
             summary.game.gameNumber,
           ),
-          itemSubtitleBuilder: (summary) =>
-              _savedGameListSubtitle(summary),
+          itemSubtitleBuilder: (summary) => _savedGameListSubtitle(summary),
           deleteTooltip: _deleteLabel(),
           onDelete: (summary) async {
             final shouldDelete = await _confirmDeleteSavedGame(summary);
@@ -556,6 +445,48 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
       selected.game,
       selected.level,
       restoreSavedSession: true,
+    );
+  }
+
+  Future<void> _openMyPaceGame() async {
+    final target = await _myPaceService.resolveTarget(
+      preferContinueGame: _continueGame,
+    );
+
+    if (!mounted) return;
+
+    if (target != null) {
+      final uiLevel = _levels.firstWhere(
+        (item) => item.name == target.level.name,
+        orElse: () => target.level,
+      );
+      await _openGame(
+        target.game,
+        uiLevel,
+        restoreSavedSession: target.restoreSavedSession,
+      );
+      return;
+    }
+
+    await _showNoPlayableGameDialog();
+  }
+
+  Future<void> _showNoPlayableGameDialog() async {
+    final l10n = AppLocalizations.of(context)!;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(l10n.myPaceNoPlayableTitle),
+          content: Text(l10n.myPaceNoPlayableMessage),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(l10n.commonOk),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -609,10 +540,9 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness:
-            Theme.of(context).brightness == Brightness.dark
-                ? Brightness.light
-                : Brightness.dark,
+        statusBarIconBrightness: Theme.of(context).brightness == Brightness.dark
+            ? Brightness.light
+            : Brightness.dark,
         systemNavigationBarColor: Colors.transparent,
         systemNavigationBarIconBrightness:
             Theme.of(context).brightness == Brightness.dark
@@ -637,10 +567,12 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
               SafeArea(
                 top: false,
                 bottom: false,
-                child:
-                    isTablet ? _buildTabletLayout(topInset) : _buildMobileLayout(topInset),
+                child: isTablet
+                    ? _buildTabletLayout(topInset)
+                    : _buildMobileLayout(topInset),
               ),
-              if (_showCatalogIntro) _buildCatalogIntroOverlay(),
+              if (_showCatalogIntro && !widget.showExploreOnly)
+                _buildCatalogIntroOverlay(),
             ],
           ),
         ),
@@ -666,8 +598,10 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHomeHero(),
-                const SizedBox(height: 20),
+                if (!widget.showExploreOnly) ...[
+                  _buildHomeHero(),
+                  const SizedBox(height: 20),
+                ],
                 _buildLevelGrid(),
               ],
             ),
@@ -714,8 +648,10 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                     );
                   },
                 ),
-                _buildHomeHero(),
-                const SizedBox(height: 16),
+                if (!widget.showExploreOnly) ...[
+                  _buildHomeHero(),
+                  const SizedBox(height: 16),
+                ],
                 _buildLevelExplorer(),
               ],
             ),
@@ -733,181 +669,20 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
 
   /// 스크롤 콘텐츠가 아래로 지나갈 때 블러로 비치는 상단 프로필 바 (상태바 영역까지 동일 글래스)
   Widget _buildGlassProfileHeader() {
-    final colorScheme = Theme.of(context).colorScheme;
-    final topInset = MediaQuery.paddingOf(context).top;
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: const Color(0xFFFDFBF6).withValues(alpha: 0.34),
-            border: Border(
-              bottom: BorderSide(
-                color: _isTop
-                    ? Colors.transparent
-                    : colorScheme.outlineVariant.withValues(alpha: 0.28),
-                width: 0.8,
-              ),
-            ),
-          ),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(16, 22 + topInset, 16, 18),
-            child: _buildProfileHeaderRow(),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProfileHeaderRow() {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
-    final hasProfileImage =
-        _profileImagePath != null && File(_profileImagePath!).existsSync();
-    final displayName = (_profileName?.trim().isNotEmpty ?? false)
-        ? _profileName!
-        : l10n.homeGuestTitle;
-    final subtitleText = (_profileName?.trim().isNotEmpty ?? false)
-        ? (Localizations.localeOf(context).languageCode == 'ko'
-            ? '안녕, $displayName! 오늘 하루는 어땠나요?'
-            : '$displayName, ready for one calm puzzle today?')
-        : (Localizations.localeOf(context).languageCode == 'ko'
-            ? '안녕! 오늘 하루는 어땠나요?'
-            : 'One calm puzzle for today.');
-    return Row(
-      children: [
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              children: [
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: colorScheme.surface,
-                        border: Border.all(
-                          color: colorScheme.outlineVariant.withValues(alpha: 0.9),
-                          width: 2.5,
-                        ),
-                      ),
-                      child: CircleAvatar(
-                        radius: 25,
-                        backgroundColor: colorScheme.primaryContainer,
-                        backgroundImage: hasProfileImage
-                            ? FileImage(File(_profileImagePath!))
-                            : null,
-                        child: hasProfileImage
-                            ? null
-                            : Icon(
-                                Icons.person,
-                                size: 31,
-                                color: colorScheme.onPrimaryContainer,
-                              ),
-                      ),
-                    ),
-                    Positioned(
-                      right: -2,
-                      bottom: -2,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: _openProfileEditor,
-                          customBorder: const CircleBorder(),
-                          child: Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: colorScheme.primary,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: colorScheme.surface,
-                                width: 2,
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.edit,
-                              size: 10,
-                              color: colorScheme.onPrimary,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 18),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        displayName,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 20,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        subtitleText,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: colorScheme.onSurfaceVariant,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(),
-                ),
-              );
-            },
-            borderRadius: BorderRadius.circular(18),
-            child: Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.42),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.55),
-                ),
-              ),
-              child: Icon(
-                Icons.tune_rounded,
-                size: 20,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-        ),
-      ],
+    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
+    return ProfileGlassHeader(
+      isTop: _isTop,
+      profileName: _profileName,
+      guestTitle: l10n.homeGuestTitle,
+      profileImagePath: _profileImagePath,
+      onTapSettings: _openSettings,
+      sectionLabel: widget.showExploreOnly ? null : (isKorean ? '홈' : 'Home'),
+      onTapEditProfile: _openProfileEditor,
     );
   }
 
   Widget _buildHomeHero() {
-    final l10n = AppLocalizations.of(context)!;
     if (_isLoadingHome) {
       return const Center(
         child: Padding(
@@ -921,44 +696,10 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (_todayChallenge != null) _buildTodaySpotlightCard(_todayChallenge!),
-        const SizedBox(height: 18),
-        Row(
-          children: [
-            Expanded(
-              child: _EditorialMiniStatCard(
-                eyebrow: Localizations.localeOf(context).languageCode == 'ko'
-                    ? '마음의 준비'
-                    : 'Gentle focus',
-                value: _focusSummaryValue(),
-                detail: Localizations.localeOf(context).languageCode == 'ko'
-                    ? '이전 평균 몰입 시간'
-                    : 'Your recent average focus',
-                valueIcon: Icons.spa_outlined,
-                tone: _cpSage,
-                accent: _cpBlue,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _EditorialMiniStatCard(
-                eyebrow: Localizations.localeOf(context).languageCode == 'ko'
-                    ? '오늘의 차분함'
-                    : 'Calm streak',
-                value: _calmStreakValue(l10n),
-                detail: (_challengeProgress?.isTodayChallengeCleared ?? false)
-                    ? (Localizations.localeOf(context).languageCode == 'ko'
-                        ? '오늘 퍼즐을 마쳤어요'
-                        : 'Today is complete')
-                    : (Localizations.localeOf(context).languageCode == 'ko'
-                        ? '차분한 흐름을 이어가보세요'
-                        : 'Keep the calm rhythm going'),
-                valueIcon: Icons.self_improvement_outlined,
-                tone: _cpOat,
-                accent: _cpCoral,
-              ),
-            ),
-          ],
-        ),
+        if (_challengeProgress != null) ...[
+          const SizedBox(height: 14),
+          _buildHomeChallengeSection(_challengeProgress!),
+        ],
         if (_continueGame != null) ...[
           const SizedBox(height: 18),
           _buildContinueCard(_continueGame!),
@@ -995,7 +736,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                         ),
                       ],
                       border: Border.all(
-                        color: colorScheme.outlineVariant.withValues(alpha: 0.65),
+                        color:
+                            colorScheme.outlineVariant.withValues(alpha: 0.65),
                       ),
                     ),
                     child: ValueListenableBuilder<PuzzleCatalogStatus>(
@@ -1052,7 +794,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                                 color: colorScheme.surfaceContainerLow,
                                 borderRadius: BorderRadius.circular(22),
                                 border: Border.all(
-                                  color: colorScheme.outlineVariant.withValues(alpha: 0.72),
+                                  color: colorScheme.outlineVariant
+                                      .withValues(alpha: 0.72),
                                 ),
                               ),
                               child: Column(
@@ -1121,10 +864,6 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
 
   Widget _buildTodaySpotlightCard(SudokuGame game) {
     final l10n = AppLocalizations.of(context)!;
-    final level = SudokuLevel.levels.firstWhere(
-      (item) => item.name == game.levelName,
-      orElse: () => SudokuLevel.levels.first,
-    );
     final challengeDone = _challengeProgress?.isTodayChallengeCleared ?? false;
     return Container(
       width: double.infinity,
@@ -1200,7 +939,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(minWidth: 168),
               child: FilledButton(
-                onPressed: () => _openGame(game, level),
+                onPressed: _openMyPaceGame,
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFFF8F4E8),
                   foregroundColor: _cpForest,
@@ -1255,8 +994,9 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
           : (Localizations.localeOf(context).languageCode == 'ko'
               ? '최근 퍼즐'
               : 'Recent puzzle'),
-      savedGamesLabel:
-          _continueGames.length > 1 ? _savedGamesCta(_continueGames.length) : null,
+      savedGamesLabel: _continueGames.length > 1
+          ? _savedGamesCta(_continueGames.length)
+          : null,
       onTap: () => _openGame(
         summary.game,
         summary.level,
@@ -1266,28 +1006,138 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     );
   }
 
+  Widget _buildHomeChallengeSection(ChallengeProgressSummary challenge) {
+    final l10n = AppLocalizations.of(context)!;
+    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(
+              Icons.local_florist_outlined,
+              size: 18,
+              color: _cpBlue,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              isKorean ? '챌린지 흐름' : 'Challenge rhythm',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: _cpBlue,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _HomeChallengeMiniStatCard(
+                eyebrow: isKorean ? '연속 기록' : 'Streak',
+                value: challenge.streakDays > 0
+                    ? l10n.challengeStreakDays(challenge.streakDays)
+                    : l10n.challengeStreakStartToday,
+                tone: const Color(0xFFE7F0E8),
+                accent: const Color(0xFF457B9D),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _HomeChallengeMiniStatCard(
+                eyebrow: isKorean ? '이번 주 흐름' : 'This week',
+                value: challenge.isWeeklyGoalAchieved
+                    ? l10n.challengeWeeklyGoalReachedTitle
+                    : l10n.challengeWeeklyGoalRemainingTitle(
+                        challenge.remainingWeeklyGoal,
+                      ),
+                tone: const Color(0xFFF2E9DA),
+                accent: const Color(0xFFF4A261),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _HomeWeeklyGoalCard(
+          l10n: l10n,
+          challenge: challenge,
+        ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            onPressed: _showChallengeMetricsBasisSheet,
+            icon: const Icon(Icons.info_outline, size: 18),
+            label: Text(
+              isKorean ? '지표 기준 보기' : 'See metric basis',
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showChallengeMetricsBasisSheet() async {
+    if (!mounted) return;
+    final colorScheme = Theme.of(context).colorScheme;
+    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isKorean ? '챌린지 지표 기준' : 'Challenge metric basis',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  isKorean
+                      ? '주간 진행도: 최근 7일의 완료 이벤트 수를 기준으로 계산됩니다.'
+                      : 'Weekly progress: based on clear events from the last 7 days.',
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  isKorean
+                      ? '연속 기록: 오늘의 도전을 완료한 날짜 연속성으로 계산됩니다.'
+                      : 'Streak: based on consecutive dates when the daily challenge was completed.',
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   String _savedGamesTitle() {
     return Localizations.localeOf(context).languageCode == 'ko'
         ? '저장된 게임'
         : 'Saved games';
-  }
-
-  String _focusSummaryValue() {
-    final roundedMinutes = _averageClearTimeSeconds <= 0
-        ? 10
-        : ((_averageClearTimeSeconds / 60).round()).clamp(1, 99);
-    if (Localizations.localeOf(context).languageCode == 'ko') {
-      return '$roundedMinutes분 준비됨';
-    }
-    return '$roundedMinutes min ready';
-  }
-
-  String _calmStreakValue(AppLocalizations l10n) {
-    final streakDays = _challengeProgress?.streakDays ?? 0;
-    if (Localizations.localeOf(context).languageCode == 'ko') {
-      return streakDays > 0 ? '$streakDays일 차' : '오늘 시작';
-    }
-    return streakDays > 0 ? 'Day $streakDays' : 'Start today';
   }
 
   String _savedGamesDescription() {
@@ -1341,26 +1191,28 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          Localizations.localeOf(context).languageCode == 'ko'
-              ? 'Explore Levels'
-              : 'Explore Levels',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-            color: colorScheme.onSurface,
+        if (!widget.showExploreOnly) ...[
+          Text(
+            Localizations.localeOf(context).languageCode == 'ko'
+                ? 'Explore Levels'
+                : 'Explore Levels',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 22,
+              color: colorScheme.onSurface,
+            ),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          Localizations.localeOf(context).languageCode == 'ko'
-              ? '지금 기분에 맞는 난이도를 바로 고를 수 있어요.'
-              : 'Pick the difficulty that feels right for this moment.',
-          style: TextStyle(
-            color: colorScheme.onSurfaceVariant,
+          const SizedBox(height: 4),
+          Text(
+            Localizations.localeOf(context).languageCode == 'ko'
+                ? '지금 기분에 맞는 난이도를 바로 고를 수 있어요.'
+                : 'Pick the difficulty that feels right for this moment.',
+            style: TextStyle(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
-        ),
-        const SizedBox(height: 10),
+          const SizedBox(height: 10),
+        ],
         ...List.generate(5, (index) => _buildLevelCard(index)),
       ],
     );
@@ -1371,26 +1223,28 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          Localizations.localeOf(context).languageCode == 'ko'
-              ? 'Explore Levels'
-              : 'Explore Levels',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-            color: colorScheme.onSurface,
+        if (!widget.showExploreOnly) ...[
+          Text(
+            Localizations.localeOf(context).languageCode == 'ko'
+                ? 'Explore Levels'
+                : 'Explore Levels',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 22,
+              color: colorScheme.onSurface,
+            ),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          Localizations.localeOf(context).languageCode == 'ko'
-              ? '차분하게 시작할지, 깊게 몰입할지 고를 수 있어요.'
-              : 'Choose between a gentle start or deeper focus.',
-          style: TextStyle(
-            color: colorScheme.onSurfaceVariant,
+          const SizedBox(height: 4),
+          Text(
+            Localizations.localeOf(context).languageCode == 'ko'
+                ? '차분하게 시작할지, 깊게 몰입할지 고를 수 있어요.'
+                : 'Choose between a gentle start or deeper focus.',
+            style: TextStyle(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
+          const SizedBox(height: 12),
+        ],
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -1579,31 +1433,27 @@ class _ResumeActionCard extends StatelessWidget {
   }
 }
 
-class _EditorialMiniStatCard extends StatelessWidget {
-  const _EditorialMiniStatCard({
+class _HomeChallengeMiniStatCard extends StatelessWidget {
+  const _HomeChallengeMiniStatCard({
     required this.eyebrow,
     required this.value,
-    required this.detail,
-    required this.valueIcon,
     required this.tone,
     required this.accent,
   });
 
   final String eyebrow;
   final String value;
-  final String detail;
-  final IconData valueIcon;
   final Color tone;
   final Color accent;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: tone,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: _LevelSelectionMainState._cpLine),
+        border: Border.all(color: const Color(0xFFE4DED3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1616,49 +1466,196 @@ class _EditorialMiniStatCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(999),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
             eyebrow,
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: _LevelSelectionMainState._cpText,
+              color: Color(0xFF66776C),
             ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(
-                valueIcon,
-                size: 16,
-                color: accent.withValues(alpha: 0.9),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: _LevelSelectionMainState._cpInk,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 10),
           Text(
-            detail,
+            value,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF21382A),
+            ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 11,
-              height: 1.35,
-              color: _LevelSelectionMainState._cpText,
-            ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _HomeWeeklyGoalCard extends StatelessWidget {
+  const _HomeWeeklyGoalCard({
+    required this.l10n,
+    required this.challenge,
+  });
+
+  final AppLocalizations l10n;
+  final ChallengeProgressSummary challenge;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final goalSlots = challenge.weeklyGoalTarget.clamp(1, 7);
+    final filledSlots = challenge.weeklyClearCount.clamp(0, goalSlots);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.challengeWeeklyGoalHeading,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.challengeWeeklyClearsLine(challenge.weeklyGoalTarget),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 14),
+            _HomeLeafProgressRow(
+              filledCount: filledSlots,
+              totalCount: goalSlots,
+              isComplete: challenge.isWeeklyGoalAchieved,
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: _HomeGoalMetaLabel(
+                    icon: Icons.check_circle_outline,
+                    label: l10n.challengeWeeklyProgressShort(
+                      challenge.weeklyClearCount,
+                      challenge.weeklyGoalTarget,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _HomeGoalMetaLabel(
+                    icon: Icons.auto_awesome,
+                    label: l10n.challengeWeeklyPerfectShort(
+                      challenge.perfectClearCount,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              challenge.isWeeklyGoalAchieved
+                  ? l10n.challengeWeeklyCongratsFooter
+                  : l10n.challengeWeeklyAlmostFooter(
+                      challenge.remainingWeeklyGoal,
+                    ),
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeGoalMetaLabel extends StatelessWidget {
+  const _HomeGoalMetaLabel({
+    required this.icon,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: colorScheme.primary),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HomeLeafProgressRow extends StatelessWidget {
+  const _HomeLeafProgressRow({
+    required this.filledCount,
+    required this.totalCount,
+    required this.isComplete,
+  });
+
+  final int filledCount;
+  final int totalCount;
+  final bool isComplete;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final filledColor =
+        isComplete ? const Color(0xFF7AA874) : const Color(0xFF8EBE99);
+    final emptyColor = colorScheme.surfaceContainerHighest;
+
+    return Row(
+      children: List.generate(totalCount, (index) {
+        final filled = index < filledCount;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(right: index == totalCount - 1 ? 0 : 8),
+            child: Container(
+              height: 52,
+              decoration: BoxDecoration(
+                color:
+                    filled ? filledColor.withValues(alpha: 0.16) : emptyColor,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: filled
+                      ? filledColor.withValues(alpha: 0.28)
+                      : colorScheme.outlineVariant,
+                ),
+              ),
+              child: Center(
+                child: Transform.rotate(
+                  angle: filled ? -0.25 : 0,
+                  child: Icon(
+                    filled ? Icons.spa_rounded : Icons.eco_outlined,
+                    size: 22,
+                    color: filled ? filledColor : colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }),
     );
   }
 }
@@ -1849,9 +1846,8 @@ class _LevelCardState extends State<_LevelCard> {
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: _pressed
-              ? colorScheme.surfaceContainerLow
-              : colorScheme.surface,
+          color:
+              _pressed ? colorScheme.surfaceContainerLow : colorScheme.surface,
           borderRadius: BorderRadius.circular(28),
           border: Border.all(
             color: colorScheme.outlineVariant,
@@ -1860,7 +1856,9 @@ class _LevelCardState extends State<_LevelCard> {
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(
-                alpha: Theme.of(context).brightness == Brightness.dark ? 0.16 : 0.08,
+                alpha: Theme.of(context).brightness == Brightness.dark
+                    ? 0.16
+                    : 0.08,
               ),
               blurRadius: 12,
               offset: const Offset(0, 4),

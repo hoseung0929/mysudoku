@@ -9,11 +9,11 @@ import 'package:mysudoku/l10n/app_locale_scope.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
 import 'package:mysudoku/services/firebase_bootstrap_service.dart';
 import 'package:mysudoku/services/firebase_identity_service.dart';
+import 'package:mysudoku/services/game_record_notifier.dart';
 import 'package:mysudoku/services/notification_service.dart';
 import 'package:mysudoku/theme/app_theme.dart';
 import 'package:mysudoku/theme/app_theme_scope.dart';
 import 'package:mysudoku/navigation/root_nav_scope.dart';
-import 'package:mysudoku/view/challenge_screen.dart';
 import 'package:mysudoku/view/level_selection_main.dart';
 import 'package:mysudoku/view/records_statistics_screen.dart';
 import 'package:mysudoku/view/startup_catalog_preparing_gate.dart';
@@ -179,25 +179,18 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
-  final Set<int> _loadedTabs = <int>{0};
+  bool _recordsTabLoaded = false;
 
   void _onItemTapped(int index) {
+    final isChanged = _selectedIndex != index;
     setState(() {
       _selectedIndex = index;
-      _loadedTabs.add(index);
+      if (index == 2) {
+        _recordsTabLoaded = true;
+      }
     });
-  }
-
-  Widget _buildPage(int index) {
-    switch (index) {
-      case 0:
-        return const LevelSelectionMain();
-      case 1:
-        return const ChallengeScreen();
-      case 2:
-        return const RecordsStatisticsScreen();
-      default:
-        return const LevelSelectionMain();
+    if (isChanged && index == 2) {
+      GameRecordNotifier.instance.notifyChanged();
     }
   }
 
@@ -209,13 +202,13 @@ class _MyHomePageState extends State<MyHomePage> {
         extendBody: true,
         backgroundColor: Colors.transparent,
         body: IndexedStack(
-          index: _selectedIndex,
-          children: List.generate(
-            3,
-            (index) => _loadedTabs.contains(index)
-                ? _buildPage(index)
+          index: _selectedIndex == 2 ? 1 : 0,
+          children: [
+            LevelSelectionMain(showExploreOnly: _selectedIndex == 1),
+            _recordsTabLoaded
+                ? const RecordsStatisticsScreen()
                 : const SizedBox.shrink(),
-          ),
+          ],
         ),
         bottomNavigationBar: Material(
           color: Colors.transparent,

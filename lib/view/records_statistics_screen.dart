@@ -5,26 +5,40 @@ import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
 import 'package:mysudoku/database/database_helper.dart';
 import 'package:mysudoku/model/sudoku_game.dart';
 import 'package:mysudoku/model/sudoku_level.dart';
+import 'package:mysudoku/services/game_record_notifier.dart';
+import 'package:mysudoku/services/profile_state_service.dart';
 import 'package:mysudoku/services/records_statistics_service.dart';
-import 'package:mysudoku/navigation/root_nav_scope.dart';
+import 'package:mysudoku/view/level_selection_screen.dart';
 import 'package:mysudoku/view/settings_screen.dart';
 import 'package:mysudoku/view/sudoku_game_screen.dart';
+import 'package:mysudoku/widgets/profile_editor_sheet.dart';
+import 'package:mysudoku/widgets/profile_glass_header.dart';
 
 class RecordsStatisticsScreen extends StatefulWidget {
   const RecordsStatisticsScreen({super.key});
 
   @override
-  State<RecordsStatisticsScreen> createState() => _RecordsStatisticsScreenState();
+  State<RecordsStatisticsScreen> createState() =>
+      _RecordsStatisticsScreenState();
 }
 
 class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
+  static const double _kProfileHeaderExtent = 96;
+
   final DatabaseHelper _dbHelper = DatabaseHelper();
-  final RecordsStatisticsService _statisticsService = RecordsStatisticsService();
+  final RecordsStatisticsService _statisticsService =
+      RecordsStatisticsService();
+  final ProfileStateService _profileStateService = ProfileStateService();
+  final ScrollController _scrollController = ScrollController();
   bool _isLoading = true;
+  bool _isTop = true;
+  int _loadRequestId = 0;
 
   Map<String, dynamic> _overall = {};
   List<Map<String, dynamic>> _levels = [];
   List<Map<String, dynamic>> _recent = [];
+  String? _profileImagePath;
+  String? _profileName;
 
   String _selectedLevel = RecordsLevelFilter.allLevels;
   int _selectedPeriodDays = 0;
@@ -33,9 +47,92 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   void initState() {
     super.initState();
     _loadStats();
+    _loadProfile();
+    GameRecordNotifier.instance.version.addListener(_handleRecordsChanged);
+    _scrollController.addListener(() {
+      if (_scrollController.offset <= 0 && !_isTop) {
+        setState(() {
+          _isTop = true;
+        });
+      } else if (_scrollController.offset > 0 && _isTop) {
+        setState(() {
+          _isTop = false;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    GameRecordNotifier.instance.version.removeListener(_handleRecordsChanged);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _handleRecordsChanged() {
+    if (!mounted) return;
+    _loadStats();
+  }
+
+  Future<void> _loadProfile() async {
+    final snapshot = await _profileStateService.load();
+    if (!mounted) return;
+    setState(() {
+      _profileImagePath = snapshot.imagePath;
+      _profileName = snapshot.name;
+    });
+  }
+
+  Future<void> _openSettings() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SettingsScreen(),
+      ),
+    );
+    if (!mounted) return;
+    await _loadProfile();
+  }
+
+  Future<void> _saveProfile({
+    required String? name,
+    required bool removeImage,
+    String? pickedImagePath,
+  }) async {
+    final snapshot = await _profileStateService.save(
+      name: name,
+      removeImage: removeImage,
+      currentImagePath: _profileImagePath,
+      pickedImagePath: pickedImagePath,
+    );
+    if (!mounted) return;
+    setState(() {
+      _profileName = snapshot.name;
+      _profileImagePath = snapshot.imagePath;
+    });
+  }
+
+  Future<void> _openProfileEditor() async {
+    await showProfileEditorSheet(
+      context: context,
+      profileImageService: _profileStateService.profileImageService,
+      initialProfileName: _profileName,
+      initialProfileImagePath: _profileImagePath,
+      onSave: ({
+        required String? name,
+        required bool removeImage,
+        String? pickedImagePath,
+      }) =>
+          _saveProfile(
+        name: name,
+        removeImage: removeImage,
+        pickedImagePath: pickedImagePath,
+      ),
+    );
   }
 
   Future<void> _loadStats() async {
+    final requestId = ++_loadRequestId;
     setState(() {
       _isLoading = true;
     });
@@ -45,7 +142,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         selectedPeriodDays: _selectedPeriodDays,
       );
 
-      if (mounted) {
+      if (mounted && requestId == _loadRequestId) {
         setState(() {
           _overall = data.overall;
           _levels = data.levels;
@@ -53,7 +150,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         });
       }
     } finally {
-      if (mounted) {
+      if (mounted && requestId == _loadRequestId) {
         setState(() {
           _isLoading = false;
         });
@@ -85,15 +182,80 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     );
   }
 
+  String _metricsBasisLabel(BuildContext context) {
+    return Localizations.localeOf(context).languageCode == 'ko'
+        ? '지표 기준 보기'
+        : 'See metric basis';
+  }
+
+  Future<void> _showMetricsBasisSheet() async {
+    if (!mounted) return;
+    final colorScheme = Theme.of(context).colorScheme;
+    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isKorean ? '기록 지표 기준' : 'Records metric basis',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  isKorean
+                      ? '기록 통계는 퍼즐별 최고 기록(clear_records)을 기준으로 집계됩니다.'
+                      : 'Record stats aggregate best-per-puzzle clears (clear_records).',
+                  style: TextStyle(
+                      color: colorScheme.onSurfaceVariant, height: 1.4),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  isKorean
+                      ? '챌린지 주간 진행은 완료 이벤트(clear_events)를 기준으로 계산됩니다.'
+                      : 'Challenge weekly progress uses completion events (clear_events).',
+                  style: TextStyle(
+                      color: colorScheme.onSurfaceVariant, height: 1.4),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
     final bottomInset = MediaQuery.of(context).padding.bottom;
-    if (_isLoading) {
-      return const SafeArea(
-        bottom: false,
-        child: Center(child: CircularProgressIndicator()),
+    final topInset = MediaQuery.paddingOf(context).top;
+    if (_isLoading && _overall.isEmpty && _levels.isEmpty && _recent.isEmpty) {
+      return const DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFFDFBF6),
+              Color(0xFFF7F4E8),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: Center(child: CircularProgressIndicator()),
+        ),
       );
     }
 
@@ -109,138 +271,130 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         ),
       ),
       child: SafeArea(
+        top: false,
         bottom: false,
-        child: RefreshIndicator(
-          onRefresh: _loadStats,
-          child: ListView(
-            padding: EdgeInsets.fromLTRB(20, 16, 20, 112 + bottomInset),
-            children: [
-              Row(
+        child: Stack(
+          children: [
+            RefreshIndicator(
+              onRefresh: _loadStats,
+              child: ListView(
+                controller: _scrollController,
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  topInset + _kProfileHeaderExtent + 12,
+                  20,
+                  112 + bottomInset,
+                ),
                 children: [
-                  Expanded(
-                    child: Text(
-                      l10n.recordsScreenTitle,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                      ),
+                  _RecordsHeroCard(
+                    trend: _statisticsService.buildDailyTrend(
+                      recent: _recent,
+                      selectedLevel: _selectedLevel,
                     ),
+                    title: Localizations.localeOf(context).languageCode == 'ko'
+                        ? '차분하게 쌓인 흐름을\n먼저 살펴보세요.'
+                        : 'Start with the gentle\nshape of your progress.',
+                    subtitle: Localizations.localeOf(context).languageCode ==
+                            'ko'
+                        ? '이번 주의 기록과 리듬을 먼저 보고, 숫자는 그다음에 천천히 확인해보세요.'
+                        : 'Take in this week’s rhythm first, then drift into the details when you want to.',
                   ),
-                  const SizedBox(width: 12),
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SettingsScreen(),
-                          ),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(18),
-                      child: Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          color: colorScheme.surface.withValues(alpha: 0.86),
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(
-                            color:
-                                colorScheme.outlineVariant.withValues(alpha: 0.85),
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.tune_rounded,
-                          size: 20,
-                          color: colorScheme.onSurfaceVariant,
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _recordsInsightCard(
+                          eyebrow:
+                              Localizations.localeOf(context).languageCode ==
+                                      'ko'
+                                  ? '이번 주의 발자국'
+                                  : 'This week',
+                          value: Localizations.localeOf(context).languageCode ==
+                                  'ko'
+                              ? '${_statisticsService.buildTrendSummary(recent: _recent, selectedLevel: _selectedLevel)['total_clears'] as int}회'
+                              : '${_statisticsService.buildTrendSummary(recent: _recent, selectedLevel: _selectedLevel)['total_clears'] as int} clears',
+                          icon: Icons.pets_outlined,
+                          tone: const Color(0xFFE7F0E8),
+                          accent: const Color(0xFF457B9D),
                         ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              _RecordsHeroCard(
-                trend: _statisticsService.buildDailyTrend(
-                  recent: _recent,
-                  selectedLevel: _selectedLevel,
-                ),
-                title: Localizations.localeOf(context).languageCode == 'ko'
-                    ? '차분하게 쌓인 흐름을\n먼저 살펴보세요.'
-                    : 'Start with the gentle\nshape of your progress.',
-                subtitle: Localizations.localeOf(context).languageCode == 'ko'
-                    ? '이번 주의 기록과 리듬을 먼저 보고, 숫자는 그다음에 천천히 확인해보세요.'
-                    : 'Take in this week’s rhythm first, then drift into the details when you want to.',
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _recordsInsightCard(
-                      eyebrow: Localizations.localeOf(context).languageCode == 'ko'
-                          ? '이번 주의 발자국'
-                          : 'This week',
-                      value:
-                          '${_statisticsService.buildTrendSummary(recent: _recent, selectedLevel: _selectedLevel)['total_clears'] as int}회',
-                      icon: Icons.pets_outlined,
-                      tone: const Color(0xFFE7F0E8),
-                      accent: const Color(0xFF457B9D),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _recordsInsightCard(
-                      eyebrow: Localizations.localeOf(context).languageCode == 'ko'
-                          ? '평균 호흡'
-                          : 'Average pace',
-                      value: _statisticsService.formatSeconds(
-                        _displayOverall['total_average_time'] as double,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _recordsInsightCard(
+                          eyebrow:
+                              Localizations.localeOf(context).languageCode ==
+                                      'ko'
+                                  ? '평균 호흡'
+                                  : 'Average pace',
+                          value: _statisticsService.formatSeconds(
+                            _displayOverall['total_average_time'] as double,
+                          ),
+                          icon: Icons.cloud_outlined,
+                          tone: const Color(0xFFF2E9DA),
+                          accent: const Color(0xFFF4A261),
+                        ),
                       ),
-                      icon: Icons.cloud_outlined,
-                      tone: const Color(0xFFF2E9DA),
-                      accent: const Color(0xFFF4A261),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: _showMetricsBasisSheet,
+                      icon: const Icon(Icons.info_outline, size: 18),
+                      label: Text(_metricsBasisLabel(context)),
                     ),
                   ),
+                  const SizedBox(height: 18),
+                  _buildFilterSection(l10n),
+                  const SizedBox(height: 20),
+                  _buildOverallSection(l10n),
+                  const SizedBox(height: 22),
+                  _buildTrendSection(l10n),
+                  if (_statisticsService.buildRecommendedLevelByMistakes(
+                        recent: _recent,
+                      ) !=
+                      null) ...[
+                    const SizedBox(height: 22),
+                    _buildRecommendationSection(l10n),
+                  ],
+                  const SizedBox(height: 22),
+                  _buildBestByLevelSection(l10n),
+                  const SizedBox(height: 22),
+                  _buildLevelSection(l10n),
+                  const SizedBox(height: 22),
+                  _buildBestSection(l10n),
+                  const SizedBox(height: 22),
+                  _buildRecentSection(l10n),
                 ],
               ),
-              const SizedBox(height: 10),
-              Text(
-                l10n.recordsChallengeTabHint,
-                style: TextStyle(
-                  fontSize: 13,
-                  height: 1.4,
-                  color: colorScheme.onSurfaceVariant,
-                ),
+            ),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: ProfileGlassHeader(
+                isTop: _isTop,
+                profileName: _profileName,
+                guestTitle: l10n.homeGuestTitle,
+                profileImagePath: _profileImagePath,
+                onTapSettings: _openSettings,
+                onTapEditProfile: _openProfileEditor,
               ),
-              TextButton(
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  alignment: Alignment.centerLeft,
-                ),
-                onPressed: () =>
-                    RootNavScope.maybeOf(context)?.goToTab(1),
-                child: Text(l10n.recordsGoToChallengeTab),
+            ),
+            if (_isLoading)
+              const Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: LinearProgressIndicator(minHeight: 2),
               ),
-              const SizedBox(height: 18),
-              _buildFilterSection(l10n),
-              const SizedBox(height: 20),
-              _buildOverallSection(l10n),
-              const SizedBox(height: 22),
-              _buildTrendSection(l10n),
-              const SizedBox(height: 22),
-              _buildBestByLevelSection(l10n),
-              const SizedBox(height: 22),
-              _buildLevelSection(l10n),
-              const SizedBox(height: 22),
-              _buildBestSection(l10n),
-              const SizedBox(height: 22),
-              _buildRecentSection(l10n),
-            ],
-          ),
+          ],
         ),
       ),
     );
@@ -402,11 +556,12 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               spacing: 12,
               runSpacing: 12,
               children: [
-                _metricChip(l10n.recordsMetricClears, '$totalCleared/$totalGames'),
                 _metricChip(
-                    l10n.recordsMetricClearRate, '${clearRate.toStringAsFixed(1)}%'),
-                _metricChip(
-                    l10n.recordsMetricPerfectRate, '${perfectRate.toStringAsFixed(1)}%'),
+                    l10n.recordsMetricClears, '$totalCleared/$totalGames'),
+                _metricChip(l10n.recordsMetricClearRate,
+                    '${clearRate.toStringAsFixed(1)}%'),
+                _metricChip(l10n.recordsMetricPerfectRate,
+                    '${perfectRate.toStringAsFixed(1)}%'),
                 _metricChip(l10n.recordsMetricAvgTime,
                     _statisticsService.formatSeconds(avgTime)),
                 _metricChip(
@@ -474,8 +629,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               final cleared = stat['cleared_count'] as int;
               final total = stat['total_count'] as int;
               final clearRate = stat['clear_rate'] as double;
-              final avgTime =
-                  _statisticsService.formatSeconds(stat['average_time'] as double);
+              final avgTime = _statisticsService
+                  .formatSeconds(stat['average_time'] as double);
 
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
@@ -492,7 +647,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        Text('$cleared/$total · ${clearRate.toStringAsFixed(1)}%'),
+                        Text(
+                            '$cleared/$total · ${clearRate.toStringAsFixed(1)}%'),
                       ],
                     ),
                     const SizedBox(height: 6),
@@ -783,7 +939,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               final timeStr = _statisticsService.formatSeconds(clearTime);
               return ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.history, color: colorScheme.onSurfaceVariant),
+                leading:
+                    Icon(Icons.history, color: colorScheme.onSurfaceVariant),
                 title: Text(
                   l10n.recordsGameNumberTitle(levelName, gameNumber),
                 ),
@@ -792,6 +949,95 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 ),
               );
             }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecommendationSection(AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final recommendation = _statisticsService.buildRecommendedLevelByMistakes(
+      recent: _recent,
+    );
+    if (recommendation == null) {
+      return const SizedBox.shrink();
+    }
+
+    final levelNameKey = recommendation['level_name'] as String;
+    final localizedLevel = levelNameKey.localizedSudokuLevelName(l10n);
+    final averageWrong = recommendation['average_wrong'] as double;
+    final sampleCount = recommendation['sample_count'] as int;
+    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isKorean ? '다음 추천' : 'Suggested next focus',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isKorean
+                  ? '최근 7일 기준으로 오답이 가장 많았던 난이도예요.'
+                  : 'In the last 7 days, this level had your highest mistake average.',
+              style: TextStyle(color: colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFF4EF),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE4DED3)),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: colorScheme.surfaceContainerHighest,
+                    child: Text(
+                      localizedLevel.substring(0, 1),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      isKorean
+                          ? '$localizedLevel · 평균 오답 ${averageWrong.toStringAsFixed(1)} ($sampleCount판)'
+                          : '$localizedLevel · Avg mistakes ${averageWrong.toStringAsFixed(1)} ($sampleCount clears)',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FilledButton.icon(
+                onPressed: () => _openRecommendedLevel(levelNameKey),
+                icon: const Icon(Icons.play_arrow_rounded),
+                label: Text(isKorean ? '추천 난이도 열기' : 'Open recommended level'),
+              ),
+            ),
           ],
         ),
       ),
@@ -1005,12 +1251,21 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     if (board.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.recordsGameLoadError)),
+        SnackBar(
+            content: Text(AppLocalizations.of(context)!.recordsGameLoadError)),
       );
       return;
     }
 
     final solution = await _dbHelper.getSolution(levelName, gameNumber);
+    if (!_isPlayableBoard(board) || !_isPlayableBoard(solution)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(AppLocalizations.of(context)!.recordsGameLoadError)),
+      );
+      return;
+    }
     final game = SudokuGame(
       board: board,
       solution: solution,
@@ -1029,6 +1284,32 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _openRecommendedLevel(String levelName) async {
+    final level = SudokuLevel.levels.firstWhere(
+      (item) => item.name == levelName,
+      orElse: () => SudokuLevel.levels.first,
+    );
+    if (!mounted) return;
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LevelSelectionScreen(level: level),
+      ),
+    );
+  }
+
+  bool _isPlayableBoard(List<List<int>> board) {
+    if (board.length != 9) {
+      return false;
+    }
+    for (final row in board) {
+      if (row.length != 9) {
+        return false;
+      }
+    }
+    return true;
   }
 }
 
@@ -1082,7 +1363,8 @@ class _RecordsHeroCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(999),
@@ -1194,9 +1476,11 @@ class _RecordsTrendBackdropPainter extends CustomPainter {
     final values = trend
         .map((day) => (day['clears'] as int).toDouble())
         .toList(growable: false);
-    final maxValue = values.fold<double>(0, (max, value) => value > max ? value : max);
+    final maxValue =
+        values.fold<double>(0, (max, value) => value > max ? value : max);
     final safeMax = maxValue <= 0 ? 1.0 : maxValue;
-    final horizontalStep = values.length == 1 ? size.width : size.width / (values.length - 1);
+    final horizontalStep =
+        values.length == 1 ? size.width : size.width / (values.length - 1);
     final points = <Offset>[];
 
     for (var i = 0; i < values.length; i++) {

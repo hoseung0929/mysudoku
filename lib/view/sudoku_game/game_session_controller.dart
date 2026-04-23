@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:mysudoku/model/sudoku_game.dart';
 import 'package:mysudoku/model/sudoku_level.dart';
 import 'package:mysudoku/services/game_state_service.dart';
+import 'package:mysudoku/utils/app_logger.dart';
 
 class GameSessionSnapshot {
   const GameSessionSnapshot({
@@ -145,6 +147,16 @@ class GameSessionController {
     );
   }
 
+  Future<void> syncToCloud() async {
+    try {
+      await _gameStateService.syncToCloud();
+    } catch (e) {
+      if (kDebugMode) {
+        AppLogger.debug('게임 세션 클라우드 업로드 실패(무시): $e');
+      }
+    }
+  }
+
   void dispose() {
     _saveTimer?.cancel();
     _saveTimer = null;
@@ -154,7 +166,9 @@ class GameSessionController {
     required GameSessionState session,
     required SudokuGame game,
   }) {
-    if (session.isGameComplete || session.isGameOver || session.wrongCount >= 3) {
+    if (session.isGameComplete ||
+        session.isGameOver ||
+        session.wrongCount >= 3) {
       return true;
     }
 

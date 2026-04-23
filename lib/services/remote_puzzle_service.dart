@@ -46,44 +46,48 @@ class RemotePuzzleService {
       return const [];
     }
 
-    final response = await _resolvedClient.get(
-      Uri.parse(_baseUrl).replace(
-        path: _joinPath('catalog'),
-        queryParameters: {
-          'level_name': levelName,
-          'limit': '$limit',
-        },
-      ),
-    );
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      return const [];
-    }
-
-    final decoded = jsonDecode(response.body);
-    final rawItems = _extractCatalogItems(decoded);
-    final items = <RemotePuzzleEntry>[];
-    for (final rawItem in rawItems) {
-      if (rawItem is! Map<String, dynamic>) {
-        continue;
-      }
-      final gameNumber = _readInt(rawItem, 'game_number', 'gameNumber');
-      final board = _readBoard(rawItem['board']);
-      final solution = _readBoard(rawItem['solution']);
-      final entryLevelName =
-          _readString(rawItem, 'level_name', 'levelName') ?? levelName;
-      if (gameNumber == null || board == null || solution == null) {
-        continue;
-      }
-      items.add(
-        RemotePuzzleEntry(
-          levelName: entryLevelName,
-          gameNumber: gameNumber,
-          board: board,
-          solution: solution,
+    try {
+      final response = await _resolvedClient.get(
+        Uri.parse(_baseUrl).replace(
+          path: _joinPath('catalog'),
+          queryParameters: {
+            'level_name': levelName,
+            'limit': '$limit',
+          },
         ),
       );
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        return const [];
+      }
+
+      final decoded = jsonDecode(response.body);
+      final rawItems = _extractCatalogItems(decoded);
+      final items = <RemotePuzzleEntry>[];
+      for (final rawItem in rawItems) {
+        if (rawItem is! Map<String, dynamic>) {
+          continue;
+        }
+        final gameNumber = _readInt(rawItem, 'game_number', 'gameNumber');
+        final board = _readBoard(rawItem['board']);
+        final solution = _readBoard(rawItem['solution']);
+        final entryLevelName =
+            _readString(rawItem, 'level_name', 'levelName') ?? levelName;
+        if (gameNumber == null || board == null || solution == null) {
+          continue;
+        }
+        items.add(
+          RemotePuzzleEntry(
+            levelName: entryLevelName,
+            gameNumber: gameNumber,
+            board: board,
+            solution: solution,
+          ),
+        );
+      }
+      return items;
+    } catch (_) {
+      return const [];
     }
-    return items;
   }
 
   Future<TodayChallengeTarget?> fetchDailyChallengeTarget({
@@ -93,35 +97,39 @@ class RemotePuzzleService {
       return null;
     }
 
-    final yyyyMmDd =
-        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    final response = await _resolvedClient.get(
-      Uri.parse(_baseUrl).replace(
-        path: _joinPath('daily-challenge'),
-        queryParameters: {
-          'date': yyyyMmDd,
-        },
-      ),
-    );
-    if (response.statusCode < 200 || response.statusCode >= 300) {
+    try {
+      final yyyyMmDd =
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      final response = await _resolvedClient.get(
+        Uri.parse(_baseUrl).replace(
+          path: _joinPath('daily-challenge'),
+          queryParameters: {
+            'date': yyyyMmDd,
+          },
+        ),
+      );
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        return null;
+      }
+
+      final decoded = jsonDecode(response.body);
+      if (decoded is! Map<String, dynamic>) {
+        return null;
+      }
+
+      final levelName = _readString(decoded, 'level_name', 'levelName');
+      final gameNumber = _readInt(decoded, 'game_number', 'gameNumber');
+      if (levelName == null || gameNumber == null) {
+        return null;
+      }
+
+      return TodayChallengeTarget(
+        levelName: levelName,
+        gameNumber: gameNumber,
+      );
+    } catch (_) {
       return null;
     }
-
-    final decoded = jsonDecode(response.body);
-    if (decoded is! Map<String, dynamic>) {
-      return null;
-    }
-
-    final levelName = _readString(decoded, 'level_name', 'levelName');
-    final gameNumber = _readInt(decoded, 'game_number', 'gameNumber');
-    if (levelName == null || gameNumber == null) {
-      return null;
-    }
-
-    return TodayChallengeTarget(
-      levelName: levelName,
-      gameNumber: gameNumber,
-    );
   }
 
   String _joinPath(String segment) {

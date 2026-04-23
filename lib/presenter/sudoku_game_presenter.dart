@@ -447,6 +447,61 @@ class SudokuGamePresenter {
     _checkGameComplete();
   }
 
+  /// 개발/디버그 전용: 선택된 셀에 즉시 정답을 입력한다.
+  ///
+  /// 오답 카운트에 영향을 주지 않으며, 해당 셀을 힌트 셀로 표시해 이후
+  /// 사용자 입력 대상에서 제외한다. `kDebugMode` 에서만 사용해야 한다.
+  void devFillSelectedCellWithAnswer() {
+    if (_isGameComplete || _isGameOver || _isPaused) return;
+    final row = _boardController.selectedRow;
+    final col = _boardController.selectedCol;
+    if (row == null || col == null) return;
+    if (_boardController.isCellFixed(row, col)) return;
+
+    final correctValue = _boardController.getCorrectValue(row, col);
+    if (_boardController.getCellValue(row, col) == correctValue) return;
+
+    _boardController.setCellValue(row, col, correctValue, isHint: true);
+    _hintCells.add('$row,$col');
+
+    _boardController.recomputeWrongStatus();
+    onBoardChanged(_boardController.board);
+    onWrongNumbersChanged(_boardController.wrongNumbers);
+
+    if (onCorrectAnswer != null) {
+      onCorrectAnswer!(row, col);
+    }
+
+    _checkGameComplete();
+  }
+
+  /// 개발/디버그 전용: 모든 빈 칸을 정답으로 채워 게임을 즉시 완료 상태로 만든다.
+  ///
+  /// 오답/힌트 카운트에 영향을 주지 않는다. `kDebugMode` 에서만 사용해야 한다.
+  void devAutoSolve() {
+    if (_isGameComplete || _isGameOver || _isPaused) return;
+
+    var filledAny = false;
+    for (int row = 0; row < 9; row++) {
+      for (int col = 0; col < 9; col++) {
+        if (_boardController.isCellFixed(row, col)) continue;
+        final correctValue = _boardController.getCorrectValue(row, col);
+        if (_boardController.getCellValue(row, col) == correctValue) continue;
+        _boardController.setCellValue(row, col, correctValue, isHint: true);
+        _hintCells.add('$row,$col');
+        filledAny = true;
+      }
+    }
+
+    if (!filledAny) return;
+
+    _boardController.recomputeWrongStatus();
+    onBoardChanged(_boardController.board);
+    onWrongNumbersChanged(_boardController.wrongNumbers);
+
+    _checkGameComplete();
+  }
+
   bool isSameNumber(int row, int col) {
     return _boardController.isSameNumber(row, col);
   }

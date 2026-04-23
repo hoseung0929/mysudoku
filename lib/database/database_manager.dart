@@ -95,7 +95,7 @@ class DatabaseManager {
 
     return await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onOpen: (db) async {
@@ -149,6 +149,17 @@ class DatabaseManager {
     ''');
 
     await db.execute('''
+      CREATE TABLE IF NOT EXISTS clear_events(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        level_name TEXT NOT NULL,
+        game_number INTEGER NOT NULL,
+        clear_time INTEGER NOT NULL,
+        wrong_count INTEGER NOT NULL,
+        clear_date TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
       CREATE TABLE IF NOT EXISTS app_metadata(
         key TEXT PRIMARY KEY NOT NULL,
         value TEXT NOT NULL
@@ -186,6 +197,18 @@ class DatabaseManager {
         CREATE TABLE IF NOT EXISTS app_metadata(
           key TEXT PRIMARY KEY NOT NULL,
           value TEXT NOT NULL
+        )
+      ''');
+    }
+    if (oldVersion < 5) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS clear_events(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          level_name TEXT NOT NULL,
+          game_number INTEGER NOT NULL,
+          clear_time INTEGER NOT NULL,
+          wrong_count INTEGER NOT NULL,
+          clear_date TEXT NOT NULL
         )
       ''');
     }
@@ -547,10 +570,15 @@ class DatabaseManager {
     required String levelName,
     required int limit,
   }) async {
-    final firestoreEntries = await _firestorePuzzleService.fetchCatalogForLevel(
-      levelName: levelName,
-      limit: limit,
-    );
+    List<RemotePuzzleEntry> firestoreEntries = const [];
+    try {
+      firestoreEntries = await _firestorePuzzleService.fetchCatalogForLevel(
+        levelName: levelName,
+        limit: limit,
+      );
+    } catch (_) {
+      firestoreEntries = const [];
+    }
     if (firestoreEntries.isNotEmpty) {
       return firestoreEntries;
     }
@@ -558,10 +586,14 @@ class DatabaseManager {
     if (!_remotePuzzleService.isConfigured) {
       return const [];
     }
-    return _remotePuzzleService.fetchCatalogForLevel(
-      levelName: levelName,
-      limit: limit,
-    );
+    try {
+      return _remotePuzzleService.fetchCatalogForLevel(
+        levelName: levelName,
+        limit: limit,
+      );
+    } catch (_) {
+      return const [];
+    }
   }
 
   Future<bool> isRemoteCatalogActive() async {

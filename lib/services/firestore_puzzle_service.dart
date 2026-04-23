@@ -36,35 +36,40 @@ class FirestorePuzzleService {
       return const [];
     }
 
-    final snapshot = await _resolvedFirestore
-        .collection('puzzle_catalog')
-        .doc(_catalogVersion)
-        .collection('levels')
-        .doc(levelName)
-        .collection('games')
-        .orderBy('gameNumber')
-        .limit(limit)
-        .get();
+    try {
+      final snapshot = await _resolvedFirestore
+          .collection('puzzle_catalog')
+          .doc(_catalogVersion)
+          .collection('levels')
+          .doc(levelName)
+          .collection('games')
+          .orderBy('gameNumber')
+          .limit(limit)
+          .get();
 
-    final entries = <RemotePuzzleEntry>[];
-    for (final doc in snapshot.docs) {
-      final data = doc.data();
-      final gameNumber = _readInt(data['gameNumber'] ?? data['game_number']);
-      final board = _readBoard(data['board']);
-      final solution = _readBoard(data['solution']);
-      if (gameNumber == null || board == null || solution == null) {
-        continue;
+      final entries = <RemotePuzzleEntry>[];
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final gameNumber = _readInt(data['gameNumber'] ?? data['game_number']);
+        final board = _readBoard(data['board']);
+        final solution = _readBoard(data['solution']);
+        if (gameNumber == null || board == null || solution == null) {
+          continue;
+        }
+        entries.add(
+          RemotePuzzleEntry(
+            levelName:
+                _readString(data['levelName'] ?? data['level_name']) ?? levelName,
+            gameNumber: gameNumber,
+            board: board,
+            solution: solution,
+          ),
+        );
       }
-      entries.add(
-        RemotePuzzleEntry(
-          levelName: (data['levelName'] ?? data['level_name'] ?? levelName) as String,
-          gameNumber: gameNumber,
-          board: board,
-          solution: solution,
-        ),
-      );
+      return entries;
+    } catch (_) {
+      return const [];
     }
-    return entries;
   }
 
   Future<TodayChallengeTarget?> fetchDailyChallengeTarget({
@@ -74,27 +79,38 @@ class FirestorePuzzleService {
       return null;
     }
 
-    final yyyyMmDd =
-        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    final snapshot = await _resolvedFirestore
-        .collection('daily_challenges')
-        .doc(yyyyMmDd)
-        .get();
-    final data = snapshot.data();
-    if (data == null) {
+    try {
+      final yyyyMmDd =
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      final snapshot = await _resolvedFirestore
+          .collection('daily_challenges')
+          .doc(yyyyMmDd)
+          .get();
+      final data = snapshot.data();
+      if (data == null) {
+        return null;
+      }
+
+      final levelName = _readString(data['levelName'] ?? data['level_name']);
+      final gameNumber = _readInt(data['gameNumber'] ?? data['game_number']);
+      if (levelName == null || gameNumber == null) {
+        return null;
+      }
+
+      return TodayChallengeTarget(
+        levelName: levelName,
+        gameNumber: gameNumber,
+      );
+    } catch (_) {
       return null;
     }
+  }
 
-    final levelName = data['levelName'] ?? data['level_name'];
-    final gameNumber = _readInt(data['gameNumber'] ?? data['game_number']);
-    if (levelName is! String || levelName.isEmpty || gameNumber == null) {
-      return null;
+  String? _readString(dynamic value) {
+    if (value is String && value.isNotEmpty) {
+      return value;
     }
-
-    return TodayChallengeTarget(
-      levelName: levelName,
-      gameNumber: gameNumber,
-    );
+    return null;
   }
 
   int? _readInt(dynamic value) {

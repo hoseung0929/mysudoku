@@ -7,6 +7,7 @@ import 'package:mysudoku/services/result_share_service.dart';
 import 'package:mysudoku/view/sudoku_game/game_completion_coordinator.dart';
 import 'package:mysudoku/view/sudoku_game/game_over_flow.dart';
 import 'package:mysudoku/view/sudoku_game/game_result_actions.dart';
+import 'package:mysudoku/view/settings_screen.dart';
 import 'package:mysudoku/widgets/game_complete_dialog.dart';
 
 class GameEndFlow {
@@ -75,6 +76,17 @@ class GameEndFlow {
             wrongCount: wrongCount,
             isNewBestRecord: completionData.isNewBestRecord,
           ),
+          onOpenSettings: () async {
+            Navigator.of(dialogContext).pop();
+            await Future<void>.delayed(Duration.zero);
+            if (!context.mounted) return;
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SettingsScreen(),
+              ),
+            );
+          },
           onNextPuzzle: completionData.nextGame == null
               ? null
               : () async {

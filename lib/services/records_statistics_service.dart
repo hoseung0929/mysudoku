@@ -166,19 +166,18 @@ class RecordsStatisticsService {
         continue;
       }
 
-      final records = recent
-          .where((record) => record['level_name'] == level)
-          .toList()
-        ..sort((a, b) {
-          final clearTimeA = _recordInt(a, 'clear_time');
-          final clearTimeB = _recordInt(b, 'clear_time');
-          if (clearTimeA != clearTimeB) {
-            return clearTimeA.compareTo(clearTimeB);
-          }
-          final wrongA = _recordInt(a, 'wrong_count');
-          final wrongB = _recordInt(b, 'wrong_count');
-          return wrongA.compareTo(wrongB);
-        });
+      final records =
+          recent.where((record) => record['level_name'] == level).toList()
+            ..sort((a, b) {
+              final clearTimeA = _recordInt(a, 'clear_time');
+              final clearTimeB = _recordInt(b, 'clear_time');
+              if (clearTimeA != clearTimeB) {
+                return clearTimeA.compareTo(clearTimeB);
+              }
+              final wrongA = _recordInt(a, 'wrong_count');
+              final wrongB = _recordInt(b, 'wrong_count');
+              return wrongA.compareTo(wrongB);
+            });
 
       if (records.isEmpty) {
         continue;
@@ -267,6 +266,55 @@ class RecordsStatisticsService {
       'average_time': _averageIntField(records, 'clear_time'),
       'average_wrong': _averageIntField(records, 'wrong_count'),
     };
+  }
+
+  Map<String, dynamic>? buildRecommendedLevelByMistakes({
+    required List<Map<String, dynamic>> recent,
+    int days = 7,
+  }) {
+    final today = DateTime.now();
+    final earliest = _formatDate(today.subtract(Duration(days: days - 1)));
+    final latest = _formatDate(today);
+
+    Map<String, dynamic>? best;
+    for (final level in levelOrder) {
+      final records = recent.where((record) {
+        final levelName = record['level_name']?.toString();
+        if (levelName != level) {
+          return false;
+        }
+        final clearDate = record['clear_date']?.toString();
+        if (clearDate == null || clearDate.isEmpty) {
+          return false;
+        }
+        return clearDate.compareTo(earliest) >= 0 &&
+            clearDate.compareTo(latest) <= 0;
+      }).toList();
+
+      if (records.isEmpty) {
+        continue;
+      }
+      final averageWrong = _averageIntField(records, 'wrong_count');
+      final candidate = <String, dynamic>{
+        'level_name': level,
+        'sample_count': records.length,
+        'average_wrong': averageWrong,
+      };
+
+      if (best == null) {
+        best = candidate;
+        continue;
+      }
+
+      final bestWrong = best['average_wrong'] as double;
+      final bestSample = best['sample_count'] as int;
+      if (averageWrong > bestWrong ||
+          (averageWrong == bestWrong && records.length > bestSample)) {
+        best = candidate;
+      }
+    }
+
+    return best;
   }
 
   Map<String, int> buildTotalByLevel(List<Map<String, dynamic>> levels) {

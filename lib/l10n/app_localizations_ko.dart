@@ -646,10 +646,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get challengeTodayPendingHint => '오늘의 대표 퍼즐로 연속 플레이를 이어가세요.';
 
   @override
-  String get challengeTodayReviewButton => '나만의 속도로 다시 풀기';
+  String get challengeTodayReviewButton => '나만의 속도로 계속';
 
   @override
   String get challengeTodayStartButton => '나만의 속도로 몰입';
+
+  @override
+  String get myPaceNoPlayableTitle => '플레이할 게임이 없어요';
+
+  @override
+  String get myPaceNoPlayableMessage => '전체 레벨에서 새로 플레이할 퍼즐이 없어요.';
 
   @override
   String get challengeWeeklyGoalReachedTitle => '이번 주 목표를 달성했어요';

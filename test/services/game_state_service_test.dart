@@ -22,8 +22,8 @@ void main() {
     test('saves and loads board state', () async {
       const levelName = '초급';
       const gameNumber = 7;
-      final board =
-          List.generate(9, (row) => List.generate(9, (col) => (row + col) % 10));
+      final board = List.generate(
+          9, (row) => List.generate(9, (col) => (row + col) % 10));
 
       await service.saveBoard(
         levelName: levelName,
@@ -134,7 +134,8 @@ void main() {
 
       expect(restored, isNotNull);
       expect(restored!.board, board);
-      expect(restored.notes.expand((row) => row).every((cell) => cell.isEmpty), isTrue);
+      expect(restored.notes.expand((row) => row).every((cell) => cell.isEmpty),
+          isTrue);
       expect(restored.elapsedSeconds, 0);
       expect(restored.hintsRemaining, 3);
       expect(restored.wrongCount, 0);
@@ -183,7 +184,8 @@ void main() {
       expect(prefs.getString('game_${levelName}_$gameNumber'), isNull);
     });
 
-    test('uploads local saves to cloud sync service', () async {
+    test('saveSession only persists locally without immediate cloud upload',
+        () async {
       await service.saveSession(
         levelName: '초급',
         gameNumber: 1,
@@ -197,9 +199,7 @@ void main() {
 
       await Future<void>.delayed(Duration.zero);
 
-      expect(cloudSyncService.upserts, hasLength(1));
-      expect(cloudSyncService.upserts.first.levelName, '초급');
-      expect(cloudSyncService.upserts.first.gameNumber, 1);
+      expect(cloudSyncService.upserts, isEmpty);
     });
 
     test('hydrates newer cloud saves into local storage', () async {

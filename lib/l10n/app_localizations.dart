@@ -1283,7 +1283,7 @@ abstract class AppLocalizations {
   /// No description provided for @challengeTodayReviewButton.
   ///
   /// In en, this message translates to:
-  /// **'Solve again gently'**
+  /// **'Continue at your pace'**
   String get challengeTodayReviewButton;
 
   /// No description provided for @challengeTodayStartButton.
@@ -1291,6 +1291,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Start at your pace'**
   String get challengeTodayStartButton;
+
+  /// No description provided for @myPaceNoPlayableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No playable game'**
+  String get myPaceNoPlayableTitle;
+
+  /// No description provided for @myPaceNoPlayableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no new puzzles left to play across all levels.'**
+  String get myPaceNoPlayableMessage;
 
   /// No description provided for @challengeWeeklyGoalReachedTitle.
   ///

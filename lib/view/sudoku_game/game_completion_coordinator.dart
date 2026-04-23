@@ -5,8 +5,11 @@ import 'package:mysudoku/model/sudoku_level.dart';
 import 'package:mysudoku/database/database_helper.dart';
 import 'package:mysudoku/services/achievement_service.dart';
 import 'package:mysudoku/services/challenge_progress_service.dart';
+import 'package:mysudoku/services/game_record_notifier.dart';
 import 'package:mysudoku/services/game_record_service.dart';
 import 'package:mysudoku/services/notification_service.dart';
+import 'package:mysudoku/utils/app_logger.dart';
+import 'package:flutter/foundation.dart';
 
 class GameCompletionData {
   const GameCompletionData({
@@ -51,6 +54,12 @@ class GameCompletionCoordinator {
   }) async {
     final challengeBefore = await _challengeProgressService.load();
     final beforeAchievements = await _achievementService.load(l10n);
+    await _databaseHelper.saveClearEvent(
+      levelName: level.name,
+      gameNumber: game.gameNumber,
+      clearTime: clearTimeSeconds,
+      wrongCount: wrongCount,
+    );
     final isNewBestRecord = await _gameRecordService.saveClearRecordIfBest(
       levelName: level.name,
       gameNumber: game.gameNumber,
@@ -71,30 +80,46 @@ class GameCompletionCoordinator {
     );
     final challengeAfter = await _challengeProgressService.load();
 
-    await _notificationService.showGameCompleteNotification(
-      levelName: level.name,
-      gameNumber: game.gameNumber,
-      isNewBestRecord: isNewBestRecord,
-    );
-    if (!challengeBefore.isWeeklyGoalAchieved &&
-        challengeAfter.isWeeklyGoalAchieved) {
-      await _notificationService.showDailyGoalAchievedNotification(
-        weeklyClearCount: challengeAfter.weeklyClearCount,
-        weeklyGoalTarget: challengeAfter.weeklyGoalTarget,
+    GameRecordNotifier.instance.notifyChanged();
+
+    try {
+      await _notificationService.showGameCompleteNotification(
+        levelName: level.name,
+        gameNumber: game.gameNumber,
+        isNewBestRecord: isNewBestRecord,
       );
-    }
-    if (isTodayChallenge) {
-      await _notificationService.resyncFromStoredSettings();
+      if (!challengeBefore.isWeeklyGoalAchieved &&
+          challengeAfter.isWeeklyGoalAchieved) {
+        await _notificationService.showDailyGoalAchievedNotification(
+          weeklyClearCount: challengeAfter.weeklyClearCount,
+          weeklyGoalTarget: challengeAfter.weeklyGoalTarget,
+        );
+      }
+      if (isTodayChallenge) {
+        await _notificationService.resyncFromStoredSettings();
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        AppLogger.debug('완료 알림 처리 실패(무시): $e');
+      }
     }
 
-    final gamesInLevel = await SudokuGameSet.create(level.name);
-    gamesInLevel.sort((a, b) => a.gameNumber.compareTo(b.gameNumber));
-    final currentIndex = gamesInLevel.indexWhere(
-      (candidate) => candidate.gameNumber == game.gameNumber,
-    );
-    final nextGame = currentIndex >= 0 && currentIndex < gamesInLevel.length - 1
-        ? gamesInLevel[currentIndex + 1]
-        : null;
+    SudokuGame? nextGame;
+    try {
+      final gamesInLevel = await SudokuGameSet.create(level.name);
+      gamesInLevel.sort((a, b) => a.gameNumber.compareTo(b.gameNumber));
+      final currentIndex = gamesInLevel.indexWhere(
+        (candidate) => candidate.gameNumber == game.gameNumber,
+      );
+      nextGame = currentIndex >= 0 && currentIndex < gamesInLevel.length - 1
+          ? gamesInLevel[currentIndex + 1]
+          : null;
+    } catch (e) {
+      if (kDebugMode) {
+        AppLogger.debug('다음 퍼즐 계산 실패(무시): $e');
+      }
+      nextGame = null;
+    }
 
     return GameCompletionData(
       isNewBestRecord: isNewBestRecord,

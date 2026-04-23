@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// [MyHomePage]이 제공하는 하단 탭 전환. 챌린지·기록 화면에서 홈/다른 탭으로 이동할 때 사용합니다.
+/// [MyHomePage]이 제공하는 하단 탭 전환. 홈·기록 화면에서 다른 탭으로 이동할 때 사용합니다.
 class RootNavScope extends InheritedWidget {
   const RootNavScope({
     super.key,

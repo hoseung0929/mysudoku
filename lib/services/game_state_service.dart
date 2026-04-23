@@ -96,25 +96,6 @@ class GameStateService {
       isGameOver: isGameOver,
       updatedAtMillis: updatedAtMillis,
     );
-
-    unawaited(
-      _cloudSyncService.upsertSave(
-        CloudGameSavePayload(
-          levelName: levelName,
-          gameNumber: gameNumber,
-          board: board,
-          notes: notes,
-          elapsedSeconds: elapsedSeconds,
-          hintsRemaining: hintsRemaining,
-          wrongCount: wrongCount,
-          isMemoMode: isMemoMode,
-          hintCells: hintCells,
-          isGameComplete: isGameComplete,
-          isGameOver: isGameOver,
-          updatedAtMillis: updatedAtMillis,
-        ),
-      ),
-    );
   }
 
   Future<void> _persistLocalSession({
@@ -138,9 +119,8 @@ class GameStateService {
       'board': board,
       'notes': notes
           .map(
-            (row) => row
-                .map((cellNotes) => cellNotes.toList()..sort())
-                .toList(),
+            (row) =>
+                row.map((cellNotes) => cellNotes.toList()..sort()).toList(),
           )
           .toList(),
       'elapsedSeconds': elapsedSeconds,
@@ -237,11 +217,12 @@ class GameStateService {
     await prefs.remove(key);
     await prefs.remove(metaKey);
 
-    unawaited(
-      _cloudSyncService.deleteSave(
+    _runCloudTask(
+      () => _cloudSyncService.deleteSave(
         levelName: levelName,
         gameNumber: gameNumber,
       ),
+      action: '저장 삭제',
     );
 
     if (kDebugMode) {
@@ -306,13 +287,15 @@ class GameStateService {
           levelName: levelName,
           gameNumber: gameNumber,
           board: session.board,
-          lastPlayedAtMillis: prefs.getInt(_metaKey(levelName, gameNumber)) ?? 0,
+          lastPlayedAtMillis:
+              prefs.getInt(_metaKey(levelName, gameNumber)) ?? 0,
           session: session,
         ),
       );
     }
 
-    savedGames.sort((a, b) => b.lastPlayedAtMillis.compareTo(a.lastPlayedAtMillis));
+    savedGames
+        .sort((a, b) => b.lastPlayedAtMillis.compareTo(a.lastPlayedAtMillis));
     return savedGames;
   }
 
@@ -394,16 +377,16 @@ class GameStateService {
 
     return GameSessionState(
       board: rawBoard
-          .map((row) => (row as List<dynamic>).map((cell) => cell as int).toList())
+          .map((row) =>
+              (row as List<dynamic>).map((cell) => cell as int).toList())
           .toList(),
       notes: List.generate(9, (row) {
         final rowData =
             row < rawNotes.length ? rawNotes[row] as List<dynamic>? : null;
         return List.generate(9, (col) {
-          final cellData =
-              rowData != null && col < rowData.length
-                  ? rowData[col] as List<dynamic>? ?? const []
-                  : const <dynamic>[];
+          final cellData = rowData != null && col < rowData.length
+              ? rowData[col] as List<dynamic>? ?? const []
+              : const <dynamic>[];
           return cellData.map((value) => value as int).toSet();
         });
       }),
@@ -475,5 +458,20 @@ class GameStateService {
     }
 
     return true;
+  }
+
+  void _runCloudTask(
+    Future<void> Function() task, {
+    required String action,
+  }) {
+    unawaited(() async {
+      try {
+        await task();
+      } catch (e) {
+        if (kDebugMode) {
+          AppLogger.debug('클라우드 동기화($action) 실패: $e');
+        }
+      }
+    }());
   }
 }

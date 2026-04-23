@@ -127,4 +127,31 @@ class GameRepository {
         .where((gameNumber) => gameNumber > 0)
         .toList();
   }
+
+  /// 특정 레벨에서 아직 클리어하지 않은 게임 중 가장 작은 game_number를 반환합니다.
+  /// games/clear_records의 (level_name, game_number) 유니크 인덱스를 활용하여
+  /// 레벨별 게임 수가 많아져도 O(log n)에 가깝게 동작합니다.
+  Future<int?> findFirstUnclearedGameNumber(String levelName) async {
+    final db = await _dbManager.database;
+    final result = await db.rawQuery(
+      '''
+      SELECT g.game_number
+      FROM games AS g
+      WHERE g.level_name = ?
+        AND g.game_number > 0
+        AND NOT EXISTS (
+          SELECT 1
+          FROM clear_records AS c
+          WHERE c.level_name = g.level_name
+            AND c.game_number = g.game_number
+        )
+      ORDER BY g.game_number ASC
+      LIMIT 1
+      ''',
+      [levelName],
+    );
+
+    if (result.isEmpty) return null;
+    return result.first['game_number'] as int;
+  }
 }

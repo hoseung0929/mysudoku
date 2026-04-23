@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:mysudoku/l10n/achievement_l10n.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
 import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
-import 'package:mysudoku/navigation/root_nav_scope.dart';
 import 'package:mysudoku/services/achievement_service.dart';
 import 'package:mysudoku/services/challenge_progress_service.dart';
+import 'package:mysudoku/services/game_record_notifier.dart';
 import 'package:mysudoku/services/home_dashboard_service.dart';
+import 'package:mysudoku/services/my_pace_service.dart';
 import 'package:mysudoku/view/achievement_collection_screen.dart';
 import 'package:mysudoku/view/settings_screen.dart';
+import 'package:mysudoku/view/sudoku_game_screen.dart';
 
 class ChallengeScreen extends StatefulWidget {
   const ChallengeScreen({super.key});
@@ -18,8 +20,10 @@ class ChallengeScreen extends StatefulWidget {
 
 class _ChallengeScreenState extends State<ChallengeScreen> {
   final HomeDashboardService _homeDashboardService = HomeDashboardService();
+  final MyPaceService _myPaceService = MyPaceService();
   bool _isLoading = true;
   HomeDashboardData? _data;
+  int _loadRequestId = 0;
 
   @override
   void initState() {
@@ -28,9 +32,22 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
       if (!mounted) return;
       _load();
     });
+    GameRecordNotifier.instance.version.addListener(_handleRecordsChanged);
+  }
+
+  @override
+  void dispose() {
+    GameRecordNotifier.instance.version.removeListener(_handleRecordsChanged);
+    super.dispose();
+  }
+
+  void _handleRecordsChanged() {
+    if (!mounted) return;
+    _load();
   }
 
   Future<void> _load() async {
+    final requestId = ++_loadRequestId;
     setState(() {
       _isLoading = true;
     });
@@ -39,13 +56,13 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
       final data = await _homeDashboardService.load(l10n);
-      if (mounted) {
+      if (mounted && requestId == _loadRequestId) {
         setState(() {
           _data = data;
         });
       }
     } finally {
-      if (mounted) {
+      if (mounted && requestId == _loadRequestId) {
         setState(() {
           _isLoading = false;
         });
@@ -53,23 +70,146 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
     }
   }
 
+  String _metricsBasisLabel(BuildContext context) {
+    return Localizations.localeOf(context).languageCode == 'ko'
+        ? '지표 기준 보기'
+        : 'See metric basis';
+  }
+
+  Future<void> _openMyPaceGame() async {
+    final target = await _myPaceService.resolveTarget(
+      preferContinueGame: _data?.continueGame,
+    );
+
+    if (!mounted) return;
+
+    if (target == null) {
+      await _showNoPlayableGameDialog();
+      return;
+    }
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => SudokuGameScreen(
+          game: target.game,
+          level: target.level,
+          restoreSavedSession: target.restoreSavedSession,
+        ),
+      ),
+    );
+
+    if (mounted) {
+      await _load();
+    }
+  }
+
+  Future<void> _showNoPlayableGameDialog() async {
+    final l10n = AppLocalizations.of(context)!;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(l10n.myPaceNoPlayableTitle),
+          content: Text(l10n.myPaceNoPlayableMessage),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(l10n.commonOk),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showMetricsBasisSheet() async {
+    if (!mounted) return;
+    final colorScheme = Theme.of(context).colorScheme;
+    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isKorean ? '챌린지 지표 기준' : 'Challenge metric basis',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  isKorean
+                      ? '주간 진행도: 최근 7일의 완료 이벤트 수를 기준으로 계산됩니다.'
+                      : 'Weekly progress: based on clear events from the last 7 days.',
+                  style: TextStyle(
+                      color: colorScheme.onSurfaceVariant, height: 1.4),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  isKorean
+                      ? '연속 기록: 오늘의 도전을 완료한 날짜 연속성으로 계산됩니다.'
+                      : 'Streak: based on consecutive dates when the daily challenge was completed.',
+                  style: TextStyle(
+                      color: colorScheme.onSurfaceVariant, height: 1.4),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final bottomInset = MediaQuery.of(context).padding.bottom;
-    if (_isLoading) {
-      return const SafeArea(
-        bottom: false,
-        child: Center(child: CircularProgressIndicator()),
+    if (_isLoading && _data == null) {
+      return const DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFFDFBF6),
+              Color(0xFFF7F4E8),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: Center(child: CircularProgressIndicator()),
+        ),
       );
     }
 
     final data = _data;
     if (data == null) {
-      return SafeArea(
-        bottom: false,
-        child: Center(child: Text(l10n.challengeLoadError)),
+      return DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFFDFBF6),
+              Color(0xFFF7F4E8),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: Center(child: Text(l10n.challengeLoadError)),
+        ),
       );
     }
 
@@ -87,116 +227,143 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
       ),
       child: SafeArea(
         bottom: false,
-        child: RefreshIndicator(
-          onRefresh: _load,
-          child: ListView(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 112 + bottomInset),
-            children: [
-              Row(
+        child: Stack(
+          children: [
+            RefreshIndicator(
+              onRefresh: _load,
+              child: ListView(
+                padding: EdgeInsets.fromLTRB(16, 16, 16, 112 + bottomInset),
                 children: [
-                  Expanded(
-                    child: Text(
-                      l10n.challengeScreenTitle,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SettingsScreen(),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          l10n.challengeScreenTitle,
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
                           ),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(18),
-                      child: Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          color: colorScheme.surface.withValues(alpha: 0.86),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const SettingsScreen(),
+                              ),
+                            );
+                          },
                           borderRadius: BorderRadius.circular(18),
-                          border: Border.all(
-                            color:
-                                colorScheme.outlineVariant.withValues(alpha: 0.85),
+                          child: Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: colorScheme.surface.withValues(alpha: 0.86),
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(
+                                color: colorScheme.outlineVariant
+                                    .withValues(alpha: 0.85),
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.tune_rounded,
+                              size: 20,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
-                        child: Icon(
-                          Icons.tune_rounded,
-                          size: 20,
-                          color: colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _ChallengeHeroCard(
+                    l10n: l10n,
+                    isTodayCleared: challenge.isTodayChallengeCleared,
+                    todayLabel: l10n.recordsGameNumberTitle(
+                      challenge.todayChallengeLevelName
+                          .localizedSudokuLevelName(l10n),
+                      challenge.todayChallengeGameNumber,
+                    ),
+                    onOpenMyPace: _openMyPaceGame,
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _ChallengeMiniStatCard(
+                          eyebrow:
+                              Localizations.localeOf(context).languageCode ==
+                                      'ko'
+                                  ? '연속 기록'
+                                  : 'Streak',
+                          value: challenge.streakDays > 0
+                              ? l10n.challengeStreakDays(challenge.streakDays)
+                              : l10n.challengeStreakStartToday,
+                          tone: const Color(0xFFE7F0E8),
+                          accent: const Color(0xFF457B9D),
                         ),
                       ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _ChallengeMiniStatCard(
+                          eyebrow:
+                              Localizations.localeOf(context).languageCode ==
+                                      'ko'
+                                  ? '이번 주 흐름'
+                                  : 'This week',
+                          value: challenge.isWeeklyGoalAchieved
+                              ? l10n.challengeWeeklyGoalReachedTitle
+                              : l10n.challengeWeeklyGoalRemainingTitle(
+                                  challenge.remainingWeeklyGoal,
+                                ),
+                          tone: const Color(0xFFF2E9DA),
+                          accent: const Color(0xFFF4A261),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _WeeklyGoalCard(l10n: l10n, challenge: challenge),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: _showMetricsBasisSheet,
+                      icon: const Icon(Icons.info_outline, size: 18),
+                      label: Text(_metricsBasisLabel(context)),
                     ),
+                  ),
+                  const SizedBox(height: 22),
+                  _AchievementSection(
+                    l10n: l10n,
+                    summary: data.achievementSummary,
+                    onViewAll: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const AchievementCollectionScreen(),
+                        ),
+                      );
+                      await _load();
+                    },
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              _ChallengeHeroCard(
-                l10n: l10n,
-                isTodayCleared: challenge.isTodayChallengeCleared,
-                todayLabel: l10n.recordsGameNumberTitle(
-                  challenge.todayChallengeLevelName.localizedSudokuLevelName(l10n),
-                  challenge.todayChallengeGameNumber,
-                ),
+            ),
+            if (_isLoading)
+              const Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: LinearProgressIndicator(minHeight: 2),
               ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: _ChallengeMiniStatCard(
-                      eyebrow: Localizations.localeOf(context).languageCode == 'ko'
-                          ? '연속 기록'
-                          : 'Streak',
-                      value: challenge.streakDays > 0
-                          ? l10n.challengeStreakDays(challenge.streakDays)
-                          : l10n.challengeStreakStartToday,
-                      tone: const Color(0xFFE7F0E8),
-                      accent: const Color(0xFF457B9D),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _ChallengeMiniStatCard(
-                      eyebrow: Localizations.localeOf(context).languageCode == 'ko'
-                          ? '이번 주 흐름'
-                          : 'This week',
-                      value: challenge.isWeeklyGoalAchieved
-                          ? l10n.challengeWeeklyGoalReachedTitle
-                          : l10n.challengeWeeklyGoalRemainingTitle(
-                              challenge.remainingWeeklyGoal,
-                            ),
-                      tone: const Color(0xFFF2E9DA),
-                      accent: const Color(0xFFF4A261),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              _WeeklyGoalCard(l10n: l10n, challenge: challenge),
-              const SizedBox(height: 22),
-              _AchievementSection(
-                l10n: l10n,
-                summary: data.achievementSummary,
-                onViewAll: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const AchievementCollectionScreen(),
-                    ),
-                  );
-                  await _load();
-                },
-              ),
-            ],
-          ),
+          ],
         ),
       ),
     );
@@ -390,9 +557,8 @@ class _LeafProgressRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final filledColor = isComplete
-        ? const Color(0xFF7AA874)
-        : const Color(0xFF8EBE99);
+    final filledColor =
+        isComplete ? const Color(0xFF7AA874) : const Color(0xFF8EBE99);
     final emptyColor = colorScheme.surfaceContainerHighest;
 
     return Row(
@@ -404,7 +570,8 @@ class _LeafProgressRow extends StatelessWidget {
             child: Container(
               height: 52,
               decoration: BoxDecoration(
-                color: filled ? filledColor.withValues(alpha: 0.16) : emptyColor,
+                color:
+                    filled ? filledColor.withValues(alpha: 0.16) : emptyColor,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
                   color: filled
@@ -685,11 +852,13 @@ class _ChallengeHeroCard extends StatelessWidget {
     required this.l10n,
     required this.isTodayCleared,
     required this.todayLabel,
+    required this.onOpenMyPace,
   });
 
   final AppLocalizations l10n;
   final bool isTodayCleared;
   final String todayLabel;
+  final VoidCallback onOpenMyPace;
 
   @override
   Widget build(BuildContext context) {
@@ -755,8 +924,7 @@ class _ChallengeHeroCard extends StatelessWidget {
           ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 200),
             child: FilledButton(
-              onPressed: () =>
-                  RootNavScope.maybeOf(context)?.goToTab(0),
+              onPressed: onOpenMyPace,
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFFF8F4E8),
                 foregroundColor: const Color(0xFF285B3F),
@@ -770,7 +938,11 @@ class _ChallengeHeroCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(18),
                 ),
               ),
-              child: Text(l10n.challengeOpenTodayOnHomeButton),
+              child: Text(
+                isTodayCleared
+                    ? l10n.challengeTodayReviewButton
+                    : l10n.challengeTodayStartButton,
+              ),
             ),
           ),
         ],

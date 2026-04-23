@@ -294,8 +294,10 @@
   "challengeTodaysChallengeTitle": "Today's challenge",
   "challengeTodayDoneHint": "You've already finished today. Open it again anytime to review.",
   "challengeTodayPendingHint": "Keep your streak with today's featured puzzle.",
-  "challengeTodayReviewButton": "Solve again gently",
+  "challengeTodayReviewButton": "Continue at your pace",
   "challengeTodayStartButton": "Start at your pace",
+  "myPaceNoPlayableTitle": "No playable game",
+  "myPaceNoPlayableMessage": "There are no new puzzles left to play across all levels.",
   "challengeWeeklyGoalReachedTitle": "Weekly goal reached",
   "challengeWeeklyGoalRemainingTitle": "{count} more clears to hit your weekly goal",
   "@challengeWeeklyGoalRemainingTitle": {

@@ -245,6 +245,7 @@ class _FakeChallengeProgressService extends ChallengeProgressService {
   @override
   Future<ChallengeProgressSummary> load({
     List<Map<String, dynamic>>? recentRecords,
+    List<Map<String, dynamic>>? recentClearEvents,
   }) async {
     return ChallengeProgressSummary(
       streakDays: 0,

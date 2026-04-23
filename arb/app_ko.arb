@@ -294,8 +294,10 @@
   "challengeTodaysChallengeTitle": "오늘의 도전",
   "challengeTodayDoneHint": "오늘 도전은 이미 완료했어요. 기록을 다시 확인해보세요.",
   "challengeTodayPendingHint": "오늘의 대표 퍼즐로 연속 플레이를 이어가세요.",
-  "challengeTodayReviewButton": "나만의 속도로 다시 풀기",
+  "challengeTodayReviewButton": "나만의 속도로 계속",
   "challengeTodayStartButton": "나만의 속도로 몰입",
+  "myPaceNoPlayableTitle": "플레이할 게임이 없어요",
+  "myPaceNoPlayableMessage": "전체 레벨에서 새로 플레이할 퍼즐이 없어요.",
   "challengeWeeklyGoalReachedTitle": "이번 주 목표를 달성했어요",
   "challengeWeeklyGoalRemainingTitle": "주간 목표까지 {count}판 남았어요",
   "@challengeWeeklyGoalRemainingTitle": {

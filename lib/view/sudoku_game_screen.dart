@@ -21,6 +21,7 @@ import 'package:mysudoku/view/sudoku_game/sudoku_answer_box.dart';
 import 'package:mysudoku/view/sudoku_game/sudoku_board_grid.dart';
 import 'package:mysudoku/view/sudoku_game/game_effects_controller.dart';
 import 'package:mysudoku/view/sudoku_game/sudoku_game_action_button.dart';
+import 'package:mysudoku/view/level_selection_screen.dart';
 import 'package:mysudoku/widgets/custom_app_bar.dart';
 import 'package:mysudoku/widgets/progressive_blur_button.dart';
 import 'package:vibration/vibration.dart';
@@ -67,10 +68,13 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     if (!_presenterReady || row == null || col == null) {
       return false;
     }
-    if (_presenter.isPaused || _presenter.isGameComplete || _presenter.isGameOver) {
+    if (_presenter.isPaused ||
+        _presenter.isGameComplete ||
+        _presenter.isGameOver) {
       return false;
     }
-    return !_presenter.isCellFixed(row, col) && !_presenter.isHintCell(row, col);
+    return !_presenter.isCellFixed(row, col) &&
+        !_presenter.isHintCell(row, col);
   }
 
   bool get _canToggleMemo {
@@ -155,6 +159,12 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     );
   }
 
+  Future<void> _flushAndSyncCloudSession() async {
+    if (!_presenterReady) return;
+    await _flushPendingSessionSave();
+    await _sessionController.syncToCloud();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -195,7 +205,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       initialWrongCount: activeSession?.wrongCount ?? 0,
       initialMemoMode: activeSession?.isMemoMode ?? false,
       initialNotes: activeSession?.notes,
-      initialHintsRemaining: activeSession?.hintsRemaining ?? SudokuGamePresenter.maxHints,
+      initialHintsRemaining:
+          activeSession?.hintsRemaining ?? SudokuGamePresenter.maxHints,
       initialHintCells: activeSession?.hintCells ?? const {},
       level: widget.level,
       onBoardChanged: (board) {
@@ -274,7 +285,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       case AppLifecycleState.paused:
       case AppLifecycleState.detached:
       case AppLifecycleState.hidden:
-        unawaited(_flushPendingSessionSave());
+        unawaited(_flushAndSyncCloudSession());
         return;
       case AppLifecycleState.resumed:
         return;
@@ -342,9 +353,20 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
 
   Future<void> _exitToLevelSelection() async {
     final levelNavigator = Navigator.of(context);
-    await _clearCurrentGameState();
-    if (!mounted) return;
-    levelNavigator.pop();
+    unawaited(
+      levelNavigator.pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (context) => LevelSelectionScreen(level: widget.level),
+        ),
+      ),
+    );
+    unawaited(
+      _clearCurrentGameState().catchError((error) {
+        if (kDebugMode) {
+          AppLogger.debug('게임 상태 정리 실패(무시): $error');
+        }
+      }),
+    );
   }
 
   Future<void> _loadGameSettings() async {
@@ -421,26 +443,17 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         systemOverlayStyle: SystemUiOverlayStyle.dark,
         centerTitle: true,
         titleSpacing: 0,
-        title: kDebugMode
-            ? GestureDetector(
-                onLongPress: _toggleDeveloperAnswerPreview,
-                child: Text(
-                  titleText,
-                  style: GoogleFonts.notoSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF21382A),
-                  ),
-                ),
-              )
-            : Text(
-                titleText,
-                style: GoogleFonts.notoSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF21382A),
-                ),
-              ),
+        title: GestureDetector(
+          onLongPress: kDebugMode ? _toggleDeveloperAnswerPreview : null,
+          child: Text(
+            titleText,
+            style: GoogleFonts.notoSans(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF21382A),
+            ),
+          ),
+        ),
         leadingWidth: 52,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -450,6 +463,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           },
         ),
         actions: [
+          _buildDeveloperMenuButton(),
           Padding(
             padding: const EdgeInsets.only(right: 14),
             child: Center(
@@ -470,17 +484,105 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       title: widget.level.localizedName(l10n),
       showNotificationIcon: false,
       showLogoutIcon: false,
-      titleWidget: kDebugMode
-          ? GestureDetector(
-              onLongPress: _toggleDeveloperAnswerPreview,
-              child: Text(widget.level.localizedName(l10n)),
-            )
-          : null,
+      titleWidget: GestureDetector(
+        onLongPress: kDebugMode ? _toggleDeveloperAnswerPreview : null,
+        child: Text(widget.level.localizedName(l10n)),
+      ),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         onPressed: () {
           Navigator.pop(context);
         },
+      ),
+      actions: [_buildDeveloperMenuButton()],
+    );
+  }
+
+  Widget _buildDeveloperMenuButton() {
+    if (!kDebugMode) {
+      return const SizedBox.shrink();
+    }
+    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
+    return PopupMenuButton<_DeveloperCheatAction>(
+      tooltip: isKorean ? '개발자 도구' : 'Developer tools',
+      icon: const Icon(
+        Icons.bug_report_outlined,
+        size: 20,
+        color: Color(0xFF66776C),
+      ),
+      onSelected: _handleDeveloperCheatAction,
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: _DeveloperCheatAction.toggleAnswerPreview,
+          child: Text(
+            _showDeveloperAnswerPreview
+                ? (isKorean ? '정답 미리보기 끄기' : 'Hide answer preview')
+                : (isKorean ? '정답 미리보기 켜기' : 'Show answer preview'),
+          ),
+        ),
+        PopupMenuItem(
+          value: _DeveloperCheatAction.fillSelected,
+          child: Text(
+            isKorean ? '선택 셀에 정답 입력' : 'Fill selected cell',
+          ),
+        ),
+        PopupMenuItem(
+          value: _DeveloperCheatAction.autoSolve,
+          child: Text(
+            isKorean ? '모든 셀 자동 완성' : 'Auto-solve board',
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _handleDeveloperCheatAction(_DeveloperCheatAction action) {
+    if (!kDebugMode) return;
+    switch (action) {
+      case _DeveloperCheatAction.toggleAnswerPreview:
+        _toggleDeveloperAnswerPreview();
+      case _DeveloperCheatAction.fillSelected:
+        _devFillSelectedCell();
+      case _DeveloperCheatAction.autoSolve:
+        _devAutoSolveBoard();
+    }
+  }
+
+  void _devFillSelectedCell() {
+    if (!_presenterReady) return;
+    if (_presenter.selectedRow == null || _presenter.selectedCol == null) {
+      _showDeveloperSnackBar(
+        koMessage: '먼저 셀을 선택해 주세요.',
+        enMessage: 'Select a cell first.',
+      );
+      return;
+    }
+    _presenter.devFillSelectedCellWithAnswer();
+    _showDeveloperSnackBar(
+      koMessage: '선택한 셀에 정답을 입력했어요.',
+      enMessage: 'Filled the selected cell with the answer.',
+    );
+  }
+
+  void _devAutoSolveBoard() {
+    if (!_presenterReady) return;
+    _presenter.devAutoSolve();
+    _showDeveloperSnackBar(
+      koMessage: '모든 셀을 정답으로 채웠어요.',
+      enMessage: 'Auto-solved the board.',
+    );
+  }
+
+  void _showDeveloperSnackBar({
+    required String koMessage,
+    required String enMessage,
+  }) {
+    if (!mounted) return;
+    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(isKorean ? koMessage : enMessage),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -568,7 +670,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                           border: Border.all(color: const Color(0xFFE4DED3)),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF21382A).withValues(alpha: 0.06),
+                              color: const Color(0xFF21382A)
+                                  .withValues(alpha: 0.06),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                             ),
@@ -660,7 +763,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                 ),
                                 SudokuGameActionButton(
                                   icon: Icons.lightbulb_outline,
-                                  label: '${l10n.gameHintShort} ${_presenter.hintsRemaining}',
+                                  label:
+                                      '${l10n.gameHintShort} ${_presenter.hintsRemaining}',
                                   backgroundColor: AppTheme.yellowColor,
                                   onPressed: _canUseHint
                                       ? () {
@@ -704,6 +808,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
 
   /// 모바일 레이아웃
   Widget _buildMobileLayout() {
+    final l10n = AppLocalizations.of(context)!;
     final mediaQuery = MediaQuery.of(context);
     final bottomSafePadding = math.max(mediaQuery.padding.bottom, 12.0);
     return Stack(
@@ -716,134 +821,151 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
               bottomSafePadding: bottomSafePadding,
             );
 
-            return Padding(
-              padding: EdgeInsets.fromLTRB(
-                metrics.horizontalPadding,
-                metrics.topPadding,
-                metrics.horizontalPadding,
-                0,
-              ),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Center(
-                      child: SizedBox(
-                        width: metrics.boardSize,
-                        height: metrics.boardSize,
-                        child: _buildBoardGrid(),
+            return Stack(
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    metrics.horizontalPadding,
+                    metrics.topPadding,
+                    metrics.horizontalPadding,
+                    0,
+                  ),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: Center(
+                          child: SizedBox(
+                            width: metrics.boardSize,
+                            height: metrics.boardSize,
+                            child: _buildBoardGrid(),
+                          ),
+                        ),
                       ),
+                      SizedBox(height: metrics.sectionGap),
+                      for (int i = 0; i < 3; i++)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            for (int j = 1; j <= 3; j++)
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: metrics.numberButtonGap / 2,
+                                  vertical: metrics.numberButtonGap / 2,
+                                ),
+                                child: _buildNumberButton(
+                                  i * 3 + j,
+                                  compact: true,
+                                  width: metrics.numberButtonWidth,
+                                  height: metrics.numberButtonHeight,
+                                  borderRadius: metrics.numberButtonRadius,
+                                ),
+                              ),
+                          ],
+                        ),
+                      SizedBox(height: metrics.compactGap),
+                      Padding(
+                        padding: EdgeInsets.only(
+                          bottom: metrics.scrollBottomPadding,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _buildMobileActionButton(
+                              icon: Icons.undo,
+                              label: '',
+                              color: AppTheme.lightBlueColor,
+                              onPressed: _canUndo
+                                  ? () {
+                                      setState(() {
+                                        _presenter.undo();
+                                      });
+                                    }
+                                  : null,
+                              compact: true,
+                              size: metrics.actionButtonSize,
+                              labelFontSize: metrics.actionLabelFontSize,
+                            ),
+                            _buildMobileActionButton(
+                              icon: Icons.redo,
+                              label: '',
+                              color: AppTheme.lightBlueColor,
+                              onPressed: _canRedo
+                                  ? () {
+                                      setState(() {
+                                        _presenter.redo();
+                                      });
+                                    }
+                                  : null,
+                              compact: true,
+                              size: metrics.actionButtonSize,
+                              labelFontSize: metrics.actionLabelFontSize,
+                            ),
+                            _buildMobileActionButton(
+                              icon: Icons.edit_note,
+                              label: '',
+                              color: _presenter.isMemoMode
+                                  ? AppTheme.mintColor
+                                  : AppTheme.lightBlueColor,
+                              onPressed: () {
+                                if (!_canToggleMemo) return;
+                                setState(() {
+                                  _memoFocusNumber = null;
+                                  _presenter.toggleMemoMode();
+                                });
+                              },
+                              compact: true,
+                              size: metrics.actionButtonSize,
+                              labelFontSize: metrics.actionLabelFontSize,
+                            ),
+                            _buildMobileActionButton(
+                              icon: Icons.backspace_outlined,
+                              label: '',
+                              color: AppTheme.pinkColor.withValues(alpha: 0.78),
+                              onPressed: _canClearSelectedCell
+                                  ? () {
+                                      setState(() {
+                                        _presenter.clearSelectedCell();
+                                      });
+                                    }
+                                  : null,
+                              compact: true,
+                              size: metrics.actionButtonSize,
+                              labelFontSize: metrics.actionLabelFontSize,
+                            ),
+                            _buildMobileHintButton(metrics),
+                            _buildMobileActionButton(
+                              icon: _presenter.isPaused
+                                  ? Icons.play_arrow
+                                  : Icons.pause,
+                              label: '',
+                              color: AppTheme.pinkColor,
+                              onPressed: () {
+                                setState(() {
+                                  _presenter.togglePause();
+                                });
+                              },
+                              compact: true,
+                              size: metrics.actionButtonSize,
+                              labelFontSize: metrics.actionLabelFontSize,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (_showDeveloperAnswerPreview)
+                  Positioned(
+                    right: metrics.horizontalPadding,
+                    bottom: metrics.scrollBottomPadding +
+                        metrics.actionButtonSize +
+                        metrics.compactGap +
+                        10,
+                    child: IgnorePointer(
+                      child: _buildDeveloperAnswerPreview(l10n),
                     ),
                   ),
-                  SizedBox(height: metrics.sectionGap),
-                  for (int i = 0; i < 3; i++)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        for (int j = 1; j <= 3; j++)
-                          Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: metrics.numberButtonGap / 2,
-                              vertical: metrics.numberButtonGap / 2,
-                            ),
-                            child: _buildNumberButton(
-                              i * 3 + j,
-                              compact: true,
-                              width: metrics.numberButtonWidth,
-                              height: metrics.numberButtonHeight,
-                              borderRadius: metrics.numberButtonRadius,
-                            ),
-                          ),
-                      ],
-                    ),
-                  SizedBox(height: metrics.compactGap),
-                    Padding(
-                      padding: EdgeInsets.only(
-                        bottom: metrics.scrollBottomPadding,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildMobileActionButton(
-                            icon: Icons.undo,
-                            label: '',
-                            color: AppTheme.lightBlueColor,
-                            onPressed: _canUndo
-                                ? () {
-                                    setState(() {
-                                      _presenter.undo();
-                                    });
-                                  }
-                                : null,
-                            compact: true,
-                            size: metrics.actionButtonSize,
-                            labelFontSize: metrics.actionLabelFontSize,
-                          ),
-                          _buildMobileActionButton(
-                            icon: Icons.redo,
-                            label: '',
-                            color: AppTheme.lightBlueColor,
-                            onPressed: _canRedo
-                                ? () {
-                                    setState(() {
-                                      _presenter.redo();
-                                    });
-                                  }
-                                : null,
-                            compact: true,
-                            size: metrics.actionButtonSize,
-                            labelFontSize: metrics.actionLabelFontSize,
-                          ),
-                          _buildMobileActionButton(
-                            icon: Icons.edit_note,
-                            label: '',
-                            color: _presenter.isMemoMode
-                                ? AppTheme.mintColor
-                                : AppTheme.lightBlueColor,
-                            onPressed: () {
-                              if (!_canToggleMemo) return;
-                              setState(() {
-                                _memoFocusNumber = null;
-                                _presenter.toggleMemoMode();
-                              });
-                            },
-                            compact: true,
-                            size: metrics.actionButtonSize,
-                            labelFontSize: metrics.actionLabelFontSize,
-                          ),
-                          _buildMobileActionButton(
-                            icon: Icons.backspace_outlined,
-                            label: '',
-                            color: AppTheme.pinkColor.withValues(alpha: 0.78),
-                            onPressed: _canClearSelectedCell
-                                ? () {
-                                    setState(() {
-                                      _presenter.clearSelectedCell();
-                                    });
-                                  }
-                                : null,
-                            compact: true,
-                            size: metrics.actionButtonSize,
-                            labelFontSize: metrics.actionLabelFontSize,
-                          ),
-                          _buildMobileHintButton(metrics),
-                          _buildMobileActionButton(
-                            icon: _presenter.isPaused ? Icons.play_arrow : Icons.pause,
-                            label: '',
-                            color: AppTheme.pinkColor,
-                            onPressed: () {
-                              setState(() {
-                                _presenter.togglePause();
-                              });
-                            },
-                            compact: true,
-                            size: metrics.actionButtonSize,
-                            labelFontSize: metrics.actionLabelFontSize,
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
+              ],
             );
           },
         ),
@@ -860,7 +982,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           waveActive: _effectsController.waveActive,
           lineCompleteActive: _effectsController.lineCompleteActive,
           errorActive: _effectsController.errorActive,
-          highlightedMemoNumber: _memoHighlightEnabled ? _memoFocusNumber : null,
+          highlightedMemoNumber:
+              _memoHighlightEnabled ? _memoFocusNumber : null,
           enableMemoHighlights: _memoHighlightEnabled,
           onCellTapped: (row, col) {
             _presenter.selectCell(row, col);
@@ -904,7 +1027,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(item.icon, size: compact ? 13 : 16, color: const Color(0xFF66776C)),
+                    Icon(item.icon,
+                        size: compact ? 13 : 16,
+                        color: const Color(0xFF66776C)),
                     SizedBox(width: compact ? 5 : 6),
                     Text(
                       '${item.label} ${item.value}',
@@ -1079,7 +1204,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         style: GoogleFonts.notoSans(
           fontSize: 10,
           fontWeight: FontWeight.w600,
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.58),
+          color:
+              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.58),
         ),
       ),
     );
@@ -1108,8 +1234,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       return;
     }
 
-    final supportsCustomPattern =
-        await Vibration.hasCustomVibrationsSupport();
+    final supportsCustomPattern = await Vibration.hasCustomVibrationsSupport();
     if (supportsCustomPattern) {
       await Vibration.vibrate(pattern: [0, 45, 30, 65]);
       return;
@@ -1129,7 +1254,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   }) {
     final buttonSize =
         size ?? (compact ? 52.0 : (_oneHandModeEnabled ? 62.0 : 70.0));
-    final iconSize = compact ? buttonSize * 0.36 : (_oneHandModeEnabled ? 28.0 : 32.0);
+    final iconSize =
+        compact ? buttonSize * 0.36 : (_oneHandModeEnabled ? 28.0 : 32.0);
     final hasLabel = label.isNotEmpty;
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -1261,7 +1387,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   }
 
   Widget _buildDeveloperAnswerPreview(AppLocalizations l10n) {
-    if (!kDebugMode || !_showDeveloperAnswerPreview) {
+    if (!kDebugMode) {
+      return const SizedBox.shrink();
+    }
+    if (!_showDeveloperAnswerPreview) {
       return const SizedBox.shrink();
     }
 
@@ -1279,8 +1408,12 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
 
     final isKorean = Localizations.localeOf(context).languageCode == 'ko';
     final message = _showDeveloperAnswerPreview
-        ? (isKorean ? '개발자 정답 미리보기를 켰습니다.' : 'Developer answer preview enabled.')
-        : (isKorean ? '개발자 정답 미리보기를 껐습니다.' : 'Developer answer preview disabled.');
+        ? (isKorean
+            ? '개발자 정답 미리보기를 켰습니다.'
+            : 'Developer answer preview enabled.')
+        : (isKorean
+            ? '개발자 정답 미리보기를 껐습니다.'
+            : 'Developer answer preview disabled.');
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
@@ -1329,6 +1462,12 @@ class _StatusStripItem {
   final IconData icon;
   final String label;
   final String value;
+}
+
+enum _DeveloperCheatAction {
+  toggleAnswerPreview,
+  fillSelected,
+  autoSolve,
 }
 
 class _MobileGameLayoutMetrics {
@@ -1388,8 +1527,7 @@ class _MobileGameLayoutMetrics {
     final estimatedNumberPadHeight =
         (numberButtonHeight * 3) + (numberButtonGap * 4);
     final estimatedActionRowHeight = actionButtonSize + 8.0;
-    final fixedChromeHeight =
-        estimatedNumberPadHeight +
+    final fixedChromeHeight = estimatedNumberPadHeight +
         estimatedActionRowHeight +
         bottomSafePadding +
         20.0;

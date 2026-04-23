@@ -12,6 +12,7 @@ class _FixedChallengeProgressService extends ChallengeProgressService {
   @override
   Future<ChallengeProgressSummary> load({
     List<Map<String, dynamic>>? recentRecords,
+    List<Map<String, dynamic>>? recentClearEvents,
   }) async =>
       _summary;
 }

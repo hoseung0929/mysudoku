@@ -60,6 +60,11 @@ class DatabaseHelper {
     return await _gameRepository.getGameNumbersForLevel(levelName);
   }
 
+  /// 특정 레벨에서 아직 클리어하지 않은 게임 중 가장 작은 game_number를 반환합니다.
+  Future<int?> findFirstUnclearedGameNumber(String levelName) async {
+    return await _gameRepository.findFirstUnclearedGameNumber(levelName);
+  }
+
   // ========== 클리어 기록 관련 메서드들 ==========
 
   /// 클리어 기록을 저장합니다.
@@ -74,6 +79,23 @@ class DatabaseHelper {
       gameNumber: gameNumber,
       clearTime: clearTime,
       wrongCount: wrongCount,
+    );
+  }
+
+  /// 클리어 이벤트를 매번 저장합니다.
+  Future<void> saveClearEvent({
+    required String levelName,
+    required int gameNumber,
+    required int clearTime,
+    required int wrongCount,
+    DateTime? clearedAtLocal,
+  }) async {
+    await _clearRecordRepository.saveClearEvent(
+      levelName: levelName,
+      gameNumber: gameNumber,
+      clearTime: clearTime,
+      wrongCount: wrongCount,
+      clearedAtLocal: clearedAtLocal,
     );
   }
 
@@ -163,6 +185,11 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> getRecentClearRecords(
       {int limit = 10}) async {
     return await _statisticsRepository.getRecentClearRecords(limit: limit);
+  }
+
+  /// 최근 클리어 이벤트를 반환합니다.
+  Future<List<Map<String, dynamic>>> getRecentClearEvents({int limit = 365}) async {
+    return _clearRecordRepository.getRecentClearEvents(limit: limit);
   }
 
   /// 특정 기간의 클리어 기록을 반환합니다.

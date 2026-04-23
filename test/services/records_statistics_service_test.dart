@@ -24,7 +24,8 @@ void main() {
       expect(filtered.first['level_name'], '초급');
     });
 
-    test('all-levels filter keeps every record (locale-independent constant)', () {
+    test('all-levels filter keeps every record (locale-independent constant)',
+        () {
       final recent = [
         {'level_name': '초급', 'clear_time': 100, 'wrong_count': 1},
         {'level_name': '중급', 'clear_time': 200, 'wrong_count': 2},
@@ -144,7 +145,8 @@ void main() {
         selectedLevel: '초급',
       );
 
-      expect(topRecords.map((record) => record['game_number']).toList(), [3, 2, 1]);
+      expect(topRecords.map((record) => record['game_number']).toList(),
+          [3, 2, 1]);
     });
 
     test('builds best record list by level', () {
@@ -247,6 +249,41 @@ void main() {
       expect(summary['active_days'], 2);
       expect(summary['average_time'], 120.0);
       expect(summary['average_wrong'], 0.5);
+    });
+
+    test(
+        'recommends the level with the highest average mistakes in last 7 days',
+        () {
+      final today = DateTime.now();
+      String fmt(DateTime date) =>
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+      final recommended = service.buildRecommendedLevelByMistakes(
+        recent: [
+          {
+            'level_name': '초급',
+            'clear_date': fmt(today),
+            'clear_time': 120,
+            'wrong_count': 1,
+          },
+          {
+            'level_name': '고급',
+            'clear_date': fmt(today.subtract(const Duration(days: 1))),
+            'clear_time': 280,
+            'wrong_count': 4,
+          },
+          {
+            'level_name': '고급',
+            'clear_date': fmt(today.subtract(const Duration(days: 2))),
+            'clear_time': 250,
+            'wrong_count': 3,
+          },
+        ],
+      );
+
+      expect(recommended?['level_name'], '고급');
+      expect(recommended?['sample_count'], 2);
+      expect(recommended?['average_wrong'], 3.5);
     });
   });
 }

@@ -38,6 +38,38 @@ class ClearRecordRepository {
     }
   }
 
+  /// 클리어 이벤트를 매번 저장합니다.
+  Future<void> saveClearEvent({
+    required String levelName,
+    required int gameNumber,
+    required int clearTime,
+    required int wrongCount,
+    DateTime? clearedAtLocal,
+  }) async {
+    final db = await _dbManager.database;
+    final now = clearedAtLocal ?? DateTime.now();
+    final clearDate =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+    await db.insert('clear_events', {
+      'level_name': levelName,
+      'game_number': gameNumber,
+      'clear_time': clearTime,
+      'wrong_count': wrongCount,
+      'clear_date': clearDate,
+    });
+  }
+
+  /// 최근 클리어 이벤트를 반환합니다.
+  Future<List<Map<String, dynamic>>> getRecentClearEvents({int limit = 365}) async {
+    final db = await _dbManager.database;
+    return db.query(
+      'clear_events',
+      orderBy: 'clear_date DESC, id DESC',
+      limit: limit,
+    );
+  }
+
   /// 모든 클리어 기록을 반환합니다 (백필·마이그레이션용).
   Future<List<Map<String, dynamic>>> getAllClearRecords() async {
     final db = await _dbManager.database;
@@ -122,6 +154,7 @@ class ClearRecordRepository {
   Future<void> clearAllRecords() async {
     final db = await _dbManager.database;
     await db.delete('clear_records');
+    await db.delete('clear_events');
     if (kDebugMode) {
       AppLogger.debug('모든 클리어 기록 삭제 완료');
     }
@@ -135,6 +168,11 @@ class ClearRecordRepository {
       where: 'level_name = ?',
       whereArgs: [levelName],
     );
+    await db.delete(
+      'clear_events',
+      where: 'level_name = ?',
+      whereArgs: [levelName],
+    );
     if (kDebugMode) {
       AppLogger.debug('$levelName 레벨의 클리어 기록 삭제 완료');
     }
@@ -145,6 +183,11 @@ class ClearRecordRepository {
     final db = await _dbManager.database;
     await db.delete(
       'clear_records',
+      where: 'level_name = ? AND game_number = ?',
+      whereArgs: [levelName, gameNumber],
+    );
+    await db.delete(
+      'clear_events',
       where: 'level_name = ? AND game_number = ?',
       whereArgs: [levelName, gameNumber],
     );
