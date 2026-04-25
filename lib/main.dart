@@ -185,11 +185,11 @@ class _MyHomePageState extends State<MyHomePage> {
     final isChanged = _selectedIndex != index;
     setState(() {
       _selectedIndex = index;
-      if (index == 2) {
+      if (index == 1) {
         _recordsTabLoaded = true;
       }
     });
-    if (isChanged && index == 2) {
+    if (isChanged && index == 1) {
       GameRecordNotifier.instance.notifyChanged();
     }
   }
@@ -202,9 +202,9 @@ class _MyHomePageState extends State<MyHomePage> {
         extendBody: true,
         backgroundColor: Colors.transparent,
         body: IndexedStack(
-          index: _selectedIndex == 2 ? 1 : 0,
+          index: _selectedIndex,
           children: [
-            LevelSelectionMain(showExploreOnly: _selectedIndex == 1),
+            const LevelSelectionMain(),
             _recordsTabLoaded
                 ? const RecordsStatisticsScreen()
                 : const SizedBox.shrink(),

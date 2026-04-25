@@ -21,9 +21,6 @@ class BottomNavBar extends StatelessWidget {
         icon: Icons.cottage_rounded,
       ),
       const _BottomNavItemData(
-        icon: Icons.explore_rounded,
-      ),
-      const _BottomNavItemData(
         icon: Icons.bar_chart_rounded,
       ),
     ];
@@ -67,7 +64,6 @@ class BottomNavBar extends StatelessWidget {
                         Expanded(
                           child: _BottomNavButton(
                             data: items[index],
-                            selected: selectedIndex == index,
                             onTap: () => onItemTapped(index),
                           ),
                         ),
@@ -94,64 +90,31 @@ class _BottomNavItemData {
 class _BottomNavButton extends StatelessWidget {
   const _BottomNavButton({
     required this.data,
-    required this.selected,
     required this.onTap,
   });
 
   final _BottomNavItemData data;
-  final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    const selectedColor = Color(0xFF285B3F);
-    const unselectedColor = Color(0xFF7A857D);
+    const iconColor = Color(0xFF7A857D);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-        transform: Matrix4.translationValues(0, selected ? -2 : 0, 0),
-        decoration: BoxDecoration(
-          color: selected
-              ? const Color(0xFFE7F0E8).withValues(alpha: 0.42)
-              : Colors.transparent,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(26),
-          border: selected
-              ? Border.all(
-                  color: const Color(0xFFDDE8DF).withValues(alpha: 0.38),
-                )
-              : null,
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(26),
-            splashColor: colorScheme.primary.withValues(alpha: 0.14),
-            highlightColor: colorScheme.primary.withValues(alpha: 0.06),
-            child: Center(
-              child: AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
-                style: TextStyle(
-                  fontWeight: selected ? FontWeight.bold : FontWeight.w500,
-                  fontSize: 11,
-                  color: selected ? selectedColor : unselectedColor,
-                ),
-                child: AnimatedScale(
-                  duration: const Duration(milliseconds: 180),
-                  curve: Curves.easeOutBack,
-                  scale: selected ? 1.08 : 1,
-                  child: Icon(
-                    data.icon,
-                    size: selected ? 27 : 24,
-                    color: selected ? selectedColor : unselectedColor,
-                  ),
-                ),
-              ),
+          splashColor: colorScheme.primary.withValues(alpha: 0.14),
+          highlightColor: colorScheme.primary.withValues(alpha: 0.06),
+          child: Center(
+            child: Icon(
+              data.icon,
+              size: 24,
+              color: iconColor,
             ),
           ),
         ),

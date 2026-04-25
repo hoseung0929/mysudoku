@@ -2,15 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:mysudoku/constants/records_level_filter.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
 import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
-import 'package:mysudoku/database/database_helper.dart';
-import 'package:mysudoku/model/sudoku_game.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
 import 'package:mysudoku/services/game_record_notifier.dart';
 import 'package:mysudoku/services/profile_state_service.dart';
 import 'package:mysudoku/services/records_statistics_service.dart';
-import 'package:mysudoku/view/level_selection_screen.dart';
 import 'package:mysudoku/view/settings_screen.dart';
-import 'package:mysudoku/view/sudoku_game_screen.dart';
 import 'package:mysudoku/widgets/profile_editor_sheet.dart';
 import 'package:mysudoku/widgets/profile_glass_header.dart';
 
@@ -25,7 +20,6 @@ class RecordsStatisticsScreen extends StatefulWidget {
 class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   static const double _kProfileHeaderExtent = 96;
 
-  final DatabaseHelper _dbHelper = DatabaseHelper();
   final RecordsStatisticsService _statisticsService =
       RecordsStatisticsService();
   final ProfileStateService _profileStateService = ProfileStateService();
@@ -158,13 +152,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     }
   }
 
-  List<Map<String, dynamic>> get _filteredRecent {
-    return _statisticsService.filterRecentRecords(
-      recent: _recent,
-      selectedLevel: _selectedLevel,
-    );
-  }
-
   Map<String, dynamic> get _displayOverall {
     return _statisticsService.buildOverallStats(
       overall: _overall,
@@ -179,59 +166,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       levels: _levels,
       recent: _recent,
       selectedLevel: _selectedLevel,
-    );
-  }
-
-  String _metricsBasisLabel(BuildContext context) {
-    return Localizations.localeOf(context).languageCode == 'ko'
-        ? '지표 기준 보기'
-        : 'See metric basis';
-  }
-
-  Future<void> _showMetricsBasisSheet() async {
-    if (!mounted) return;
-    final colorScheme = Theme.of(context).colorScheme;
-    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isKorean ? '기록 지표 기준' : 'Records metric basis',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  isKorean
-                      ? '기록 통계는 퍼즐별 최고 기록(clear_records)을 기준으로 집계됩니다.'
-                      : 'Record stats aggregate best-per-puzzle clears (clear_records).',
-                  style: TextStyle(
-                      color: colorScheme.onSurfaceVariant, height: 1.4),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  isKorean
-                      ? '챌린지 주간 진행은 완료 이벤트(clear_events)를 기준으로 계산됩니다.'
-                      : 'Challenge weekly progress uses completion events (clear_events).',
-                  style: TextStyle(
-                      color: colorScheme.onSurfaceVariant, height: 1.4),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -336,41 +270,12 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        visualDensity: VisualDensity.compact,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      onPressed: _showMetricsBasisSheet,
-                      icon: const Icon(Icons.info_outline, size: 18),
-                      label: Text(_metricsBasisLabel(context)),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  _buildFilterSection(l10n),
                   const SizedBox(height: 20),
                   _buildOverallSection(l10n),
                   const SizedBox(height: 22),
                   _buildTrendSection(l10n),
-                  if (_statisticsService.buildRecommendedLevelByMistakes(
-                        recent: _recent,
-                      ) !=
-                      null) ...[
-                    const SizedBox(height: 22),
-                    _buildRecommendationSection(l10n),
-                  ],
-                  const SizedBox(height: 22),
-                  _buildBestByLevelSection(l10n),
                   const SizedBox(height: 22),
                   _buildLevelSection(l10n),
-                  const SizedBox(height: 22),
-                  _buildBestSection(l10n),
-                  const SizedBox(height: 22),
-                  _buildRecentSection(l10n),
                 ],
               ),
             ),
@@ -398,126 +303,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         ),
       ),
     );
-  }
-
-  Widget _buildFilterSection(AppLocalizations l10n) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l10n.recordsFilterSectionTitle,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                ),
-                _PeriodDropdownChip(
-                  label: _periodLabel(l10n, _selectedPeriodDays),
-                  children: [
-                    _periodMenuItem(l10n, 0),
-                    _periodMenuItem(l10n, 7),
-                    _periodMenuItem(l10n, 30),
-                    _periodMenuItem(l10n, 90),
-                  ],
-                  onSelected: (value) async {
-                    setState(() {
-                      _selectedPeriodDays = value;
-                    });
-                    await _loadStats();
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              Localizations.localeOf(context).languageCode == 'ko'
-                  ? '필요한 흐름만 조용히 골라서 볼 수 있어요.'
-                  : 'Choose only the rhythm you want to focus on.',
-              style: TextStyle(color: colorScheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: 14),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  for (final level in [
-                    RecordsLevelFilter.allLevels,
-                    ...RecordsStatisticsService.levelOrder,
-                  ])
-                    Padding(
-                      padding: const EdgeInsets.only(right: 12),
-                      child: FilterChip(
-                        label: Text(
-                          RecordsLevelFilter.isAllLevels(level)
-                              ? l10n.recordsFilterAllLevels
-                              : level.localizedSudokuLevelName(l10n),
-                        ),
-                        selected: _selectedLevel == level,
-                        onSelected: (_) {
-                          setState(() {
-                            _selectedLevel = level;
-                          });
-                        },
-                        showCheckmark: false,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 6,
-                        ),
-                        side: BorderSide(
-                          color: _selectedLevel == level
-                              ? colorScheme.primary.withValues(alpha: 0.28)
-                              : colorScheme.outlineVariant,
-                        ),
-                        selectedColor:
-                            const Color(0xFFE7F0E8).withValues(alpha: 0.9),
-                        backgroundColor: colorScheme.surface,
-                        labelStyle: TextStyle(
-                          color: _selectedLevel == level
-                              ? const Color(0xFF285B3F)
-                              : colorScheme.onSurfaceVariant,
-                          fontWeight: _selectedLevel == level
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  PopupMenuItem<int> _periodMenuItem(AppLocalizations l10n, int value) {
-    return PopupMenuItem<int>(
-      value: value,
-      child: Text(_periodLabel(l10n, value)),
-    );
-  }
-
-  String _periodLabel(AppLocalizations l10n, int days) {
-    switch (days) {
-      case 7:
-        return l10n.recordsPeriodLastDays(7);
-      case 30:
-        return l10n.recordsPeriodLastDays(30);
-      case 90:
-        return l10n.recordsPeriodLastDays(90);
-      case 0:
-      default:
-        return l10n.recordsPeriodAll;
-    }
   }
 
   Widget _buildOverallSection(AppLocalizations l10n) {
@@ -679,102 +464,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     );
   }
 
-  Widget _buildBestByLevelSection(AppLocalizations l10n) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final bestByLevel = _statisticsService.buildBestByLevel(
-      recent: _recent,
-      selectedLevel: _selectedLevel,
-    );
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.recordsBestByLevelTitle,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              Localizations.localeOf(context).languageCode == 'ko'
-                  ? '가장 좋았던 순간만 따로 모아봤어요.'
-                  : 'A calm collection of your best puzzle moments.',
-              style: TextStyle(color: colorScheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: 10),
-            if (bestByLevel.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(l10n.recordsBestByLevelEmpty),
-              ),
-            ...bestByLevel.map((record) {
-              final levelNameKey = record['level_name'] as String;
-              final levelName = levelNameKey.localizedSudokuLevelName(l10n);
-              final gameNumber = record['game_number'] as int;
-              final clearTime = record['clear_time'] as int;
-              final wrongCount = record['wrong_count'] as int;
-              final isPerfect = record['is_perfect'] as bool;
-              final timeStr = _statisticsService.formatSeconds(clearTime);
-
-              return ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(
-                  radius: 16,
-                  backgroundColor: colorScheme.surfaceContainerHighest,
-                  child: Text(
-                    levelName.substring(0, 1),
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                ),
-                title: Text(
-                  l10n.recordsGameNumberTitle(levelName, gameNumber),
-                ),
-                subtitle: Text(
-                  l10n.recordsBestByLevelDetail(timeStr, wrongCount),
-                ),
-                trailing: isPerfect
-                    ? Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          l10n.recordsPerfectBadge,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: colorScheme.primary,
-                          ),
-                        ),
-                      )
-                    : Icon(
-                        Icons.chevron_right,
-                        size: 18,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                onTap: () => _openGameFromRecord(record),
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildTrendSection(AppLocalizations l10n) {
     final colorScheme = Theme.of(context).colorScheme;
     final trend = _statisticsService.buildDailyTrend(
@@ -898,249 +587,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     );
   }
 
-  Widget _buildRecentSection(AppLocalizations l10n) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final records = _filteredRecent;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.recordsRecentTitle,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              Localizations.localeOf(context).languageCode == 'ko'
-                  ? '가장 최근에 마무리한 퍼즐들을 다시 살펴볼 수 있어요.'
-                  : 'Revisit the puzzles you completed most recently.',
-              style: TextStyle(color: colorScheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: 10),
-            if (records.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(l10n.recordsRecentEmpty),
-              ),
-            ...records.map((record) {
-              final levelNameKey = record['level_name'] as String;
-              final levelName = levelNameKey.localizedSudokuLevelName(l10n);
-              final gameNumber = record['game_number'] as int;
-              final clearTime = record['clear_time'] as int;
-              final wrongCount = record['wrong_count'] as int;
-              final clearDate = record['clear_date'] as String;
-              final timeStr = _statisticsService.formatSeconds(clearTime);
-              return ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading:
-                    Icon(Icons.history, color: colorScheme.onSurfaceVariant),
-                title: Text(
-                  l10n.recordsGameNumberTitle(levelName, gameNumber),
-                ),
-                subtitle: Text(
-                  l10n.recordsRecentDetail(timeStr, wrongCount, clearDate),
-                ),
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecommendationSection(AppLocalizations l10n) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final recommendation = _statisticsService.buildRecommendedLevelByMistakes(
-      recent: _recent,
-    );
-    if (recommendation == null) {
-      return const SizedBox.shrink();
-    }
-
-    final levelNameKey = recommendation['level_name'] as String;
-    final localizedLevel = levelNameKey.localizedSudokuLevelName(l10n);
-    final averageWrong = recommendation['average_wrong'] as double;
-    final sampleCount = recommendation['sample_count'] as int;
-    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              isKorean ? '다음 추천' : 'Suggested next focus',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              isKorean
-                  ? '최근 7일 기준으로 오답이 가장 많았던 난이도예요.'
-                  : 'In the last 7 days, this level had your highest mistake average.',
-              style: TextStyle(color: colorScheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEFF4EF),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE4DED3)),
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: colorScheme.surfaceContainerHighest,
-                    child: Text(
-                      localizedLevel.substring(0, 1),
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      isKorean
-                          ? '$localizedLevel · 평균 오답 ${averageWrong.toStringAsFixed(1)} ($sampleCount판)'
-                          : '$localizedLevel · Avg mistakes ${averageWrong.toStringAsFixed(1)} ($sampleCount clears)',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: FilledButton.icon(
-                onPressed: () => _openRecommendedLevel(levelNameKey),
-                icon: const Icon(Icons.play_arrow_rounded),
-                label: Text(isKorean ? '추천 난이도 열기' : 'Open recommended level'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBestSection(AppLocalizations l10n) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final topRecords = _statisticsService.buildTopRecords(
-      recent: _recent,
-      selectedLevel: _selectedLevel,
-    );
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.recordsBestTitle,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              Localizations.localeOf(context).languageCode == 'ko'
-                  ? '기억에 남는 완주들을 조용히 모아봤어요.'
-                  : 'Your standout clears, gathered in one quiet place.',
-              style: TextStyle(color: colorScheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: 10),
-            if (topRecords.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(l10n.recordsBestEmpty),
-              ),
-            ...topRecords.asMap().entries.map((entry) {
-              final rank = entry.key + 1;
-              final record = entry.value;
-              final levelNameKey = record['level_name'] as String;
-              final levelName = levelNameKey.localizedSudokuLevelName(l10n);
-              final gameNumber = record['game_number'] as int;
-              final clearTime = record['clear_time'] as int;
-              final wrongCount = record['wrong_count'] as int;
-              final timeStr = _statisticsService.formatSeconds(clearTime);
-
-              return ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: _rankBadge(rank),
-                title: Text(
-                  l10n.recordsGameNumberTitle(levelName, gameNumber),
-                ),
-                subtitle: Text(
-                  l10n.recordsBestDetail(timeStr, wrongCount),
-                ),
-                trailing: Icon(
-                  Icons.chevron_right,
-                  size: 18,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-                onTap: () => _openGameFromRecord(record),
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _rankBadge(int rank) {
-    final colorScheme = Theme.of(context).colorScheme;
-    IconData icon;
-    Color color;
-    switch (rank) {
-      case 1:
-        icon = Icons.workspace_premium;
-        color = const Color(0xFFFFD700);
-        break;
-      case 2:
-        icon = Icons.workspace_premium;
-        color = const Color(0xFFC0C0C0);
-        break;
-      case 3:
-        icon = Icons.workspace_premium;
-        color = const Color(0xFFCD7F32);
-        break;
-      default:
-        icon = Icons.emoji_events;
-        color = colorScheme.onSurfaceVariant;
-        break;
-    }
-
-    return CircleAvatar(
-      radius: 14,
-      backgroundColor: color.withValues(alpha: 0.18),
-      child: Icon(icon, size: 16, color: color),
-    );
-  }
-
   Widget _metricChip(String label, String value) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
@@ -1235,82 +681,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     );
   }
 
-  Future<void> _openGameFromRecord(Map<String, dynamic> record) async {
-    final levelName = record['level_name'] as String?;
-    final gameNumber = record['game_number'] as int?;
-    if (levelName == null || gameNumber == null) {
-      return;
-    }
-
-    final level = SudokuLevel.levels.firstWhere(
-      (item) => item.name == levelName,
-      orElse: () => SudokuLevel.levels.first,
-    );
-
-    final board = await _dbHelper.getGame(levelName, gameNumber);
-    if (board.isEmpty) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(AppLocalizations.of(context)!.recordsGameLoadError)),
-      );
-      return;
-    }
-
-    final solution = await _dbHelper.getSolution(levelName, gameNumber);
-    if (!_isPlayableBoard(board) || !_isPlayableBoard(solution)) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(AppLocalizations.of(context)!.recordsGameLoadError)),
-      );
-      return;
-    }
-    final game = SudokuGame(
-      board: board,
-      solution: solution,
-      emptyCells: level.emptyCells,
-      levelName: levelName,
-      gameNumber: gameNumber,
-    );
-
-    if (!mounted) return;
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SudokuGameScreen(
-          game: game,
-          level: level,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _openRecommendedLevel(String levelName) async {
-    final level = SudokuLevel.levels.firstWhere(
-      (item) => item.name == levelName,
-      orElse: () => SudokuLevel.levels.first,
-    );
-    if (!mounted) return;
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => LevelSelectionScreen(level: level),
-      ),
-    );
-  }
-
-  bool _isPlayableBoard(List<List<int>> board) {
-    if (board.length != 9) {
-      return false;
-    }
-    for (final row in board) {
-      if (row.length != 9) {
-        return false;
-      }
-    }
-    return true;
-  }
 }
 
 class _RecordsHeroCard extends StatelessWidget {
@@ -1406,57 +776,6 @@ class _RecordsHeroCard extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _PeriodDropdownChip extends StatelessWidget {
-  const _PeriodDropdownChip({
-    required this.label,
-    required this.children,
-    required this.onSelected,
-  });
-
-  final String label;
-  final List<PopupMenuEntry<int>> children;
-  final ValueChanged<int> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return PopupMenuButton<int>(
-      onSelected: onSelected,
-      itemBuilder: (context) => children,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: colorScheme.outlineVariant),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(width: 6),
-            Icon(
-              Icons.expand_more_rounded,
-              size: 18,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ],
-        ),
       ),
     );
   }

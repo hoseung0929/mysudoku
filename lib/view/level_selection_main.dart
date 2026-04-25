@@ -25,12 +25,7 @@ import 'package:mysudoku/widgets/profile_editor_sheet.dart';
 import 'package:mysudoku/widgets/profile_glass_header.dart';
 
 class LevelSelectionMain extends StatefulWidget {
-  const LevelSelectionMain({
-    super.key,
-    this.showExploreOnly = false,
-  });
-
-  final bool showExploreOnly;
+  const LevelSelectionMain({super.key});
 
   @override
   State<LevelSelectionMain> createState() => _LevelSelectionMainState();
@@ -88,33 +83,16 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     _loadLevelTotals();
     _refreshLevels();
     _loadProfile();
-    if (widget.showExploreOnly) {
-      _isLoadingHome = false;
-    } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _loadHomeDashboard();
-      });
-      _maybeShowHomeOnboarding();
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _loadHomeDashboard();
+    });
+    _maybeShowHomeOnboarding();
   }
 
   @override
   void didUpdateWidget(covariant LevelSelectionMain oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.showExploreOnly == widget.showExploreOnly) {
-      return;
-    }
-
-    if (widget.showExploreOnly) {
-      if (!mounted) return;
-      setState(() {
-        _isLoadingHome = false;
-        _showCatalogIntro = false;
-      });
-      return;
-    }
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _loadHomeDashboard();
@@ -129,9 +107,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   void _handleRecordsChanged() {
     if (!mounted) return;
     _refreshLevels();
-    if (!widget.showExploreOnly) {
-      _loadHomeDashboard();
-    }
+    _loadHomeDashboard();
   }
 
   Future<void> _loadLevelTotals() async {
@@ -332,7 +308,6 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     final status = _databaseManager.catalogStatus.value;
     final shouldShow = _hasResolvedHomeOnboarding &&
         !_isShowingOnboarding &&
-        !widget.showExploreOnly &&
         _databaseManager.shouldShowInitialCatalogIntro &&
         status.isRunning;
 
@@ -571,7 +546,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                     ? _buildTabletLayout(topInset)
                     : _buildMobileLayout(topInset),
               ),
-              if (_showCatalogIntro && !widget.showExploreOnly)
+              if (_showCatalogIntro)
                 _buildCatalogIntroOverlay(),
             ],
           ),
@@ -598,10 +573,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (!widget.showExploreOnly) ...[
-                  _buildHomeHero(),
-                  const SizedBox(height: 20),
-                ],
+                _buildHomeHero(),
+                const SizedBox(height: 20),
                 _buildLevelGrid(),
               ],
             ),
@@ -648,10 +621,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                     );
                   },
                 ),
-                if (!widget.showExploreOnly) ...[
-                  _buildHomeHero(),
-                  const SizedBox(height: 16),
-                ],
+                _buildHomeHero(),
+                const SizedBox(height: 16),
                 _buildLevelExplorer(),
               ],
             ),
@@ -677,7 +648,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
       guestTitle: l10n.homeGuestTitle,
       profileImagePath: _profileImagePath,
       onTapSettings: _openSettings,
-      sectionLabel: widget.showExploreOnly ? null : (isKorean ? '홈' : 'Home'),
+      sectionLabel: isKorean ? '홈' : 'Home',
       onTapEditProfile: _openProfileEditor,
     );
   }
@@ -696,14 +667,6 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (_todayChallenge != null) _buildTodaySpotlightCard(_todayChallenge!),
-        if (_challengeProgress != null) ...[
-          const SizedBox(height: 14),
-          _buildHomeChallengeSection(_challengeProgress!),
-        ],
-        if (_continueGame != null) ...[
-          const SizedBox(height: 18),
-          _buildContinueCard(_continueGame!),
-        ],
       ],
     );
   }
@@ -974,166 +937,6 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
         summary.game.gameNumber == today.gameNumber;
   }
 
-  Widget _buildContinueCard(ContinueGameSummary summary) {
-    final l10n = AppLocalizations.of(context)!;
-    final sameAsSpotlight = _continueMatchesTodaySpotlight(summary);
-    final progressPercent = (summary.progress * 100).round().clamp(0, 100);
-    return _ResumeActionCard(
-      title: Localizations.localeOf(context).languageCode == 'ko'
-          ? '마음의 퍼즐 잇기'
-          : 'Resume gently',
-      subtitle: sameAsSpotlight
-          ? l10n.homeProgressPercent(progressPercent)
-          : l10n.recordsGameNumberTitle(
-              summary.level.localizedName(l10n),
-              summary.game.gameNumber,
-            ),
-      metaLabel: _savedGameListSubtitle(summary),
-      supportingLabel: sameAsSpotlight
-          ? l10n.homeContinueSameAsSpotlightSupporting
-          : (Localizations.localeOf(context).languageCode == 'ko'
-              ? '최근 퍼즐'
-              : 'Recent puzzle'),
-      savedGamesLabel: _continueGames.length > 1
-          ? _savedGamesCta(_continueGames.length)
-          : null,
-      onTap: () => _openGame(
-        summary.game,
-        summary.level,
-        restoreSavedSession: true,
-      ),
-      onSavedGamesTap: _continueGames.length > 1 ? _openSavedGamesScreen : null,
-    );
-  }
-
-  Widget _buildHomeChallengeSection(ChallengeProgressSummary challenge) {
-    final l10n = AppLocalizations.of(context)!;
-    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Icon(
-              Icons.local_florist_outlined,
-              size: 18,
-              color: _cpBlue,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              isKorean ? '챌린지 흐름' : 'Challenge rhythm',
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: _cpBlue,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _HomeChallengeMiniStatCard(
-                eyebrow: isKorean ? '연속 기록' : 'Streak',
-                value: challenge.streakDays > 0
-                    ? l10n.challengeStreakDays(challenge.streakDays)
-                    : l10n.challengeStreakStartToday,
-                tone: const Color(0xFFE7F0E8),
-                accent: const Color(0xFF457B9D),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _HomeChallengeMiniStatCard(
-                eyebrow: isKorean ? '이번 주 흐름' : 'This week',
-                value: challenge.isWeeklyGoalAchieved
-                    ? l10n.challengeWeeklyGoalReachedTitle
-                    : l10n.challengeWeeklyGoalRemainingTitle(
-                        challenge.remainingWeeklyGoal,
-                      ),
-                tone: const Color(0xFFF2E9DA),
-                accent: const Color(0xFFF4A261),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        _HomeWeeklyGoalCard(
-          l10n: l10n,
-          challenge: challenge,
-        ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-              visualDensity: VisualDensity.compact,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            onPressed: _showChallengeMetricsBasisSheet,
-            icon: const Icon(Icons.info_outline, size: 18),
-            label: Text(
-              isKorean ? '지표 기준 보기' : 'See metric basis',
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _showChallengeMetricsBasisSheet() async {
-    if (!mounted) return;
-    final colorScheme = Theme.of(context).colorScheme;
-    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isKorean ? '챌린지 지표 기준' : 'Challenge metric basis',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  isKorean
-                      ? '주간 진행도: 최근 7일의 완료 이벤트 수를 기준으로 계산됩니다.'
-                      : 'Weekly progress: based on clear events from the last 7 days.',
-                  style: TextStyle(
-                    color: colorScheme.onSurfaceVariant,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  isKorean
-                      ? '연속 기록: 오늘의 도전을 완료한 날짜 연속성으로 계산됩니다.'
-                      : 'Streak: based on consecutive dates when the daily challenge was completed.',
-                  style: TextStyle(
-                    color: colorScheme.onSurfaceVariant,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   String _savedGamesTitle() {
     return Localizations.localeOf(context).languageCode == 'ko'
         ? '저장된 게임'
@@ -1191,28 +994,6 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (!widget.showExploreOnly) ...[
-          Text(
-            Localizations.localeOf(context).languageCode == 'ko'
-                ? 'Explore Levels'
-                : 'Explore Levels',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 22,
-              color: colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            Localizations.localeOf(context).languageCode == 'ko'
-                ? '지금 기분에 맞는 난이도를 바로 고를 수 있어요.'
-                : 'Pick the difficulty that feels right for this moment.',
-            style: TextStyle(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 10),
-        ],
         ...List.generate(5, (index) => _buildLevelCard(index)),
       ],
     );
@@ -1223,28 +1004,6 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (!widget.showExploreOnly) ...[
-          Text(
-            Localizations.localeOf(context).languageCode == 'ko'
-                ? 'Explore Levels'
-                : 'Explore Levels',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 22,
-              color: colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            Localizations.localeOf(context).languageCode == 'ko'
-                ? '차분하게 시작할지, 깊게 몰입할지 고를 수 있어요.'
-                : 'Choose between a gentle start or deeper focus.',
-            style: TextStyle(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 12),
-        ],
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -1303,359 +1062,6 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
         });
         _goToGame(levelTitles[index]);
       },
-    );
-  }
-}
-
-class _ResumeActionCard extends StatelessWidget {
-  const _ResumeActionCard({
-    required this.title,
-    required this.subtitle,
-    required this.metaLabel,
-    required this.supportingLabel,
-    required this.onTap,
-    this.savedGamesLabel,
-    this.onSavedGamesTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final String metaLabel;
-  final String supportingLabel;
-  final VoidCallback onTap;
-  final String? savedGamesLabel;
-  final VoidCallback? onSavedGamesTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
-        child: Ink(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.64),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: const Color(0xFFE4DED3),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: _LevelSelectionMainState._cpBlue,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                supportingLabel,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          subtitle,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                            color: _LevelSelectionMainState._cpInk,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          metaLabel,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ],
-              ),
-              if (savedGamesLabel != null && onSavedGamesTap != null) ...[
-                const SizedBox(height: 12),
-                Divider(
-                  height: 1,
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.72),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: onSavedGamesTap,
-                    icon: const Icon(Icons.folder_open, size: 18),
-                    label: Text(savedGamesLabel!),
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: colorScheme.surfaceContainerLow,
-                      alignment: Alignment.center,
-                      foregroundColor: colorScheme.onSurface,
-                      side: BorderSide(color: colorScheme.outlineVariant),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _HomeChallengeMiniStatCard extends StatelessWidget {
-  const _HomeChallengeMiniStatCard({
-    required this.eyebrow,
-    required this.value,
-    required this.tone,
-    required this.accent,
-  });
-
-  final String eyebrow;
-  final String value;
-  final Color tone;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: tone,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFE4DED3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 28,
-            height: 4,
-            decoration: BoxDecoration(
-              color: accent,
-              borderRadius: BorderRadius.circular(999),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            eyebrow,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF66776C),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF21382A),
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HomeWeeklyGoalCard extends StatelessWidget {
-  const _HomeWeeklyGoalCard({
-    required this.l10n,
-    required this.challenge,
-  });
-
-  final AppLocalizations l10n;
-  final ChallengeProgressSummary challenge;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final goalSlots = challenge.weeklyGoalTarget.clamp(1, 7);
-    final filledSlots = challenge.weeklyClearCount.clamp(0, goalSlots);
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.challengeWeeklyGoalHeading,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.challengeWeeklyClearsLine(challenge.weeklyGoalTarget),
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 14),
-            _HomeLeafProgressRow(
-              filledCount: filledSlots,
-              totalCount: goalSlots,
-              isComplete: challenge.isWeeklyGoalAchieved,
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: _HomeGoalMetaLabel(
-                    icon: Icons.check_circle_outline,
-                    label: l10n.challengeWeeklyProgressShort(
-                      challenge.weeklyClearCount,
-                      challenge.weeklyGoalTarget,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _HomeGoalMetaLabel(
-                    icon: Icons.auto_awesome,
-                    label: l10n.challengeWeeklyPerfectShort(
-                      challenge.perfectClearCount,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              challenge.isWeeklyGoalAchieved
-                  ? l10n.challengeWeeklyCongratsFooter
-                  : l10n.challengeWeeklyAlmostFooter(
-                      challenge.remainingWeeklyGoal,
-                    ),
-              style: TextStyle(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _HomeGoalMetaLabel extends StatelessWidget {
-  const _HomeGoalMetaLabel({
-    required this.icon,
-    required this.label,
-  });
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: colorScheme.primary),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: colorScheme.onSurface,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _HomeLeafProgressRow extends StatelessWidget {
-  const _HomeLeafProgressRow({
-    required this.filledCount,
-    required this.totalCount,
-    required this.isComplete,
-  });
-
-  final int filledCount;
-  final int totalCount;
-  final bool isComplete;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final filledColor =
-        isComplete ? const Color(0xFF7AA874) : const Color(0xFF8EBE99);
-    final emptyColor = colorScheme.surfaceContainerHighest;
-
-    return Row(
-      children: List.generate(totalCount, (index) {
-        final filled = index < filledCount;
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(right: index == totalCount - 1 ? 0 : 8),
-            child: Container(
-              height: 52,
-              decoration: BoxDecoration(
-                color:
-                    filled ? filledColor.withValues(alpha: 0.16) : emptyColor,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: filled
-                      ? filledColor.withValues(alpha: 0.28)
-                      : colorScheme.outlineVariant,
-                ),
-              ),
-              child: Center(
-                child: Transform.rotate(
-                  angle: filled ? -0.25 : 0,
-                  child: Icon(
-                    filled ? Icons.spa_rounded : Icons.eco_outlined,
-                    size: 22,
-                    color: filled ? filledColor : colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }),
     );
   }
 }
