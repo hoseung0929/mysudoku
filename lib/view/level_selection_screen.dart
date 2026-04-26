@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
 import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
 import 'package:mysudoku/database/database_helper.dart';
 import 'package:mysudoku/database/database_manager.dart';
 import 'package:mysudoku/model/sudoku_game.dart';
-import 'package:mysudoku/model/sudoku_game_set.dart';
 import 'package:mysudoku/model/sudoku_level.dart';
 import 'package:mysudoku/services/level_progress_service.dart';
 import 'package:mysudoku/view/sudoku_game_screen.dart';
@@ -22,23 +22,28 @@ class LevelSelectionScreen extends StatefulWidget {
 }
 
 class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
+  static const int _perfLogThresholdMs = 120;
   final DatabaseManager _databaseManager = DatabaseManager();
   final LevelProgressService _levelProgressService = LevelProgressService();
+  final DatabaseHelper _dbHelper = DatabaseHelper();
   // 게임 데이터 캐시
-  final Map<String, List<SudokuGame>> _gameCache = {};
+  final Map<String, List<int>> _gameCache = {};
+  final Map<String, Future<List<int>>> _gameFutureCache = {};
+  final Map<String, Map<int, SudokuGame>> _playGameCache = {};
+  final Map<String, Stopwatch> _levelLoadStopwatch = {};
   final Map<String, int> _levelTotal = {};
   final Map<String, Set<int>> _clearedGameNumbers = {};
   List<SudokuLevel> _levels = List<SudokuLevel>.from(SudokuLevel.levels);
-  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadLevelTotals();
-    _refreshLevels();
-    // 특정 레벨이 전달된 경우 미리 게임 데이터 로딩
-    if (widget.level != null) {
-      _preloadGames();
+    // 홈에서 특정 레벨로 진입한 경우에는 초기 진입 비용을 최소화합니다.
+    if (widget.level == null) {
+      _loadLevelTotals();
+      _refreshLevels();
+    } else {
+      _gamesFutureForLevel(widget.level!.name);
     }
   }
 
@@ -60,55 +65,121 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     });
   }
 
-  /// 게임 데이터 미리 로딩
-  Future<void> _preloadGames() async {
-    if (!_gameCache.containsKey(widget.level!.name)) {
-      setState(() {
-        _isLoading = true;
-      });
-      try {
-        final games = await SudokuGameSet.create(widget.level!.name);
-        _gameCache[widget.level!.name] = games;
-        await _loadClearedGameNumbers(widget.level!.name);
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-      }
-    }
-  }
-
   /// 특정 난이도의 게임 목록을 로드합니다.
   /// 캐시된 데이터가 있으면 캐시에서 반환하고,
   /// 없으면 데이터베이스에서 로드하여 캐시에 저장합니다.
-  Future<List<SudokuGame>> _loadGames(String level) async {
+  Future<List<int>> _loadGames(String level) async {
+    final sw = _levelLoadStopwatch.putIfAbsent(level, Stopwatch.new);
+    if (!sw.isRunning) {
+      sw
+        ..reset()
+        ..start();
+    }
     if (!_clearedGameNumbers.containsKey(level)) {
-      await _loadClearedGameNumbers(level);
+      _loadClearedGameNumbers(level).then((_) {
+        if (mounted) {
+          setState(() {});
+        }
+      });
     }
     if (_gameCache.containsKey(level)) {
+      if (sw.isRunning) {
+        sw.stop();
+      }
+      if (kDebugMode && sw.elapsedMilliseconds >= _perfLogThresholdMs) {
+        debugPrint(
+          '[perf] level_list(cache) level=$level count=${_gameCache[level]!.length} '
+          'elapsed_ms=${sw.elapsedMilliseconds}',
+        );
+      }
       return _gameCache[level]!;
     }
-    final games = await SudokuGameSet.create(level);
-    _gameCache[level] = games;
-    return games;
+    final gameNumbers = await _dbHelper.getGameNumbersForLevel(level);
+    _gameCache[level] = gameNumbers;
+    if (sw.isRunning) {
+      sw.stop();
+    }
+    if (kDebugMode && sw.elapsedMilliseconds >= _perfLogThresholdMs) {
+      debugPrint(
+        '[perf] level_list(db) level=$level count=${gameNumbers.length} '
+        'elapsed_ms=${sw.elapsedMilliseconds}',
+      );
+    }
+    return gameNumbers;
+  }
+
+  Future<List<int>> _gamesFutureForLevel(String level) {
+    return _gameFutureCache.putIfAbsent(level, () => _loadGames(level));
   }
 
   Future<void> _loadClearedGameNumbers(String levelName) async {
-    final dbHelper = DatabaseHelper();
-    final records = await dbHelper.getClearRecordsForLevel(levelName);
-    _clearedGameNumbers[levelName] = records
-        .map((record) => record['game_number'] as int)
-        .toSet();
+    final numbers = await _dbHelper.getClearedGameNumbersForLevel(levelName);
+    _clearedGameNumbers[levelName] = numbers.toSet();
   }
 
-  bool _isCleared(SudokuGame game) {
-    final levelName = game.levelName;
-    return _clearedGameNumbers[levelName]?.contains(game.gameNumber) ?? false;
+  bool _isCleared(String levelName, int gameNumber) {
+    return _clearedGameNumbers[levelName]?.contains(gameNumber) ?? false;
   }
 
-  Future<void> _onGameSelected(SudokuGame game, SudokuLevel level) async {
+  Future<SudokuGame?> _loadGameForPlay(String levelName, int gameNumber) async {
+    final sw = Stopwatch()..start();
+    final cached = _playGameCache[levelName]?[gameNumber];
+    if (cached != null) {
+      sw.stop();
+      if (kDebugMode && sw.elapsedMilliseconds >= _perfLogThresholdMs) {
+        debugPrint(
+          '[perf] game_entry(cache) level=$levelName game=$gameNumber '
+          'elapsed_ms=${sw.elapsedMilliseconds}',
+        );
+      }
+      return cached;
+    }
+
+    final levelInfo = SudokuLevel.levels.firstWhere(
+      (item) => item.name == levelName,
+      orElse: () => SudokuLevel.levels.first,
+    );
+    final entry = await _dbHelper.getGameEntry(levelName, gameNumber);
+    if (entry == null) {
+      sw.stop();
+      if (kDebugMode && sw.elapsedMilliseconds >= _perfLogThresholdMs) {
+        debugPrint(
+          '[perf] game_entry(miss) level=$levelName game=$gameNumber '
+          'elapsed_ms=${sw.elapsedMilliseconds}',
+        );
+      }
+      return null;
+    }
+
+    final game = SudokuGame(
+      board: entry['board'] as List<List<int>>,
+      solution: entry['solution'] as List<List<int>>,
+      emptyCells: levelInfo.emptyCells,
+      levelName: levelName,
+      gameNumber: gameNumber,
+    );
+
+    (_playGameCache[levelName] ??= <int, SudokuGame>{})[gameNumber] = game;
+    sw.stop();
+    if (kDebugMode && sw.elapsedMilliseconds >= _perfLogThresholdMs) {
+      debugPrint(
+        '[perf] game_entry(db) level=$levelName game=$gameNumber '
+        'elapsed_ms=${sw.elapsedMilliseconds}',
+      );
+    }
+    return game;
+  }
+
+  Future<void> _onGameSelected(int gameNumber, SudokuLevel level) async {
+    final game = await _loadGameForPlay(level.name, gameNumber);
+    if (!mounted) return;
+    if (game == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.recordsGameLoadError)),
+      );
+      return;
+    }
+
     await Navigator.push(
       context,
       PageRouteBuilder(
@@ -359,8 +430,11 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
         Expanded(
           child: Container(
             padding: const EdgeInsets.all(24),
-            child: _isLoading
-                ? Center(
+            child: FutureBuilder<List<int>>(
+              future: _gamesFutureForLevel(widget.level!.name),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -375,49 +449,28 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                         ),
                       ],
                     ),
-                  )
-                : FutureBuilder<List<SudokuGame>>(
-                    future: _loadGames(widget.level!.name),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const CircularProgressIndicator(),
-                              const SizedBox(height: 16),
-                              Text(
-                                l10n.levelLoadingGames,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  color: Color(0xFF7F8C8D),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return Center(
-                          child: Text(l10n.recordsGameLoadError),
-                        );
-                      }
-                      return GridView.builder(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 4,
-                          crossAxisSpacing: 20,
-                          mainAxisSpacing: 20,
-                          childAspectRatio: 1,
-                        ),
-                        itemCount: snapshot.data!.length,
-                        itemBuilder: (context, index) {
-                          final game = snapshot.data![index];
-                          return _buildGameSelectionCard(game, l10n);
-                        },
-                      );
-                    },
+                  );
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(
+                    child: Text(l10n.recordsGameLoadError),
+                  );
+                }
+                return GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    crossAxisSpacing: 20,
+                    mainAxisSpacing: 20,
+                    childAspectRatio: 1,
                   ),
+                  itemCount: snapshot.data!.length,
+                  itemBuilder: (context, index) {
+                    final gameNumber = snapshot.data![index];
+                    return _buildGameSelectionCard(gameNumber, l10n);
+                  },
+                );
+              },
+            ),
           ),
         ),
       ],
@@ -511,8 +564,11 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
           child: SingleChildScrollView(
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: _isLoading
-                ? Center(
+            child: FutureBuilder<List<int>>(
+              future: _gamesFutureForLevel(widget.level!.name),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -527,41 +583,23 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                         ),
                       ],
                     ),
-                  )
-                : FutureBuilder<List<SudokuGame>>(
-                    future: _loadGames(widget.level!.name),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const CircularProgressIndicator(),
-                              const SizedBox(height: 16),
-                              Text(
-                                l10n.levelLoadingGames,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  color: Color(0xFF7F8C8D),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return Center(
-                          child: Text(l10n.recordsGameLoadError),
-                        );
-                      }
-                      return Column(
-                        children: snapshot.data!
-                            .map((game) =>
-                                _buildGameSelectionMobileCard(game, l10n))
-                            .toList(),
-                      );
-                    },
-                  ),
+                  );
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(
+                    child: Text(l10n.recordsGameLoadError),
+                  );
+                }
+                return Column(
+                  children: snapshot.data!
+                      .map(
+                        (gameNumber) =>
+                            _buildGameSelectionMobileCard(gameNumber, l10n),
+                      )
+                      .toList(),
+                );
+              },
+            ),
           ),
         ),
       ],
@@ -569,8 +607,8 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   }
 
   /// 게임 선택용 카드 위젯
-  Widget _buildGameSelectionCard(SudokuGame game, AppLocalizations l10n) {
-    final isCleared = _isCleared(game);
+  Widget _buildGameSelectionCard(int gameNumber, AppLocalizations l10n) {
+    final isCleared = _isCleared(widget.level!.name, gameNumber);
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.all(12),
@@ -591,7 +629,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
       ),
       child: InkWell(
         onTap: () async {
-          await _onGameSelected(game, widget.level!);
+          await _onGameSelected(gameNumber, widget.level!);
         },
         borderRadius: BorderRadius.circular(28),
         child: Stack(
@@ -614,7 +652,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  l10n.gameNumberLabel(game.gameNumber),
+                  l10n.gameNumberLabel(gameNumber),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -653,10 +691,10 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
 
   /// 게임 선택용 모바일 카드 위젯
   Widget _buildGameSelectionMobileCard(
-    SudokuGame game,
+    int gameNumber,
     AppLocalizations l10n,
   ) {
-    final isCleared = _isCleared(game);
+    final isCleared = _isCleared(widget.level!.name, gameNumber);
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.all(12),
@@ -677,7 +715,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
       ),
       child: InkWell(
         onTap: () async {
-          await _onGameSelected(game, widget.level!);
+          await _onGameSelected(gameNumber, widget.level!);
         },
         borderRadius: BorderRadius.circular(28),
         child: Row(
@@ -701,7 +739,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n.gameNumberLabel(game.gameNumber),
+                    l10n.gameNumberLabel(gameNumber),
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -935,8 +973,8 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
             ),
             // 게임 목록
             Expanded(
-              child: FutureBuilder<List<SudokuGame>>(
-                future: _loadGames(level.name),
+              child: FutureBuilder<List<int>>(
+                future: _gamesFutureForLevel(level.name),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -957,8 +995,8 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                     ),
                     itemCount: snapshot.data!.length,
                     itemBuilder: (context, index) {
-                      final game = snapshot.data![index];
-                      return _buildGameCard(game, level, l10n);
+                      final gameNumber = snapshot.data![index];
+                      return _buildGameCard(gameNumber, level, l10n);
                     },
                   );
                 },
@@ -972,17 +1010,17 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
 
   /// 게임 카드 위젯 (모달용)
   Widget _buildGameCard(
-    SudokuGame game,
+    int gameNumber,
     SudokuLevel level,
     AppLocalizations l10n,
   ) {
-    final isCleared = _isCleared(game);
+    final isCleared = _isCleared(level.name, gameNumber);
     return Container(
       width: 100,
       margin: const EdgeInsets.only(right: 12),
       child: InkWell(
         onTap: () async {
-          await _onGameSelected(game, level);
+          await _onGameSelected(gameNumber, level);
         },
         child: Card(
           elevation: 1,
@@ -996,7 +1034,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  l10n.gameNumberLabel(game.gameNumber),
+                  l10n.gameNumberLabel(gameNumber),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,

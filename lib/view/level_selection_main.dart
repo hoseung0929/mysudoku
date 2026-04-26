@@ -356,8 +356,28 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
 
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => LevelSelectionScreen(level: level),
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            LevelSelectionScreen(level: level),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(0.08, 0.0);
+          const end = Offset.zero;
+          final tween = Tween(begin: begin, end: end).chain(
+            CurveTween(curve: Curves.easeOutCubic),
+          );
+          final fade = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          );
+          return FadeTransition(
+            opacity: fade,
+            child: SlideTransition(
+              position: animation.drive(tween),
+              child: child,
+            ),
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 170),
       ),
     );
     // 게임 화면에서 돌아온 뒤 클리어 수 갱신
@@ -899,15 +919,17 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
           const SizedBox(height: 18),
           Align(
             alignment: Alignment.centerLeft,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 168),
+            child: FractionallySizedBox(
+              widthFactor: 0.60,
               child: FilledButton(
                 onPressed: _openMyPaceGame,
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFFF8F4E8),
                   foregroundColor: _cpForest,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 26, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 26,
+                    vertical: 16,
+                  ),
                   textStyle: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -1057,9 +1079,6 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
       progressColor: const Color(0xFF8DC6B0),
       isSelected: _selectedIndex == index,
       onTap: () {
-        setState(() {
-          _selectedIndex = index;
-        });
         _goToGame(levelTitles[index]);
       },
     );

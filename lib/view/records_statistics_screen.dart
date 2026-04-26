@@ -211,8 +211,12 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           children: [
             RefreshIndicator(
               onRefresh: _loadStats,
+              color: const Color(0xFF285B3F),
+              backgroundColor: Colors.white,
+              displacement: 28,
               child: ListView(
                 controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: EdgeInsets.fromLTRB(
                   20,
                   topInset + _kProfileHeaderExtent + 12,

@@ -4,7 +4,6 @@ import 'package:mysudoku/l10n/app_locale_scope.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
 import 'package:mysudoku/services/firebase_identity_service.dart';
 import 'package:mysudoku/theme/app_theme.dart';
-import 'package:mysudoku/theme/app_theme_scope.dart';
 import 'package:mysudoku/view/settings/settings_controller.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -34,160 +33,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _setVibrationEnabled(bool value) async {
-    final nextState = await _settingsController.setVibrationEnabled(_state, value);
+    final nextState =
+        await _settingsController.setVibrationEnabled(_state, value);
     if (!mounted) return;
     setState(() {
       _state = nextState;
     });
-  }
-
-  Future<void> _setNotificationsEnabled(bool value) async {
-    final l10n = AppLocalizations.of(context)!;
-    if (value) {
-      final granted = await _settingsController.requestNotificationPermissions();
-      if (!granted) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.settingsNotificationsPermissionDenied),
-          ),
-        );
-        return;
-      }
-    }
-
-    final nextState = await _settingsController.setNotificationsEnabled(
-      _state,
-      value,
-    );
-    if (!mounted) return;
-    setState(() {
-      _state = nextState;
-    });
-  }
-
-  Future<void> _setStreakReminderEnabled(bool value) async {
-    final l10n = AppLocalizations.of(context)!;
-    if (value && !_state.notificationsEnabled) {
-      final granted = await _settingsController.requestNotificationPermissions();
-      if (!granted) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.settingsNotificationsPermissionDenied),
-          ),
-        );
-        return;
-      }
-    }
-
-    final nextState = await _settingsController.setStreakReminderEnabled(
-      _state,
-      value,
-    );
-    if (!mounted) return;
-    setState(() {
-      _state = nextState;
-    });
-  }
-
-  Future<void> _setGameCompleteNotificationEnabled(bool value) async {
-    final l10n = AppLocalizations.of(context)!;
-    if (value) {
-      final granted = await _settingsController.requestNotificationPermissions();
-      if (!granted) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.settingsNotificationsPermissionDenied),
-          ),
-        );
-        return;
-      }
-    }
-
-    final nextState = await _settingsController.setGameCompleteNotificationEnabled(
-      _state,
-      value,
-    );
-    if (!mounted) return;
-    setState(() {
-      _state = nextState;
-    });
-  }
-
-  Future<void> _setDailyGoalNotificationEnabled(bool value) async {
-    final l10n = AppLocalizations.of(context)!;
-    if (value) {
-      final granted = await _settingsController.requestNotificationPermissions();
-      if (!granted) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.settingsNotificationsPermissionDenied),
-          ),
-        );
-        return;
-      }
-    }
-
-    final nextState = await _settingsController.setDailyGoalNotificationEnabled(
-      _state,
-      value,
-    );
-    if (!mounted) return;
-    setState(() {
-      _state = nextState;
-    });
-  }
-
-  Future<void> _pickNotificationTime() async {
-    final selected = await showTimePicker(
-      context: context,
-      initialTime: _state.notificationTime,
-    );
-    if (selected == null) return;
-
-    final nextState = await _settingsController.setNotificationTime(
-      _state,
-      selected,
-    );
-    if (!mounted) return;
-    setState(() {
-      _state = nextState;
-    });
-  }
-
-  String _formatNotificationTime(BuildContext context) {
-    return MaterialLocalizations.of(context).formatTimeOfDay(
-      _state.notificationTime,
-    );
   }
 
   Future<void> _setKeepScreenAwake(bool value) async {
-    final nextState = await _settingsController.setKeepScreenAwake(_state, value);
-    if (!mounted) return;
-    setState(() {
-      _state = nextState;
-    });
-  }
-
-  Future<void> _setOneHandModeEnabled(bool value) async {
-    final nextState = await _settingsController.setOneHandModeEnabled(
-      _state,
-      value,
-    );
-    if (!mounted) return;
-    setState(() {
-      _state = nextState;
-    });
-  }
-
-  Future<void> _setMemoHighlightEnabled(bool value) async {
-    final nextState = await _settingsController.setMemoHighlightEnabled(
-      _state,
-      value,
-    );
+    final nextState =
+        await _settingsController.setKeepScreenAwake(_state, value);
     if (!mounted) return;
     setState(() {
       _state = nextState;
@@ -214,9 +70,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Text(
                     l10n.settingsCloudManageSheetTitle,
-                    style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                    style:
+                        Theme.of(sheetContext).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -517,6 +374,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _showCloudComingSoonDialog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('안내'),
+        content: const Text('다음 버전에 제공 될 기능입니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _showLanguagePicker() async {
     final l10n = AppLocalizations.of(context)!;
     await showModalBottomSheet<void>(
@@ -557,63 +430,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Navigator.pop(ctx);
                   await AppLocaleScope.of(context)
                       .setAppLocale(const Locale('ko'));
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _showAppearancePicker() async {
-    final l10n = AppLocalizations.of(context)!;
-    final scope = AppThemeScope.of(context);
-    await showModalBottomSheet<void>(
-      context: context,
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  l10n.settingsAppearancePickerTitle,
-                  style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-              ),
-              ListTile(
-                title: Text(l10n.settingsLanguageSystem),
-                trailing: scope.themeMode == ThemeMode.system
-                    ? const Icon(Icons.check, color: AppTheme.mintColor)
-                    : null,
-                onTap: () async {
-                  Navigator.pop(ctx);
-                  await scope.setThemeMode(ThemeMode.system);
-                },
-              ),
-              ListTile(
-                title: Text(l10n.settingsThemeModeLight),
-                trailing: scope.themeMode == ThemeMode.light
-                    ? const Icon(Icons.check, color: AppTheme.mintColor)
-                    : null,
-                onTap: () async {
-                  Navigator.pop(ctx);
-                  await scope.setThemeMode(ThemeMode.light);
-                },
-              ),
-              ListTile(
-                title: Text(l10n.settingsThemeModeDark),
-                trailing: scope.themeMode == ThemeMode.dark
-                    ? const Icon(Icons.check, color: AppTheme.mintColor)
-                    : null,
-                onTap: () async {
-                  Navigator.pop(ctx);
-                  await scope.setThemeMode(ThemeMode.dark);
                 },
               ),
             ],
@@ -719,16 +535,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const Spacer(),
-          Text(
-            Localizations.localeOf(context).languageCode == 'ko'
-                ? '차분한 플레이 환경'
-                : 'Calm play setup',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
         ],
       ),
     );
@@ -765,91 +571,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _buildSettingsSection(
-          l10n.settingsSectionNotifications,
-          [
-            SwitchListTile(
-              value: _state.gameCompleteNotificationEnabled,
-              onChanged: _setGameCompleteNotificationEnabled,
-              secondary: _buildGameOptionIcon(Icons.emoji_events_outlined),
-              title: Text(
-                l10n.settingsGameCompleteNotifTitle,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-              ),
-              subtitle: Text(
-                l10n.settingsGameCompleteNotifSubtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            SwitchListTile(
-              value: _state.dailyGoalNotificationEnabled,
-              onChanged: _setDailyGoalNotificationEnabled,
-              secondary: _buildGameOptionIcon(Icons.flag_outlined),
-              title: Text(
-                l10n.settingsDailyGoalNotifTitle,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-              ),
-              subtitle: Text(
-                l10n.settingsDailyGoalNotifSubtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-            ),
-            SwitchListTile(
-              value: _state.notificationsEnabled,
-              onChanged: _setNotificationsEnabled,
-              secondary: _buildGameOptionIcon(Icons.notifications_active_outlined),
-              title: Text(
-                l10n.settingsNotificationsTitle,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-              ),
-              subtitle: Text(
-                l10n.settingsNotificationsSubtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            SwitchListTile(
-              value: _state.streakReminderEnabled,
-              onChanged: _setStreakReminderEnabled,
-              secondary: _buildGameOptionIcon(Icons.local_fire_department_outlined),
-              title: Text(
-                l10n.settingsStreakReminderTitle,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-              ),
-              subtitle: Text(
-                l10n.settingsStreakReminderSubtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-            ),
-            _buildSettingsTile(
-              icon: Icons.schedule,
-              title: l10n.settingsNotificationTimeTitle,
-              subtitle:
-                  '${l10n.settingsNotificationTimeSubtitle} · ${_formatNotificationTime(context)}',
-              onTap: _pickNotificationTime,
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
         _buildSettingsSection(
           l10n.settingsSectionLanguage,
           [
@@ -910,48 +631,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 l10n.settingsKeepScreenAwakeSubtitle,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            SwitchListTile(
-              value: _state.oneHandModeEnabled,
-              onChanged: _setOneHandModeEnabled,
-              secondary: _buildGameOptionIcon(Icons.pan_tool_alt_outlined),
-              title: Text(
-                l10n.settingsOneHandModeTitle,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-              ),
-              subtitle: Text(
-                l10n.settingsOneHandModeSubtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            _buildSettingsTile(
-              icon: Icons.palette_outlined,
-              title: l10n.settingsThemeTitle,
-              subtitle: l10n.settingsThemeSubtitle,
-              onTap: _showAppearancePicker,
-            ),
-            SwitchListTile(
-              value: _state.memoHighlightEnabled,
-              onChanged: _setMemoHighlightEnabled,
-              secondary: _buildGameOptionIcon(Icons.filter_center_focus),
-              title: Text(
-                l10n.settingsMemoHighlightTitle,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-              ),
-              subtitle: Text(
-                l10n.settingsMemoHighlightSubtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
               ),
             ),
@@ -967,13 +646,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   : Icons.cloud_sync_outlined,
               title: l10n.settingsCloudAccountTitle,
               subtitle: _cloudAccountSubtitle(l10n),
-              onTap: _showCloudAccountSheet,
+              onTap: _showCloudComingSoonDialog,
             ),
             _buildSettingsTile(
               icon: Icons.sync_outlined,
               title: l10n.settingsCloudSyncNowTitle,
               subtitle: l10n.settingsCloudSyncNowSubtitle,
-              onTap: _syncCloudProgress,
+              onTap: _showCloudComingSoonDialog,
             ),
           ],
         ),
@@ -1091,7 +770,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: EdgeInsets.zero,
       children: [
         Text(
-          l10n.settingsTabletNotificationsHeader,
+          l10n.settingsSectionGame,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: cs.onSurface,
@@ -1099,7 +778,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          l10n.settingsNotificationsSubtitle,
+          l10n.settingsThemeSubtitle,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: cs.onSurfaceVariant,
               ),
@@ -1115,7 +794,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
-                    '${l10n.settingsTabletNotificationsBody}\n${l10n.settingsNotificationTimeTitle}: ${_formatNotificationTime(context)}\n${l10n.settingsStreakReminderTitle}: ${_state.streakReminderEnabled ? l10n.gameMemoStateOn : l10n.gameMemoStateOff}',
+                    l10n.settingsMemoHighlightSubtitle,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),

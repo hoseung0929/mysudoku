@@ -105,6 +105,11 @@ class DatabaseHelper {
     return await _clearRecordRepository.getClearRecordsForLevel(levelName);
   }
 
+  /// 특정 레벨에서 클리어된 게임 번호 목록만 반환합니다.
+  Future<List<int>> getClearedGameNumbersForLevel(String levelName) async {
+    return await _clearRecordRepository.getClearedGameNumbersForLevel(levelName);
+  }
+
   /// 특정 게임의 클리어 기록을 조회합니다.
   Future<Map<String, dynamic>?> getClearRecord(
       String levelName, int gameNumber) async {

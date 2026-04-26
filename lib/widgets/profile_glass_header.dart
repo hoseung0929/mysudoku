@@ -33,11 +33,10 @@ class ProfileGlassHeader extends StatelessWidget {
     final hasName = trimmedName.isNotEmpty;
     final displayName = hasName ? trimmedName : guestTitle;
     final isKorean = Localizations.localeOf(context).languageCode == 'ko';
-    final subtitleText = hasName
-        ? (isKorean
-            ? '안녕, $displayName! 오늘 하루는 어땠나요?'
-            : '$displayName, ready for one calm puzzle today?')
-        : (isKorean ? '안녕! 오늘 하루는 어땠나요?' : 'One calm puzzle for today.');
+    final subtitleText = _buildGreetingMessage(
+      isKorean: isKorean,
+      hour: DateTime.now().hour,
+    );
     final subtitleWithSection = (sectionLabel == null || sectionLabel!.isEmpty)
         ? subtitleText
         : '${sectionLabel!} · $subtitleText';
@@ -143,11 +142,12 @@ class ProfileGlassHeader extends StatelessWidget {
                               const SizedBox(height: 3),
                               Text(
                                 subtitleWithSection,
-                                maxLines: 1,
+                                maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   color: colorScheme.onSurfaceVariant,
-                                  fontSize: 13,
+                                  fontSize: 12,
+                                  height: 1.25,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -191,4 +191,36 @@ class ProfileGlassHeader extends StatelessWidget {
       ),
     );
   }
+
+  String _buildGreetingMessage({
+    required bool isKorean,
+    required int hour,
+  }) {
+    final period = _timePeriod(hour);
+    switch (period) {
+      case _GreetingTimePeriod.morning:
+        if (isKorean) {
+          return '좋은 아침이에요! 가볍게 한 판 어때요?';
+        }
+        return 'Good morning! Ready for a light puzzle?';
+      case _GreetingTimePeriod.afternoon:
+        if (isKorean) {
+          return '점심 이후 집중 한 판 해볼까요?';
+        }
+        return 'How about a focused puzzle this afternoon?';
+      case _GreetingTimePeriod.evening:
+        if (isKorean) {
+          return '오늘 저녁은 차분하게 퍼즐로 마무리해요.';
+        }
+        return 'Wind down tonight with a calm puzzle.';
+    }
+  }
+
+  _GreetingTimePeriod _timePeriod(int hour) {
+    if (hour >= 5 && hour < 12) return _GreetingTimePeriod.morning;
+    if (hour >= 12 && hour < 18) return _GreetingTimePeriod.afternoon;
+    return _GreetingTimePeriod.evening;
+  }
 }
+
+enum _GreetingTimePeriod { morning, afternoon, evening }

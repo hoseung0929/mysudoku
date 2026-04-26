@@ -90,6 +90,18 @@ class ClearRecordRepository {
     return maps;
   }
 
+  /// 특정 레벨에서 클리어된 게임 번호 목록만 조회합니다.
+  Future<List<int>> getClearedGameNumbersForLevel(String levelName) async {
+    final db = await _dbManager.database;
+    final maps = await db.query(
+      'clear_records',
+      columns: ['game_number'],
+      where: 'level_name = ?',
+      whereArgs: [levelName],
+    );
+    return maps.map((row) => row['game_number'] as int).toList();
+  }
+
   /// 특정 게임의 클리어 기록을 조회합니다.
   Future<Map<String, dynamic>?> getClearRecord(
       String levelName, int gameNumber) async {
