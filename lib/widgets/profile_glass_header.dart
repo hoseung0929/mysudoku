@@ -142,12 +142,13 @@ class ProfileGlassHeader extends StatelessWidget {
                               const SizedBox(height: 3),
                               Text(
                                 subtitleWithSection,
-                                maxLines: 2,
+                                maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  color: colorScheme.onSurfaceVariant,
-                                  fontSize: 12,
-                                  height: 1.25,
+                                  color:
+                                      colorScheme.onSurfaceVariant.withValues(alpha: 0.9),
+                                  fontSize: 11.5,
+                                  height: 1.15,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -200,19 +201,19 @@ class ProfileGlassHeader extends StatelessWidget {
     switch (period) {
       case _GreetingTimePeriod.morning:
         if (isKorean) {
-          return '좋은 아침이에요! 가볍게 한 판 어때요?';
+          return '가볍게 한 판 시작해볼까요?';
         }
-        return 'Good morning! Ready for a light puzzle?';
+        return 'Start with a light puzzle.';
       case _GreetingTimePeriod.afternoon:
         if (isKorean) {
-          return '점심 이후 집중 한 판 해볼까요?';
+          return '집중 퍼즐 한 판, 딱 좋아요.';
         }
-        return 'How about a focused puzzle this afternoon?';
+        return 'A focused puzzle fits now.';
       case _GreetingTimePeriod.evening:
         if (isKorean) {
-          return '오늘 저녁은 차분하게 퍼즐로 마무리해요.';
+          return '차분하게 퍼즐로 마무리해요.';
         }
-        return 'Wind down tonight with a calm puzzle.';
+        return 'Wind down with a calm puzzle.';
     }
   }
 

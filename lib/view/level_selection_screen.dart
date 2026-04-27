@@ -13,9 +13,9 @@ import 'package:mysudoku/widgets/custom_app_bar.dart';
 /// 난이도 선택 화면
 /// 사용자가 스도쿠 게임의 난이도를 선택할 수 있는 화면입니다.
 class LevelSelectionScreen extends StatefulWidget {
-  final SudokuLevel? level;
+  final SudokuLevel level;
 
-  const LevelSelectionScreen({super.key, this.level});
+  const LevelSelectionScreen({super.key, required this.level});
 
   @override
   State<LevelSelectionScreen> createState() => _LevelSelectionScreenState();
@@ -31,38 +31,14 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   final Map<String, Future<List<int>>> _gameFutureCache = {};
   final Map<String, Map<int, SudokuGame>> _playGameCache = {};
   final Map<String, Stopwatch> _levelLoadStopwatch = {};
-  final Map<String, int> _levelTotal = {};
   final Map<String, Set<int>> _clearedGameNumbers = {};
   List<SudokuLevel> _levels = List<SudokuLevel>.from(SudokuLevel.levels);
 
   @override
   void initState() {
     super.initState();
-    // 홈에서 특정 레벨로 진입한 경우에는 초기 진입 비용을 최소화합니다.
-    if (widget.level == null) {
-      _loadLevelTotals();
-      _refreshLevels();
-    } else {
-      _gamesFutureForLevel(widget.level!.name);
-    }
-  }
-
-  Future<void> _loadLevelTotals() async {
-    final dbHelper = DatabaseHelper();
-    for (final level in _levels) {
-      _levelTotal[level.name] = await dbHelper.getGameCount(level.name);
-    }
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
-  Future<void> _refreshLevels() async {
-    final refreshedLevels = await _levelProgressService.refreshAllLevels(_levels);
-    if (!mounted) return;
-    setState(() {
-      _levels = refreshedLevels;
-    });
+    // 단일 진입 흐름: 홈 -> 특정 레벨 게임 목록
+    _gamesFutureForLevel(widget.level.name);
   }
 
   /// 특정 난이도의 게임 목록을 로드합니다.
@@ -224,111 +200,33 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     final l10n = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth > 600;
-
-    // 특정 레벨이 전달된 경우 해당 레벨의 게임들을 카드형으로 표시
-    if (widget.level != null) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFF8F9FA),
-        appBar: _buildGameSelectionAppBar(),
-        body: SafeArea(
-          child: Column(
-            children: [
-              ValueListenableBuilder<PuzzleCatalogStatus>(
-                valueListenable: _databaseManager.catalogStatus,
-                builder: (context, status, child) {
-                  if (!status.isRunning) return const SizedBox.shrink();
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    child: _CatalogStatusBar(
-                      status: status,
-                      l10n: AppLocalizations.of(context)!,
-                    ),
-                  );
-                },
-              ),
-              Expanded(
-                child: isTablet
-                    ? _buildGameSelectionTabletLayout(l10n)
-                    : _buildGameSelectionMobileLayout(l10n),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // 기존 난이도 선택 화면
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      appBar: _buildAppBar(),
+      appBar: _buildGameSelectionAppBar(),
       body: SafeArea(
         child: Column(
           children: [
-            // 상단 설명 영역
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  bottom: BorderSide(
-                    color: Colors.grey[300]!,
-                    width: 2,
+            ValueListenableBuilder<PuzzleCatalogStatus>(
+              valueListenable: _databaseManager.catalogStatus,
+              builder: (context, status, child) {
+                if (!status.isRunning) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: _CatalogStatusBar(
+                    status: status,
+                    l10n: AppLocalizations.of(context)!,
                   ),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.levelPickDifficultyTitle,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2C3E50),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.levelPickDifficultySubtitle,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Color(0xFF7F8C8D),
-                    ),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
-            // 난이도 카드 영역
             Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 20,
-                    mainAxisSpacing: 20,
-                    childAspectRatio: 1.5,
-                  ),
-                  itemCount: _levels.length,
-                  itemBuilder: (context, index) {
-                    final level = _levels[index];
-                    return _buildLevelCard(level, true, l10n);
-                  },
-                ),
-              ),
+              child: isTablet
+                  ? _buildGameSelectionTabletLayout(l10n)
+                  : _buildGameSelectionMobileLayout(l10n),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  /// 앱바 위젯
-  PreferredSizeWidget _buildAppBar() {
-    return const CustomAppBar(
-      title: '',
-      showNotificationIcon: false,
-      showLogoutIcon: false,
     );
   }
 
@@ -366,7 +264,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
             children: [
               Text(
                 l10n.levelGamesScreenTitle(
-                  widget.level!.localizedName(l10n),
+                  widget.level.localizedName(l10n),
                 ),
                 style: const TextStyle(
                   fontSize: 28,
@@ -389,11 +287,11 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                     width: 50,
                     height: 50,
                     decoration: BoxDecoration(
-                      color: _getLevelColor(widget.level!.name),
+                      color: _getLevelColor(widget.level.name),
                       borderRadius: BorderRadius.circular(18),
                     ),
                     child: Icon(
-                      _getLevelIcon(widget.level!.name),
+                      _getLevelIcon(widget.level.name),
                       color: Colors.white,
                       size: 28,
                     ),
@@ -404,7 +302,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.level!.localizedName(l10n),
+                          widget.level.localizedName(l10n),
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -412,7 +310,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                           ),
                         ),
                         Text(
-                          widget.level!.localizedDescription(l10n),
+                          widget.level.localizedDescription(l10n),
                           style: const TextStyle(
                             fontSize: 14,
                             color: Color(0xFF7F8C8D),
@@ -431,30 +329,19 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
           child: Container(
             padding: const EdgeInsets.all(24),
             child: FutureBuilder<List<int>>(
-              future: _gamesFutureForLevel(widget.level!.name),
+              future: _gamesFutureForLevel(widget.level.name),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const CircularProgressIndicator(),
-                        const SizedBox(height: 16),
-                        Text(
-                          l10n.levelLoadingGames,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Color(0xFF7F8C8D),
-                          ),
-                        ),
-                      ],
-                    ),
+                  return _buildGameListStateMessage(
+                    l10n.levelLoadingGames,
+                    showSpinner: true,
                   );
                 }
+                if (snapshot.hasError) {
+                  return _buildGameListStateMessage(l10n.recordsGameLoadError);
+                }
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(
-                    child: Text(l10n.recordsGameLoadError),
-                  );
+                  return _buildGameListStateMessage(_emptyGamesMessage(l10n));
                 }
                 return GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -484,7 +371,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
       children: [
         // 상단 설명 영역
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
           decoration: BoxDecoration(
             color: Colors.white,
             border: Border(
@@ -499,55 +386,59 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
             children: [
               Text(
                 l10n.levelGamesScreenTitle(
-                  widget.level!.localizedName(l10n),
+                  widget.level.localizedName(l10n),
                 ),
                 style: const TextStyle(
-                  fontSize: 24,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF2C3E50),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               Text(
                 l10n.levelPickGameSubtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 12.5,
                   color: Color(0xFF7F8C8D),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               Row(
                 children: [
                   Container(
-                    width: 40,
-                    height: 40,
+                    width: 34,
+                    height: 34,
                     decoration: BoxDecoration(
-                      color: _getLevelColor(widget.level!.name),
+                      color: _getLevelColor(widget.level.name),
                       borderRadius: BorderRadius.circular(18),
                     ),
                     child: Icon(
-                      _getLevelIcon(widget.level!.name),
+                      _getLevelIcon(widget.level.name),
                       color: Colors.white,
-                      size: 20,
+                      size: 17,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 9),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.level!.localizedName(l10n),
+                          widget.level.localizedName(l10n),
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 14.5,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF2C3E50),
                           ),
                         ),
                         Text(
-                          widget.level!.localizedDescription(l10n),
+                          widget.level.localizedDescription(l10n),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             color: Color(0xFF7F8C8D),
                           ),
                         ),
@@ -561,130 +452,157 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
         ),
         // 게임 카드 영역
         Expanded(
-          child: SingleChildScrollView(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: FutureBuilder<List<int>>(
-              future: _gamesFutureForLevel(widget.level!.name),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const CircularProgressIndicator(),
-                        const SizedBox(height: 16),
-                        Text(
-                          l10n.levelLoadingGames,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Color(0xFF7F8C8D),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(
-                    child: Text(l10n.recordsGameLoadError),
-                  );
-                }
-                return Column(
-                  children: snapshot.data!
-                      .map(
-                        (gameNumber) =>
-                            _buildGameSelectionMobileCard(gameNumber, l10n),
-                      )
-                      .toList(),
+          child: FutureBuilder<List<int>>(
+            future: _gamesFutureForLevel(widget.level.name),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return _buildGameListStateMessage(
+                  l10n.levelLoadingGames,
+                  showSpinner: true,
                 );
-              },
-            ),
+              }
+              if (snapshot.hasError) {
+                return _buildGameListStateMessage(
+                  l10n.recordsGameLoadError,
+                  icon: Icons.error_outline_rounded,
+                  actionLabel: _retryLabel(context),
+                  onAction: _retryLoadGames,
+                );
+              }
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return _buildGameListStateMessage(
+                  _emptyGamesMessage(l10n),
+                  icon: Icons.inbox_outlined,
+                );
+              }
+              final games = snapshot.data!;
+              return ListView.builder(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                itemCount: games.length,
+                itemBuilder: (context, index) {
+                  return _buildGameSelectionMobileCard(games[index], l10n);
+                },
+              );
+            },
           ),
         ),
       ],
     );
   }
 
-  /// 게임 선택용 카드 위젯
-  Widget _buildGameSelectionCard(int gameNumber, AppLocalizations l10n) {
-    final isCleared = _isCleared(widget.level!.name, gameNumber);
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: Colors.white,
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () async {
-          await _onGameSelected(gameNumber, widget.level!);
-        },
-        borderRadius: BorderRadius.circular(28),
-        child: Stack(
+  Widget _buildGameListStateMessage(
+    String message, {
+    bool showSpinner = false,
+    IconData? icon,
+    String? actionLabel,
+    VoidCallback? onAction,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: _getLevelColor(widget.level!.name),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Icon(
-                    isCleared ? Icons.check : Icons.play_arrow,
-                    color: Colors.white,
-                    size: 36,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.gameNumberLabel(gameNumber),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C3E50),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-            if (isCleared)
-              Positioned(
-                top: 6,
-                right: 6,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFB8E6B8),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    l10n.levelClearedBadge,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2C3E50),
-                    ),
-                  ),
-                ),
+            if (showSpinner) ...[
+              const CircularProgressIndicator(strokeWidth: 2.2),
+              const SizedBox(height: 14),
+            ] else if (icon != null) ...[
+              Icon(icon, size: 28, color: colorScheme.onSurfaceVariant),
+              const SizedBox(height: 10),
+            ],
+            Text(
+              message,
+              style: TextStyle(
+                fontSize: 15,
+                color: colorScheme.onSurfaceVariant,
               ),
+              textAlign: TextAlign.center,
+            ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: onAction,
+                child: Text(actionLabel),
+              ),
+            ],
           ],
         ),
+      ),
+    );
+  }
+
+  String _emptyGamesMessage(AppLocalizations l10n) {
+    return Localizations.localeOf(context).languageCode == 'ko'
+        ? '선택 가능한 게임이 없습니다.'
+        : 'No puzzles are available for this level.';
+  }
+
+  String _retryLabel(BuildContext context) {
+    return Localizations.localeOf(context).languageCode == 'ko'
+        ? '다시 시도'
+        : 'Try again';
+  }
+
+  void _retryLoadGames() {
+    _gameFutureCache.remove(widget.level.name);
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  /// 게임 선택용 카드 위젯
+  Widget _buildGameSelectionCard(int gameNumber, AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isCleared = _isCleared(widget.level.name, gameNumber);
+    return _GameCardFrame(
+      colorScheme: colorScheme,
+      deemphasized: isCleared,
+      onTap: () async {
+        await _onGameSelected(gameNumber, widget.level);
+      },
+      child: Stack(
+        children: [
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: _getLevelColor(widget.level.name),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Icon(
+                  isCleared ? Icons.check : Icons.play_arrow,
+                  color: Colors.white,
+                  size: 36,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l10n.gameNumberLabel(gameNumber),
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: colorScheme.onSurface,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          if (isCleared)
+            Positioned(
+              top: 6,
+              right: 6,
+              child: _ClearedBadge(
+                text: l10n.levelClearedBadge,
+                color: _getLevelColor(widget.level.name),
+                colorScheme: colorScheme,
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -694,195 +612,68 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     int gameNumber,
     AppLocalizations l10n,
   ) {
-    final isCleared = _isCleared(widget.level!.name, gameNumber);
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: Colors.white,
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+    final colorScheme = Theme.of(context).colorScheme;
+    final isCleared = _isCleared(widget.level.name, gameNumber);
+    return _GameCardFrame(
+      colorScheme: colorScheme,
+      deemphasized: isCleared,
+      onTap: () async {
+        await _onGameSelected(gameNumber, widget.level);
+      },
+      child: Row(
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: _getLevelColor(widget.level.name),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Icon(
+              isCleared ? Icons.check : Icons.play_arrow,
+              color: Colors.white,
+              size: 36,
+            ),
           ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () async {
-          await _onGameSelected(gameNumber, widget.level!);
-        },
-        borderRadius: BorderRadius.circular(28),
-        child: Row(
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: _getLevelColor(widget.level!.name),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Icon(
-                isCleared ? Icons.check : Icons.play_arrow,
-                color: Colors.white,
-                size: 36,
-              ),
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.gameNumberLabel(gameNumber),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2C3E50),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    l10n.levelTapToStart,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF7F8C8D),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isCleared)
-              Container(
-                margin: const EdgeInsets.only(right: 8),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFB8E6B8),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  l10n.levelClearedBadge,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C3E50),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.gameNumberLabel(gameNumber),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onSurface,
                   ),
                 ),
-              ),
-            const Icon(
-              Icons.chevron_right,
-              color: Color(0xFF7F8C8D),
-              size: 24,
+                const SizedBox(height: 4),
+                Text(
+                  l10n.levelTapToStart,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.82),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 난이도 카드 위젯
-  Widget _buildLevelCard(
-    SudokuLevel level,
-    bool isCompact,
-    AppLocalizations l10n,
-  ) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: Colors.white,
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+          ),
+          if (isCleared)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: _ClearedBadge(
+                text: l10n.levelClearedBadge,
+                color: _getLevelColor(widget.level.name),
+                colorScheme: colorScheme,
+              ),
+            ),
+          Icon(
+            Icons.chevron_right,
+            color: colorScheme.onSurfaceVariant,
+            size: 24,
           ),
         ],
-      ),
-      child: InkWell(
-        onTap: () => _showLevelGames(level),
-        borderRadius: BorderRadius.circular(28),
-        child: Row(
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: _getLevelColor(level.name),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Icon(
-                _getLevelIcon(level.name),
-                color: Colors.white,
-                size: 36,
-              ),
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        level.localizedName(l10n),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2C3E50),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFB8E6B8).withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '${level.clearedGames}/${_levelTotal[level.name] ?? level.gameCount}',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF2C3E50),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    level.localizedDescription(l10n),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF7F8C8D),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 16),
-            const Icon(
-              Icons.chevron_right,
-              color: Color(0xFF7F8C8D),
-              size: 24,
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -923,156 +714,6 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     }
   }
 
-  /// 난이도별 게임 목록 표시
-  void _showLevelGames(SudokuLevel level) {
-    final l10n = AppLocalizations.of(context)!;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          children: [
-            // 헤더
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: _getLevelColor(level.name).withValues(alpha: 0.1),
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(20)),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    _getLevelIcon(level.name),
-                    color: const Color(0xFF2C3E50),
-                    size: 28,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    l10n.levelGamesScreenTitle(level.localizedName(l10n)),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2C3E50),
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
-                    color: const Color(0xFF7F8C8D),
-                  ),
-                ],
-              ),
-            ),
-            // 게임 목록
-            Expanded(
-              child: FutureBuilder<List<int>>(
-                future: _gamesFutureForLevel(level.name),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(
-                      child: Text(l10n.recordsGameLoadError),
-                    );
-                  }
-                  return GridView.builder(
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 1,
-                    ),
-                    itemCount: snapshot.data!.length,
-                    itemBuilder: (context, index) {
-                      final gameNumber = snapshot.data![index];
-                      return _buildGameCard(gameNumber, level, l10n);
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 게임 카드 위젯 (모달용)
-  Widget _buildGameCard(
-    int gameNumber,
-    SudokuLevel level,
-    AppLocalizations l10n,
-  ) {
-    final isCleared = _isCleared(level.name, gameNumber);
-    return Container(
-      width: 100,
-      margin: const EdgeInsets.only(right: 12),
-      child: InkWell(
-        onTap: () async {
-          await _onGameSelected(gameNumber, level);
-        },
-        child: Card(
-          elevation: 1,
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  l10n.gameNumberLabel(gameNumber),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C3E50),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFB8E6B8).withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    isCleared ? Icons.check : Icons.play_arrow,
-                    color: const Color(0xFF2C3E50),
-                    size: 24,
-                  ),
-                ),
-                if (isCleared) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    l10n.levelClearedBadge,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2C3E50),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _CatalogStatusBar extends StatelessWidget {
@@ -1111,6 +752,79 @@ class _CatalogStatusBar extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _GameCardFrame extends StatelessWidget {
+  const _GameCardFrame({
+    required this.colorScheme,
+    required this.onTap,
+    required this.child,
+    this.deemphasized = false,
+  });
+
+  final ColorScheme colorScheme;
+  final VoidCallback onTap;
+  final Widget child;
+  final bool deemphasized;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: colorScheme.outlineVariant,
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: deemphasized ? 0.04 : 0.08),
+            blurRadius: deemphasized ? 8 : 12,
+            offset: Offset(0, deemphasized ? 2 : 4),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(28),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _ClearedBadge extends StatelessWidget {
+  const _ClearedBadge({
+    required this.text,
+    required this.color,
+    required this.colorScheme,
+  });
+
+  final String text;
+  final Color color;
+  final ColorScheme colorScheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.28),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: colorScheme.onSurface,
+        ),
       ),
     );
   }

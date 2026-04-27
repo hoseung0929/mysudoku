@@ -44,11 +44,18 @@ class GameSessionController {
   GameSessionController({
     GameStateService? gameStateService,
     this.debounceDuration = const Duration(milliseconds: 800),
+    this.cloudSyncCooldown = const Duration(seconds: 45),
   }) : _gameStateService = gameStateService ?? GameStateService();
 
   final GameStateService _gameStateService;
   final Duration debounceDuration;
+  final Duration cloudSyncCooldown;
   Timer? _saveTimer;
+  String? _pendingSaveKey;
+  String? _pendingSaveSignature;
+  final Map<String, String> _lastSavedSignatureByGame = <String, String>{};
+  DateTime? _lastCloudSyncAt;
+  bool _cloudSyncInFlight = false;
 
   Future<GameSessionBootstrap> prepareSession({
     required SudokuGame game,
@@ -97,6 +104,19 @@ class GameSessionController {
     required int gameNumber,
     required GameSessionSnapshot snapshot,
   }) {
+    final key = _sessionKey(level.name, gameNumber);
+    final signature = _snapshotSignature(snapshot);
+    if (_lastSavedSignatureByGame[key] == signature) {
+      return;
+    }
+    if (_pendingSaveKey == key &&
+        _pendingSaveSignature != null &&
+        _pendingSaveSignature == signature) {
+      return;
+    }
+
+    _pendingSaveKey = key;
+    _pendingSaveSignature = signature;
     _saveTimer?.cancel();
     _saveTimer = Timer(debounceDuration, () {
       unawaited(
@@ -114,11 +134,18 @@ class GameSessionController {
     required int gameNumber,
     required GameSessionSnapshot snapshot,
   }) async {
+    final key = _sessionKey(level.name, gameNumber);
+    final signature = _snapshotSignature(snapshot);
     _saveTimer?.cancel();
     _saveTimer = null;
+    _pendingSaveKey = null;
+    _pendingSaveSignature = null;
 
     if (snapshot.isGameComplete || snapshot.isGameOver) {
       await clear(level: level, gameNumber: gameNumber);
+      return;
+    }
+    if (_lastSavedSignatureByGame[key] == signature) {
       return;
     }
 
@@ -135,12 +162,14 @@ class GameSessionController {
       isGameComplete: snapshot.isGameComplete,
       isGameOver: snapshot.isGameOver,
     );
+    _lastSavedSignatureByGame[key] = signature;
   }
 
   Future<void> clear({
     required SudokuLevel level,
     required int gameNumber,
   }) async {
+    _lastSavedSignatureByGame.remove(_sessionKey(level.name, gameNumber));
     await _gameStateService.clearBoard(
       levelName: level.name,
       gameNumber: gameNumber,
@@ -148,18 +177,82 @@ class GameSessionController {
   }
 
   Future<void> syncToCloud() async {
+    if (_cloudSyncInFlight) {
+      return;
+    }
+    final lastSyncAt = _lastCloudSyncAt;
+    if (lastSyncAt != null &&
+        DateTime.now().difference(lastSyncAt) < cloudSyncCooldown) {
+      return;
+    }
+    _cloudSyncInFlight = true;
     try {
       await _gameStateService.syncToCloud();
+      _lastCloudSyncAt = DateTime.now();
     } catch (e) {
       if (kDebugMode) {
         AppLogger.debug('게임 세션 클라우드 업로드 실패(무시): $e');
       }
+    } finally {
+      _cloudSyncInFlight = false;
     }
   }
 
   void dispose() {
     _saveTimer?.cancel();
     _saveTimer = null;
+    _pendingSaveKey = null;
+    _pendingSaveSignature = null;
+  }
+
+  String _sessionKey(String levelName, int gameNumber) {
+    return '$levelName#$gameNumber';
+  }
+
+  String _snapshotSignature(GameSessionSnapshot snapshot) {
+    final buffer = StringBuffer()
+      ..write(snapshot.elapsedSeconds)
+      ..write('|')
+      ..write(snapshot.wrongCount)
+      ..write('|')
+      ..write(snapshot.isMemoMode ? 1 : 0)
+      ..write('|')
+      ..write(snapshot.hintsRemaining)
+      ..write('|')
+      ..write(snapshot.isGameComplete ? 1 : 0)
+      ..write('|')
+      ..write(snapshot.isGameOver ? 1 : 0)
+      ..write('|');
+
+    for (final row in snapshot.board) {
+      for (final value in row) {
+        buffer.write(value);
+      }
+      buffer.write('/');
+    }
+    buffer.write('|');
+
+    for (final row in snapshot.notes) {
+      for (final cellNotes in row) {
+        if (cellNotes.isNotEmpty) {
+          final sorted = cellNotes.toList()..sort();
+          for (final note in sorted) {
+            buffer.write(note);
+          }
+        }
+        buffer.write(',');
+      }
+      buffer.write('/');
+    }
+    buffer.write('|');
+
+    final hintCells = snapshot.hintCells.toList()..sort();
+    for (final cell in hintCells) {
+      buffer
+        ..write(cell)
+        ..write(',');
+    }
+    return buffer.toString();
   }
 
   bool _shouldDiscardRestoredSession({

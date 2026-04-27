@@ -187,8 +187,9 @@ class DatabaseHelper {
   }
 
   /// 최근 클리어 기록을 반환합니다.
-  Future<List<Map<String, dynamic>>> getRecentClearRecords(
-      {int limit = 10}) async {
+  Future<List<Map<String, dynamic>>> getRecentClearRecords({
+    int? limit,
+  }) async {
     return await _statisticsRepository.getRecentClearRecords(limit: limit);
   }
 

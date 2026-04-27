@@ -12,6 +12,7 @@ class SudokuBoardGrid extends StatelessWidget {
     required this.waveActive,
     required this.lineCompleteActive,
     required this.errorActive,
+    required this.errorOffset,
     this.enableMemoHighlights = true,
     this.highlightedMemoNumber,
     required this.onCellTapped,
@@ -21,6 +22,7 @@ class SudokuBoardGrid extends StatelessWidget {
   final Map<String, bool> waveActive;
   final Map<String, bool> lineCompleteActive;
   final Map<String, bool> errorActive;
+  final Map<String, double> errorOffset;
   final bool enableMemoHighlights;
   final int? highlightedMemoNumber;
   final void Function(int row, int col) onCellTapped;
@@ -92,7 +94,7 @@ class SudokuBoardGrid extends StatelessWidget {
                 final isWave = waveActive['$row,$col'] == true;
                 final isLineComplete = lineCompleteActive['$row,$col'] == true;
                 final isErrorActive = errorActive['$row,$col'] == true;
-                final horizontalOffset = isErrorActive ? 6.0 : 0.0;
+                final horizontalOffset = errorOffset['$row,$col'] ?? 0.0;
 
                     return Expanded(
                       child: GestureDetector(

@@ -27,6 +27,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   bool _isLoading = true;
   bool _isTop = true;
   int _loadRequestId = 0;
+  String? _loadErrorMessage;
 
   Map<String, dynamic> _overall = {};
   List<Map<String, dynamic>> _levels = [];
@@ -34,8 +35,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   String? _profileImagePath;
   String? _profileName;
 
-  String _selectedLevel = RecordsLevelFilter.allLevels;
-  int _selectedPeriodDays = 0;
+  final String _selectedLevel = RecordsLevelFilter.allLevels;
+  final int _selectedPeriodDays = 0;
 
   @override
   void initState() {
@@ -129,6 +130,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     final requestId = ++_loadRequestId;
     setState(() {
       _isLoading = true;
+      _loadErrorMessage = null;
     });
 
     try {
@@ -141,6 +143,12 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           _overall = data.overall;
           _levels = data.levels;
           _recent = data.recent;
+        });
+      }
+    } catch (_) {
+      if (mounted && requestId == _loadRequestId) {
+        setState(() {
+          _loadErrorMessage = _statsLoadErrorMessage();
         });
       }
     } finally {
@@ -224,6 +232,10 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                   112 + bottomInset,
                 ),
                 children: [
+                  if (_loadErrorMessage != null) ...[
+                    _buildLoadErrorBanner(_loadErrorMessage!),
+                    const SizedBox(height: 12),
+                  ],
                   _RecordsHeroCard(
                     trend: _statisticsService.buildDailyTrend(
                       recent: _recent,
@@ -618,6 +630,52 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               fontWeight: FontWeight.bold,
               color: colorScheme.onSurface,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _statsLoadErrorMessage() {
+    return Localizations.localeOf(context).languageCode == 'ko'
+        ? '통계 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
+        : 'Unable to load statistics right now. Please try again shortly.';
+  }
+
+  String _retryLabel() {
+    return Localizations.localeOf(context).languageCode == 'ko'
+        ? '다시 시도'
+        : 'Try again';
+  }
+
+  Widget _buildLoadErrorBanner(String message) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.errorContainer.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: colorScheme.error.withValues(alpha: 0.22),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline_rounded, color: colorScheme.error),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                color: colorScheme.onSurface,
+                fontSize: 13,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: _loadStats,
+            child: Text(_retryLabel()),
           ),
         ],
       ),

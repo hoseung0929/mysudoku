@@ -22,10 +22,12 @@ class GameEffectsController {
   final Map<String, bool> _waveActive = <String, bool>{};
   final Map<String, bool> _lineCompleteActive = <String, bool>{};
   final Map<String, bool> _errorActive = <String, bool>{};
+  final Map<String, double> _errorOffset = <String, double>{};
 
   Map<String, bool> get waveActive => _waveActive;
   Map<String, bool> get lineCompleteActive => _lineCompleteActive;
   Map<String, bool> get errorActive => _errorActive;
+  Map<String, double> get errorOffset => _errorOffset;
 
   void resetForBoard({
     required List<List<int>> board,
@@ -35,6 +37,7 @@ class GameEffectsController {
     _waveActive.clear();
     _lineCompleteActive.clear();
     _errorActive.clear();
+    _errorOffset.clear();
     initializeCompletedLineState(board: board, solution: solution);
   }
 
@@ -43,6 +46,7 @@ class GameEffectsController {
     _waveActive.clear();
     _lineCompleteActive.clear();
     _errorActive.clear();
+    _errorOffset.clear();
   }
 
   void initializeCompletedLineState({
@@ -163,26 +167,35 @@ class GameEffectsController {
     final effectGeneration = _effectGeneration;
     final key = '$row,$col';
     setState(() {
-      _errorActive[key] = false;
+      _errorActive[key] = true;
+      _errorOffset[key] = 0;
     });
 
-    Future<void>.delayed(Duration.zero, () {
-      if (!isMounted() || effectGeneration != _effectGeneration) {
-        return;
-      }
-      setState(() {
-        _errorActive[key] = true;
+    const shakeFrames = <double>[8, -7, 5, -3, 0];
+    const frameGapMs = 42;
+    for (int i = 0; i < shakeFrames.length; i++) {
+      Future<void>.delayed(Duration(milliseconds: frameGapMs * i), () {
+        if (!isMounted() || effectGeneration != _effectGeneration) {
+          return;
+        }
+        setState(() {
+          _errorOffset[key] = shakeFrames[i];
+        });
       });
-    });
+    }
 
-    Future<void>.delayed(const Duration(milliseconds: 280), () {
-      if (!isMounted() || effectGeneration != _effectGeneration) {
-        return;
-      }
-      setState(() {
-        _errorActive[key] = false;
-      });
-    });
+    Future<void>.delayed(
+      Duration(milliseconds: frameGapMs * shakeFrames.length + 70),
+      () {
+        if (!isMounted() || effectGeneration != _effectGeneration) {
+          return;
+        }
+        setState(() {
+          _errorActive[key] = false;
+          _errorOffset.remove(key);
+        });
+      },
+    );
   }
 
   Set<int> _getCompletedCorrectRows({

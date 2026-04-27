@@ -558,7 +558,7 @@ class SudokuGamePresenter {
     final col = _boardController.selectedCol!;
     if (_boardController.isCellFixed(row, col)) return;
     if (_hintCells.contains('$row,$col')) return;
-    final wasWrongBefore = _boardController.isWrongNumber(row, col);
+    final previousValue = _boardController.getCellValue(row, col);
 
     if (_isMemoMode) {
       _boardController.toggleNote(row, col, value);
@@ -582,7 +582,8 @@ class SudokuGamePresenter {
     }
 
     final shouldIncrease = _shouldIncreaseWrongCount(
-      wasWrongBefore: wasWrongBefore,
+      previousValue: previousValue,
+      nextValue: value,
       isWrongNow: isWrongNow,
     );
     if (shouldIncrease) {
@@ -603,10 +604,16 @@ class SudokuGamePresenter {
   }
 
   bool _shouldIncreaseWrongCount({
-    required bool wasWrongBefore,
+    required int previousValue,
+    required int nextValue,
     required bool isWrongNow,
   }) {
-    return !wasWrongBefore && isWrongNow;
+    // 같은 값을 다시 누른 경우는 카운트하지 않고,
+    // 값이 실제로 바뀌면서 오답으로 입력된 경우마다 카운트합니다.
+    if (previousValue == nextValue) {
+      return false;
+    }
+    return isWrongNow;
   }
 
   void _handleGameOver() {

@@ -183,13 +183,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _onItemTapped(int index) {
     final isChanged = _selectedIndex != index;
+    if (!isChanged) {
+      return;
+    }
     setState(() {
       _selectedIndex = index;
       if (index == 1) {
         _recordsTabLoaded = true;
       }
     });
-    if (isChanged && index == 1) {
+    if (index == 1) {
       GameRecordNotifier.instance.notifyChanged();
     }
   }

@@ -50,6 +50,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   final ScrollController _scrollController = ScrollController();
   bool _isTop = true;
   bool _isLoadingHome = true;
+  bool _isLevelTransitioning = false;
+  int? _transitioningLevelIndex;
   bool _isShowingOnboarding = false;
   bool _hasResolvedHomeOnboarding = false;
   bool _showCatalogIntro = false;
@@ -351,39 +353,60 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     }
   }
 
-  void _goToGame(String title) async {
+  void _goToGame(String title, {int? levelIndex}) async {
+    if (_isLevelTransitioning || !mounted) {
+      return;
+    }
+    setState(() {
+      _isLevelTransitioning = true;
+      _transitioningLevelIndex = levelIndex;
+    });
     final level = getLevel(title);
 
-    await Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            LevelSelectionScreen(level: level),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(0.08, 0.0);
-          const end = Offset.zero;
-          final tween = Tween(begin: begin, end: end).chain(
-            CurveTween(curve: Curves.easeOutCubic),
-          );
-          final fade = CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOutCubic,
-          );
-          return FadeTransition(
-            opacity: fade,
-            child: SlideTransition(
-              position: animation.drive(tween),
-              child: child,
-            ),
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 170),
-      ),
-    );
-    // 게임 화면에서 돌아온 뒤 클리어 수 갱신
-    await _refreshLevels();
-    await _loadHomeDashboard();
-    if (mounted) setState(() {});
+    try {
+      await Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              LevelSelectionScreen(level: level),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const begin = Offset(0.08, 0.0);
+            const end = Offset.zero;
+            final tween = Tween(begin: begin, end: end).chain(
+              CurveTween(curve: Curves.easeOutCubic),
+            );
+            final fade = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+            );
+            return FadeTransition(
+              opacity: fade,
+              child: SlideTransition(
+                position: animation.drive(tween),
+                child: child,
+              ),
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 170),
+        ),
+      );
+      // 레벨 화면에서 돌아온 뒤 클리어 수 갱신
+      await _refreshLevels();
+      await _loadHomeDashboard();
+      if (mounted) {
+        setState(() {});
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLevelTransitioning = false;
+          _transitioningLevelIndex = null;
+        });
+      } else {
+        _isLevelTransitioning = false;
+        _transitioningLevelIndex = null;
+      }
+    }
   }
 
   Future<void> _openGame(
@@ -926,16 +949,22 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFFF8F4E8),
                   foregroundColor: _cpForest,
+                  minimumSize: const Size.fromHeight(56),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 26,
-                    vertical: 16,
+                    vertical: 17,
                   ),
                   textStyle: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
                   ),
+                  elevation: 1.2,
+                  shadowColor: Colors.black.withValues(alpha: 0.16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.65),
+                    ),
                   ),
                 ),
                 child: Text(
@@ -1078,8 +1107,13 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
       remaining: remaining,
       progressColor: const Color(0xFF8DC6B0),
       isSelected: _selectedIndex == index,
+      isEnabled: !_isLevelTransitioning,
+      isTransitioning: _isLevelTransitioning && _transitioningLevelIndex == index,
       onTap: () {
-        _goToGame(levelTitles[index]);
+        if (_isLevelTransitioning) {
+          return;
+        }
+        _goToGame(levelTitles[index], levelIndex: index);
       },
     );
   }
@@ -1213,6 +1247,8 @@ class _LevelCard extends StatefulWidget {
   final int remaining;
   final Color progressColor;
   final bool isSelected;
+  final bool isEnabled;
+  final bool isTransitioning;
   final VoidCallback? onTap;
 
   const _LevelCard({
@@ -1223,6 +1259,8 @@ class _LevelCard extends StatefulWidget {
     required this.remaining,
     required this.progressColor,
     required this.isSelected,
+    required this.isEnabled,
+    required this.isTransitioning,
     this.onTap,
   });
 
@@ -1234,12 +1272,14 @@ class _LevelCardState extends State<_LevelCard> {
   bool _pressed = false;
 
   void _handleTapDown(TapDownDetails details) {
+    if (!widget.isEnabled) return;
     setState(() {
       _pressed = true;
     });
   }
 
   void _handleTapUp(TapUpDetails details) {
+    if (!widget.isEnabled) return;
     setState(() {
       _pressed = false;
     });
@@ -1263,34 +1303,40 @@ class _LevelCardState extends State<_LevelCard> {
     final remainingLabel = Localizations.localeOf(context).languageCode == 'ko'
         ? '${widget.remaining}개 남음'
         : '${widget.remaining} left';
-    return GestureDetector(
-      onTapDown: _handleTapDown,
-      onTapUp: _handleTapUp,
-      onTapCancel: _handleTapCancel,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color:
-              _pressed ? colorScheme.surfaceContainerLow : colorScheme.surface,
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(
-            color: colorScheme.outlineVariant,
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(
-                alpha: Theme.of(context).brightness == Brightness.dark
-                    ? 0.16
-                    : 0.08,
+    return IgnorePointer(
+      ignoring: !widget.isEnabled,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutCubic,
+        opacity: widget.isEnabled ? 1.0 : 0.78,
+        child: GestureDetector(
+          onTapDown: _handleTapDown,
+          onTapUp: _handleTapUp,
+          onTapCancel: _handleTapCancel,
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color:
+                  _pressed ? colorScheme.surfaceContainerLow : colorScheme.surface,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: colorScheme.outlineVariant,
+                width: 1.5,
               ),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(
+                    alpha: Theme.of(context).brightness == Brightness.dark
+                        ? 0.16
+                        : 0.08,
+                  ),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Row(
+            child: Row(
           children: [
             Container(
               width: 64,
@@ -1317,29 +1363,58 @@ class _LevelCardState extends State<_LevelCard> {
                         widget.title,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 24,
+                          fontSize: 23,
                           color: colorScheme.onSurface,
                         ),
                       ),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        color: colorScheme.onSurfaceVariant,
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 160),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        child: widget.isTransitioning
+                            ? SizedBox(
+                                key: const ValueKey('loading'),
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.1,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    colorScheme.primary,
+                                  ),
+                                ),
+                              )
+                            : Icon(
+                                key: const ValueKey('chevron'),
+                                Icons.chevron_right_rounded,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    solvedLabel,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: widget.color.withValues(alpha: 0.28),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      solvedLabel,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                        color: colorScheme.onSurface,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     remainingLabel,
                     style: TextStyle(
-                      color: colorScheme.onSurfaceVariant,
+                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.82),
                       fontSize: 13,
                     ),
                   ),
@@ -1369,6 +1444,8 @@ class _LevelCardState extends State<_LevelCard> {
             //       const Icon(Icons.info_outline, color: Colors.grey, size: 22),
             // ),
           ],
+            ),
+          ),
         ),
       ),
     );

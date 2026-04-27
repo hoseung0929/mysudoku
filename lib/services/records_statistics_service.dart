@@ -28,7 +28,7 @@ class RecordsStatisticsService {
     final levels = await _databaseHelper.getAllLevelStatistics();
 
     final recent = selectedPeriodDays == 0
-        ? await _databaseHelper.getRecentClearRecords(limit: 10000)
+        ? await _databaseHelper.getRecentClearRecords()
         : await _databaseHelper.getClearRecordsByDateRange(
             startDate: _formatDate(
               DateTime.now().subtract(Duration(days: selectedPeriodDays - 1)),

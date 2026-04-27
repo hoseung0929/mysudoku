@@ -228,7 +228,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       },
       onTimeChanged: (time) {
         setState(() {});
-        _scheduleSessionSave();
       },
       onPauseStateChanged: (isPaused) {
         setState(() {});
@@ -282,9 +281,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
       case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
+        return;
       case AppLifecycleState.paused:
       case AppLifecycleState.detached:
-      case AppLifecycleState.hidden:
         unawaited(_flushAndSyncCloudSession());
         return;
       case AppLifecycleState.resumed:
@@ -982,6 +982,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           waveActive: _effectsController.waveActive,
           lineCompleteActive: _effectsController.lineCompleteActive,
           errorActive: _effectsController.errorActive,
+          errorOffset: _effectsController.errorOffset,
           highlightedMemoNumber:
               _memoHighlightEnabled ? _memoFocusNumber : null,
           enableMemoHighlights: _memoHighlightEnabled,

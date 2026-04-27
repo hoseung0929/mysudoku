@@ -64,7 +64,10 @@ class BottomNavBar extends StatelessWidget {
                         Expanded(
                           child: _BottomNavButton(
                             data: items[index],
-                            onTap: () => onItemTapped(index),
+                            selected: selectedIndex == index,
+                            onTap: selectedIndex == index
+                                ? null
+                                : () => onItemTapped(index),
                           ),
                         ),
                     ],
@@ -90,31 +93,53 @@ class _BottomNavItemData {
 class _BottomNavButton extends StatelessWidget {
   const _BottomNavButton({
     required this.data,
+    required this.selected,
     required this.onTap,
   });
 
   final _BottomNavItemData data;
-  final VoidCallback onTap;
+  final bool selected;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     const iconColor = Color(0xFF7A857D);
+    const selectedIconColor = Color(0xFF3E5F4A);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
+        child: GestureDetector(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(26),
-          splashColor: colorScheme.primary.withValues(alpha: 0.14),
-          highlightColor: colorScheme.primary.withValues(alpha: 0.06),
-          child: Center(
-            child: Icon(
-              data.icon,
-              size: 24,
-              color: iconColor,
+          behavior: HitTestBehavior.opaque,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  data.icon,
+                  size: selected ? 22 : 21,
+                  color: selected ? selectedIconColor : iconColor,
+                ),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  margin: const EdgeInsets.only(top: 1),
+                  width: selected ? 4 : 0,
+                  height: selected ? 4 : 0,
+                  decoration: BoxDecoration(
+                    color: selectedIconColor.withValues(alpha: 0.72),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
