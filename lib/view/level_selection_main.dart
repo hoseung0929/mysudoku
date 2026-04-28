@@ -5,16 +5,20 @@ import 'package:mysudoku/l10n/app_localizations.dart';
 import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
 import 'package:mysudoku/database/database_helper.dart';
 import 'package:mysudoku/database/database_manager.dart';
+import 'package:mysudoku/model/sudoku_game.dart';
 import 'package:mysudoku/model/sudoku_level.dart';
+import 'package:mysudoku/services/challenge_progress_service.dart';
 import 'package:mysudoku/services/game_state_service.dart';
 import 'package:mysudoku/services/game_record_notifier.dart';
 import 'package:mysudoku/services/home_dashboard_service.dart';
 import 'package:mysudoku/services/level_progress_service.dart';
+import 'package:mysudoku/services/my_pace_service.dart';
 import 'package:mysudoku/services/onboarding_service.dart';
 import 'package:mysudoku/services/profile_state_service.dart';
 import 'package:mysudoku/utils/app_logger.dart';
 import 'package:mysudoku/view/level_selection_screen.dart';
 import 'package:mysudoku/view/settings_screen.dart';
+import 'package:mysudoku/view/sudoku_game_screen.dart';
 import 'package:mysudoku/widgets/profile_editor_sheet.dart';
 import 'package:mysudoku/widgets/profile_glass_header.dart';
 
@@ -29,14 +33,19 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   /// 상태바 아래 프로필 바 본문 높이 (padding 22+18 + 아바타 열 ~56). 상태바 높이는 별도 합산.
   static const double _kProfileHeaderExtent = 96;
 
+  static const Color _cpForest = Color(0xFF285B3F);
+  static const Color _cpForestSoft = Color(0xFF5D7A69);
+
   final DatabaseManager _databaseManager = DatabaseManager();
   final LevelProgressService _levelProgressService = LevelProgressService();
   final HomeDashboardService _homeDashboardService = HomeDashboardService();
   final OnboardingService _onboardingService = OnboardingService();
   final ProfileStateService _profileStateService = ProfileStateService();
+  final MyPaceService _myPaceService = MyPaceService();
   int? _selectedIndex;
   final ScrollController _scrollController = ScrollController();
   bool _isTop = true;
+  bool _isLoadingHome = true;
   bool _isLevelTransitioning = false;
   int? _transitioningLevelIndex;
   bool _isShowingOnboarding = false;
@@ -48,6 +57,10 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
 
   /// 레벨별 전체 게임 수 (DB 기준)
   Map<String, int> _levelTotal = {};
+  ContinueGameSummary? _continueGame;
+  SudokuGame? _todayChallenge;
+  ChallengeProgressSummary? _challengeProgress;
+  MyPaceTarget? _myPacePreviewTarget;
 
   @override
   void initState() {
@@ -175,19 +188,39 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   }
 
   Future<void> _loadHomeDashboard() async {
-    if (!mounted) return;
+    setState(() {
+      _isLoadingHome = true;
+    });
+
     try {
-      await GameStateService().syncBidirectional();
-    } catch (e) {
-      if (kDebugMode) {
-        AppLogger.debug('클라우드 세이브 동기화 실패: $e');
+      if (!mounted) return;
+      try {
+        await GameStateService().syncBidirectional();
+      } catch (e) {
+        if (kDebugMode) {
+          AppLogger.debug('클라우드 세이브 동기화 실패: $e');
+        }
       }
-    }
-    if (!mounted) return;
-    final l10n = AppLocalizations.of(context)!;
-    await _homeDashboardService.load(l10n);
-    if (mounted) {
-      setState(() {});
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      final data = await _homeDashboardService.load(l10n);
+      final myPacePreview = await _myPaceService.resolveTarget(
+        preferContinueGame: data.continueGame,
+      );
+      if (mounted) {
+        setState(() {
+          _continueGame = data.continueGame;
+          _todayChallenge = data.todayChallenge;
+          _challengeProgress = data.challengeProgress;
+          _myPacePreviewTarget = myPacePreview;
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingHome = false;
+        });
+      }
     }
   }
 
@@ -375,6 +408,70 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     }
   }
 
+  Future<void> _openGame(
+    SudokuGame game,
+    SudokuLevel level, {
+    bool restoreSavedSession = false,
+  }) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SudokuGameScreen(
+          game: game,
+          level: level,
+          restoreSavedSession: restoreSavedSession,
+        ),
+      ),
+    );
+    await _refreshLevels();
+    await _loadHomeDashboard();
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _openMyPaceGame() async {
+    final target = await _myPaceService.resolveTarget(
+      preferContinueGame: _continueGame,
+    );
+
+    if (!mounted) return;
+
+    if (target != null) {
+      final uiLevel = _levels.firstWhere(
+        (item) => item.name == target.level.name,
+        orElse: () => target.level,
+      );
+      await _openGame(
+        target.game,
+        uiLevel,
+        restoreSavedSession: target.restoreSavedSession,
+      );
+      return;
+    }
+
+    await _showNoPlayableGameDialog();
+  }
+
+  Future<void> _showNoPlayableGameDialog() async {
+    final l10n = AppLocalizations.of(context)!;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(l10n.myPaceNoPlayableTitle),
+          content: Text(l10n.myPaceNoPlayableMessage),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(l10n.commonOk),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -443,6 +540,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                _buildHomeHero(),
+                const SizedBox(height: 20),
                 _buildLevelGrid(),
               ],
             ),
@@ -489,6 +588,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                     );
                   },
                 ),
+                _buildHomeHero(),
+                const SizedBox(height: 16),
                 _buildLevelExplorer(),
               ],
             ),
@@ -516,6 +617,24 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
       onTapSettings: _openSettings,
       sectionLabel: isKorean ? '홈' : 'Home',
       onTapEditProfile: _openProfileEditor,
+    );
+  }
+
+  Widget _buildHomeHero() {
+    if (_isLoadingHome) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 24),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_todayChallenge != null) _buildTodaySpotlightCard(_todayChallenge!),
+      ],
     );
   }
 
@@ -670,6 +789,132 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTodaySpotlightCard(SudokuGame game) {
+    final l10n = AppLocalizations.of(context)!;
+    final challengeDone = _challengeProgress?.isTodayChallengeCleared ?? false;
+    final myPaceLabel = _myPacePreviewLabel(l10n);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            _cpForest,
+            _cpForestSoft,
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _cpForest.withValues(alpha: 0.18),
+            blurRadius: 24,
+            offset: const Offset(0, 14),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(left: 4, top: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              Localizations.localeOf(context).languageCode == 'ko'
+                  ? 'Today'
+                  : 'Today',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            Localizations.localeOf(context).languageCode == 'ko'
+                ? '오늘의 퍼즐 하나에\n부드럽게 몰입해보세요.'
+                : 'Settle into\ntoday\'s one puzzle.',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 30,
+              height: 1.15,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            myPaceLabel ??
+                (challengeDone
+                    ? l10n.challengeTodayDoneHint
+                    : l10n.recordsGameNumberTitle(
+                        game.levelName.localizedSudokuLevelName(l10n),
+                        game.gameNumber,
+                      )),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.82),
+              fontSize: 15,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: FractionallySizedBox(
+              widthFactor: 0.60,
+              child: FilledButton(
+                onPressed: _openMyPaceGame,
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFF8F4E8),
+                  foregroundColor: _cpForest,
+                  minimumSize: const Size.fromHeight(56),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 26,
+                    vertical: 17,
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                  elevation: 1.2,
+                  shadowColor: Colors.black.withValues(alpha: 0.16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.65),
+                    ),
+                  ),
+                ),
+                child: Text(
+                  challengeDone
+                      ? l10n.challengeTodayReviewButton
+                      : l10n.challengeTodayStartButton,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String? _myPacePreviewLabel(AppLocalizations l10n) {
+    final target = _myPacePreviewTarget;
+    if (target == null) {
+      return null;
+    }
+    return l10n.recordsGameNumberTitle(
+      target.level.localizedName(l10n),
+      target.game.gameNumber,
     );
   }
 

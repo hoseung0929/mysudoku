@@ -710,7 +710,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   }
 
   String _bestRecordLabel(int? seconds) {
-    final value = seconds == null ? '--:--' : _formatDuration(seconds);
+    final value = seconds == null ? '--:--:--' : _formatDuration(seconds);
     return Localizations.localeOf(context).languageCode == 'ko'
         ? '🏆 최고 기록: $value'
         : '🏆 Best: $value';
