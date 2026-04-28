@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
@@ -23,6 +24,7 @@ class LevelSelectionScreen extends StatefulWidget {
 
 class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   static const int _perfLogThresholdMs = 120;
+  static const int _maxReasonableClearSeconds = 24 * 60 * 60;
   final DatabaseManager _databaseManager = DatabaseManager();
   final LevelProgressService _levelProgressService = LevelProgressService();
   final DatabaseHelper _dbHelper = DatabaseHelper();
@@ -32,13 +34,28 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   final Map<String, Map<int, SudokuGame>> _playGameCache = {};
   final Map<String, Stopwatch> _levelLoadStopwatch = {};
   final Map<String, Set<int>> _clearedGameNumbers = {};
+  final Map<String, _LevelHeroStats> _heroStatsCache = {};
+  final Map<String, Future<_LevelHeroStats>> _heroStatsFutureCache = {};
+  final Map<String, int> _heroQuoteIndexByLevel = {};
+  final Random _random = Random();
   List<SudokuLevel> _levels = List<SudokuLevel>.from(SudokuLevel.levels);
+  bool _isGameTransitioning = false;
+  bool _didInitHeroQuote = false;
 
   @override
   void initState() {
     super.initState();
     // 단일 진입 흐름: 홈 -> 특정 레벨 게임 목록
     _gamesFutureForLevel(widget.level.name);
+    _heroStatsFutureForLevel(widget.level.name);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didInitHeroQuote) return;
+    _didInitHeroQuote = true;
+    _rotateHeroQuote(widget.level.name);
   }
 
   /// 특정 난이도의 게임 목록을 로드합니다.
@@ -91,6 +108,59 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   Future<void> _loadClearedGameNumbers(String levelName) async {
     final numbers = await _dbHelper.getClearedGameNumbersForLevel(levelName);
     _clearedGameNumbers[levelName] = numbers.toSet();
+  }
+
+  Future<_LevelHeroStats> _loadHeroStats(String levelName) async {
+    final records = await _dbHelper.getClearRecordsForLevel(levelName);
+    final validRecords = records.where((record) {
+      final clearTime = (record['clear_time'] as num?)?.toInt();
+      return clearTime != null &&
+          clearTime >= 0 &&
+          clearTime <= _maxReasonableClearSeconds;
+    }).toList();
+    if (validRecords.isEmpty) {
+      const empty = _LevelHeroStats(bestClearSeconds: null, avgClearSeconds: null);
+      _heroStatsCache[levelName] = empty;
+      return empty;
+    }
+
+    int? best;
+    var total = 0;
+    for (final record in validRecords) {
+      final clearTime = (record['clear_time'] as num?)?.toInt();
+      if (clearTime == null) continue;
+      total += clearTime;
+      if (best == null || clearTime < best) {
+        best = clearTime;
+      }
+    }
+
+    final validCount = validRecords
+        .where((record) => (record['clear_time'] as num?) != null)
+        .length;
+    final avg = validCount == 0 ? null : (total / validCount).round();
+    final stats = _LevelHeroStats(
+      bestClearSeconds: best,
+      avgClearSeconds: avg,
+    );
+    _heroStatsCache[levelName] = stats;
+    return stats;
+  }
+
+  Future<_LevelHeroStats> _heroStatsFutureForLevel(String levelName) {
+    return _heroStatsFutureCache.putIfAbsent(
+      levelName,
+      () => _loadHeroStats(levelName),
+    );
+  }
+
+  Future<void> _refreshHeroStats(String levelName) async {
+    _heroStatsFutureCache.remove(levelName);
+    final stats = await _loadHeroStats(levelName);
+    if (!mounted) return;
+    setState(() {
+      _heroStatsCache[levelName] = stats;
+    });
   }
 
   bool _isCleared(String levelName, int gameNumber) {
@@ -147,51 +217,74 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   }
 
   Future<void> _onGameSelected(int gameNumber, SudokuLevel level) async {
+    if (_isGameTransitioning || !mounted) {
+      return;
+    }
+    setState(() {
+      _isGameTransitioning = true;
+    });
     final game = await _loadGameForPlay(level.name, gameNumber);
     if (!mounted) return;
     if (game == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.recordsGameLoadError)),
       );
+      if (mounted) {
+        setState(() {
+          _isGameTransitioning = false;
+        });
+      } else {
+        _isGameTransitioning = false;
+      }
       return;
     }
-
-    await Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => SudokuGameScreen(
-          game: game,
-          level: level,
+    try {
+      await Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) => SudokuGameScreen(
+            game: game,
+            level: level,
+          ),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const begin = Offset(1.0, 0.0);
+            const end = Offset.zero;
+            const curve = Curves.easeInOut;
+            final tween =
+                Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            final offsetAnimation = animation.drive(tween);
+            return SlideTransition(position: offsetAnimation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 300),
         ),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(1.0, 0.0);
-          const end = Offset.zero;
-          const curve = Curves.easeInOut;
-          final tween =
-              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-          final offsetAnimation = animation.drive(tween);
-          return SlideTransition(position: offsetAnimation, child: child);
-        },
-        transitionDuration: const Duration(milliseconds: 300),
-      ),
-    );
+      );
 
-    await _loadClearedGameNumbers(level.name);
-    final currentLevel = _levels.firstWhere(
-      (item) => item.name == level.name,
-      orElse: () => level,
-    );
-    final refreshedLevel = await _levelProgressService.refreshLevel(currentLevel);
-    if (mounted) {
-      setState(() {
-        _levels = _levels
-            .map((item) => item.name == refreshedLevel.name ? refreshedLevel : item)
-            .toList();
-      });
-    }
+      await _loadClearedGameNumbers(level.name);
+      final currentLevel = _levels.firstWhere(
+        (item) => item.name == level.name,
+        orElse: () => level,
+      );
+      final refreshedLevel = await _levelProgressService.refreshLevel(currentLevel);
+      if (mounted) {
+        setState(() {
+          _levels = _levels
+              .map((item) => item.name == refreshedLevel.name ? refreshedLevel : item)
+              .toList();
+        });
+      }
 
-    if (mounted) {
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
+      await _refreshHeroStats(level.name);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isGameTransitioning = false;
+        });
+      } else {
+        _isGameTransitioning = false;
+      }
     }
   }
 
@@ -263,64 +356,15 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                l10n.levelGamesScreenTitle(
-                  widget.level.localizedName(l10n),
-                ),
+                _levelHeaderTitle(l10n),
                 style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
                   color: Color(0xFF2C3E50),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.levelPickGameSubtitle,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF7F8C8D),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: _getLevelColor(widget.level.name),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Icon(
-                      _getLevelIcon(widget.level.name),
-                      color: Colors.white,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.level.localizedName(l10n),
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF2C3E50),
-                          ),
-                        ),
-                        Text(
-                          widget.level.localizedDescription(l10n),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF7F8C8D),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              const SizedBox(height: 10),
+              _buildLevelProgressSummary(l10n, compact: false),
             ],
           ),
         ),
@@ -385,68 +429,15 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                l10n.levelGamesScreenTitle(
-                  widget.level.localizedName(l10n),
-                ),
+                _levelHeaderTitle(l10n),
                 style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w800,
                   color: Color(0xFF2C3E50),
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                l10n.levelPickGameSubtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  color: Color(0xFF7F8C8D),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: _getLevelColor(widget.level.name),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Icon(
-                      _getLevelIcon(widget.level.name),
-                      color: Colors.white,
-                      size: 17,
-                    ),
-                  ),
-                  const SizedBox(width: 9),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.level.localizedName(l10n),
-                          style: const TextStyle(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF2C3E50),
-                          ),
-                        ),
-                        Text(
-                          widget.level.localizedDescription(l10n),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: Color(0xFF7F8C8D),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              const SizedBox(height: 6),
+              _buildLevelProgressSummary(l10n, compact: true),
             ],
           ),
         ),
@@ -533,6 +524,252 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     );
   }
 
+  Widget _buildLevelProgressSummary(
+    AppLocalizations l10n, {
+    required bool compact,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final level = _currentLevelInfo();
+    final total = level.gameCount;
+    final cleared = _clearedGameNumbers[level.name]?.length ?? 0;
+    final progress = total == 0 ? 0.0 : cleared / total;
+    final progressPercent = (progress * 100).round();
+
+    return FutureBuilder<_LevelHeroStats>(
+      future: _heroStatsFutureForLevel(level.name),
+      initialData: _heroStatsCache[level.name],
+      builder: (context, snapshot) {
+        final stats = snapshot.data ?? const _LevelHeroStats(bestClearSeconds: null, avgClearSeconds: null);
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(compact ? 12 : 16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFFE3F4EC),
+                Color(0xFFF2E6D5),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(compact ? 20 : 24),
+            border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.7)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: compact ? 38 : 46,
+                    height: compact ? 38 : 46,
+                    decoration: BoxDecoration(
+                      color: _getLevelColor(level),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(
+                      _getLevelIcon(level),
+                      color: Colors.white,
+                      size: compact ? 18 : 22,
+                    ),
+                  ),
+                  SizedBox(width: compact ? 10 : 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          level.localizedName(l10n),
+                          style: TextStyle(
+                            fontSize: compact ? 14 : 16,
+                            fontWeight: FontWeight.w700,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                        Text(
+                          _completedSummaryLabel(cleared, total),
+                          style: TextStyle(
+                            fontSize: compact ? 12 : 13,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    width: compact ? 44 : 52,
+                    height: compact ? 44 : 52,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          value: progress,
+                          strokeWidth: compact ? 4 : 4.5,
+                          backgroundColor: Colors.white.withValues(alpha: 0.75),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            _getLevelColor(level).withValues(alpha: 0.95),
+                          ),
+                        ),
+                        Text(
+                          '$progressPercent%',
+                          style: TextStyle(
+                            fontSize: compact ? 10 : 11,
+                            fontWeight: FontWeight.w700,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: compact ? 10 : 12),
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: colorScheme.outlineVariant.withValues(alpha: 0.7),
+              ),
+              SizedBox(height: compact ? 9 : 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _bestRecordLabel(stats.bestClearSeconds),
+                      style: TextStyle(
+                        fontSize: compact ? 11 : 12,
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      _avgFocusLabel(stats.avgClearSeconds),
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                        fontSize: compact ? 11 : 12,
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: compact ? 8 : 9),
+              Text(
+                _heroQuoteForLevel(level.name),
+                style: TextStyle(
+                  fontSize: compact ? 11.5 : 12.5,
+                  fontStyle: FontStyle.italic,
+                  color: colorScheme.onSurface.withValues(alpha: 0.82),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  SudokuLevel _currentLevelInfo() {
+    return _levels.firstWhere(
+      (item) => item.name == widget.level.name,
+      orElse: () => widget.level,
+    );
+  }
+
+  String _completedSummaryLabel(int cleared, int total) {
+    return Localizations.localeOf(context).languageCode == 'ko'
+        ? '완료 $cleared / 전체 $total'
+        : 'Completed $cleared / $total';
+  }
+
+  String _levelHeaderTitle(AppLocalizations l10n) {
+    final levelName = widget.level.localizedName(l10n);
+    final levelNameEn = _levelEnglishName(widget.level);
+    return Localizations.localeOf(context).languageCode == 'ko'
+        ? '$levelName 레벨 ($levelNameEn)'
+        : '$levelName ($levelNameEn)';
+  }
+
+  String _levelEnglishName(SudokuLevel level) {
+    switch (level.difficulty) {
+      case 1:
+        return 'Beginner';
+      case 2:
+        return 'Medium';
+      case 3:
+        return 'Advanced';
+      case 4:
+        return 'Expert';
+      case 5:
+        return 'Master';
+      default:
+        return 'Beginner';
+    }
+  }
+
+  String _bestRecordLabel(int? seconds) {
+    final value = seconds == null ? '--:--' : _formatDuration(seconds);
+    return Localizations.localeOf(context).languageCode == 'ko'
+        ? '🏆 최고 기록: $value'
+        : '🏆 Best: $value';
+  }
+
+  String _avgFocusLabel(int? seconds) {
+    final value = seconds == null ? '--:--:--' : _formatDuration(seconds);
+    return Localizations.localeOf(context).languageCode == 'ko'
+        ? '🧘 평균 몰입: $value'
+        : '🧘 Avg focus: $value';
+  }
+
+  String _formatDuration(int seconds) {
+    final hours = seconds ~/ 3600;
+    final minutes = seconds ~/ 60;
+    final remainingSeconds = seconds % 60;
+    final minutePart = minutes % 60;
+    return '${hours.toString().padLeft(2, '0')}:${minutePart.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
+  void _rotateHeroQuote(String levelName) {
+    final quotes = _heroQuoteCandidates();
+    if (quotes.isEmpty) return;
+    final previousIndex = _heroQuoteIndexByLevel[levelName];
+    if (quotes.length == 1) {
+      _heroQuoteIndexByLevel[levelName] = 0;
+      return;
+    }
+    var nextIndex = _random.nextInt(quotes.length);
+    if (previousIndex != null && nextIndex == previousIndex) {
+      nextIndex = (nextIndex + 1 + _random.nextInt(quotes.length - 1)) % quotes.length;
+    }
+    _heroQuoteIndexByLevel[levelName] = nextIndex;
+  }
+
+  String _heroQuoteForLevel(String levelName) {
+    final quotes = _heroQuoteCandidates();
+    if (quotes.isEmpty) return '';
+    final idx = _heroQuoteIndexByLevel[levelName] ?? 0;
+    return quotes[idx % quotes.length];
+  }
+
+  List<String> _heroQuoteCandidates() {
+    if (Localizations.localeOf(context).languageCode == 'ko') {
+      return const [
+        '"숫자의 흐름에 차분히 몰입해보세요."',
+        '"한 칸씩 확실하게, 리듬을 잃지 말아요."',
+        '"지금 페이스 좋아요. 정확도를 먼저 챙겨보세요."',
+        '"작은 단서가 큰 해답으로 이어집니다."',
+      ];
+    }
+    return const [
+      '"Stay calm and follow the rhythm of numbers."',
+      '"One cell at a time, keep your steady pace."',
+      '"Great pace so far. Prioritize precision first."',
+      '"Small clues often unlock the biggest answers."',
+    ];
+  }
+
   String _emptyGamesMessage(AppLocalizations l10n) {
     return Localizations.localeOf(context).languageCode == 'ko'
         ? '선택 가능한 게임이 없습니다.'
@@ -546,7 +783,12 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   }
 
   void _retryLoadGames() {
-    _gameFutureCache.remove(widget.level.name);
+    final levelName = widget.level.name;
+    _gameFutureCache.remove(levelName);
+    _gameCache.remove(levelName);
+    _playGameCache.remove(levelName);
+    _clearedGameNumbers.remove(levelName);
+    _levelLoadStopwatch.remove(levelName);
     if (mounted) {
       setState(() {});
     }
@@ -559,6 +801,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     return _GameCardFrame(
       colorScheme: colorScheme,
       deemphasized: isCleared,
+      isEnabled: !_isGameTransitioning,
       onTap: () async {
         await _onGameSelected(gameNumber, widget.level);
       },
@@ -571,7 +814,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: _getLevelColor(widget.level.name),
+                  color: _getLevelColor(widget.level),
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Icon(
@@ -598,7 +841,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
               right: 6,
               child: _ClearedBadge(
                 text: l10n.levelClearedBadge,
-                color: _getLevelColor(widget.level.name),
+                color: _getLevelColor(widget.level),
                 colorScheme: colorScheme,
               ),
             ),
@@ -617,6 +860,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     return _GameCardFrame(
       colorScheme: colorScheme,
       deemphasized: isCleared,
+      isEnabled: !_isGameTransitioning,
       onTap: () async {
         await _onGameSelected(gameNumber, widget.level);
       },
@@ -626,7 +870,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: _getLevelColor(widget.level.name),
+              color: _getLevelColor(widget.level),
               borderRadius: BorderRadius.circular(18),
             ),
             child: Icon(
@@ -664,7 +908,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
               padding: const EdgeInsets.only(right: 8),
               child: _ClearedBadge(
                 text: l10n.levelClearedBadge,
-                color: _getLevelColor(widget.level.name),
+                color: _getLevelColor(widget.level),
                 colorScheme: colorScheme,
               ),
             ),
@@ -679,41 +923,50 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   }
 
   /// 난이도별 색상 반환
-  Color _getLevelColor(String levelName) {
-    switch (levelName) {
-      case '초급':
+  Color _getLevelColor(SudokuLevel level) {
+    switch (level.difficulty) {
+      case 1:
         return const Color(0xFFBFE2D0);
-      case '중급':
+      case 2:
         return const Color(0xFFCDE7E0);
-      case '고급':
+      case 3:
         return const Color(0xFFE6D4B8);
-      case '전문가':
+      case 4:
         return const Color(0xFFE6B8C8);
-      case '마스터':
+      case 5:
         return const Color(0xFFB8D4E6);
       default:
         return const Color(0xFFBFE2D0);
     }
   }
 
-  /// 난이도별 아이콘 반환
-  IconData _getLevelIcon(String levelName) {
-    switch (levelName) {
-      case '초급':
+  IconData _getLevelIcon(SudokuLevel level) {
+    switch (level.difficulty) {
+      case 1:
         return Icons.grid_view;
-      case '중급':
+      case 2:
         return Icons.diamond;
-      case '고급':
+      case 3:
         return Icons.star;
-      case '전문가':
+      case 4:
         return Icons.flash_on;
-      case '마스터':
+      case 5:
         return Icons.workspace_premium;
       default:
         return Icons.grid_view;
     }
   }
 
+}
+
+class _LevelHeroStats {
+  const _LevelHeroStats({
+    required this.bestClearSeconds,
+    required this.avgClearSeconds,
+  });
+
+  final int? bestClearSeconds;
+  final int? avgClearSeconds;
 }
 
 class _CatalogStatusBar extends StatelessWidget {
@@ -762,12 +1015,14 @@ class _GameCardFrame extends StatelessWidget {
     required this.colorScheme,
     required this.onTap,
     required this.child,
+    required this.isEnabled,
     this.deemphasized = false,
   });
 
   final ColorScheme colorScheme;
   final VoidCallback onTap;
   final Widget child;
+  final bool isEnabled;
   final bool deemphasized;
 
   @override
@@ -790,10 +1045,17 @@ class _GameCardFrame extends StatelessWidget {
           ),
         ],
       ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(28),
-        child: child,
+      child: IgnorePointer(
+        ignoring: !isEnabled,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 120),
+          opacity: isEnabled ? 1 : 0.72,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(28),
+            child: child,
+          ),
+        ),
       ),
     );
   }

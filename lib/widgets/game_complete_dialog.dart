@@ -40,9 +40,10 @@ class GameCompleteDialog extends StatelessWidget {
   });
 
   String get formattedTime {
-    final minutes = timeInSeconds ~/ 60;
+    final hours = timeInSeconds ~/ 3600;
+    final minutes = (timeInSeconds % 3600) ~/ 60;
     final seconds = timeInSeconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
   @override

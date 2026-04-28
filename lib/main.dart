@@ -12,7 +12,6 @@ import 'package:mysudoku/services/firebase_identity_service.dart';
 import 'package:mysudoku/services/game_record_notifier.dart';
 import 'package:mysudoku/services/notification_service.dart';
 import 'package:mysudoku/theme/app_theme.dart';
-import 'package:mysudoku/theme/app_theme_scope.dart';
 import 'package:mysudoku/navigation/root_nav_scope.dart';
 import 'package:mysudoku/view/level_selection_main.dart';
 import 'package:mysudoku/view/records_statistics_screen.dart';
@@ -21,7 +20,6 @@ import 'package:mysudoku/widgets/bottom_nav_bar.dart';
 import 'package:mysudoku/utils/app_logger.dart';
 
 const String _prefsLocaleKey = 'app_locale';
-const String _prefsThemeModeKey = 'app_theme_mode';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,7 +49,6 @@ class MySudokuApp extends StatefulWidget {
 class _MySudokuAppState extends State<MySudokuApp> {
   final NotificationService _notificationService = NotificationService();
   Locale? _localeOverride;
-  ThemeMode _themeMode = ThemeMode.system;
   bool _prefsLoaded = false;
 
   @override
@@ -63,7 +60,6 @@ class _MySudokuAppState extends State<MySudokuApp> {
   Future<void> _loadSavedPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     final code = prefs.getString(_prefsLocaleKey);
-    final themeCode = prefs.getString(_prefsThemeModeKey);
     if (!mounted) return;
     setState(() {
       if (code == null || code.isEmpty || code == 'system') {
@@ -71,7 +67,6 @@ class _MySudokuAppState extends State<MySudokuApp> {
       } else {
         _localeOverride = Locale(code);
       }
-      _themeMode = _themeModeFromStorage(themeCode);
       _prefsLoaded = true;
     });
 
@@ -89,17 +84,6 @@ class _MySudokuAppState extends State<MySudokuApp> {
     }
   }
 
-  static ThemeMode _themeModeFromStorage(String? code) {
-    switch (code) {
-      case 'light':
-        return ThemeMode.light;
-      case 'dark':
-        return ThemeMode.dark;
-      default:
-        return ThemeMode.system;
-    }
-  }
-
   Future<void> _setAppLocale(Locale? locale) async {
     final prefs = await SharedPreferences.getInstance();
     if (locale == null) {
@@ -109,20 +93,6 @@ class _MySudokuAppState extends State<MySudokuApp> {
     }
     if (!mounted) return;
     setState(() => _localeOverride = locale);
-  }
-
-  Future<void> _setThemeMode(ThemeMode mode) async {
-    final prefs = await SharedPreferences.getInstance();
-    switch (mode) {
-      case ThemeMode.light:
-        await prefs.setString(_prefsThemeModeKey, 'light');
-      case ThemeMode.dark:
-        await prefs.setString(_prefsThemeModeKey, 'dark');
-      case ThemeMode.system:
-        await prefs.remove(_prefsThemeModeKey);
-    }
-    if (!mounted) return;
-    setState(() => _themeMode = mode);
   }
 
   @override
@@ -138,32 +108,26 @@ class _MySudokuAppState extends State<MySudokuApp> {
     return AppLocaleScope(
       appLocale: _localeOverride,
       setAppLocale: _setAppLocale,
-      child: AppThemeScope(
-        themeMode: _themeMode,
-        setThemeMode: _setThemeMode,
-        child: MaterialApp(
-          onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
-          theme: AppTheme.lightTheme(),
-          darkTheme: AppTheme.darkTheme(),
-          themeMode: _themeMode,
-          locale: _localeOverride,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          localeResolutionCallback: (locale, supported) {
-            if (_localeOverride != null) {
-              return _localeOverride;
+      child: MaterialApp(
+        onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
+        theme: AppTheme.lightTheme(),
+        locale: _localeOverride,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localeResolutionCallback: (locale, supported) {
+          if (_localeOverride != null) {
+            return _localeOverride;
+          }
+          if (locale == null) return supported.first;
+          for (final supportedLocale in supported) {
+            if (supportedLocale.languageCode == locale.languageCode) {
+              return supportedLocale;
             }
-            if (locale == null) return supported.first;
-            for (final supportedLocale in supported) {
-              if (supportedLocale.languageCode == locale.languageCode) {
-                return supportedLocale;
-              }
-            }
-            return supported.first;
-          },
-          home: const StartupCatalogPreparingGate(
-            child: MyHomePage(),
-          ),
+          }
+          return supported.first;
+        },
+        home: const StartupCatalogPreparingGate(
+          child: MyHomePage(),
         ),
       ),
     );

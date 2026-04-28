@@ -778,7 +778,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          l10n.settingsThemeSubtitle,
+          l10n.settingsMemoHighlightSubtitle,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: cs.onSurfaceVariant,
               ),

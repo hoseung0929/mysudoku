@@ -45,9 +45,10 @@ class RecordsStatisticsService {
 
   String formatSeconds(num value) {
     final total = value.round();
-    final minutes = total ~/ 60;
+    final hours = total ~/ 3600;
+    final minutes = (total % 3600) ~/ 60;
     final seconds = total % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
   List<Map<String, dynamic>> filterRecentRecords({
@@ -116,6 +117,17 @@ class RecordsStatisticsService {
       final total = totals[level] ?? 0;
       final cleared = records.length;
       final avgTime = _averageIntField(records, 'clear_time');
+      final avgWrong = _averageIntField(records, 'wrong_count');
+      final perfectClears = records
+          .where((record) => _recordInt(record, 'wrong_count') == 0)
+          .length;
+      final perfectRate =
+          cleared > 0 ? (perfectClears / cleared) * 100 : 0.0;
+      final bestTime = records.isEmpty
+          ? 0
+          : records
+              .map((record) => _recordInt(record, 'clear_time'))
+              .reduce((a, b) => a < b ? a : b);
       final clearRate = total > 0 ? (cleared / total) * 100 : 0.0;
 
       stats.add({
@@ -124,6 +136,10 @@ class RecordsStatisticsService {
         'total_count': total,
         'clear_rate': clearRate,
         'average_time': avgTime,
+        'average_wrong': avgWrong,
+        'perfect_clears': perfectClears,
+        'perfect_rate': perfectRate,
+        'best_time': bestTime,
       });
     }
 

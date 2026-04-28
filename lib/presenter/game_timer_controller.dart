@@ -15,9 +15,10 @@ class GameTimerController {
   int get seconds => _seconds;
 
   String get formattedTime {
-    final minutes = _seconds ~/ 60;
+    final hours = _seconds ~/ 3600;
+    final minutes = (_seconds % 3600) ~/ 60;
     final seconds = _seconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
   void start() {
