@@ -31,9 +31,7 @@ class SudokuBoardGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     const borderColor = Color(0xFFE4DED3);
-    final relatedFill = Theme.of(context).brightness == Brightness.dark
-        ? cs.surfaceContainerHigh
-        : const Color(0xFFF7F3EB);
+    const relatedFill = Color(0xFFF7F3EB);
     final digitOnBoard = cs.onSurface;
     final selectedRow = presenter.selectedRow;
     final selectedCol = presenter.selectedCol;

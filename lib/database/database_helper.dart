@@ -65,6 +65,17 @@ class DatabaseHelper {
     return await _gameRepository.findFirstUnclearedGameNumber(levelName);
   }
 
+  /// [afterGameNumber]보다 큰 번호 중 미클리어 최소값 (같은 레벨 순차 진행용).
+  Future<int?> findFirstUnclearedGameNumberAfter(
+    String levelName,
+    int afterGameNumber,
+  ) async {
+    return await _gameRepository.findFirstUnclearedGameNumberAfter(
+      levelName,
+      afterGameNumber,
+    );
+  }
+
   // ========== 클리어 기록 관련 메서드들 ==========
 
   /// 클리어 기록을 저장합니다.

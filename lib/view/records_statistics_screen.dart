@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:mysudoku/constants/records_level_filter.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
 import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
@@ -18,7 +19,18 @@ class RecordsStatisticsScreen extends StatefulWidget {
 }
 
 class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
-  static const double _kProfileHeaderExtent = 96;
+  /// 상태바 아래 프로필 바 본문 높이(홈 [LevelSelectionMain]과 동일).
+  static const double _kProfileHeaderExtent = 104;
+
+  /// 프로필 헤더와 스크롤 본문 사이 여백.
+  static const double _kBelowProfileHeaderGap = 18;
+
+  static const double _kTrendChartHeight = 156;
+
+  /// 막대가 차지할 수 있는 본체 높이(수치 레이블·축 레이블 제외).
+  static const double _kTrendBarMaxFill = 86;
+
+  static const double _kTrendBarMinFill = 8;
 
   final RecordsStatisticsService _statisticsService =
       RecordsStatisticsService();
@@ -177,6 +189,14 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     );
   }
 
+  String _trendDayPrimaryLabel(AppLocalizations l10n, Map<String, dynamic> day) {
+    if (day['is_today'] == true) {
+      return l10n.recordsTrendTodayLabel;
+    }
+    final parsed = DateTime.parse(day['date'] as String);
+    return DateFormat.E(Localizations.localeOf(context).toString()).format(parsed);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -200,6 +220,15 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         ),
       );
     }
+
+    final dailyTrend = _statisticsService.buildDailyTrend(
+      recent: _recent,
+      selectedLevel: _selectedLevel,
+    );
+    final trendSummaryUi = _statisticsService.buildTrendSummary(
+      recent: _recent,
+      selectedLevel: _selectedLevel,
+    );
 
     return DecoratedBox(
       decoration: const BoxDecoration(
@@ -227,7 +256,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: EdgeInsets.fromLTRB(
                   20,
-                  topInset + _kProfileHeaderExtent + 12,
+                  topInset + _kProfileHeaderExtent + _kBelowProfileHeaderGap,
                   20,
                   112 + bottomInset,
                 ),
@@ -236,33 +265,16 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                     _buildLoadErrorBanner(_loadErrorMessage!),
                     const SizedBox(height: 12),
                   ],
-                  _RecordsHeroCard(
-                    trend: _statisticsService.buildDailyTrend(
-                      recent: _recent,
-                      selectedLevel: _selectedLevel,
-                    ),
-                    title: Localizations.localeOf(context).languageCode == 'ko'
-                        ? '차분하게 쌓인 흐름을\n먼저 살펴보세요.'
-                        : 'Start with the gentle\nshape of your progress.',
-                    subtitle: Localizations.localeOf(context).languageCode ==
-                            'ko'
-                        ? '이번 주의 기록과 리듬을 먼저 보고, 숫자는 그다음에 천천히 확인해보세요.'
-                        : 'Take in this week’s rhythm first, then drift into the details when you want to.',
-                  ),
+                  _RecordsHeroCard(trend: dailyTrend),
                   const SizedBox(height: 16),
                   Row(
                     children: [
                       Expanded(
                         child: _recordsInsightCard(
-                          eyebrow:
-                              Localizations.localeOf(context).languageCode ==
-                                      'ko'
-                                  ? '이번 주의 발자국'
-                                  : 'This week',
-                          value: Localizations.localeOf(context).languageCode ==
-                                  'ko'
-                              ? '${_statisticsService.buildTrendSummary(recent: _recent, selectedLevel: _selectedLevel)['total_clears'] as int}회'
-                              : '${_statisticsService.buildTrendSummary(recent: _recent, selectedLevel: _selectedLevel)['total_clears'] as int} clears',
+                          eyebrow: l10n.recordsInsightThisWeekEyebrow,
+                          value: l10n.recordsInsightClearsValue(
+                            trendSummaryUi['total_clears'] as int,
+                          ),
                           icon: Icons.pets_outlined,
                           tone: const Color(0xFFE7F0E8),
                           accent: const Color(0xFF457B9D),
@@ -271,11 +283,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _recordsInsightCard(
-                          eyebrow:
-                              Localizations.localeOf(context).languageCode ==
-                                      'ko'
-                                  ? '평균 호흡'
-                                  : 'Average pace',
+                          eyebrow: l10n.recordsInsightAvgPaceEyebrow,
                           value: _statisticsService.formatSeconds(
                             _displayOverall['total_average_time'] as double,
                           ),
@@ -287,7 +295,11 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  _buildTrendSection(l10n),
+                  _buildTrendSection(
+                    l10n,
+                    trend: dailyTrend,
+                    summary: trendSummaryUi,
+                  ),
                   const SizedBox(height: 22),
                   _buildLevelSection(l10n),
                 ],
@@ -457,16 +469,12 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     );
   }
 
-  Widget _buildTrendSection(AppLocalizations l10n) {
+  Widget _buildTrendSection(
+    AppLocalizations l10n, {
+    required List<Map<String, dynamic>> trend,
+    required Map<String, dynamic> summary,
+  }) {
     final colorScheme = Theme.of(context).colorScheme;
-    final trend = _statisticsService.buildDailyTrend(
-      recent: _recent,
-      selectedLevel: _selectedLevel,
-    );
-    final summary = _statisticsService.buildTrendSummary(
-      recent: _recent,
-      selectedLevel: _selectedLevel,
-    );
     final maxClears = trend.isEmpty
         ? 1
         : trend
@@ -491,13 +499,11 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              Localizations.localeOf(context).languageCode == 'ko'
-                  ? '최근 플레이 리듬을 한눈에 보도록 간결하게 정리했습니다.'
-                  : 'A concise rhythm view of your recent puzzle days.',
+              l10n.recordsTrendSectionSubtitle,
               style: TextStyle(
                 color: colorScheme.onSurfaceVariant,
                 fontSize: 13,
-                height: 1.4,
+                height: 1.45,
               ),
             ),
             const SizedBox(height: 14),
@@ -525,83 +531,118 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                   _trendLegendItem(
                     color: colorScheme.primary,
                     isLine: false,
-                    label: Localizations.localeOf(context).languageCode == 'ko'
-                        ? '일별 클리어'
-                        : 'Daily clears',
+                    label: l10n.recordsTrendLegendDailyClears,
                   ),
                   _trendLegendItem(
                     color: colorScheme.tertiary.withValues(alpha: 0.9),
                     isLine: true,
-                    label: Localizations.localeOf(context).languageCode == 'ko'
-                        ? '이동 평균'
-                        : 'Moving average',
+                    label: l10n.recordsTrendLegendMovingAverage,
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-              SizedBox(
-                height: 132,
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      top: 22,
-                      bottom: 22,
-                      left: 0,
-                      right: 0,
-                      child: IgnorePointer(
-                        child: CustomPaint(
-                          painter: _TrendMovingAveragePainter(
-                            trend: trend,
-                            maxClears: maxClears.toDouble(),
-                            color: colorScheme.tertiary,
+              const SizedBox(height: 10),
+              Text(
+                l10n.recordsTrendMovingAvgFootnote,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  height: 1.35,
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.92),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Semantics(
+                label: '${l10n.recordsTrendTitle}. ${l10n.recordsTrendLegendDailyClears}, ${l10n.recordsTrendLegendMovingAverage}',
+                child: SizedBox(
+                  height: _kTrendChartHeight,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        top: 26,
+                        bottom: 38,
+                        left: 0,
+                        right: 0,
+                        child: IgnorePointer(
+                          child: CustomPaint(
+                            painter: _TrendMovingAveragePainter(
+                              trend: trend,
+                              maxClears: maxClears.toDouble(),
+                              color: colorScheme.tertiary,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: trend.map((day) {
-                        final clears = day['clears'] as int;
-                        final ratio = clears / maxClears;
-                        return Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Text(
-                                  '$clears',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: colorScheme.onSurfaceVariant,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: trend.map((day) {
+                          final clears = day['clears'] as int;
+                          final ratio = clears / maxClears;
+                          final isToday = day['is_today'] == true;
+                          return Expanded(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 2),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    '$clears',
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 8),
-                                Container(
-                                  height: 72 * ratio + 8,
-                                  decoration: BoxDecoration(
-                                    color: clears == 0
-                                        ? colorScheme.surfaceContainerHighest
-                                        : colorScheme.primary,
-                                    borderRadius: BorderRadius.circular(10),
+                                  const SizedBox(height: 6),
+                                  Container(
+                                    height: _kTrendBarMaxFill * ratio +
+                                        _kTrendBarMinFill,
+                                    decoration: BoxDecoration(
+                                      color: clears == 0
+                                          ? colorScheme.surfaceContainerHighest
+                                          : colorScheme.primary,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  day['label'] as String,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: colorScheme.onSurfaceVariant,
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    _trendDayPrimaryLabel(l10n, day),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: isToday
+                                          ? FontWeight.w700
+                                          : FontWeight.w600,
+                                      color: isToday
+                                          ? colorScheme.primary
+                                          : colorScheme.onSurfaceVariant,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    day['label'] as String,
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      height: 1.15,
+                                      color: colorScheme.onSurfaceVariant
+                                          .withValues(alpha: 0.76),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -887,18 +928,13 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
 }
 
 class _RecordsHeroCard extends StatelessWidget {
-  const _RecordsHeroCard({
-    required this.title,
-    required this.subtitle,
-    required this.trend,
-  });
+  const _RecordsHeroCard({required this.trend});
 
-  final String title;
-  final String subtitle;
   final List<Map<String, dynamic>> trend;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -943,9 +979,7 @@ class _RecordsHeroCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  Localizations.localeOf(context).languageCode == 'ko'
-                      ? 'Flow'
-                      : 'Flow',
+                  l10n.recordsHeroBadgeFlow,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
@@ -955,7 +989,7 @@ class _RecordsHeroCard extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                title,
+                l10n.recordsHeroTitle,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 28,
@@ -965,9 +999,9 @@ class _RecordsHeroCard extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 280),
+                constraints: const BoxConstraints(maxWidth: 320),
                 child: Text(
-                  subtitle,
+                  l10n.recordsHeroSubtitle,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.82),
                     fontSize: 15,

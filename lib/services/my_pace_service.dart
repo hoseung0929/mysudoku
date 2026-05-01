@@ -20,9 +20,11 @@ class MyPaceTarget {
 ///
 /// 우선순위:
 /// 1. 저장된 이어하기 세션(`ContinueGameSummary`)이 있으면 그 게임을 복원.
-/// 2. 그렇지 않으면 `초급 → 마스터` 순서(직전 클리어 레벨 다음부터 순회)로
+/// 2. 최근 클리어 이벤트에 레벨·게임 번호가 있으면, **그 레벨에서** 방금 깬 번호보다
+///    큰 미클리어 최소값 → 없으면 그 레벨의 미클리어 최소값 순으로 시도.
+/// 3. 그렇지 않으면 `초급 → 마스터` 순서(직전 클리어 레벨 다음부터 순회)로
 ///    아직 클리어하지 않은 가장 작은 `game_number`를 탐색.
-/// 3. 끝까지 없으면 `null`을 반환하여 호출부에서 "플레이할 게임이 없어요" 안내를
+/// 4. 끝까지 없으면 `null`을 반환하여 호출부에서 "플레이할 게임이 없어요" 안내를
 ///    보여줄 수 있도록 한다.
 class MyPaceService {
   MyPaceService({
@@ -30,6 +32,9 @@ class MyPaceService {
     Future<List<Map<String, dynamic>>> Function({int limit})?
         loadRecentClearEvents,
     Future<int?> Function(String levelName)? findFirstUnclearedGameNumber,
+    Future<int?> Function(String levelName, int afterGameNumber)?
+        findFirstUnclearedGameNumberAfter,
+    Future<bool> Function(String levelName, int gameNumber)? isGameCleared,
     Future<Map<String, dynamic>?> Function(String levelName, int gameNumber)?
         loadGameEntry,
   })  : _loadRecentClearEvents =
@@ -38,6 +43,16 @@ class MyPaceService {
         _findFirstUnclearedGameNumber =
             findFirstUnclearedGameNumber ??
                 (databaseHelper ?? DatabaseHelper()).findFirstUnclearedGameNumber,
+        _findFirstUnclearedGameNumberAfter =
+            findFirstUnclearedGameNumberAfter ??
+                (databaseHelper ?? DatabaseHelper())
+                    .findFirstUnclearedGameNumberAfter,
+        _isGameCleared =
+            isGameCleared ??
+                ((levelName, gameNumber) async =>
+                    (await (databaseHelper ?? DatabaseHelper())
+                            .getClearRecord(levelName, gameNumber)) !=
+                        null),
         _loadGameEntry =
             loadGameEntry ??
                 (databaseHelper ?? DatabaseHelper()).getGameEntry;
@@ -45,6 +60,9 @@ class MyPaceService {
   final Future<List<Map<String, dynamic>>> Function({int limit})
       _loadRecentClearEvents;
   final Future<int?> Function(String levelName) _findFirstUnclearedGameNumber;
+  final Future<int?> Function(String levelName, int afterGameNumber)
+      _findFirstUnclearedGameNumberAfter;
+  final Future<bool> Function(String levelName, int gameNumber) _isGameCleared;
   final Future<Map<String, dynamic>?> Function(String levelName, int gameNumber)
       _loadGameEntry;
 
@@ -57,10 +75,20 @@ class MyPaceService {
     ContinueGameSummary? preferContinueGame,
   }) async {
     if (preferContinueGame != null) {
-      return MyPaceTarget(
-        level: preferContinueGame.level,
-        game: preferContinueGame.game,
-        restoreSavedSession: true,
+      final continueCleared = await _isGameCleared(
+        preferContinueGame.level.name,
+        preferContinueGame.game.gameNumber,
+      );
+      if (!continueCleared) {
+        return MyPaceTarget(
+          level: preferContinueGame.level,
+          game: preferContinueGame.game,
+          restoreSavedSession: true,
+        );
+      }
+      return _resolveFromAnchor(
+        levelName: preferContinueGame.level.name,
+        gameNumber: preferContinueGame.game.gameNumber,
       );
     }
     return resolveNextPlayableTarget();
@@ -68,42 +96,102 @@ class MyPaceService {
 
   /// 이어하기는 고려하지 않고, 레벨 순회를 통해 새 퍼즐만 탐색한다.
   Future<MyPaceTarget?> resolveNextPlayableTarget() async {
+    final recentClearEvents =
+        await _loadRecentClearEvents(limit: 1);
+    final lastEvent = recentClearEvents.isEmpty ? null : recentClearEvents.first;
+    final lastClearedLevelName =
+        lastEvent == null ? null : lastEvent['level_name'] as String?;
+    final lastClearedGameNumber = _readGameNumber(lastEvent);
+
+    if (lastClearedLevelName != null && lastClearedGameNumber != null) {
+      return _resolveFromAnchor(
+        levelName: lastClearedLevelName,
+        gameNumber: lastClearedGameNumber,
+      );
+    }
+
     const orderedLevels = SudokuLevel.levels;
     if (orderedLevels.isEmpty) {
       return null;
     }
 
-    final recentClearEvents =
-        await _loadRecentClearEvents(limit: 1);
-    final lastClearedLevelName = recentClearEvents.isEmpty
-        ? null
-        : recentClearEvents.first['level_name'] as String?;
-
     final startIndex = _indexAfterLastClearedLevel(lastClearedLevelName);
     for (var offset = 0; offset < orderedLevels.length; offset++) {
       final level =
           orderedLevels[(startIndex + offset) % orderedLevels.length];
-      final gameNumber =
-          await _findFirstUnclearedGameNumber(level.name);
+      final gameNumber = await _findFirstUnclearedGameNumber(level.name);
       if (gameNumber == null) continue;
 
-      final entry = await _loadGameEntry(level.name, gameNumber);
-      if (entry == null) continue;
+      final target = await _targetFor(level: level, gameNumber: gameNumber);
+      if (target != null) return target;
+    }
 
-      final game = SudokuGame(
+    return null;
+  }
+
+  Future<MyPaceTarget?> _resolveFromAnchor({
+    required String levelName,
+    required int gameNumber,
+  }) async {
+    const orderedLevels = SudokuLevel.levels;
+    if (orderedLevels.isEmpty) return null;
+
+    final sameLevel = orderedLevels.firstWhere(
+      (item) => item.name == levelName,
+      orElse: () => orderedLevels.first,
+    );
+
+    final nextInSameLevel = await _findFirstUnclearedGameNumberAfter(
+      sameLevel.name,
+      gameNumber,
+    );
+    if (nextInSameLevel != null) {
+      final target = await _targetFor(
+        level: sameLevel,
+        gameNumber: nextInSameLevel,
+      );
+      if (target != null) return target;
+    }
+
+    final startIndex = _indexAfterLastClearedLevel(sameLevel.name);
+    for (var offset = 0; offset < orderedLevels.length; offset++) {
+      final level = orderedLevels[(startIndex + offset) % orderedLevels.length];
+      if (level.name == sameLevel.name) {
+        continue;
+      }
+      final firstUncleared = await _findFirstUnclearedGameNumber(level.name);
+      if (firstUncleared == null) continue;
+      final target = await _targetFor(level: level, gameNumber: firstUncleared);
+      if (target != null) return target;
+    }
+
+    return null;
+  }
+
+  Future<MyPaceTarget?> _targetFor({
+    required SudokuLevel level,
+    required int gameNumber,
+  }) async {
+    final entry = await _loadGameEntry(level.name, gameNumber);
+    if (entry == null) return null;
+    return MyPaceTarget(
+      level: level,
+      game: SudokuGame(
         board: entry['board'] as List<List<int>>,
         solution: entry['solution'] as List<List<int>>,
         emptyCells: level.emptyCells,
         levelName: level.name,
         gameNumber: entry['game_number'] as int,
-      );
-      return MyPaceTarget(
-        level: level,
-        game: game,
-        restoreSavedSession: false,
-      );
-    }
+      ),
+      restoreSavedSession: false,
+    );
+  }
 
+  int? _readGameNumber(Map<String, dynamic>? event) {
+    if (event == null) return null;
+    final raw = event['game_number'];
+    if (raw is int) return raw;
+    if (raw is num) return raw.toInt();
     return null;
   }
 

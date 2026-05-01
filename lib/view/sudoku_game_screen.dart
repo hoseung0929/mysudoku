@@ -10,7 +10,6 @@ import 'package:mysudoku/model/sudoku_game.dart';
 import 'package:mysudoku/model/sudoku_level.dart';
 import 'package:mysudoku/presenter/sudoku_game_presenter.dart';
 import 'package:mysudoku/services/onboarding_service.dart';
-import 'package:mysudoku/services/result_share_service.dart';
 import 'package:mysudoku/theme/app_theme.dart';
 import 'package:mysudoku/utils/app_logger.dart';
 import 'package:mysudoku/view/sudoku_game/game_end_flow.dart';
@@ -47,9 +46,7 @@ class SudokuGameScreen extends StatefulWidget {
 class _SudokuGameScreenState extends State<SudokuGameScreen>
     with WidgetsBindingObserver {
   final OnboardingService _onboardingService = OnboardingService();
-  final ResultShareService _resultShareService = ResultShareService();
-  late final GameEndFlow _gameEndFlow =
-      GameEndFlow(resultShareService: _resultShareService);
+  late final GameEndFlow _gameEndFlow = GameEndFlow();
   final GameSessionController _sessionController = GameSessionController();
   final GameSettingsController _settingsController = GameSettingsController();
   late final SudokuGamePresenter _presenter;

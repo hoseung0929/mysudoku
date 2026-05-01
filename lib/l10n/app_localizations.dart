@@ -152,12 +152,6 @@ abstract class AppLocalizations {
   /// **'Notifications'**
   String get settingsSectionNotifications;
 
-  /// No description provided for @settingsSectionAppearance.
-  ///
-  /// In en, this message translates to:
-  /// **'Appearance'**
-  String get settingsSectionAppearance;
-
   /// No description provided for @settingsSectionLanguage.
   ///
   /// In en, this message translates to:
@@ -403,30 +397,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notification permission is required to turn reminders on.'**
   String get settingsNotificationsPermissionDenied;
-
-  /// No description provided for @settingsThemeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Theme'**
-  String get settingsThemeTitle;
-
-  /// No description provided for @settingsThemeSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Light, dark, or system default'**
-  String get settingsThemeSubtitle;
-
-  /// No description provided for @settingsDarkModeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Dark mode'**
-  String get settingsDarkModeTitle;
-
-  /// No description provided for @settingsDarkModeSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Turn dark mode on or off'**
-  String get settingsDarkModeSubtitle;
 
   /// No description provided for @settingsLanguageTitle.
   ///
@@ -968,24 +938,6 @@ abstract class AppLocalizations {
   /// **'Next puzzle'**
   String get dialogNextPuzzle;
 
-  /// No description provided for @settingsAppearancePickerTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Appearance'**
-  String get settingsAppearancePickerTitle;
-
-  /// No description provided for @settingsThemeModeLight.
-  ///
-  /// In en, this message translates to:
-  /// **'Light'**
-  String get settingsThemeModeLight;
-
-  /// No description provided for @settingsThemeModeDark.
-  ///
-  /// In en, this message translates to:
-  /// **'Dark'**
-  String get settingsThemeModeDark;
-
   /// No description provided for @settingsNotificationsComingSoonTitle.
   ///
   /// In en, this message translates to:
@@ -1117,6 +1069,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Active days'**
   String get recordsTrendActiveDays;
+
+  /// No description provided for @recordsHeroBadgeFlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Flow'**
+  String get recordsHeroBadgeFlow;
+
+  /// No description provided for @recordsHeroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with the gentle\nshape of your progress.'**
+  String get recordsHeroTitle;
+
+  /// No description provided for @recordsHeroSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The curve above is the same week, softened for a quick read. Use the card below for exact clears per day plus the smoothed trend line.'**
+  String get recordsHeroSubtitle;
+
+  /// No description provided for @recordsInsightThisWeekEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get recordsInsightThisWeekEyebrow;
+
+  /// No description provided for @recordsInsightClearsValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} clear} other{{count} clears}}'**
+  String recordsInsightClearsValue(int count);
+
+  /// No description provided for @recordsInsightAvgPaceEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Average pace'**
+  String get recordsInsightAvgPaceEyebrow;
+
+  /// No description provided for @recordsTrendSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily clears with a smoothed trend (up to ±2 days on each side).'**
+  String get recordsTrendSectionSubtitle;
+
+  /// No description provided for @recordsTrendLegendDailyClears.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily clears'**
+  String get recordsTrendLegendDailyClears;
+
+  /// No description provided for @recordsTrendLegendMovingAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Moving average'**
+  String get recordsTrendLegendMovingAverage;
+
+  /// No description provided for @recordsTrendMovingAvgFootnote.
+  ///
+  /// In en, this message translates to:
+  /// **'Each point averages up to five days (two before and after that day).'**
+  String get recordsTrendMovingAvgFootnote;
+
+  /// No description provided for @recordsTrendTodayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get recordsTrendTodayLabel;
 
   /// No description provided for @recordsMetricClears.
   ///

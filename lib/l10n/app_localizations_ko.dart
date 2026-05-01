@@ -36,9 +36,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsSectionNotifications => '알림';
 
   @override
-  String get settingsSectionAppearance => '외관';
-
-  @override
   String get settingsSectionLanguage => '언어';
 
   @override
@@ -171,18 +168,6 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get settingsNotificationsPermissionDenied =>
       '알림 권한이 허용되지 않아 리마인드를 켤 수 없어요.';
-
-  @override
-  String get settingsThemeTitle => '테마 설정';
-
-  @override
-  String get settingsThemeSubtitle => '라이트, 다크, 시스템 설정';
-
-  @override
-  String get settingsDarkModeTitle => '다크 모드';
-
-  @override
-  String get settingsDarkModeSubtitle => '다크 모드를 켜거나 끕니다';
 
   @override
   String get settingsLanguageTitle => '언어 설정';
@@ -471,15 +456,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get dialogNextPuzzle => '다음 퍼즐';
 
   @override
-  String get settingsAppearancePickerTitle => '화면 모드';
-
-  @override
-  String get settingsThemeModeLight => '라이트';
-
-  @override
-  String get settingsThemeModeDark => '다크';
-
-  @override
   String get settingsNotificationsComingSoonTitle => '알림';
 
   @override
@@ -552,6 +528,44 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get recordsTrendActiveDays => '플레이한 날';
+
+  @override
+  String get recordsHeroBadgeFlow => '흐름';
+
+  @override
+  String get recordsHeroTitle => '차분하게 쌓인 흐름을\n먼저 살펴보세요.';
+
+  @override
+  String get recordsHeroSubtitle =>
+      '위에는 같은 7일을 부드러운 선으로 표현했어요. 아래 카드에서 날짜별 클리어와 이동 평균선을 더 정확히 볼 수 있어요.';
+
+  @override
+  String get recordsInsightThisWeekEyebrow => '이번 주의 발자국';
+
+  @override
+  String recordsInsightClearsValue(int count) {
+    return '$count회';
+  }
+
+  @override
+  String get recordsInsightAvgPaceEyebrow => '평균 호흡';
+
+  @override
+  String get recordsTrendSectionSubtitle =>
+      '날마다 클리어와 이동 평균선(전후 최대 ±2일)을 함께 보는 요약이에요.';
+
+  @override
+  String get recordsTrendLegendDailyClears => '일별 클리어';
+
+  @override
+  String get recordsTrendLegendMovingAverage => '이동 평균';
+
+  @override
+  String get recordsTrendMovingAvgFootnote =>
+      '이동 평균선은 각 날짜 기준 최대 5일(양쪽 2일 포함) 범위의 평균으로 그려져요.';
+
+  @override
+  String get recordsTrendTodayLabel => '오늘';
 
   @override
   String get recordsMetricClears => '클리어 (필터)';

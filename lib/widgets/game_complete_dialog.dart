@@ -1,20 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/services/achievement_service.dart';
 
 /// 게임 완료 축하 다이얼로그 위젯
 class GameCompleteDialog extends StatelessWidget {
-  final String shareSummary;
   final int timeInSeconds;
   final int wrongCount;
   final bool isNewBestRecord;
   final String? challengeMessage;
-  final List<AchievementBadge> unlockedBadges;
   final VoidCallback onRestart;
   final VoidCallback onGoToLevelSelection;
-  final VoidCallback onCopyResult;
-  final VoidCallback onShareResult;
   final VoidCallback? onOpenSettings;
 
   /// 같은 난이도의 다음 게임이 있을 때만 전달합니다.
@@ -25,16 +20,12 @@ class GameCompleteDialog extends StatelessWidget {
 
   const GameCompleteDialog({
     super.key,
-    required this.shareSummary,
     required this.timeInSeconds,
     required this.wrongCount,
     this.isNewBestRecord = false,
     this.challengeMessage,
-    this.unlockedBadges = const [],
     required this.onRestart,
     required this.onGoToLevelSelection,
-    required this.onCopyResult,
-    required this.onShareResult,
     this.onOpenSettings,
     this.onNextPuzzle,
   });
@@ -52,7 +43,6 @@ class GameCompleteDialog extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final onSurface = cs.onSurface;
     final onVar = cs.onSurfaceVariant;
-    final shareBg = cs.surfaceContainerHighest;
     final isKorean = Localizations.localeOf(context).languageCode == 'ko';
     final dialogMaxContentHeight = MediaQuery.of(context).size.height * 0.52;
     final secondaryActionStyle = OutlinedButton.styleFrom(
@@ -205,65 +195,6 @@ class GameCompleteDialog extends StatelessWidget {
                   ),
                 ),
               ],
-              if (unlockedBadges.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF6F0E5),
-                    borderRadius: BorderRadius.circular(16),
-                    border:
-                        Border.all(color: goldColor.withValues(alpha: 0.35)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.military_tech, size: 18, color: onSurface),
-                          const SizedBox(width: 8),
-                          Text(
-                            l10n.dialogNewBadges,
-                            style: GoogleFonts.notoSans(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: onSurface,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      ...unlockedBadges.map(
-                        (badge) => Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(
-                                badge.icon,
-                                size: 16,
-                                color: badge.accentColor,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  '${badge.title} · ${badge.description}',
-                                  style: GoogleFonts.notoSans(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: onVar,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
               const SizedBox(height: 20),
               // 통계 정보
               Container(
@@ -335,36 +266,6 @@ class GameCompleteDialog extends StatelessWidget {
                           ),
                         ),
                       ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: shareBg,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.dialogSharePreview,
-                      style: GoogleFonts.notoSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      shareSummary,
-                      style: GoogleFonts.notoSans(
-                        fontSize: 14,
-                        color: onVar,
-                      ),
                     ),
                   ],
                 ),

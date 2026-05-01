@@ -30,8 +30,14 @@ class LevelSelectionMain extends StatefulWidget {
 }
 
 class _LevelSelectionMainState extends State<LevelSelectionMain> {
-  /// 상태바 아래 프로필 바 본문 높이 (padding 22+18 + 아바타 열 ~56). 상태바 높이는 별도 합산.
-  static const double _kProfileHeaderExtent = 96;
+  /// 상태바 아래 프로필 바 본문 높이 (padding 22+18 + 아바타·테두리 열 ~62). 상태바 높이는 별도 합산.
+  static const double _kProfileHeaderExtent = 104;
+
+  /// 프로필 헤더 아래와 스크롤 본문(히어로) 사이 여백.
+  static const double _kBelowProfileHeaderGap = 18;
+
+  /// `extendBody` + 플로팅 하단 탭 높이(68)·SafeArea(20)·그림자 대략값.
+  static const double _kHomeScrollBottomPad = 100;
 
   static const Color _cpForest = Color(0xFF285B3F);
   static const Color _cpForestSoft = Color(0xFF5D7A69);
@@ -480,16 +486,11 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     final topInset = MediaQuery.paddingOf(context).top;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
+      value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Theme.of(context).brightness == Brightness.dark
-            ? Brightness.light
-            : Brightness.dark,
+        statusBarIconBrightness: Brightness.dark,
         systemNavigationBarColor: Colors.transparent,
-        systemNavigationBarIconBrightness:
-            Theme.of(context).brightness == Brightness.dark
-                ? Brightness.light
-                : Brightness.dark,
+        systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: DecoratedBox(
         decoration: const BoxDecoration(
@@ -533,9 +534,9 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
             controller: _scrollController,
             padding: EdgeInsets.fromLTRB(
               24,
-              topInset + _kProfileHeaderExtent + 12,
+              topInset + _kProfileHeaderExtent + _kBelowProfileHeaderGap,
               24,
-              76 + bottomInset,
+              _kHomeScrollBottomPad + bottomInset,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -568,9 +569,9 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
             controller: _scrollController,
             padding: EdgeInsets.fromLTRB(
               16,
-              topInset + _kProfileHeaderExtent + 12,
+              topInset + _kProfileHeaderExtent + _kBelowProfileHeaderGap,
               16,
-              72 + bottomInset,
+              _kHomeScrollBottomPad + bottomInset,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -796,10 +797,12 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     final l10n = AppLocalizations.of(context)!;
     final challengeDone = _challengeProgress?.isTodayChallengeCleared ?? false;
     final myPaceLabel = _myPacePreviewLabel(l10n);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -869,7 +872,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
           Align(
             alignment: Alignment.centerLeft,
             child: FractionallySizedBox(
-              widthFactor: 0.60,
+              widthFactor: 0.68,
               child: FilledButton(
                 onPressed: _openMyPaceGame,
                 style: FilledButton.styleFrom(
@@ -884,8 +887,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                   ),
-                  elevation: 1.2,
-                  shadowColor: Colors.black.withValues(alpha: 0.16),
+                  elevation: 0,
+                  shadowColor: Colors.transparent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                     side: BorderSide(
@@ -904,6 +907,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -921,9 +925,12 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   Widget _buildLevelExplorer() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ...List.generate(5, (index) => _buildLevelCard(index)),
-      ],
+      children: List.generate(5, (index) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: index == 4 ? 0 : 12),
+          child: _buildLevelCard(index),
+        );
+      }),
     );
   }
 
@@ -936,8 +943,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            crossAxisSpacing: 20,
-            mainAxisSpacing: 20,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
             childAspectRatio: 1.45,
           ),
           itemCount: 5,
@@ -1190,7 +1197,6 @@ class _LevelCardState extends State<_LevelCard> {
           onTapUp: _handleTapUp,
           onTapCancel: _handleTapCancel,
           child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 4),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color:
@@ -1202,11 +1208,7 @@ class _LevelCardState extends State<_LevelCard> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(
-                    alpha: Theme.of(context).brightness == Brightness.dark
-                        ? 0.16
-                        : 0.08,
-                  ),
+                  color: Colors.black.withValues(alpha: 0.08),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -1268,31 +1270,39 @@ class _LevelCardState extends State<_LevelCard> {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: widget.color.withValues(alpha: 0.28),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      solvedLabel,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                        color: colorScheme.onSurface,
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: widget.color.withValues(alpha: 0.28),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          solvedLabel,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    remainingLabel,
-                    style: TextStyle(
-                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.82),
-                      fontSize: 13,
-                    ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          remainingLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.82),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 10),
                   ClipRRect(
@@ -1308,17 +1318,6 @@ class _LevelCardState extends State<_LevelCard> {
                 ],
               ),
             ),
-            const SizedBox(width: 16),
-            // Container(
-            //   width: 36,
-            //   height: 36,
-            //   decoration: BoxDecoration(
-            //     color: Colors.grey.withValues(alpha: 0.12),
-            //     shape: BoxShape.circle,
-            //   ),
-            //   child:
-            //       const Icon(Icons.info_outline, color: Colors.grey, size: 22),
-            // ),
           ],
             ),
           ),

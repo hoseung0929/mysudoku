@@ -111,6 +111,7 @@ class _MySudokuAppState extends State<MySudokuApp> {
       child: MaterialApp(
         onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
         theme: AppTheme.lightTheme(),
+        themeMode: ThemeMode.light,
         locale: _localeOverride,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,

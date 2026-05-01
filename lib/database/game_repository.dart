@@ -154,4 +154,33 @@ class GameRepository {
     if (result.isEmpty) return null;
     return result.first['game_number'] as int;
   }
+
+  /// [afterGameNumber]보다 큰 번호 중, 아직 클리어하지 않은 가장 작은 `game_number`.
+  Future<int?> findFirstUnclearedGameNumberAfter(
+    String levelName,
+    int afterGameNumber,
+  ) async {
+    final db = await _dbManager.database;
+    final result = await db.rawQuery(
+      '''
+      SELECT g.game_number
+      FROM games AS g
+      WHERE g.level_name = ?
+        AND g.game_number > ?
+        AND g.game_number > 0
+        AND NOT EXISTS (
+          SELECT 1
+          FROM clear_records AS c
+          WHERE c.level_name = g.level_name
+            AND c.game_number = g.game_number
+        )
+      ORDER BY g.game_number ASC
+      LIMIT 1
+      ''',
+      [levelName, afterGameNumber],
+    );
+
+    if (result.isEmpty) return null;
+    return result.first['game_number'] as int;
+  }
 }

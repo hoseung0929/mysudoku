@@ -217,6 +217,8 @@ void main() {
       expect(trend.length, 7);
       expect(trend.last['clears'], 2);
       expect(trend.last['average_time'], 150.0);
+      expect(trend.last['is_today'], true);
+      expect(trend.first['is_today'], false);
       expect(trend[4]['clears'], 1);
     });
 

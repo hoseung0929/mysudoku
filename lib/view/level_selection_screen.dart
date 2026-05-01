@@ -325,8 +325,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
 
   /// 게임 선택 화면용 앱바 위젯
   PreferredSizeWidget _buildGameSelectionAppBar() {
+    final l10n = AppLocalizations.of(context)!;
     return CustomAppBar(
-      title: '',
+      title: _levelHeaderTitle(l10n),
       showNotificationIcon: false,
       showLogoutIcon: false,
       leading: IconButton(
@@ -355,15 +356,6 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                _levelHeaderTitle(l10n),
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF2C3E50),
-                ),
-              ),
-              const SizedBox(height: 10),
               _buildLevelProgressSummary(l10n, compact: false),
             ],
           ),
@@ -428,15 +420,6 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                _levelHeaderTitle(l10n),
-                style: const TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF2C3E50),
-                ),
-              ),
-              const SizedBox(height: 6),
               _buildLevelProgressSummary(l10n, compact: true),
             ],
           ),

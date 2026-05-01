@@ -222,6 +222,7 @@ class RecordsStatisticsService {
       selectedLevel: selectedLevel,
     );
     final today = DateTime.now();
+    final todayKey = _formatDate(today);
     final buckets = <String, List<Map<String, dynamic>>>{};
 
     for (int i = days - 1; i >= 0; i--) {
@@ -242,6 +243,7 @@ class RecordsStatisticsService {
       return {
         'date': entry.key,
         'label': entry.key.substring(5),
+        'is_today': entry.key == todayKey,
         'clears': records.length,
         'average_time': _averageIntField(records, 'clear_time'),
         'average_wrong': _averageIntField(records, 'wrong_count'),

@@ -36,9 +36,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSectionNotifications => 'Notifications';
 
   @override
-  String get settingsSectionAppearance => 'Appearance';
-
-  @override
   String get settingsSectionLanguage => 'Language';
 
   @override
@@ -181,18 +178,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsNotificationsPermissionDenied =>
       'Notification permission is required to turn reminders on.';
-
-  @override
-  String get settingsThemeTitle => 'Theme';
-
-  @override
-  String get settingsThemeSubtitle => 'Light, dark, or system default';
-
-  @override
-  String get settingsDarkModeTitle => 'Dark mode';
-
-  @override
-  String get settingsDarkModeSubtitle => 'Turn dark mode on or off';
 
   @override
   String get settingsLanguageTitle => 'Language';
@@ -490,15 +475,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dialogNextPuzzle => 'Next puzzle';
 
   @override
-  String get settingsAppearancePickerTitle => 'Appearance';
-
-  @override
-  String get settingsThemeModeLight => 'Light';
-
-  @override
-  String get settingsThemeModeDark => 'Dark';
-
-  @override
   String get settingsNotificationsComingSoonTitle => 'Notifications';
 
   @override
@@ -572,6 +548,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recordsTrendActiveDays => 'Active days';
+
+  @override
+  String get recordsHeroBadgeFlow => 'Flow';
+
+  @override
+  String get recordsHeroTitle =>
+      'Start with the gentle\nshape of your progress.';
+
+  @override
+  String get recordsHeroSubtitle =>
+      'The curve above is the same week, softened for a quick read. Use the card below for exact clears per day plus the smoothed trend line.';
+
+  @override
+  String get recordsInsightThisWeekEyebrow => 'This week';
+
+  @override
+  String recordsInsightClearsValue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count clears',
+      one: '$count clear',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recordsInsightAvgPaceEyebrow => 'Average pace';
+
+  @override
+  String get recordsTrendSectionSubtitle =>
+      'Daily clears with a smoothed trend (up to ±2 days on each side).';
+
+  @override
+  String get recordsTrendLegendDailyClears => 'Daily clears';
+
+  @override
+  String get recordsTrendLegendMovingAverage => 'Moving average';
+
+  @override
+  String get recordsTrendMovingAvgFootnote =>
+      'Each point averages up to five days (two before and after that day).';
+
+  @override
+  String get recordsTrendTodayLabel => 'Today';
 
   @override
   String get recordsMetricClears => 'Clears (filtered)';
