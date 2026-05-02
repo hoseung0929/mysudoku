@@ -544,10 +544,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Not enough recent clears to show a 7-day trend.';
 
   @override
-  String get recordsTrendClears => 'Recent clears';
+  String get recordsTrendClears => 'Clears';
 
   @override
-  String get recordsTrendActiveDays => 'Active days';
+  String get recordsTrendActiveDays => 'Days played';
 
   @override
   String get recordsTrendWindowAvgTime => 'Avg. time (same window)';
@@ -592,6 +592,69 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recordsTrendTodayLabel => 'Today';
+
+  @override
+  String get recordsPlayInsightsTitle => 'Recent play insights';
+
+  @override
+  String get recordsPlayCalendarTitle => 'Play calendar';
+
+  @override
+  String get recordsWeeklyReportTitle => 'Weekly report';
+
+  @override
+  String get recordsWeeklyReportBusiestDay => 'Most active day';
+
+  @override
+  String recordsWeeklyReportTopDayValue(String day, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count clears',
+      one: '$count clear',
+    );
+    return '$day, $_temp0';
+  }
+
+  @override
+  String get recordsWeeklyReportTopDayFallback => 'No clears yet';
+
+  @override
+  String get recordsTimelineTitle => 'Recent timeline';
+
+  @override
+  String get recordsTimelineEmpty =>
+      'Recent clears will show up here as you play.';
+
+  @override
+  String recordsTimelineMistakesValue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count mistakes',
+      one: '$count mistake',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recordsTimelinePerfect => 'Perfect clear';
+
+  @override
+  String get recordsPaceTitle => 'Pace change';
+
+  @override
+  String get recordsPaceEmpty =>
+      'We need another week of records before we can compare your pace.';
+
+  @override
+  String get recordsPaceRecentWindow => 'Recent 7 days';
+
+  @override
+  String get recordsPacePreviousWindow => 'Previous 7 days';
+
+  @override
+  String get recordsPaceDelta => 'Change';
 
   @override
   String get recordsMetricClears => 'Clears (filtered)';

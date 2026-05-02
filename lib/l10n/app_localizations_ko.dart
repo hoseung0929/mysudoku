@@ -524,10 +524,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsTrendEmpty => '최근 7일 추세를 만들 기록이 없습니다.';
 
   @override
-  String get recordsTrendClears => '최근 클리어';
+  String get recordsTrendClears => '클리어 수';
 
   @override
-  String get recordsTrendActiveDays => '플레이한 날';
+  String get recordsTrendActiveDays => '플레이 일수';
 
   @override
   String get recordsTrendWindowAvgTime => '평균 시간 (같은 기간)';
@@ -565,6 +565,55 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get recordsTrendTodayLabel => '오늘';
+
+  @override
+  String get recordsPlayInsightsTitle => '최근 플레이 인사이트';
+
+  @override
+  String get recordsPlayCalendarTitle => '플레이 캘린더';
+
+  @override
+  String get recordsWeeklyReportTitle => '이번 주 리포트';
+
+  @override
+  String get recordsWeeklyReportBusiestDay => '가장 많이 플레이한 날';
+
+  @override
+  String recordsWeeklyReportTopDayValue(String day, int count) {
+    return '$day, $count회';
+  }
+
+  @override
+  String get recordsWeeklyReportTopDayFallback => '아직 클리어가 없어요';
+
+  @override
+  String get recordsTimelineTitle => '최근 플레이 타임라인';
+
+  @override
+  String get recordsTimelineEmpty => '최근 클리어가 생기면 여기에 차곡차곡 보여드릴게요.';
+
+  @override
+  String recordsTimelineMistakesValue(int count) {
+    return '오답 $count회';
+  }
+
+  @override
+  String get recordsTimelinePerfect => '퍼펙트 클리어';
+
+  @override
+  String get recordsPaceTitle => '나의 페이스 변화';
+
+  @override
+  String get recordsPaceEmpty => '이전 일주일과 비교하려면 기록이 조금 더 쌓여야 해요.';
+
+  @override
+  String get recordsPaceRecentWindow => '최근 7일';
+
+  @override
+  String get recordsPacePreviousWindow => '이전 7일';
+
+  @override
+  String get recordsPaceDelta => '변화';
 
   @override
   String get recordsMetricClears => '클리어 (필터)';

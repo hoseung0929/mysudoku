@@ -227,8 +227,8 @@
   "recordsSummaryTitle": "요약 통계",
   "recordsTrendTitle": "최근 7일 추세",
   "recordsTrendEmpty": "최근 7일 추세를 만들 기록이 없습니다.",
-  "recordsTrendClears": "최근 클리어",
-  "recordsTrendActiveDays": "플레이한 날",
+  "recordsTrendClears": "클리어 수",
+  "recordsTrendActiveDays": "플레이 일수",
   "recordsTrendWindowAvgTime": "평균 시간 (같은 기간)",
   "recordsTrendWindowAvgWrong": "평균 오답 (같은 기간)",
   "recordsHeroBadgeFlow": "흐름",
@@ -245,6 +245,32 @@
   "recordsTrendSectionSubtitle": "최근 일주일 동안 날짜별 클리어 수를 한눈에 보는 요약이에요.",
   "recordsTrendLegendDailyClears": "일별 클리어",
   "recordsTrendTodayLabel": "오늘",
+  "recordsPlayInsightsTitle": "최근 플레이 인사이트",
+  "recordsPlayCalendarTitle": "플레이 캘린더",
+  "recordsWeeklyReportTitle": "이번 주 리포트",
+  "recordsWeeklyReportBusiestDay": "가장 많이 플레이한 날",
+  "recordsWeeklyReportTopDayValue": "{day}, {count}회",
+  "@recordsWeeklyReportTopDayValue": {
+    "placeholders": {
+      "day": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "recordsWeeklyReportTopDayFallback": "아직 클리어가 없어요",
+  "recordsTimelineTitle": "최근 플레이 타임라인",
+  "recordsTimelineEmpty": "최근 클리어가 생기면 여기에 차곡차곡 보여드릴게요.",
+  "recordsTimelineMistakesValue": "오답 {count}회",
+  "@recordsTimelineMistakesValue": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "recordsTimelinePerfect": "퍼펙트 클리어",
+  "recordsPaceTitle": "나의 페이스 변화",
+  "recordsPaceEmpty": "이전 일주일과 비교하려면 기록이 조금 더 쌓여야 해요.",
+  "recordsPaceRecentWindow": "최근 7일",
+  "recordsPacePreviousWindow": "이전 7일",
+  "recordsPaceDelta": "변화",
   "recordsMetricClears": "클리어 (필터)",
   "recordsMetricClearRate": "퍼즐 대비 비율",
   "recordsMetricPerfectRate": "퍼펙트율",

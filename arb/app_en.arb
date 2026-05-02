@@ -227,8 +227,8 @@
   "recordsSummaryTitle": "Summary",
   "recordsTrendTitle": "Last 7 days",
   "recordsTrendEmpty": "Not enough recent clears to show a 7-day trend.",
-  "recordsTrendClears": "Recent clears",
-  "recordsTrendActiveDays": "Active days",
+  "recordsTrendClears": "Clears",
+  "recordsTrendActiveDays": "Days played",
   "recordsTrendWindowAvgTime": "Avg. time (same window)",
   "recordsTrendWindowAvgWrong": "Avg. mistakes (same window)",
   "recordsHeroBadgeFlow": "Flow",
@@ -245,6 +245,32 @@
   "recordsTrendSectionSubtitle": "Day-by-day clears for the last seven days.",
   "recordsTrendLegendDailyClears": "Daily clears",
   "recordsTrendTodayLabel": "Today",
+  "recordsPlayInsightsTitle": "Recent play insights",
+  "recordsPlayCalendarTitle": "Play calendar",
+  "recordsWeeklyReportTitle": "Weekly report",
+  "recordsWeeklyReportBusiestDay": "Most active day",
+  "recordsWeeklyReportTopDayValue": "{day}, {count, plural, one{{count} clear} other{{count} clears}}",
+  "@recordsWeeklyReportTopDayValue": {
+    "placeholders": {
+      "day": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "recordsWeeklyReportTopDayFallback": "No clears yet",
+  "recordsTimelineTitle": "Recent timeline",
+  "recordsTimelineEmpty": "Recent clears will show up here as you play.",
+  "recordsTimelineMistakesValue": "{count, plural, one{{count} mistake} other{{count} mistakes}}",
+  "@recordsTimelineMistakesValue": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "recordsTimelinePerfect": "Perfect clear",
+  "recordsPaceTitle": "Pace change",
+  "recordsPaceEmpty": "We need another week of records before we can compare your pace.",
+  "recordsPaceRecentWindow": "Recent 7 days",
+  "recordsPacePreviousWindow": "Previous 7 days",
+  "recordsPaceDelta": "Change",
   "recordsMetricClears": "Clears (filtered)",
   "recordsMetricClearRate": "Catalog share",
   "recordsMetricPerfectRate": "Perfect rate",

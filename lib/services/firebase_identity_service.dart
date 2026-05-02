@@ -80,6 +80,14 @@ class FirebaseIdentityService {
     try {
       final credential = await _resolvedAuth.signInAnonymously();
       return credential.user;
+    } on FirebaseAuthException catch (e) {
+      if (_shouldSilenceAnonymousSignInError(e.code)) {
+        return null;
+      }
+      if (kDebugMode) {
+        AppLogger.debug('익명 로그인 건너뜀(${e.code}): ${e.message ?? e}');
+      }
+      return null;
     } catch (e) {
       if (kDebugMode) {
         AppLogger.debug('익명 로그인 건너뜀: $e');
@@ -165,5 +173,16 @@ class FirebaseIdentityService {
       email: user.email,
       uid: user.uid,
     );
+  }
+
+  bool _shouldSilenceAnonymousSignInError(String code) {
+    switch (code) {
+      case 'internal-error':
+      case 'network-request-failed':
+      case 'operation-not-allowed':
+        return true;
+      default:
+        return false;
+    }
   }
 }

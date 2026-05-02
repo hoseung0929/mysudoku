@@ -1061,13 +1061,13 @@ abstract class AppLocalizations {
   /// No description provided for @recordsTrendClears.
   ///
   /// In en, this message translates to:
-  /// **'Recent clears'**
+  /// **'Clears'**
   String get recordsTrendClears;
 
   /// No description provided for @recordsTrendActiveDays.
   ///
   /// In en, this message translates to:
-  /// **'Active days'**
+  /// **'Days played'**
   String get recordsTrendActiveDays;
 
   /// No description provided for @recordsTrendWindowAvgTime.
@@ -1135,6 +1135,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Today'**
   String get recordsTrendTodayLabel;
+
+  /// No description provided for @recordsPlayInsightsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent play insights'**
+  String get recordsPlayInsightsTitle;
+
+  /// No description provided for @recordsPlayCalendarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Play calendar'**
+  String get recordsPlayCalendarTitle;
+
+  /// No description provided for @recordsWeeklyReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly report'**
+  String get recordsWeeklyReportTitle;
+
+  /// No description provided for @recordsWeeklyReportBusiestDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Most active day'**
+  String get recordsWeeklyReportBusiestDay;
+
+  /// No description provided for @recordsWeeklyReportTopDayValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{day}, {count, plural, one{{count} clear} other{{count} clears}}'**
+  String recordsWeeklyReportTopDayValue(String day, int count);
+
+  /// No description provided for @recordsWeeklyReportTopDayFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'No clears yet'**
+  String get recordsWeeklyReportTopDayFallback;
+
+  /// No description provided for @recordsTimelineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent timeline'**
+  String get recordsTimelineTitle;
+
+  /// No description provided for @recordsTimelineEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent clears will show up here as you play.'**
+  String get recordsTimelineEmpty;
+
+  /// No description provided for @recordsTimelineMistakesValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} mistake} other{{count} mistakes}}'**
+  String recordsTimelineMistakesValue(int count);
+
+  /// No description provided for @recordsTimelinePerfect.
+  ///
+  /// In en, this message translates to:
+  /// **'Perfect clear'**
+  String get recordsTimelinePerfect;
+
+  /// No description provided for @recordsPaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pace change'**
+  String get recordsPaceTitle;
+
+  /// No description provided for @recordsPaceEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'We need another week of records before we can compare your pace.'**
+  String get recordsPaceEmpty;
+
+  /// No description provided for @recordsPaceRecentWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent 7 days'**
+  String get recordsPaceRecentWindow;
+
+  /// No description provided for @recordsPacePreviousWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous 7 days'**
+  String get recordsPacePreviousWindow;
+
+  /// No description provided for @recordsPaceDelta.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get recordsPaceDelta;
 
   /// No description provided for @recordsMetricClears.
   ///

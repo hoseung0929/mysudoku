@@ -37,9 +37,6 @@ class ProfileGlassHeader extends StatelessWidget {
       isKorean: isKorean,
       hour: DateTime.now().hour,
     );
-    final subtitleWithSection = (sectionLabel == null || sectionLabel!.isEmpty)
-        ? subtitleText
-        : '${sectionLabel!} · $subtitleText';
 
     return ClipRect(
       child: BackdropFilter(
@@ -141,7 +138,7 @@ class ProfileGlassHeader extends StatelessWidget {
                               ),
                               const SizedBox(height: 3),
                               Text(
-                                subtitleWithSection,
+                                subtitleText,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(

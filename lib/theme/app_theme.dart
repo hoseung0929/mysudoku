@@ -16,6 +16,10 @@ class AppTheme {
   static const Color lightTextColor = Color(0xFF66776C);
   static const Color lineColor = Color(0xFFE8E8E3);
 
+  /// 홈 히어로 「나만의 속도」 주요 CTA (조금 더 또렷한 세이지 액센트).
+  static const Color homeMyPaceCtaBackground = Color(0xFFBDD5A6);
+  static const Color homeMyPaceCtaForeground = Color(0xFF23361F);
+
   /// 라이트 테마
   static ThemeData lightTheme() {
     final colorScheme = ColorScheme.fromSeed(

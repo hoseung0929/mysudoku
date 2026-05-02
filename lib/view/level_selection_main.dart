@@ -14,6 +14,7 @@ import 'package:mysudoku/services/home_dashboard_service.dart';
 import 'package:mysudoku/services/level_progress_service.dart';
 import 'package:mysudoku/services/my_pace_service.dart';
 import 'package:mysudoku/services/onboarding_service.dart';
+import 'package:mysudoku/theme/app_theme.dart';
 import 'package:mysudoku/services/profile_state_service.dart';
 import 'package:mysudoku/utils/app_logger.dart';
 import 'package:mysudoku/view/level_selection_screen.dart';
@@ -804,27 +805,17 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
           color: colorScheme.surface,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: colorScheme.outlineVariant),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.07),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              margin: const EdgeInsets.only(left: 4, top: 2),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                'Today',
-                style: TextStyle(
-                  color: colorScheme.onSurfaceVariant,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
             Text(
               Localizations.localeOf(context).languageCode == 'ko'
                   ? '오늘의 퍼즐 하나에\n조용히 집중해보세요.'
@@ -855,12 +846,12 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
             Align(
               alignment: Alignment.centerLeft,
               child: FractionallySizedBox(
-                widthFactor: 0.68,
+                widthFactor: 0.72,
                 child: FilledButton(
                   onPressed: _openMyPaceGame,
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFF3C7A8),
-                    foregroundColor: const Color(0xFF5B3A29),
+                    backgroundColor: AppTheme.homeMyPaceCtaBackground,
+                    foregroundColor: AppTheme.homeMyPaceCtaForeground,
                     minimumSize: const Size.fromHeight(54),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 22,
@@ -870,12 +861,16 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
-                    elevation: 0,
-                    shadowColor: Colors.transparent,
+                    elevation: 1,
+                    shadowColor: AppTheme.homeMyPaceCtaForeground.withValues(
+                      alpha: 0.18,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
                       side: BorderSide(
-                        color: colorScheme.outlineVariant,
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.85,
+                        ),
                       ),
                     ),
                   ),

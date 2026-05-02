@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:mysudoku/constants/records_level_filter.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
 import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
 import 'package:mysudoku/services/game_record_notifier.dart';
 import 'package:mysudoku/services/profile_state_service.dart';
 import 'package:mysudoku/services/records_statistics_service.dart';
@@ -28,32 +27,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
 
   /// 하단 플로팅 탭바 여유 — [LevelSelectionMain._kHomeScrollBottomPad] 와 동일.
   static const double _kScrollBottomPad = 100;
-
-  /// 막대 채움(0 클리어일 때도 최소 높이 유지).
-  static const double _kTrendBarMaxFill = 85;
-
-  static const double _kTrendBarMinFill = 8;
-
-  /// 일별 막대만 그리는 영역 높이 (축 텍스트와 겹치지 않도록 분리).
-  static const double _kTrendBarTrackHeight =
-      _kTrendBarMaxFill + _kTrendBarMinFill;
-
-  static const double _kTrendValueLabelHeight = 20;
-  static const double _kTrendValueRowGap = 5;
-  static const double _kTrendBarToAxisGap = 8;
-  static const double _kTrendAxisPrimaryHeight = 15;
-  static const double _kTrendAxisGap = 2;
-  static const double _kTrendAxisSecondaryHeight = 14;
-
-  /// 값 라벨 행·막대 트랙·요일·날짜 행을 세로로 나눈 최소 높이 합.
-  static const double _kTrendChartBaseHeight =
-      _kTrendValueLabelHeight +
-      _kTrendValueRowGap +
-      _kTrendBarTrackHeight +
-      _kTrendBarToAxisGap +
-      _kTrendAxisPrimaryHeight +
-      _kTrendAxisGap +
-      _kTrendAxisSecondaryHeight;
 
   final RecordsStatisticsService _statisticsService =
       RecordsStatisticsService();
@@ -202,17 +175,17 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     );
   }
 
-  Map<String, dynamic> get _displayOverall {
-    return _statisticsService.buildOverallStats(
-      overall: _overall,
+  List<Map<String, dynamic>> get _displayLevelStats {
+    return _statisticsService.buildLevelStats(
       levels: _levels,
       recent: _recentForDisplayedStats,
       selectedLevel: _selectedLevel,
     );
   }
 
-  List<Map<String, dynamic>> get _displayLevelStats {
-    return _statisticsService.buildLevelStats(
+  Map<String, dynamic> get _displayOverall {
+    return _statisticsService.buildOverallStats(
+      overall: _overall,
       levels: _levels,
       recent: _recentForDisplayedStats,
       selectedLevel: _selectedLevel,
@@ -227,11 +200,15 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     return DateFormat.E(Localizations.localeOf(context).toString()).format(parsed);
   }
 
-  /// 큰 글씨 접근성에서도 차트 막대 영역이 줄바꿈에 무너지지 않도록 높이만 소폭 확장.
-  double _trendChartHeightFor(TextScaler textScaler) {
-    final factor =
-        (textScaler.scale(13) / 13.0).clamp(1.0, 1.22);
-    return (_kTrendChartBaseHeight * factor).roundToDouble();
+  String _trendDayCalendarLabel(Map<String, dynamic> day) {
+    final parsed = DateTime.parse(day['date'] as String);
+    final languageCode = Localizations.localeOf(context).languageCode;
+    if (languageCode == 'ko') {
+      const labels = ['월', '화', '수', '목', '금', '토', '일'];
+      return labels[parsed.weekday - 1];
+    }
+    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return labels[parsed.weekday - 1];
   }
 
   String _trendA11ySummary(
@@ -475,13 +452,19 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     required Map<String, dynamic> summary,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    final maxClears = trend.isEmpty
-        ? 1
-        : trend
-            .map((day) => day['clears'] as int)
-            .reduce((a, b) => a > b ? a : b)
-            .clamp(1, 99);
-    final totalClears = summary['total_clears'] as int;
+    final previousTrend = _statisticsService
+        .buildDailyTrend(
+          recent: _recent,
+          selectedLevel: _selectedLevel,
+          days: 14,
+        )
+        .take(7)
+        .toList(growable: false);
+    final weekSummary = _buildWindowSummary(trend);
+    final previousSummary = _buildWindowSummary(previousTrend);
+    final weekRecords = _buildTimelineRecordsForTrend(trend);
+    final busiestDay = _busiestTrendDay(trend);
+    final perfectRate = weekSummary['perfect_rate'] as double;
 
     return Card(
       child: Padding(
@@ -490,260 +473,701 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              l10n.recordsTrendTitle,
+              l10n.recordsPlayInsightsTitle,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              l10n.recordsTrendSectionSubtitle,
-              style: TextStyle(
-                color: colorScheme.onSurfaceVariant,
-                fontSize: 13,
-                height: 1.45,
+            const SizedBox(height: 14),
+            _insightsSectionBlock(
+              title: l10n.recordsPlayCalendarTitle,
+              child: _buildPlayCalendar(l10n, trend),
+            ),
+            const SizedBox(height: 12),
+            _insightsSectionBlock(
+              title: l10n.recordsWeeklyReportTitle,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _adaptiveMetricRow(
+                    [
+                      _levelMetricTile(
+                        label: l10n.recordsTrendClears,
+                        value: '${summary['total_clears']}',
+                      ),
+                      _levelMetricTile(
+                        label: l10n.recordsTrendActiveDays,
+                        value: '${summary['active_days']}',
+                      ),
+                      _levelMetricTile(
+                        label: l10n.recordsMetricPerfectRate,
+                        value: '${perfectRate.toStringAsFixed(1)}%',
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _weeklyHighlightRow(
+                    title: l10n.recordsWeeklyReportBusiestDay,
+                    value: busiestDay == null
+                        ? l10n.recordsWeeklyReportTopDayFallback
+                        : l10n.recordsWeeklyReportTopDayValue(
+                            _trendDayPrimaryLabel(l10n, busiestDay),
+                            busiestDay['clears'] as int,
+                          ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 14),
-            if (totalClears == 0)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(l10n.recordsTrendEmpty),
-              )
-            else ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: _levelMetricTile(
-                      label: l10n.recordsTrendClears,
-                      value: '$totalClears',
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _levelMetricTile(
-                      label: l10n.recordsTrendActiveDays,
-                      value: '${summary['active_days']}',
-                    ),
-                  ),
-                ],
+            const SizedBox(height: 12),
+            _insightsSectionBlock(
+              title: l10n.recordsTimelineTitle,
+              child: _buildTimelineSection(l10n, weekRecords),
+            ),
+            const SizedBox(height: 12),
+            _insightsSectionBlock(
+              title: l10n.recordsPaceTitle,
+              child: _buildPaceComparison(
+                l10n,
+                current: weekSummary,
+                previous: previousSummary,
               ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: _levelMetricTile(
-                      label: l10n.recordsTrendWindowAvgTime,
-                      value: _statisticsService.formatSeconds(
-                        summary['average_time'] as double,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _levelMetricTile(
-                      label: l10n.recordsTrendWindowAvgWrong,
-                      value: (summary['average_wrong'] as double)
-                          .toStringAsFixed(1),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlayCalendar(
+    AppLocalizations l10n,
+    List<Map<String, dynamic>> trend,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final maxClears = trend.isEmpty
+        ? 1
+        : trend
+            .map((day) => day['clears'] as int)
+            .reduce((a, b) => a > b ? a : b)
+            .clamp(1, 99);
+    return Semantics(
+      container: true,
+      label: _trendA11ySummary(l10n, trend),
+      child: Row(
+        children: trend.map((day) {
+          final clears = day['clears'] as int;
+          final ratio = clears == 0 ? 0.0 : clears / maxClears;
+          final isToday = day['is_today'] == true;
+          final background = clears == 0
+              ? colorScheme.surface
+              : colorScheme.primary.withValues(alpha: 0.10 + ratio * 0.28);
+          return Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 3),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: colorScheme.outlineVariant),
+                  color: background,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isToday
+                        ? colorScheme.primary.withValues(alpha: 0.48)
+                        : colorScheme.outlineVariant,
+                  ),
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      l10n.recordsTrendLegendDailyClears,
+                      _trendDayCalendarLabel(day),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: isToday
+                            ? colorScheme.primary
+                            : colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '$clears',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 18,
                         fontWeight: FontWeight.w700,
                         color: colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '최근 7일 동안 하루마다 몇 판을 풀었는지 보여줘요.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        height: 1.4,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Semantics(
-                      container: true,
-                      label: _trendA11ySummary(l10n, trend),
-                      child: SizedBox(
-                        height: _trendChartHeightFor(
-                          MediaQuery.textScalerOf(context),
-                        ),
-                        width: double.infinity,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            SizedBox(
-                              height: _kTrendValueLabelHeight,
-                              child: Row(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.center,
-                                children: trend.map((day) {
-                                  final clears = day['clears'] as int;
-                                  return Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 2,
-                                      ),
-                                      child: FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Text(
-                                          '$clears',
-                                          textAlign: TextAlign.center,
-                                          maxLines: 1,
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            height: 1.1,
-                                            fontWeight: FontWeight.w600,
-                                            color:
-                                                colorScheme.onSurfaceVariant,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                            const SizedBox(height: _kTrendValueRowGap),
-                            SizedBox(
-                              height: _kTrendBarTrackHeight,
-                              child: Align(
-                                alignment: Alignment.bottomCenter,
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: trend.map((day) {
-                                    final clears = day['clears'] as int;
-                                    final ratio = clears / maxClears;
-                                    final isToday = day['is_today'] == true;
-                                    return Expanded(
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 2,
-                                        ),
-                                        child: Container(
-                                          height: _kTrendBarMaxFill * ratio +
-                                              _kTrendBarMinFill,
-                                          decoration: BoxDecoration(
-                                            color: clears == 0
-                                                ? colorScheme
-                                                    .surfaceContainerHighest
-                                                : isToday
-                                                ? colorScheme.primary
-                                                : colorScheme.primary
-                                                    .withValues(alpha: 0.72),
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: _kTrendBarToAxisGap),
-                            SizedBox(
-                              height: _kTrendAxisPrimaryHeight,
-                              child: Row(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.center,
-                                children: trend.map((day) {
-                                  final isToday = day['is_today'] == true;
-                                  return Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 2,
-                                      ),
-                                      child: FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Text(
-                                          _trendDayPrimaryLabel(l10n, day),
-                                          textAlign: TextAlign.center,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: isToday
-                                                ? FontWeight.w700
-                                                : FontWeight.w600,
-                                            color: isToday
-                                                ? colorScheme.primary
-                                                : colorScheme.onSurfaceVariant,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                            const SizedBox(height: _kTrendAxisGap),
-                            SizedBox(
-                              height: _kTrendAxisSecondaryHeight,
-                              child: Row(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.center,
-                                children: trend.map((day) {
-                                  return Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 2,
-                                      ),
-                                      child: FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Text(
-                                          day['label'] as String,
-                                          textAlign: TextAlign.center,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            height: 1.15,
-                                            color: colorScheme
-                                                .onSurfaceVariant
-                                                .withValues(alpha: 0.76),
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
-          ],
-        ),
+            ),
+          );
+        }).toList(),
       ),
     );
+  }
+
+  Widget _buildTimelineSection(
+    AppLocalizations l10n,
+    List<Map<String, dynamic>> records,
+  ) {
+    if (records.isEmpty) {
+      return Text(
+        l10n.recordsTimelineEmpty,
+        style: TextStyle(
+          fontSize: 13,
+          height: 1.4,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        for (var i = 0; i < records.length; i++) ...[
+          _timelineRow(l10n, records[i]),
+          if (i != records.length - 1) const SizedBox(height: 10),
+        ],
+      ],
+    );
+  }
+
+  Widget _timelineRow(AppLocalizations l10n, Map<String, dynamic> record) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final levelNameKey = record['level_name'] as String? ?? '';
+    final levelName = levelNameKey.localizedSudokuLevelName(l10n);
+    final clearDate = record['clear_date']?.toString() ?? '';
+    final date = clearDate.isEmpty ? null : DateTime.tryParse(clearDate);
+    final wrongCount = _recordInt(record, 'wrong_count');
+    final time = _statisticsService.formatSeconds(
+      _recordInt(record, 'clear_time').toDouble(),
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final textScale = MediaQuery.textScalerOf(context).scale(14) / 14.0;
+          final useStackedTime = constraints.maxWidth < 320 || textScale > 1.08;
+          final title = date == null
+              ? levelName
+              : '${DateFormat.Md(Localizations.localeOf(context).toString()).format(date)} · $levelName';
+          final subtitle = wrongCount == 0
+              ? l10n.recordsTimelinePerfect
+              : l10n.recordsTimelineMistakesValue(wrongCount);
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                margin: const EdgeInsets.only(top: 4),
+                decoration: BoxDecoration(
+                  color: _levelAccent(levelNameKey),
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (useStackedTime) ...[
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              subtitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            time,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ] else ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            time,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPaceComparison(
+    AppLocalizations l10n, {
+    required Map<String, dynamic> current,
+    required Map<String, dynamic> previous,
+  }) {
+    final previousHasData = (previous['total_clears'] as int) > 0;
+    if (!previousHasData) {
+      return Text(
+        l10n.recordsPaceEmpty,
+        style: TextStyle(
+          fontSize: 13,
+          height: 1.4,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        _comparisonRow(
+          label: l10n.recordsTrendClears,
+          currentValue: '${current['total_clears']}',
+          previousValue: '${previous['total_clears']}',
+          deltaValue: _signedIntDelta(
+            current['total_clears'] as int,
+            previous['total_clears'] as int,
+          ),
+          positiveWhenHigher: true,
+          currentRaw: (current['total_clears'] as int).toDouble(),
+          previousRaw: (previous['total_clears'] as int).toDouble(),
+        ),
+        const SizedBox(height: 10),
+        _comparisonRow(
+          label: l10n.recordsTrendWindowAvgTime,
+          currentValue: _statisticsService.formatSeconds(
+            current['average_time'] as double,
+          ),
+          previousValue: _statisticsService.formatSeconds(
+            previous['average_time'] as double,
+          ),
+          deltaValue: _signedDurationDelta(
+            current['average_time'] as double,
+            previous['average_time'] as double,
+          ),
+          positiveWhenHigher: false,
+          currentRaw: current['average_time'] as double,
+          previousRaw: previous['average_time'] as double,
+        ),
+        const SizedBox(height: 10),
+        _comparisonRow(
+          label: l10n.recordsTrendWindowAvgWrong,
+          currentValue: (current['average_wrong'] as double).toStringAsFixed(1),
+          previousValue: (previous['average_wrong'] as double).toStringAsFixed(1),
+          deltaValue: _signedDoubleDelta(
+            current['average_wrong'] as double,
+            previous['average_wrong'] as double,
+          ),
+          positiveWhenHigher: false,
+          currentRaw: current['average_wrong'] as double,
+          previousRaw: previous['average_wrong'] as double,
+        ),
+      ],
+    );
+  }
+
+  Widget _comparisonRow({
+    required String label,
+    required String currentValue,
+    required String previousValue,
+    required String deltaValue,
+    required bool positiveWhenHigher,
+    required double currentRaw,
+    required double previousRaw,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final difference = currentRaw - previousRaw;
+    final deltaColor = difference == 0
+        ? colorScheme.onSurfaceVariant
+        : ((difference > 0) == positiveWhenHigher)
+        ? const Color(0xFF2A9D8F)
+        : const Color(0xFFE76F51);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _comparisonCell(
+                  title: AppLocalizations.of(context)!.recordsPaceRecentWindow,
+                  value: currentValue,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _comparisonCell(
+                  title: AppLocalizations.of(context)!.recordsPacePreviousWindow,
+                  value: previousValue,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _comparisonCell(
+                  title: AppLocalizations.of(context)!.recordsPaceDelta,
+                  value: deltaValue,
+                  valueColor: deltaColor,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _comparisonCell({
+    required String title,
+    required String value,
+    Color? valueColor,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 10,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: valueColor ?? colorScheme.onSurface,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _insightsSectionBlock({
+    required String title,
+    required Widget child,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _adaptiveMetricRow(List<Widget> children) {
+    final textScale = MediaQuery.textScalerOf(context).scale(14) / 14.0;
+    if (textScale > 1.08) {
+      return Column(
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            children[i],
+            if (i != children.length - 1) const SizedBox(height: 10),
+          ],
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        for (var i = 0; i < children.length; i++) ...[
+          Expanded(child: children[i]),
+          if (i != children.length - 1) const SizedBox(width: 10),
+        ],
+      ],
+    );
+  }
+
+  Widget _weeklyHighlightRow({
+    required String title,
+    required String value,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.wb_sunny_outlined,
+            size: 18,
+            color: colorScheme.primary,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Map<String, dynamic> _buildWindowSummary(List<Map<String, dynamic>> trend) {
+    final filtered = _statisticsService.filterRecentRecords(
+      recent: _recent,
+      selectedLevel: _selectedLevel,
+    );
+    final dates = trend
+        .map((day) => day['date']?.toString())
+        .whereType<String>()
+        .toSet();
+    final windowRecords = filtered.where((record) {
+      final clearDate = record['clear_date']?.toString();
+      return clearDate != null && dates.contains(clearDate);
+    }).toList(growable: false);
+    final totalClears = trend.fold<int>(
+      0,
+      (sum, day) => sum + ((day['clears'] as int?) ?? 0),
+    );
+    final activeDays = trend.where((day) => ((day['clears'] as int?) ?? 0) > 0).length;
+    final perfectClears = windowRecords
+        .where((record) => _recordInt(record, 'wrong_count') == 0)
+        .length;
+    final perfectRate = windowRecords.isEmpty
+        ? 0.0
+        : (perfectClears / windowRecords.length) * 100;
+
+    return {
+      'total_clears': totalClears,
+      'active_days': activeDays,
+      'average_time': _averageRecordField(windowRecords, 'clear_time'),
+      'average_wrong': _averageRecordField(windowRecords, 'wrong_count'),
+      'perfect_clears': perfectClears,
+      'perfect_rate': perfectRate,
+    };
+  }
+
+  List<Map<String, dynamic>> _buildTimelineRecordsForTrend(
+    List<Map<String, dynamic>> trend,
+  ) {
+    final dates = trend
+        .map((day) => day['date']?.toString())
+        .whereType<String>()
+        .toSet();
+    final filtered = _statisticsService.filterRecentRecords(
+      recent: _recent,
+      selectedLevel: _selectedLevel,
+    );
+    final records = filtered.where((record) {
+      final clearDate = record['clear_date']?.toString();
+      return clearDate != null && dates.contains(clearDate);
+    }).toList()
+      ..sort((a, b) {
+        final aDate = a['clear_date']?.toString() ?? '';
+        final bDate = b['clear_date']?.toString() ?? '';
+        final byDate = bDate.compareTo(aDate);
+        if (byDate != 0) {
+          return byDate;
+        }
+        final byTime = _recordInt(a, 'clear_time').compareTo(
+          _recordInt(b, 'clear_time'),
+        );
+        if (byTime != 0) {
+          return byTime;
+        }
+        return _recordInt(a, 'wrong_count').compareTo(
+          _recordInt(b, 'wrong_count'),
+        );
+      });
+    return records.take(5).toList(growable: false);
+  }
+
+  Map<String, dynamic>? _busiestTrendDay(List<Map<String, dynamic>> trend) {
+    Map<String, dynamic>? best;
+    for (final day in trend) {
+      final clears = day['clears'] as int? ?? 0;
+      if (best == null || clears > (best['clears'] as int? ?? 0)) {
+        best = day;
+      }
+    }
+    if ((best?['clears'] as int? ?? 0) <= 0) {
+      return null;
+    }
+    return best;
+  }
+
+  double _averageRecordField(
+    List<Map<String, dynamic>> records,
+    String field,
+  ) {
+    if (records.isEmpty) {
+      return 0.0;
+    }
+    final sum = records.fold<double>(
+      0,
+      (total, record) => total + _recordInt(record, field).toDouble(),
+    );
+    return sum / records.length;
+  }
+
+  int _recordInt(Map<String, dynamic> record, String field) {
+    final value = record[field];
+    if (value is num) {
+      return value.toInt();
+    }
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  String _signedIntDelta(int current, int previous) {
+    final delta = current - previous;
+    if (delta == 0) {
+      return '0';
+    }
+    return delta > 0 ? '+$delta' : '$delta';
+  }
+
+  String _signedDoubleDelta(double current, double previous) {
+    final delta = current - previous;
+    if (delta.abs() < 0.05) {
+      return '0.0';
+    }
+    final formatted = delta.abs().toStringAsFixed(1);
+    return delta > 0 ? '+$formatted' : '-$formatted';
+  }
+
+  String _signedDurationDelta(double current, double previous) {
+    final deltaSeconds = (current - previous).round();
+    if (deltaSeconds == 0) {
+      return '00:00:00';
+    }
+    final sign = deltaSeconds > 0 ? '+' : '-';
+    final value = _statisticsService.formatSeconds(deltaSeconds.abs().toDouble());
+    return '$sign$value';
   }
 
   Widget _buildLoadErrorBanner(AppLocalizations l10n, String message) {
@@ -797,15 +1221,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     }
   }
 
-  String _levelDescription(String levelNameKey, AppLocalizations l10n) {
-    for (final level in SudokuLevel.levels) {
-      if (level.name == levelNameKey) {
-        return level.localizedDescription(l10n);
-      }
-    }
-    return '';
-  }
-
   Widget _buildLevelStatCard(
     AppLocalizations l10n,
     Map<String, dynamic> stat,
@@ -854,15 +1269,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _levelDescription(levelNameKey, l10n),
-                      style: TextStyle(
-                        fontSize: 12,
-                        height: 1.35,
-                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -981,6 +1387,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           const SizedBox(height: 6),
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
@@ -1008,7 +1416,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
@@ -1041,6 +1449,9 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           const SizedBox(height: 12),
           Text(
             value,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -1075,25 +1486,6 @@ class _RecordsHeroCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 6,
-            ),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              l10n.recordsHeroBadgeFlow,
-              style: TextStyle(
-                color: colorScheme.onSurfaceVariant,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          const SizedBox(height: 18),
           Text(
             l10n.recordsHeroTitle,
             style: TextStyle(
@@ -1101,20 +1493,6 @@ class _RecordsHeroCard extends StatelessWidget {
               fontSize: 28,
               height: 1.15,
               fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 320),
-            child: Text(
-              hasClears
-                  ? l10n.recordsHeroSubtitle
-                  : l10n.recordsHeroSubtitleNoChart,
-              style: TextStyle(
-                color: colorScheme.onSurfaceVariant,
-                fontSize: 14,
-                height: 1.5,
-              ),
             ),
           ),
           if (hasClears) ...[
@@ -1138,8 +1516,39 @@ class _RecordsHeroCard extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 16,
+              child: Row(
+                children: trend.map((day) {
+                  final isToday = day['is_today'] == true;
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          day['label'] as String,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight:
+                                isToday ? FontWeight.w700 : FontWeight.w500,
+                            color: isToday
+                                ? colorScheme.primary
+                                : colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
           ] else ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             Text(
               l10n.recordsHeroChartEmptyHint,
               style: TextStyle(
