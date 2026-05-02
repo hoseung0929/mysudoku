@@ -4,9 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 /// 앱 전체에서 사용할 테마 클래스
 class AppTheme {
   // 색상 정의
-  static const Color backgroundColor = Color(0xFFFDFBF6);
-  static const Color surfaceTint = Color(0xFFF8F4E8);
-  static const Color cardColor = Color(0xFFFFFDF9);
+  static const Color backgroundColor = Color(0xFFFAFAF8);
+  static const Color surfaceTint = Color(0xFFF5F5F1);
+  static const Color cardColor = Color(0xFFFFFFFF);
   static const Color mintColor = Color(0xFF285B3F);
   static const Color lightBlueColor = Color(0xFF457B9D);
   static const Color yellowColor = Color(0xFFF1E5CD);
@@ -14,7 +14,7 @@ class AppTheme {
   static const Color hintYellowColor = Color(0xFFE8F1F8);
   static const Color textColor = Color(0xFF21382A);
   static const Color lightTextColor = Color(0xFF66776C);
-  static const Color lineColor = Color(0xFFE4DED3);
+  static const Color lineColor = Color(0xFFE8E8E3);
 
   /// 라이트 테마
   static ThemeData lightTheme() {
@@ -23,17 +23,17 @@ class AppTheme {
       brightness: Brightness.light,
     ).copyWith(
       primary: mintColor,
-      onPrimary: const Color(0xFFFDFBF6),
+      onPrimary: const Color(0xFFFAFAF8),
       secondary: lightBlueColor,
       tertiary: pinkColor,
       surface: cardColor,
       surfaceContainerLowest: backgroundColor,
-      surfaceContainerLow: const Color(0xFFF9F6EF),
+      surfaceContainerLow: const Color(0xFFF6F6F2),
       surfaceContainer: surfaceTint,
-      surfaceContainerHigh: const Color(0xFFF4EFE5),
-      surfaceContainerHighest: const Color(0xFFEFE8DC),
+      surfaceContainerHigh: const Color(0xFFF1F1EC),
+      surfaceContainerHighest: const Color(0xFFECECE6),
       outline: lineColor,
-      outlineVariant: const Color(0xFFE9E3D8),
+      outlineVariant: const Color(0xFFE3E3DE),
       onSurface: textColor,
       onSurfaceVariant: lightTextColor,
     );

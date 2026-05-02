@@ -550,6 +550,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsTrendActiveDays => 'Active days';
 
   @override
+  String get recordsTrendWindowAvgTime => 'Avg. time (same window)';
+
+  @override
+  String get recordsTrendWindowAvgWrong => 'Avg. mistakes (same window)';
+
+  @override
   String get recordsHeroBadgeFlow => 'Flow';
 
   @override
@@ -558,7 +564,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recordsHeroSubtitle =>
-      'The curve above is the same week, softened for a quick read. Use the card below for exact clears per day plus the smoothed trend line.';
+      'The curve above is the same week, softened for a quick read. Use the card below for exact clears per day.';
 
   @override
   String get recordsInsightThisWeekEyebrow => 'This week';
@@ -579,17 +585,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recordsTrendSectionSubtitle =>
-      'Daily clears with a smoothed trend (up to ±2 days on each side).';
+      'Day-by-day clears for the last seven days.';
 
   @override
   String get recordsTrendLegendDailyClears => 'Daily clears';
-
-  @override
-  String get recordsTrendLegendMovingAverage => 'Moving average';
-
-  @override
-  String get recordsTrendMovingAvgFootnote =>
-      'Each point averages up to five days (two before and after that day).';
 
   @override
   String get recordsTrendTodayLabel => 'Today';
@@ -618,6 +617,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recordsByLevelEmpty => 'No stats for this filter.';
+
+  @override
+  String get recordsByLevelSectionSubtitle =>
+      'See which levels are starting to feel more comfortable.';
+
+  @override
+  String get recordsLevelInfographicClearRate => 'Clear rate';
+
+  @override
+  String get recordsLevelMiniBest => 'Best';
+
+  @override
+  String get recordsLevelMiniPerfectRate => 'Perfect';
+
+  @override
+  String get recordsLevelMiniAvgWrong => 'Avg wrong';
+
+  @override
+  String get recordsStatsLoadError =>
+      'Unable to load statistics right now. Please try again shortly.';
+
+  @override
+  String get recordsRetry => 'Try again';
+
+  @override
+  String get recordsHeroChartEmptyHint =>
+      'Clear a puzzle this week to see your flow sketch here.';
+
+  @override
+  String get recordsHeroSubtitleNoChart =>
+      'Use the card below for this week’s daily clears.';
 
   @override
   String get recordsBestByLevelTitle => 'Best by level';

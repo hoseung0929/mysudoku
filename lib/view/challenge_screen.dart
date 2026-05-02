@@ -181,8 +181,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFFDFBF6),
-              Color(0xFFF7F4E8),
+              Color(0xFFFAFAF8),
+              Color(0xFFF5F5F1),
             ],
           ),
         ),
@@ -201,8 +201,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFFDFBF6),
-              Color(0xFFF7F4E8),
+              Color(0xFFFAFAF8),
+              Color(0xFFF5F5F1),
             ],
           ),
         ),
@@ -220,8 +220,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFFFDFBF6),
-            Color(0xFFF7F4E8),
+            Color(0xFFFAFAF8),
+            Color(0xFFF5F5F1),
           ],
         ),
       ),
@@ -385,40 +385,52 @@ class _ChallengeMiniStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: tone,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFE4DED3)),
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 28,
-            height: 4,
-            decoration: BoxDecoration(
-              color: accent,
-              borderRadius: BorderRadius.circular(999),
-            ),
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.insights_rounded,
+                  size: 16,
+                  color: accent,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  eyebrow,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           Text(
-            eyebrow,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF66776C),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF21382A),
+              color: colorScheme.onSurface,
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -612,19 +624,19 @@ class _ChallengeHeroPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 15, color: colorScheme.onPrimary),
+          Icon(icon, size: 15, color: colorScheme.primary),
           const SizedBox(width: 6),
           Text(
             label,
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: colorScheme.onPrimary,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -866,22 +878,9 @@ class _ChallengeHeroCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF285B3F),
-            colorScheme.primary.withValues(alpha: 0.92),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.primary.withValues(alpha: 0.16),
-            blurRadius: 26,
-            offset: const Offset(0, 14),
-          ),
-        ],
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -899,7 +898,7 @@ class _ChallengeHeroCard extends StatelessWidget {
               fontSize: 28,
               height: 1.15,
               fontWeight: FontWeight.w700,
-              color: colorScheme.onPrimary,
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 12),
@@ -907,7 +906,7 @@ class _ChallengeHeroCard extends StatelessWidget {
             todayLabel,
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: colorScheme.onPrimary.withValues(alpha: 0.88),
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 8),
@@ -916,7 +915,7 @@ class _ChallengeHeroCard extends StatelessWidget {
                 ? l10n.challengeHeroDoneDetail
                 : l10n.challengeHeroPendingDetail,
             style: TextStyle(
-              color: colorScheme.onPrimary.withValues(alpha: 0.8),
+              color: colorScheme.onSurfaceVariant,
               height: 1.45,
             ),
           ),
@@ -926,8 +925,8 @@ class _ChallengeHeroCard extends StatelessWidget {
             child: FilledButton(
               onPressed: onOpenMyPace,
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFF8F4E8),
-                foregroundColor: const Color(0xFF285B3F),
+                backgroundColor: colorScheme.surfaceContainerLow,
+                foregroundColor: colorScheme.primary,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
                 textStyle: const TextStyle(
@@ -936,7 +935,10 @@ class _ChallengeHeroCard extends StatelessWidget {
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
+                  side: BorderSide(color: colorScheme.outlineVariant),
                 ),
+                elevation: 0,
+                shadowColor: Colors.transparent,
               ),
               child: Text(
                 isTodayCleared

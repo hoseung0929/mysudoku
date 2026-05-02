@@ -253,6 +253,45 @@ void main() {
       expect(summary['average_wrong'], 0.5);
     });
 
+    test('filterRecentToDisplayedPeriod keeps all rows when period is off', () {
+      final recent = [
+        {'clear_date': '2025-01-01', 'level_name': '초급'},
+        {'clear_date': '2025-06-15', 'level_name': '초급'},
+      ];
+      final out = service.filterRecentToDisplayedPeriod(
+        recent: recent,
+        selectedPeriodDays: 0,
+      );
+      expect(out.length, 2);
+    });
+
+    test('filterRecentToDisplayedPeriod trims to last N calendar days', () {
+      final today = DateTime.now();
+      String fmt(DateTime date) =>
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+      final recent = [
+        {
+          'clear_date': fmt(today.subtract(const Duration(days: 10))),
+          'level_name': '초급',
+        },
+        {
+          'clear_date': fmt(today.subtract(const Duration(days: 2))),
+          'level_name': '초급',
+        },
+        {'clear_date': fmt(today), 'level_name': '초급'},
+      ];
+
+      final out = service.filterRecentToDisplayedPeriod(
+        recent: recent,
+        selectedPeriodDays: 3,
+      );
+
+      expect(out.length, 2);
+      expect(out.every((r) => r['clear_date'] != recent.first['clear_date']),
+          isTrue);
+    });
+
     test(
         'recommends the level with the highest average mistakes in last 7 days',
         () {

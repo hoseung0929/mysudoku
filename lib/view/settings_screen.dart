@@ -486,10 +486,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFFFDFBF6),
-            Color(0xFFF7F4E8),
-          ],
+            colors: [
+            Color(0xFFFAFAF8),
+            Color(0xFFF5F5F1),
+            ],
         ),
       ),
       child: Scaffold(

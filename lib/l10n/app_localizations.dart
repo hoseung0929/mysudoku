@@ -1070,6 +1070,18 @@ abstract class AppLocalizations {
   /// **'Active days'**
   String get recordsTrendActiveDays;
 
+  /// No description provided for @recordsTrendWindowAvgTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg. time (same window)'**
+  String get recordsTrendWindowAvgTime;
+
+  /// No description provided for @recordsTrendWindowAvgWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg. mistakes (same window)'**
+  String get recordsTrendWindowAvgWrong;
+
   /// No description provided for @recordsHeroBadgeFlow.
   ///
   /// In en, this message translates to:
@@ -1085,7 +1097,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordsHeroSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'The curve above is the same week, softened for a quick read. Use the card below for exact clears per day plus the smoothed trend line.'**
+  /// **'The curve above is the same week, softened for a quick read. Use the card below for exact clears per day.'**
   String get recordsHeroSubtitle;
 
   /// No description provided for @recordsInsightThisWeekEyebrow.
@@ -1109,7 +1121,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordsTrendSectionSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Daily clears with a smoothed trend (up to ±2 days on each side).'**
+  /// **'Day-by-day clears for the last seven days.'**
   String get recordsTrendSectionSubtitle;
 
   /// No description provided for @recordsTrendLegendDailyClears.
@@ -1117,18 +1129,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Daily clears'**
   String get recordsTrendLegendDailyClears;
-
-  /// No description provided for @recordsTrendLegendMovingAverage.
-  ///
-  /// In en, this message translates to:
-  /// **'Moving average'**
-  String get recordsTrendLegendMovingAverage;
-
-  /// No description provided for @recordsTrendMovingAvgFootnote.
-  ///
-  /// In en, this message translates to:
-  /// **'Each point averages up to five days (two before and after that day).'**
-  String get recordsTrendMovingAvgFootnote;
 
   /// No description provided for @recordsTrendTodayLabel.
   ///
@@ -1183,6 +1183,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No stats for this filter.'**
   String get recordsByLevelEmpty;
+
+  /// No description provided for @recordsByLevelSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'See which levels are starting to feel more comfortable.'**
+  String get recordsByLevelSectionSubtitle;
+
+  /// No description provided for @recordsLevelInfographicClearRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear rate'**
+  String get recordsLevelInfographicClearRate;
+
+  /// No description provided for @recordsLevelMiniBest.
+  ///
+  /// In en, this message translates to:
+  /// **'Best'**
+  String get recordsLevelMiniBest;
+
+  /// No description provided for @recordsLevelMiniPerfectRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Perfect'**
+  String get recordsLevelMiniPerfectRate;
+
+  /// No description provided for @recordsLevelMiniAvgWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg wrong'**
+  String get recordsLevelMiniAvgWrong;
+
+  /// No description provided for @recordsStatsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load statistics right now. Please try again shortly.'**
+  String get recordsStatsLoadError;
+
+  /// No description provided for @recordsRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get recordsRetry;
+
+  /// No description provided for @recordsHeroChartEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear a puzzle this week to see your flow sketch here.'**
+  String get recordsHeroChartEmptyHint;
+
+  /// No description provided for @recordsHeroSubtitleNoChart.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the card below for this week’s daily clears.'**
+  String get recordsHeroSubtitleNoChart;
 
   /// No description provided for @recordsBestByLevelTitle.
   ///

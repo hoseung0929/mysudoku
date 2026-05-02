@@ -19,6 +19,10 @@ class RecordsStatisticsService {
 
   static const List<String> levelOrder = ['초급', '중급', '고급', '전문가', '마스터'];
 
+  /// [buildDailyTrend]가 항상 최근 7일 버킷을 채우려면, 기간 필터가 짧아도
+  /// 최소 이만큼(오늘 포함 7일 → 오늘 기준 6일 전)까지 클리어를 불러와야 한다.
+  static const int _kTrendPastDaysInclusive = 6;
+
   final DatabaseHelper _databaseHelper;
 
   Future<RecordsStatisticsData> load({
@@ -27,20 +31,53 @@ class RecordsStatisticsService {
     final overall = await _databaseHelper.getOverallStatistics();
     final levels = await _databaseHelper.getAllLevelStatistics();
 
-    final recent = selectedPeriodDays == 0
-        ? await _databaseHelper.getRecentClearRecords()
-        : await _databaseHelper.getClearRecordsByDateRange(
-            startDate: _formatDate(
-              DateTime.now().subtract(Duration(days: selectedPeriodDays - 1)),
-            ),
-            endDate: _formatDate(DateTime.now()),
-          );
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    final List<Map<String, dynamic>> recent;
+    if (selectedPeriodDays == 0) {
+      recent = await _databaseHelper.getRecentClearRecords();
+    } else {
+      final periodFirstDay =
+          today.subtract(Duration(days: selectedPeriodDays - 1));
+      final trendFirstDay =
+          today.subtract(const Duration(days: _kTrendPastDaysInclusive));
+      final queryFirstDay = periodFirstDay.isBefore(trendFirstDay)
+          ? periodFirstDay
+          : trendFirstDay;
+      recent = await _databaseHelper.getClearRecordsByDateRange(
+        startDate: _formatDate(queryFirstDay),
+        endDate: _formatDate(now),
+      );
+    }
 
     return RecordsStatisticsData(
       overall: overall,
       levels: levels,
       recent: recent,
     );
+  }
+
+  /// 상단 카드·레벨 통계 등 **표시용 기간**이 `selectedPeriodDays`일 때만 자른 목록.
+  /// [load]로 받은 원본 [recent]를 넣고, 7일 추세는 원본으로 [buildDailyTrend]에 넘긴다.
+  List<Map<String, dynamic>> filterRecentToDisplayedPeriod({
+    required List<Map<String, dynamic>> recent,
+    required int selectedPeriodDays,
+  }) {
+    if (selectedPeriodDays <= 0) {
+      return List<Map<String, dynamic>>.from(recent);
+    }
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final periodFirstDay =
+        today.subtract(Duration(days: selectedPeriodDays - 1));
+    final cutoff = _formatDate(periodFirstDay);
+    return recent
+        .where((record) {
+          final d = record['clear_date']?.toString();
+          return d != null && d.compareTo(cutoff) >= 0;
+        })
+        .toList(growable: false);
   }
 
   String formatSeconds(num value) {

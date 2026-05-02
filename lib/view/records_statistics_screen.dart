@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:mysudoku/constants/records_level_filter.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
 import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
+import 'package:mysudoku/model/sudoku_level.dart';
 import 'package:mysudoku/services/game_record_notifier.dart';
 import 'package:mysudoku/services/profile_state_service.dart';
 import 'package:mysudoku/services/records_statistics_service.dart';
@@ -25,12 +26,34 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   /// 프로필 헤더와 스크롤 본문 사이 여백.
   static const double _kBelowProfileHeaderGap = 18;
 
-  static const double _kTrendChartHeight = 156;
+  /// 하단 플로팅 탭바 여유 — [LevelSelectionMain._kHomeScrollBottomPad] 와 동일.
+  static const double _kScrollBottomPad = 100;
 
-  /// 막대가 차지할 수 있는 본체 높이(수치 레이블·축 레이블 제외).
-  static const double _kTrendBarMaxFill = 86;
+  /// 막대 채움(0 클리어일 때도 최소 높이 유지).
+  static const double _kTrendBarMaxFill = 85;
 
   static const double _kTrendBarMinFill = 8;
+
+  /// 일별 막대만 그리는 영역 높이 (축 텍스트와 겹치지 않도록 분리).
+  static const double _kTrendBarTrackHeight =
+      _kTrendBarMaxFill + _kTrendBarMinFill;
+
+  static const double _kTrendValueLabelHeight = 20;
+  static const double _kTrendValueRowGap = 5;
+  static const double _kTrendBarToAxisGap = 8;
+  static const double _kTrendAxisPrimaryHeight = 15;
+  static const double _kTrendAxisGap = 2;
+  static const double _kTrendAxisSecondaryHeight = 14;
+
+  /// 값 라벨 행·막대 트랙·요일·날짜 행을 세로로 나눈 최소 높이 합.
+  static const double _kTrendChartBaseHeight =
+      _kTrendValueLabelHeight +
+      _kTrendValueRowGap +
+      _kTrendBarTrackHeight +
+      _kTrendBarToAxisGap +
+      _kTrendAxisPrimaryHeight +
+      _kTrendAxisGap +
+      _kTrendAxisSecondaryHeight;
 
   final RecordsStatisticsService _statisticsService =
       RecordsStatisticsService();
@@ -160,7 +183,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     } catch (_) {
       if (mounted && requestId == _loadRequestId) {
         setState(() {
-          _loadErrorMessage = _statsLoadErrorMessage();
+          _loadErrorMessage = AppLocalizations.of(context)!.recordsStatsLoadError;
         });
       }
     } finally {
@@ -172,11 +195,18 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     }
   }
 
+  List<Map<String, dynamic>> get _recentForDisplayedStats {
+    return _statisticsService.filterRecentToDisplayedPeriod(
+      recent: _recent,
+      selectedPeriodDays: _selectedPeriodDays,
+    );
+  }
+
   Map<String, dynamic> get _displayOverall {
     return _statisticsService.buildOverallStats(
       overall: _overall,
       levels: _levels,
-      recent: _recent,
+      recent: _recentForDisplayedStats,
       selectedLevel: _selectedLevel,
     );
   }
@@ -184,7 +214,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   List<Map<String, dynamic>> get _displayLevelStats {
     return _statisticsService.buildLevelStats(
       levels: _levels,
-      recent: _recent,
+      recent: _recentForDisplayedStats,
       selectedLevel: _selectedLevel,
     );
   }
@@ -195,6 +225,94 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     }
     final parsed = DateTime.parse(day['date'] as String);
     return DateFormat.E(Localizations.localeOf(context).toString()).format(parsed);
+  }
+
+  /// 큰 글씨 접근성에서도 차트 막대 영역이 줄바꿈에 무너지지 않도록 높이만 소폭 확장.
+  double _trendChartHeightFor(TextScaler textScaler) {
+    final factor =
+        (textScaler.scale(13) / 13.0).clamp(1.0, 1.22);
+    return (_kTrendChartBaseHeight * factor).roundToDouble();
+  }
+
+  String _trendA11ySummary(
+    AppLocalizations l10n,
+    List<Map<String, dynamic>> trend,
+  ) {
+    if (trend.isEmpty) return l10n.recordsTrendEmpty;
+    final maxClears = trend
+        .map((day) => day['clears'] as int)
+        .fold<int>(0, (max, value) => value > max ? value : max);
+    final today = trend.where((day) => day['is_today'] == true).toList();
+    final todayClears = today.isEmpty ? 0 : today.first['clears'] as int;
+    final dayBreakdown = trend.map((day) {
+      final primary = _trendDayPrimaryLabel(l10n, day);
+      final secondary = day['label'] as String;
+      final clears = day['clears'] as int;
+      return '$primary $secondary, ${l10n.recordsTrendClears} $clears';
+    }).join('. ');
+    return '${l10n.recordsTrendTitle}. ${l10n.recordsTrendLegendDailyClears}. '
+        '${l10n.recordsTrendTodayLabel} $todayClears. 최고 $maxClears. $dayBreakdown';
+  }
+
+  Widget _buildInsightCards(
+    AppLocalizations l10n,
+    Map<String, dynamic> trendSummaryUi,
+  ) {
+    final textScale = MediaQuery.textScalerOf(context).scale(14) / 14.0;
+    final useStackedLayout = textScale > 1.08;
+    if (useStackedLayout) {
+      return Column(
+        children: [
+          _recordsInsightCard(
+            eyebrow: l10n.recordsInsightThisWeekEyebrow,
+            value: l10n.recordsInsightClearsValue(
+              trendSummaryUi['total_clears'] as int,
+            ),
+            icon: Icons.pets_outlined,
+            tone: const Color(0xFFE7F0E8),
+            accent: const Color(0xFF457B9D),
+          ),
+          const SizedBox(height: 12),
+          _recordsInsightCard(
+            eyebrow: l10n.recordsInsightAvgPaceEyebrow,
+            value: _statisticsService.formatSeconds(
+              _displayOverall['total_average_time'] as double,
+            ),
+            icon: Icons.cloud_outlined,
+            tone: const Color(0xFFF2E9DA),
+            accent: const Color(0xFFF4A261),
+          ),
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(
+          child: _recordsInsightCard(
+            eyebrow: l10n.recordsInsightThisWeekEyebrow,
+            value: l10n.recordsInsightClearsValue(
+              trendSummaryUi['total_clears'] as int,
+            ),
+            icon: Icons.pets_outlined,
+            tone: const Color(0xFFE7F0E8),
+            accent: const Color(0xFF457B9D),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _recordsInsightCard(
+            eyebrow: l10n.recordsInsightAvgPaceEyebrow,
+            value: _statisticsService.formatSeconds(
+              _displayOverall['total_average_time'] as double,
+            ),
+            icon: Icons.cloud_outlined,
+            tone: const Color(0xFFF2E9DA),
+            accent: const Color(0xFFF4A261),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -209,8 +327,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFFDFBF6),
-              Color(0xFFF7F4E8),
+              Color(0xFFFAFAF8),
+              Color(0xFFF5F5F1),
             ],
           ),
         ),
@@ -236,8 +354,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFFFDFBF6),
-            Color(0xFFF7F4E8),
+            Color(0xFFFAFAF8),
+            Color(0xFFF5F5F1),
           ],
         ),
       ),
@@ -258,42 +376,16 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                   20,
                   topInset + _kProfileHeaderExtent + _kBelowProfileHeaderGap,
                   20,
-                  112 + bottomInset,
+                  _kScrollBottomPad + bottomInset,
                 ),
                 children: [
                   if (_loadErrorMessage != null) ...[
-                    _buildLoadErrorBanner(_loadErrorMessage!),
+                    _buildLoadErrorBanner(l10n, _loadErrorMessage!),
                     const SizedBox(height: 12),
                   ],
                   _RecordsHeroCard(trend: dailyTrend),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _recordsInsightCard(
-                          eyebrow: l10n.recordsInsightThisWeekEyebrow,
-                          value: l10n.recordsInsightClearsValue(
-                            trendSummaryUi['total_clears'] as int,
-                          ),
-                          icon: Icons.pets_outlined,
-                          tone: const Color(0xFFE7F0E8),
-                          accent: const Color(0xFF457B9D),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _recordsInsightCard(
-                          eyebrow: l10n.recordsInsightAvgPaceEyebrow,
-                          value: _statisticsService.formatSeconds(
-                            _displayOverall['total_average_time'] as double,
-                          ),
-                          icon: Icons.cloud_outlined,
-                          tone: const Color(0xFFF2E9DA),
-                          accent: const Color(0xFFF4A261),
-                        ),
-                      ),
-                    ],
-                  ),
+                  _buildInsightCards(l10n, trendSummaryUi),
                   const SizedBox(height: 20),
                   _buildTrendSection(
                     l10n,
@@ -314,6 +406,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 profileName: _profileName,
                 guestTitle: l10n.homeGuestTitle,
                 profileImagePath: _profileImagePath,
+                sectionLabel: l10n.navRecords,
                 onTapSettings: _openSettings,
                 onTapEditProfile: _openProfileEditor,
               ),
@@ -351,118 +444,25 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              Localizations.localeOf(context).languageCode == 'ko'
-                  ? '난이도별로 어느 구간에서 가장 편안해졌는지 볼 수 있어요.'
-                  : 'See which levels are starting to feel more comfortable.',
+              l10n.recordsByLevelSectionSubtitle,
               style: TextStyle(
                 color: colorScheme.onSurfaceVariant,
                 fontSize: 13,
                 height: 1.4,
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             if (stats.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(l10n.recordsByLevelEmpty),
               ),
-            ...stats.map((stat) {
-              final levelNameKey = stat['level_name'] as String;
-              final levelName = levelNameKey.localizedSudokuLevelName(l10n);
-              final cleared = stat['cleared_count'] as int;
-              final total = stat['total_count'] as int;
-              final clearRate = stat['clear_rate'] as double;
-              final perfectRate = stat['perfect_rate'] as double;
-              final avgWrong = stat['average_wrong'] as double;
-              final bestTimeRaw = stat['best_time'] as int;
-              final avgTime = _statisticsService
-                  .formatSeconds(stat['average_time'] as double);
-              final bestTime = bestTimeRaw > 0
-                  ? _statisticsService.formatSeconds(bestTimeRaw)
-                  : '--:--:--';
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          levelName,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          '$cleared/$total · ${clearRate.toStringAsFixed(1)}%',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        minHeight: 8,
-                        value: (clearRate / 100).clamp(0.0, 1.0),
-                        backgroundColor: colorScheme.surfaceContainerHighest,
-                        valueColor: AlwaysStoppedAnimation(colorScheme.primary),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.recordsAvgTimeDetail(avgTime),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    _buildRateComparisonInfographic(
-                      clearRate: clearRate,
-                      perfectRate: perfectRate,
-                    ),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _miniLevelMetric(
-                          icon: Icons.workspace_premium_outlined,
-                          label: Localizations.localeOf(context).languageCode ==
-                                  'ko'
-                              ? '베스트'
-                              : 'Best',
-                          value: bestTime,
-                        ),
-                        _miniLevelMetric(
-                          icon: Icons.gps_fixed,
-                          label: Localizations.localeOf(context).languageCode ==
-                                  'ko'
-                              ? '퍼펙트율'
-                              : 'Perfect',
-                          value: '${perfectRate.toStringAsFixed(1)}%',
-                        ),
-                        _miniLevelMetric(
-                          icon: Icons.error_outline_rounded,
-                          label: Localizations.localeOf(context).languageCode ==
-                                  'ko'
-                              ? '평균 오답'
-                              : 'Avg wrong',
-                          value: avgWrong.toStringAsFixed(1),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            }),
+            ...stats.map(
+              (stat) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildLevelStatCard(l10n, stat),
+              ),
+            ),
           ],
         ),
       ),
@@ -515,134 +515,228 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
             else ...[
               Row(
                 children: [
-                  _metricChip(l10n.recordsTrendClears, '$totalClears'),
-                  const SizedBox(width: 12),
-                  _metricChip(
-                    l10n.recordsTrendActiveDays,
-                    '${summary['active_days']}',
+                  Expanded(
+                    child: _levelMetricTile(
+                      label: l10n.recordsTrendClears,
+                      value: '$totalClears',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _levelMetricTile(
+                      label: l10n.recordsTrendActiveDays,
+                      value: '${summary['active_days']}',
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
-              Wrap(
-                spacing: 12,
-                runSpacing: 6,
+              Row(
                 children: [
-                  _trendLegendItem(
-                    color: colorScheme.primary,
-                    isLine: false,
-                    label: l10n.recordsTrendLegendDailyClears,
+                  Expanded(
+                    child: _levelMetricTile(
+                      label: l10n.recordsTrendWindowAvgTime,
+                      value: _statisticsService.formatSeconds(
+                        summary['average_time'] as double,
+                      ),
+                    ),
                   ),
-                  _trendLegendItem(
-                    color: colorScheme.tertiary.withValues(alpha: 0.9),
-                    isLine: true,
-                    label: l10n.recordsTrendLegendMovingAverage,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _levelMetricTile(
+                      label: l10n.recordsTrendWindowAvgWrong,
+                      value: (summary['average_wrong'] as double)
+                          .toStringAsFixed(1),
+                    ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                l10n.recordsTrendMovingAvgFootnote,
-                style: TextStyle(
-                  fontSize: 11.5,
-                  height: 1.35,
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.92),
-                ),
               ),
               const SizedBox(height: 16),
-              Semantics(
-                label: '${l10n.recordsTrendTitle}. ${l10n.recordsTrendLegendDailyClears}, ${l10n.recordsTrendLegendMovingAverage}',
-                child: SizedBox(
-                  height: _kTrendChartHeight,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        top: 26,
-                        bottom: 38,
-                        left: 0,
-                        right: 0,
-                        child: IgnorePointer(
-                          child: CustomPaint(
-                            painter: _TrendMovingAveragePainter(
-                              trend: trend,
-                              maxClears: maxClears.toDouble(),
-                              color: colorScheme.tertiary,
-                            ),
-                          ),
-                        ),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: colorScheme.outlineVariant),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.recordsTrendLegendDailyClears,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.onSurface,
                       ),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: trend.map((day) {
-                          final clears = day['clears'] as int;
-                          final ratio = clears / maxClears;
-                          final isToday = day['is_today'] == true;
-                          return Expanded(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 2),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    '$clears',
-                                    textAlign: TextAlign.center,
-                                    maxLines: 1,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '최근 7일 동안 하루마다 몇 판을 풀었는지 보여줘요.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        height: 1.4,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Semantics(
+                      container: true,
+                      label: _trendA11ySummary(l10n, trend),
+                      child: SizedBox(
+                        height: _trendChartHeightFor(
+                          MediaQuery.textScalerOf(context),
+                        ),
+                        width: double.infinity,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            SizedBox(
+                              height: _kTrendValueLabelHeight,
+                              child: Row(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.center,
+                                children: trend.map((day) {
+                                  final clears = day['clears'] as int;
+                                  return Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 2,
+                                      ),
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          '$clears',
+                                          textAlign: TextAlign.center,
+                                          maxLines: 1,
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            height: 1.1,
+                                            fontWeight: FontWeight.w600,
+                                            color:
+                                                colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Container(
-                                    height: _kTrendBarMaxFill * ratio +
-                                        _kTrendBarMinFill,
-                                    decoration: BoxDecoration(
-                                      color: clears == 0
-                                          ? colorScheme.surfaceContainerHighest
-                                          : colorScheme.primary,
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    _trendDayPrimaryLabel(l10n, day),
-                                    textAlign: TextAlign.center,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: isToday
-                                          ? FontWeight.w700
-                                          : FontWeight.w600,
-                                      color: isToday
-                                          ? colorScheme.primary
-                                          : colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    day['label'] as String,
-                                    textAlign: TextAlign.center,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      height: 1.15,
-                                      color: colorScheme.onSurfaceVariant
-                                          .withValues(alpha: 0.76),
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
+                                  );
+                                }).toList(),
                               ),
                             ),
-                          );
-                        }).toList(),
+                            const SizedBox(height: _kTrendValueRowGap),
+                            SizedBox(
+                              height: _kTrendBarTrackHeight,
+                              child: Align(
+                                alignment: Alignment.bottomCenter,
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: trend.map((day) {
+                                    final clears = day['clears'] as int;
+                                    final ratio = clears / maxClears;
+                                    final isToday = day['is_today'] == true;
+                                    return Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 2,
+                                        ),
+                                        child: Container(
+                                          height: _kTrendBarMaxFill * ratio +
+                                              _kTrendBarMinFill,
+                                          decoration: BoxDecoration(
+                                            color: clears == 0
+                                                ? colorScheme
+                                                    .surfaceContainerHighest
+                                                : isToday
+                                                ? colorScheme.primary
+                                                : colorScheme.primary
+                                                    .withValues(alpha: 0.72),
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: _kTrendBarToAxisGap),
+                            SizedBox(
+                              height: _kTrendAxisPrimaryHeight,
+                              child: Row(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.center,
+                                children: trend.map((day) {
+                                  final isToday = day['is_today'] == true;
+                                  return Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 2,
+                                      ),
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          _trendDayPrimaryLabel(l10n, day),
+                                          textAlign: TextAlign.center,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: isToday
+                                                ? FontWeight.w700
+                                                : FontWeight.w600,
+                                            color: isToday
+                                                ? colorScheme.primary
+                                                : colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                            const SizedBox(height: _kTrendAxisGap),
+                            SizedBox(
+                              height: _kTrendAxisSecondaryHeight,
+                              child: Row(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.center,
+                                children: trend.map((day) {
+                                  return Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 2,
+                                      ),
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          day['label'] as String,
+                                          textAlign: TextAlign.center,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            height: 1.15,
+                                            color: colorScheme
+                                                .onSurfaceVariant
+                                                .withValues(alpha: 0.76),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -652,185 +746,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     );
   }
 
-  Widget _metricChip(String label, String value) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRateComparisonInfographic({
-    required double clearRate,
-    required double perfectRate,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Column(
-      children: [
-        _rateBar(
-          label: Localizations.localeOf(context).languageCode == 'ko'
-              ? '완료율'
-              : 'Clear rate',
-          value: clearRate,
-          color: colorScheme.primary,
-        ),
-        const SizedBox(height: 6),
-        _rateBar(
-          label: Localizations.localeOf(context).languageCode == 'ko'
-              ? '퍼펙트율'
-              : 'Perfect rate',
-          value: perfectRate,
-          color: const Color(0xFFF4A261),
-        ),
-      ],
-    );
-  }
-
-  Widget _rateBar({
-    required String label,
-    required double value,
-    required Color color,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final ratio = (value / 100).clamp(0.0, 1.0);
-    return Row(
-      children: [
-        SizedBox(
-          width: 68,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              minHeight: 6,
-              value: ratio,
-              backgroundColor: colorScheme.surfaceContainerHighest,
-              valueColor: AlwaysStoppedAnimation<Color>(color),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: 44,
-          child: Text(
-            '${value.toStringAsFixed(1)}%',
-            textAlign: TextAlign.right,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _miniLevelMetric({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: colorScheme.onSurfaceVariant),
-          const SizedBox(width: 6),
-          Text(
-            '$label $value',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _trendLegendItem({
-    required Color color,
-    required bool isLine,
-    required String label,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 16,
-          height: isLine ? 2.5 : 10,
-          decoration: BoxDecoration(
-            color: isLine ? color : color.withValues(alpha: 0.85),
-            borderRadius: BorderRadius.circular(999),
-          ),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _statsLoadErrorMessage() {
-    return Localizations.localeOf(context).languageCode == 'ko'
-        ? '통계 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
-        : 'Unable to load statistics right now. Please try again shortly.';
-  }
-
-  String _retryLabel() {
-    return Localizations.localeOf(context).languageCode == 'ko'
-        ? '다시 시도'
-        : 'Try again';
-  }
-
-  Widget _buildLoadErrorBanner(String message) {
+  Widget _buildLoadErrorBanner(AppLocalizations l10n, String message) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
@@ -857,7 +773,219 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           ),
           TextButton(
             onPressed: _loadStats,
-            child: Text(_retryLabel()),
+            child: Text(l10n.recordsRetry),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _levelAccent(String levelNameKey) {
+    switch (levelNameKey) {
+      case '초급':
+        return const Color(0xFF2A9D8F);
+      case '중급':
+        return const Color(0xFF457B9D);
+      case '고급':
+        return const Color(0xFFF4A261);
+      case '전문가':
+        return const Color(0xFFE76F51);
+      case '마스터':
+        return const Color(0xFF7A5C3E);
+      default:
+        return const Color(0xFF285B3F);
+    }
+  }
+
+  String _levelDescription(String levelNameKey, AppLocalizations l10n) {
+    for (final level in SudokuLevel.levels) {
+      if (level.name == levelNameKey) {
+        return level.localizedDescription(l10n);
+      }
+    }
+    return '';
+  }
+
+  Widget _buildLevelStatCard(
+    AppLocalizations l10n,
+    Map<String, dynamic> stat,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final levelNameKey = stat['level_name'] as String;
+    final levelName = levelNameKey.localizedSudokuLevelName(l10n);
+    final levelAccent = _levelAccent(levelNameKey);
+    final cleared = stat['cleared_count'] as int;
+    final total = stat['total_count'] as int;
+    final clearRate = stat['clear_rate'] as double;
+    final perfectRate = stat['perfect_rate'] as double;
+    final avgTime = _statisticsService
+        .formatSeconds(stat['average_time'] as double);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                margin: const EdgeInsets.only(top: 5),
+                decoration: BoxDecoration(
+                  color: levelAccent,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      levelName,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _levelDescription(levelNameKey, l10n),
+                      style: TextStyle(
+                        fontSize: 12,
+                        height: 1.35,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: levelAccent.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '$cleared/$total',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.recordsTrendClears,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Text(
+                l10n.recordsLevelInfographicClearRate,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${clearRate.toStringAsFixed(1)}%',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: levelAccent,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              minHeight: 8,
+              value: (clearRate / 100).clamp(0.0, 1.0),
+              backgroundColor: colorScheme.surfaceContainerHighest,
+              valueColor: AlwaysStoppedAnimation<Color>(levelAccent),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _levelMetricTile(
+                  label: l10n.recordsMetricAvgTime,
+                  value: avgTime,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _levelMetricTile(
+                  label: l10n.recordsMetricPerfectRate,
+                  value: '${perfectRate.toStringAsFixed(1)}%',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _levelMetricTile({
+    required String label,
+    required String value,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: colorScheme.onSurface,
+            ),
           ),
         ],
       ),
@@ -871,54 +999,53 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     required Color tone,
     required Color accent,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: tone,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFE4DED3)),
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Positioned(
-            right: 4,
-            top: 2,
-            child: Icon(
-              icon,
-              size: 34,
-              color: accent.withValues(alpha: 0.18),
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
             children: [
               Container(
                 width: 28,
-                height: 4,
+                height: 28,
                 decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  size: 16,
                   color: accent,
-                  borderRadius: BorderRadius.circular(999),
                 ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                eyebrow,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF66776C),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF21382A),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  eyebrow,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF21382A),
+            ),
           ),
         ],
       ),
@@ -935,83 +1062,93 @@ class _RecordsHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final hasClears = trend.any((d) => (d['clears'] as int) > 0);
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF285B3F),
-            Color(0xFF5D7A69),
-          ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF285B3F).withValues(alpha: 0.18),
-            blurRadius: 24,
-            offset: const Offset(0, 14),
-          ),
-        ],
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Positioned.fill(
-            child: IgnorePointer(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 36),
-                child: CustomPaint(
-                  painter: _RecordsTrendBackdropPainter(trend: trend),
-                ),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 6,
+            ),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              l10n.recordsHeroBadgeFlow,
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  l10n.recordsHeroBadgeFlow,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                l10n.recordsHeroTitle,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  height: 1.15,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 320),
-                child: Text(
-                  l10n.recordsHeroSubtitle,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.82),
-                    fontSize: 15,
-                    height: 1.5,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 72),
-            ],
+          const SizedBox(height: 18),
+          Text(
+            l10n.recordsHeroTitle,
+            style: TextStyle(
+              color: colorScheme.onSurface,
+              fontSize: 28,
+              height: 1.15,
+              fontWeight: FontWeight.w700,
+            ),
           ),
+          const SizedBox(height: 16),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 320),
+            child: Text(
+              hasClears
+                  ? l10n.recordsHeroSubtitle
+                  : l10n.recordsHeroSubtitleNoChart,
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+          ),
+          if (hasClears) ...[
+            const SizedBox(height: 18),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                height: 110,
+                width: double.infinity,
+                color: colorScheme.surfaceContainerLow,
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: _RecordsTrendBackdropPainter(
+                      trend: trend,
+                      strokeColor: colorScheme.primary.withValues(alpha: 0.46),
+                      fillTopColor: colorScheme.primary.withValues(alpha: 0.12),
+                      fillBottomColor: colorScheme.primary.withValues(alpha: 0.02),
+                      pointColor: colorScheme.primary.withValues(alpha: 0.36),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ] else ...[
+            const SizedBox(height: 16),
+            Text(
+              l10n.recordsHeroChartEmptyHint,
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 13,
+                height: 1.45,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1019,9 +1156,19 @@ class _RecordsHeroCard extends StatelessWidget {
 }
 
 class _RecordsTrendBackdropPainter extends CustomPainter {
-  const _RecordsTrendBackdropPainter({required this.trend});
+  const _RecordsTrendBackdropPainter({
+    required this.trend,
+    required this.strokeColor,
+    required this.fillTopColor,
+    required this.fillBottomColor,
+    required this.pointColor,
+  });
 
   final List<Map<String, dynamic>> trend;
+  final Color strokeColor;
+  final Color fillTopColor;
+  final Color fillBottomColor;
+  final Color pointColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1065,12 +1212,12 @@ class _RecordsTrendBackdropPainter extends CustomPainter {
     areaPath.close();
 
     final areaPaint = Paint()
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          Color(0x42FFFFFF),
-          Color(0x08FFFFFF),
+          fillTopColor,
+          fillBottomColor,
         ],
       ).createShader(Offset.zero & size);
     canvas.drawPath(areaPath, areaPaint);
@@ -1091,7 +1238,7 @@ class _RecordsTrendBackdropPainter extends CustomPainter {
     }
 
     final linePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.34)
+      ..color = strokeColor
       ..strokeWidth = 3
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
@@ -1099,7 +1246,7 @@ class _RecordsTrendBackdropPainter extends CustomPainter {
     canvas.drawPath(linePath, linePaint);
 
     final leafPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.58)
+      ..color = pointColor
       ..style = PaintingStyle.fill;
     for (final point in points) {
       canvas.save();
@@ -1116,76 +1263,5 @@ class _RecordsTrendBackdropPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _RecordsTrendBackdropPainter oldDelegate) {
     return oldDelegate.trend != trend;
-  }
-}
-
-class _TrendMovingAveragePainter extends CustomPainter {
-  const _TrendMovingAveragePainter({
-    required this.trend,
-    required this.maxClears,
-    required this.color,
-  });
-
-  final List<Map<String, dynamic>> trend;
-  final double maxClears;
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (trend.length < 2 || maxClears <= 0) {
-      return;
-    }
-    final values =
-        trend.map((day) => (day['clears'] as int).toDouble()).toList(growable: false);
-    final movingAvg = <double>[];
-    for (var i = 0; i < values.length; i++) {
-      final start = i - 2 < 0 ? 0 : i - 2;
-      final end = i + 2 >= values.length ? values.length - 1 : i + 2;
-      double sum = 0;
-      for (var j = start; j <= end; j++) {
-        sum += values[j];
-      }
-      movingAvg.add(sum / (end - start + 1));
-    }
-
-    final horizontalStep =
-        movingAvg.length == 1 ? size.width : size.width / (movingAvg.length - 1);
-    final points = <Offset>[];
-    for (var i = 0; i < movingAvg.length; i++) {
-      final x = horizontalStep * i;
-      final normalized = (movingAvg[i] / maxClears).clamp(0.0, 1.0);
-      final y = size.height - (normalized * size.height);
-      points.add(Offset(x, y));
-    }
-
-    final linePath = Path()..moveTo(points.first.dx, points.first.dy);
-    for (var i = 1; i < points.length; i++) {
-      final prev = points[i - 1];
-      final curr = points[i];
-      final controlX = (prev.dx + curr.dx) / 2;
-      linePath.cubicTo(
-        controlX,
-        prev.dy,
-        controlX,
-        curr.dy,
-        curr.dx,
-        curr.dy,
-      );
-    }
-
-    final linePaint = Paint()
-      ..color = color.withValues(alpha: 0.9)
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..style = PaintingStyle.stroke;
-    canvas.drawPath(linePath, linePaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _TrendMovingAveragePainter oldDelegate) {
-    return oldDelegate.trend != trend ||
-        oldDelegate.maxClears != maxClears ||
-        oldDelegate.color != color;
   }
 }

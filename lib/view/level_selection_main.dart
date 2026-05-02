@@ -39,9 +39,6 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
   /// `extendBody` + 플로팅 하단 탭 높이(68)·SafeArea(20)·그림자 대략값.
   static const double _kHomeScrollBottomPad = 100;
 
-  static const Color _cpForest = Color(0xFF285B3F);
-  static const Color _cpForestSoft = Color(0xFF5D7A69);
-
   final DatabaseManager _databaseManager = DatabaseManager();
   final LevelProgressService _levelProgressService = LevelProgressService();
   final HomeDashboardService _homeDashboardService = HomeDashboardService();
@@ -498,8 +495,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFFDFBF6),
-              Color(0xFFF7F4E8),
+              Color(0xFFFAFAF8),
+              Color(0xFFF5F5F1),
             ],
           ),
         ),
@@ -657,7 +654,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
                   child: Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFDFBF6),
+                      color: const Color(0xFFFAFAF8),
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
@@ -795,6 +792,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
 
   Widget _buildTodaySpotlightCard(SudokuGame game) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
     final challengeDone = _challengeProgress?.isTodayChallengeCleared ?? false;
     final myPaceLabel = _myPacePreviewLabel(l10n);
     return Padding(
@@ -803,110 +801,95 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            _cpForest,
-            _cpForestSoft,
-          ],
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: colorScheme.outlineVariant),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: _cpForest.withValues(alpha: 0.18),
-            blurRadius: 24,
-            offset: const Offset(0, 14),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            margin: const EdgeInsets.only(left: 4, top: 2),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              Localizations.localeOf(context).languageCode == 'ko'
-                  ? 'Today'
-                  : 'Today',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(left: 4, top: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                'Today',
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            Localizations.localeOf(context).languageCode == 'ko'
-                ? '오늘의 퍼즐 하나에\n부드럽게 몰입해보세요.'
-                : 'Settle into\ntoday\'s one puzzle.',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 30,
-              height: 1.15,
-              fontWeight: FontWeight.w700,
+            const SizedBox(height: 18),
+            Text(
+              Localizations.localeOf(context).languageCode == 'ko'
+                  ? '오늘의 퍼즐 하나에\n조용히 집중해보세요.'
+                  : 'Take a quiet moment\nwith today\'s puzzle.',
+              style: TextStyle(
+                color: colorScheme.onSurface,
+                fontSize: 28,
+                height: 1.15,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            myPaceLabel ??
-                (challengeDone
-                    ? l10n.challengeTodayDoneHint
-                    : l10n.recordsGameNumberTitle(
-                        game.levelName.localizedSudokuLevelName(l10n),
-                        game.gameNumber,
-                      )),
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.82),
-              fontSize: 15,
-              height: 1.45,
+            const SizedBox(height: 10),
+            Text(
+              myPaceLabel ??
+                  (challengeDone
+                      ? l10n.challengeTodayDoneHint
+                      : l10n.recordsGameNumberTitle(
+                          game.levelName.localizedSudokuLevelName(l10n),
+                          game.gameNumber,
+                        )),
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 14,
+                height: 1.45,
+              ),
             ),
-          ),
-          const SizedBox(height: 18),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: FractionallySizedBox(
-              widthFactor: 0.68,
-              child: FilledButton(
-                onPressed: _openMyPaceGame,
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFF8F4E8),
-                  foregroundColor: _cpForest,
-                  minimumSize: const Size.fromHeight(56),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 26,
-                    vertical: 17,
-                  ),
-                  textStyle: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                  ),
-                  elevation: 0,
-                  shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.65),
+            const SizedBox(height: 18),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FractionallySizedBox(
+                widthFactor: 0.68,
+                child: FilledButton(
+                  onPressed: _openMyPaceGame,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFFF3C7A8),
+                    foregroundColor: const Color(0xFF5B3A29),
+                    minimumSize: const Size.fromHeight(54),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 22,
+                      vertical: 15,
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    elevation: 0,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      side: BorderSide(
+                        color: colorScheme.outlineVariant,
+                      ),
                     ),
                   ),
-                ),
-                child: Text(
-                  challengeDone
-                      ? l10n.challengeTodayReviewButton
-                      : l10n.challengeTodayStartButton,
-                  textAlign: TextAlign.center,
+                  child: Text(
+                    challengeDone
+                        ? l10n.challengeTodayReviewButton
+                        : l10n.challengeTodayStartButton,
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }

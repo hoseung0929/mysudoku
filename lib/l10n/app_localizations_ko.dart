@@ -530,6 +530,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsTrendActiveDays => '플레이한 날';
 
   @override
+  String get recordsTrendWindowAvgTime => '평균 시간 (같은 기간)';
+
+  @override
+  String get recordsTrendWindowAvgWrong => '평균 오답 (같은 기간)';
+
+  @override
   String get recordsHeroBadgeFlow => '흐름';
 
   @override
@@ -537,7 +543,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get recordsHeroSubtitle =>
-      '위에는 같은 7일을 부드러운 선으로 표현했어요. 아래 카드에서 날짜별 클리어와 이동 평균선을 더 정확히 볼 수 있어요.';
+      '위에는 같은 7일을 부드럽게 표현했어요. 아래 카드에서 날짜별 클리어 수를 확인할 수 있어요.';
 
   @override
   String get recordsInsightThisWeekEyebrow => '이번 주의 발자국';
@@ -552,17 +558,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get recordsTrendSectionSubtitle =>
-      '날마다 클리어와 이동 평균선(전후 최대 ±2일)을 함께 보는 요약이에요.';
+      '최근 일주일 동안 날짜별 클리어 수를 한눈에 보는 요약이에요.';
 
   @override
   String get recordsTrendLegendDailyClears => '일별 클리어';
-
-  @override
-  String get recordsTrendLegendMovingAverage => '이동 평균';
-
-  @override
-  String get recordsTrendMovingAvgFootnote =>
-      '이동 평균선은 각 날짜 기준 최대 5일(양쪽 2일 포함) 범위의 평균으로 그려져요.';
 
   @override
   String get recordsTrendTodayLabel => '오늘';
@@ -591,6 +590,34 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get recordsByLevelEmpty => '표시할 레벨 통계가 없습니다.';
+
+  @override
+  String get recordsByLevelSectionSubtitle =>
+      '난이도별로 어느 구간에서 가장 편안해졌는지 볼 수 있어요.';
+
+  @override
+  String get recordsLevelInfographicClearRate => '완료율';
+
+  @override
+  String get recordsLevelMiniBest => '베스트';
+
+  @override
+  String get recordsLevelMiniPerfectRate => '퍼펙트율';
+
+  @override
+  String get recordsLevelMiniAvgWrong => '평균 오답';
+
+  @override
+  String get recordsStatsLoadError => '통계 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
+
+  @override
+  String get recordsRetry => '다시 시도';
+
+  @override
+  String get recordsHeroChartEmptyHint => '이번 주에 퍼즐을 클리어하면 흐름 그래프가 여기에 나타나요.';
+
+  @override
+  String get recordsHeroSubtitleNoChart => '아래 카드에서 이번 주 일별 클리어를 확인할 수 있어요.';
 
   @override
   String get recordsBestByLevelTitle => '난이도별 최고 기록';
