@@ -4,21 +4,21 @@ import 'package:google_fonts/google_fonts.dart';
 /// 앱 전체에서 사용할 테마 클래스
 class AppTheme {
   // 색상 정의
-  static const Color backgroundColor = Color(0xFFFAFAF8);
-  static const Color surfaceTint = Color(0xFFF5F5F1);
+  static const Color backgroundColor = Color(0xFFF7F6F0);
+  static const Color surfaceTint = Color(0xFFF1F0E8);
   static const Color cardColor = Color(0xFFFFFFFF);
-  static const Color mintColor = Color(0xFF285B3F);
-  static const Color lightBlueColor = Color(0xFF457B9D);
+  static const Color mintColor = Color(0xFF9DB59D);
+  static const Color lightBlueColor = Color(0xFF7F9B82);
   static const Color yellowColor = Color(0xFFF1E5CD);
   static const Color pinkColor = Color(0xFFF4A261);
-  static const Color hintYellowColor = Color(0xFFE8F1F8);
-  static const Color textColor = Color(0xFF21382A);
-  static const Color lightTextColor = Color(0xFF66776C);
-  static const Color lineColor = Color(0xFFE8E8E3);
+  static const Color hintYellowColor = Color(0xFFDCE8DD);
+  static const Color textColor = Color(0xFF263A2E);
+  static const Color lightTextColor = Color(0xFF7B857D);
+  static const Color lineColor = Color(0xFFE3E1D8);
 
-  /// 홈 히어로 「나만의 속도」 주요 CTA (조금 더 또렷한 세이지 액센트).
-  static const Color homeMyPaceCtaBackground = Color(0xFFBDD5A6);
-  static const Color homeMyPaceCtaForeground = Color(0xFF23361F);
+  /// 홈 히어로 「나만의 속도」 주요 CTA.
+  static const Color homeMyPaceCtaBackground = Color(0xFF7F9B82);
+  static const Color homeMyPaceCtaForeground = textColor;
 
   /// 라이트 테마
   static ThemeData lightTheme() {
@@ -27,17 +27,17 @@ class AppTheme {
       brightness: Brightness.light,
     ).copyWith(
       primary: mintColor,
-      onPrimary: const Color(0xFFFAFAF8),
+      onPrimary: textColor,
       secondary: lightBlueColor,
       tertiary: pinkColor,
       surface: cardColor,
       surfaceContainerLowest: backgroundColor,
-      surfaceContainerLow: const Color(0xFFF6F6F2),
+      surfaceContainerLow: const Color(0xFFF5F4ED),
       surfaceContainer: surfaceTint,
-      surfaceContainerHigh: const Color(0xFFF1F1EC),
-      surfaceContainerHighest: const Color(0xFFECECE6),
+      surfaceContainerHigh: const Color(0xFFEFEEE6),
+      surfaceContainerHighest: const Color(0xFFE8E6DC),
       outline: lineColor,
-      outlineVariant: const Color(0xFFE3E3DE),
+      outlineVariant: lineColor,
       onSurface: textColor,
       onSurfaceVariant: lightTextColor,
     );

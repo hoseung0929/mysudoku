@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:mysudoku/theme/app_theme.dart';
 
 /// 하단 네비게이션 바 위젯
 class BottomNavBar extends StatelessWidget {
@@ -26,8 +27,6 @@ class BottomNavBar extends StatelessWidget {
     ];
 
     /// 홈 상단 프로필 글래스 바와 동일 톤 (level_selection_main)
-    const creamGlass = Color(0xFFFDFBF6);
-
     return SafeArea(
       top: false,
       minimum: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -37,7 +36,7 @@ class BottomNavBar extends StatelessWidget {
           borderRadius: BorderRadius.circular(52),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF21382A).withValues(alpha: 0.04),
+              color: AppTheme.textColor.withValues(alpha: 0.04),
               blurRadius: 24,
               offset: const Offset(0, 12),
             ),
@@ -50,7 +49,7 @@ class BottomNavBar extends StatelessWidget {
               filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: creamGlass.withValues(alpha: 0.34),
+                  color: AppTheme.backgroundColor.withValues(alpha: 0.38),
                   borderRadius: BorderRadius.circular(52),
                   border: Border.all(
                     color: colorScheme.outlineVariant.withValues(alpha: 0.28),
@@ -103,8 +102,8 @@ class _BottomNavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const iconColor = Color(0xFF7A857D);
-    const selectedIconColor = Color(0xFF3E5F4A);
+    const iconColor = Color(0xFF8A958D);
+    const selectedIconColor = Color(0xFF1F3328);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
@@ -127,15 +126,15 @@ class _BottomNavButton extends StatelessWidget {
                 Icon(
                   data.icon,
                   size: selected ? 22 : 21,
-                  color: selected ? selectedIconColor : iconColor,
+                    color: selected ? selectedIconColor : iconColor,
                 ),
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   margin: const EdgeInsets.only(top: 1),
                   width: selected ? 4 : 0,
                   height: selected ? 4 : 0,
-                  decoration: BoxDecoration(
-                    color: selectedIconColor.withValues(alpha: 0.72),
+                  decoration: const BoxDecoration(
+                    color: selectedIconColor,
                     shape: BoxShape.circle,
                   ),
                 ),

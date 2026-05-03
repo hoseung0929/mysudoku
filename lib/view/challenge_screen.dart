@@ -7,6 +7,7 @@ import 'package:mysudoku/services/challenge_progress_service.dart';
 import 'package:mysudoku/services/game_record_notifier.dart';
 import 'package:mysudoku/services/home_dashboard_service.dart';
 import 'package:mysudoku/services/my_pace_service.dart';
+import 'package:mysudoku/theme/app_theme.dart';
 import 'package:mysudoku/view/achievement_collection_screen.dart';
 import 'package:mysudoku/view/settings_screen.dart';
 import 'package:mysudoku/view/sudoku_game_screen.dart';
@@ -181,8 +182,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFFAFAF8),
-              Color(0xFFF5F5F1),
+              AppTheme.backgroundColor,
+              AppTheme.surfaceTint,
             ],
           ),
         ),
@@ -201,8 +202,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFFAFAF8),
-              Color(0xFFF5F5F1),
+              AppTheme.backgroundColor,
+              AppTheme.surfaceTint,
             ],
           ),
         ),
@@ -220,8 +221,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFFFAFAF8),
-            Color(0xFFF5F5F1),
+            AppTheme.backgroundColor,
+            AppTheme.surfaceTint,
           ],
         ),
       ),

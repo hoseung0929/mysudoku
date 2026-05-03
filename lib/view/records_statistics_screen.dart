@@ -1,3 +1,5 @@
+import 'dart:ui' show FontFeature;
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mysudoku/constants/records_level_filter.dart';
@@ -9,6 +11,7 @@ import 'package:mysudoku/services/records_statistics_service.dart';
 import 'package:mysudoku/view/settings_screen.dart';
 import 'package:mysudoku/widgets/profile_editor_sheet.dart';
 import 'package:mysudoku/widgets/profile_glass_header.dart';
+import 'package:mysudoku/widgets/sudoku_grid_badge.dart';
 
 class RecordsStatisticsScreen extends StatefulWidget {
   const RecordsStatisticsScreen({super.key});
@@ -19,6 +22,14 @@ class RecordsStatisticsScreen extends StatefulWidget {
 }
 
 class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
+  static const Color _backgroundColor = Color(0xFFFAFAF7);
+  static const Color _cardColor = Color(0xFFFFFFFF);
+  static const Color _primaryTextColor = Color(0xFF1F3328);
+  static const Color _secondaryTextColor = Color(0xFF7B857D);
+  static const Color _selectedAccentColor = Color(0xFF8FAA91);
+  static const Color _lightAccentColor = Color(0xFFDCE8DD);
+  static const Color _borderColor = Color(0xFFE6E8E3);
+
   /// 상태바 아래 프로필 바 본문 높이(홈 [LevelSelectionMain]과 동일).
   static const double _kProfileHeaderExtent = 104;
 
@@ -26,7 +37,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   static const double _kBelowProfileHeaderGap = 18;
 
   /// 하단 플로팅 탭바 여유 — [LevelSelectionMain._kHomeScrollBottomPad] 와 동일.
-  static const double _kScrollBottomPad = 100;
+  static const double _kScrollBottomPad = 130;
 
   final RecordsStatisticsService _statisticsService =
       RecordsStatisticsService();
@@ -183,13 +194,69 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     );
   }
 
-  Map<String, dynamic> get _displayOverall {
-    return _statisticsService.buildOverallStats(
-      overall: _overall,
-      levels: _levels,
-      recent: _recentForDisplayedStats,
-      selectedLevel: _selectedLevel,
-    );
+  bool get _isKorean => Localizations.localeOf(context).languageCode == 'ko';
+
+  String _statsGuestTitle() => _isKorean ? '게스트1' : 'Guest 1';
+
+  String _statsHeaderSubtitle() =>
+      _isKorean ? '나의 풀이 기록을 확인해보세요.' : 'Check your solving records.';
+
+  String _insightCardClearsTitle() =>
+      _isKorean ? '이번 주 풀이 수' : 'This week\'s clears';
+
+  String _insightCardAverageTimeTitle() =>
+      _isKorean ? '평균 풀이 시간' : 'Average solve time';
+
+  String _recentInsightsTitle() =>
+      _isKorean ? '최근 플레이 인사이트' : 'Recent play insights';
+
+  String _playCalendarTitle() => _isKorean ? '플레이 캘린더' : 'Play calendar';
+
+  String _difficultySnapshotTitle() =>
+      _isKorean ? '난이도별 기록' : 'By difficulty';
+
+  String _bestRecordTitle() => _isKorean ? '최고 기록' : 'Best record';
+
+  String _detailStatsTitle() => _isKorean ? '세부 기록' : 'Detailed stats';
+
+  String _bestRecordEmpty() =>
+      _isKorean ? '아직 최고 기록을 표시할 데이터가 없어요.' : 'No best record yet.';
+
+  String _hintUsageLabel() => _isKorean ? '힌트 사용 기록' : 'Hint usage';
+
+  String _hintUsageUnavailable() =>
+      _isKorean ? '기록 없음' : 'No record';
+
+  String _mistakeLabel() => _isKorean ? '실수 기록' : 'Mistakes';
+
+  String _streakLabel() => _isKorean ? '연속 플레이 일수' : 'Play streak';
+
+  String _levelSectionSubtitle() => _isKorean
+      ? '난이도별 클리어 수와 완료율을 확인해보세요.'
+      : 'Review clears and completion rate by difficulty.';
+
+  String _formatDurationNatural(num seconds) {
+    final totalSeconds = seconds.round();
+    final duration = Duration(seconds: totalSeconds);
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final secs = duration.inSeconds.remainder(60);
+    if (_isKorean) {
+      if (hours > 0) {
+        return '$hours시간 $minutes분 $secs초';
+      }
+      if (minutes > 0) {
+        return '$minutes분 $secs초';
+      }
+      return '$secs초';
+    }
+    if (hours > 0) {
+      return '${hours}h ${minutes}m ${secs}s';
+    }
+    if (minutes > 0) {
+      return '${minutes}m ${secs}s';
+    }
+    return '${secs}s';
   }
 
   String _trendDayPrimaryLabel(AppLocalizations l10n, Map<String, dynamic> day) {
@@ -237,27 +304,26 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   ) {
     final textScale = MediaQuery.textScalerOf(context).scale(14) / 14.0;
     final useStackedLayout = textScale > 1.08;
+    final totalClears = trendSummaryUi['total_clears'] as int;
+    final averageTime = trendSummaryUi['average_time'] as double;
     if (useStackedLayout) {
       return Column(
         children: [
           _recordsInsightCard(
-            eyebrow: l10n.recordsInsightThisWeekEyebrow,
-            value: l10n.recordsInsightClearsValue(
-              trendSummaryUi['total_clears'] as int,
-            ),
-            icon: Icons.pets_outlined,
-            tone: const Color(0xFFE7F0E8),
-            accent: const Color(0xFF457B9D),
+            eyebrow: _insightCardClearsTitle(),
+            value: _isKorean ? '$totalClears회' : '$totalClears',
+            icon: Icons.grid_view_rounded,
+            tone: _lightAccentColor,
+            accent: _selectedAccentColor,
+            emphasized: true,
           ),
           const SizedBox(height: 12),
           _recordsInsightCard(
-            eyebrow: l10n.recordsInsightAvgPaceEyebrow,
-            value: _statisticsService.formatSeconds(
-              _displayOverall['total_average_time'] as double,
-            ),
-            icon: Icons.cloud_outlined,
-            tone: const Color(0xFFF2E9DA),
-            accent: const Color(0xFFF4A261),
+            eyebrow: _insightCardAverageTimeTitle(),
+            value: _formatDurationNatural(averageTime),
+            icon: Icons.schedule_rounded,
+            tone: _lightAccentColor,
+            accent: _selectedAccentColor,
           ),
         ],
       );
@@ -267,25 +333,22 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       children: [
         Expanded(
           child: _recordsInsightCard(
-            eyebrow: l10n.recordsInsightThisWeekEyebrow,
-            value: l10n.recordsInsightClearsValue(
-              trendSummaryUi['total_clears'] as int,
-            ),
-            icon: Icons.pets_outlined,
-            tone: const Color(0xFFE7F0E8),
-            accent: const Color(0xFF457B9D),
+            eyebrow: _insightCardClearsTitle(),
+            value: _isKorean ? '$totalClears회' : '$totalClears',
+            icon: Icons.grid_view_rounded,
+            tone: _lightAccentColor,
+            accent: _selectedAccentColor,
+            emphasized: true,
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _recordsInsightCard(
-            eyebrow: l10n.recordsInsightAvgPaceEyebrow,
-            value: _statisticsService.formatSeconds(
-              _displayOverall['total_average_time'] as double,
-            ),
-            icon: Icons.cloud_outlined,
-            tone: const Color(0xFFF2E9DA),
-            accent: const Color(0xFFF4A261),
+            eyebrow: _insightCardAverageTimeTitle(),
+            value: _formatDurationNatural(averageTime),
+            icon: Icons.schedule_rounded,
+            tone: _lightAccentColor,
+            accent: _selectedAccentColor,
           ),
         ),
       ],
@@ -304,14 +367,18 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFFAFAF8),
-              Color(0xFFF5F5F1),
+              _backgroundColor,
+              _backgroundColor,
             ],
           ),
         ),
         child: SafeArea(
           bottom: false,
-          child: Center(child: CircularProgressIndicator()),
+          child: Center(
+            child: CircularProgressIndicator(
+              color: _selectedAccentColor,
+            ),
+          ),
         ),
       );
     }
@@ -331,8 +398,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFFFAFAF8),
-            Color(0xFFF5F5F1),
+            _backgroundColor,
+            _backgroundColor,
           ],
         ),
       ),
@@ -343,7 +410,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           children: [
             RefreshIndicator(
               onRefresh: _loadStats,
-              color: const Color(0xFF285B3F),
+              color: _primaryTextColor,
               backgroundColor: Colors.white,
               displacement: 28,
               child: ListView(
@@ -367,10 +434,10 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                   _buildTrendSection(
                     l10n,
                     trend: dailyTrend,
-                    summary: trendSummaryUi,
                   ),
                   const SizedBox(height: 22),
                   _buildLevelSection(l10n),
+                  const SizedBox(height: 130),
                 ],
               ),
             ),
@@ -381,9 +448,11 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               child: ProfileGlassHeader(
                 isTop: _isTop,
                 profileName: _profileName,
-                guestTitle: l10n.homeGuestTitle,
+                guestTitle: _statsGuestTitle(),
                 profileImagePath: _profileImagePath,
                 sectionLabel: l10n.navRecords,
+                titleOverride: _statsGuestTitle(),
+                subtitleOverride: _statsHeaderSubtitle(),
                 onTapSettings: _openSettings,
                 onTapEditProfile: _openProfileEditor,
               ),
@@ -402,10 +471,15 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   }
 
   Widget _buildLevelSection(AppLocalizations l10n) {
-    final colorScheme = Theme.of(context).colorScheme;
     final stats = _displayLevelStats;
 
     return Card(
+      color: _cardColor,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: const BorderSide(color: _borderColor),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -413,17 +487,17 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           children: [
             Text(
               l10n.recordsByLevelTitle,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
+                color: _primaryTextColor,
               ),
             ),
             const SizedBox(height: 6),
             Text(
-              l10n.recordsByLevelSectionSubtitle,
-              style: TextStyle(
-                color: colorScheme.onSurfaceVariant,
+              _levelSectionSubtitle(),
+              style: const TextStyle(
+                color: _secondaryTextColor,
                 fontSize: 13,
                 height: 1.4,
               ),
@@ -432,7 +506,14 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
             if (stats.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(l10n.recordsByLevelEmpty),
+                child: Text(
+                  l10n.recordsByLevelEmpty,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: _secondaryTextColor,
+                    height: 1.4,
+                  ),
+                ),
               ),
             ...stats.map(
               (stat) => Padding(
@@ -449,90 +530,50 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   Widget _buildTrendSection(
     AppLocalizations l10n, {
     required List<Map<String, dynamic>> trend,
-    required Map<String, dynamic> summary,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final previousTrend = _statisticsService
-        .buildDailyTrend(
-          recent: _recent,
-          selectedLevel: _selectedLevel,
-          days: 14,
-        )
-        .take(7)
-        .toList(growable: false);
     final weekSummary = _buildWindowSummary(trend);
-    final previousSummary = _buildWindowSummary(previousTrend);
-    final weekRecords = _buildTimelineRecordsForTrend(trend);
-    final busiestDay = _busiestTrendDay(trend);
-    final perfectRate = weekSummary['perfect_rate'] as double;
+    final bestRecord = _bestRecord();
+    final streakDays = _currentPlayStreakDays(trend);
 
     return Card(
+      color: _cardColor,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: const BorderSide(color: _borderColor),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              l10n.recordsPlayInsightsTitle,
-              style: TextStyle(
+              _recentInsightsTitle(),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
+                color: _primaryTextColor,
               ),
             ),
             const SizedBox(height: 14),
             _insightsSectionBlock(
-              title: l10n.recordsPlayCalendarTitle,
+              title: _playCalendarTitle(),
               child: _buildPlayCalendar(l10n, trend),
             ),
             const SizedBox(height: 12),
             _insightsSectionBlock(
-              title: l10n.recordsWeeklyReportTitle,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _adaptiveMetricRow(
-                    [
-                      _levelMetricTile(
-                        label: l10n.recordsTrendClears,
-                        value: '${summary['total_clears']}',
-                      ),
-                      _levelMetricTile(
-                        label: l10n.recordsTrendActiveDays,
-                        value: '${summary['active_days']}',
-                      ),
-                      _levelMetricTile(
-                        label: l10n.recordsMetricPerfectRate,
-                        value: '${perfectRate.toStringAsFixed(1)}%',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  _weeklyHighlightRow(
-                    title: l10n.recordsWeeklyReportBusiestDay,
-                    value: busiestDay == null
-                        ? l10n.recordsWeeklyReportTopDayFallback
-                        : l10n.recordsWeeklyReportTopDayValue(
-                            _trendDayPrimaryLabel(l10n, busiestDay),
-                            busiestDay['clears'] as int,
-                          ),
-                  ),
-                ],
-              ),
+              title: _bestRecordTitle(),
+              child: _buildBestRecordSection(l10n, bestRecord),
             ),
             const SizedBox(height: 12),
             _insightsSectionBlock(
-              title: l10n.recordsTimelineTitle,
-              child: _buildTimelineSection(l10n, weekRecords),
+              title: _difficultySnapshotTitle(),
+              child: _buildDifficultySnapshot(l10n),
             ),
             const SizedBox(height: 12),
             _insightsSectionBlock(
-              title: l10n.recordsPaceTitle,
-              child: _buildPaceComparison(
-                l10n,
-                current: weekSummary,
-                previous: previousSummary,
-              ),
+              title: _detailStatsTitle(),
+              child: _buildDetailStatsSection(weekSummary, streakDays),
             ),
           ],
         ),
@@ -544,7 +585,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     AppLocalizations l10n,
     List<Map<String, dynamic>> trend,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
     final maxClears = trend.isEmpty
         ? 1
         : trend
@@ -560,8 +600,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           final ratio = clears == 0 ? 0.0 : clears / maxClears;
           final isToday = day['is_today'] == true;
           final background = clears == 0
-              ? colorScheme.surface
-              : colorScheme.primary.withValues(alpha: 0.10 + ratio * 0.28);
+              ? _cardColor
+              : _selectedAccentColor.withValues(alpha: 0.12 + ratio * 0.22);
           return Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 3),
@@ -572,8 +612,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: isToday
-                        ? colorScheme.primary.withValues(alpha: 0.48)
-                        : colorScheme.outlineVariant,
+                        ? _selectedAccentColor
+                        : _borderColor,
                   ),
                 ),
                 child: Column(
@@ -585,9 +625,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: isToday
-                            ? colorScheme.primary
-                            : colorScheme.onSurfaceVariant,
+                        color: isToday ? _selectedAccentColor : _secondaryTextColor,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -595,10 +633,10 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                       '$clears',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: colorScheme.onSurface,
+                        color: _primaryTextColor,
                       ),
                     ),
                   ],
@@ -611,328 +649,148 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     );
   }
 
-  Widget _buildTimelineSection(
-    AppLocalizations l10n,
-    List<Map<String, dynamic>> records,
-  ) {
-    if (records.isEmpty) {
+  Widget _buildDifficultySnapshot(AppLocalizations l10n) {
+    final stats = _displayLevelStats
+        .where((stat) => (stat['cleared_count'] as int? ?? 0) > 0)
+        .toList(growable: false);
+    if (stats.isEmpty) {
       return Text(
-        l10n.recordsTimelineEmpty,
-        style: TextStyle(
+        _isKorean ? '아직 난이도별 기록이 없어요.' : 'No difficulty stats yet.',
+        style: const TextStyle(
           fontSize: 13,
           height: 1.4,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          color: _secondaryTextColor,
         ),
       );
     }
 
-    return Column(
-      children: [
-        for (var i = 0; i < records.length; i++) ...[
-          _timelineRow(l10n, records[i]),
-          if (i != records.length - 1) const SizedBox(height: 10),
-        ],
-      ],
-    );
-  }
-
-  Widget _timelineRow(AppLocalizations l10n, Map<String, dynamic> record) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final levelNameKey = record['level_name'] as String? ?? '';
-    final levelName = levelNameKey.localizedSudokuLevelName(l10n);
-    final clearDate = record['clear_date']?.toString() ?? '';
-    final date = clearDate.isEmpty ? null : DateTime.tryParse(clearDate);
-    final wrongCount = _recordInt(record, 'wrong_count');
-    final time = _statisticsService.formatSeconds(
-      _recordInt(record, 'clear_time').toDouble(),
-    );
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final textScale = MediaQuery.textScalerOf(context).scale(14) / 14.0;
-          final useStackedTime = constraints.maxWidth < 320 || textScale > 1.08;
-          final title = date == null
-              ? levelName
-              : '${DateFormat.Md(Localizations.localeOf(context).toString()).format(date)} · $levelName';
-          final subtitle = wrongCount == 0
-              ? l10n.recordsTimelinePerfect
-              : l10n.recordsTimelineMistakesValue(wrongCount);
-
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: stats.map((stat) {
+        final levelNameKey = stat['level_name'] as String;
+        final levelName = levelNameKey.localizedSudokuLevelName(l10n);
+        final clears = stat['cleared_count'] as int;
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+          decoration: BoxDecoration(
+            color: _lightAccentColor,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: _borderColor),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 10,
-                height: 10,
-                margin: const EdgeInsets.only(top: 4),
-                decoration: BoxDecoration(
-                  color: _levelAccent(levelNameKey),
-                  shape: BoxShape.circle,
-                ),
+              SudokuGridBadge(
+                size: 14,
+                color: _levelAccent(levelNameKey),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (useStackedTime) ...[
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              subtitle,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            time,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ] else ...[
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: colorScheme.onSurface,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            time,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ],
+              const SizedBox(width: 8),
+              Text(
+                '$levelName ${_isKorean ? '$clears회' : '$clears'}',
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: _primaryTextColor,
                 ),
               ),
             ],
-          );
-        },
-      ),
+          ),
+        );
+      }).toList(),
     );
   }
 
-  Widget _buildPaceComparison(
-    AppLocalizations l10n, {
-    required Map<String, dynamic> current,
-    required Map<String, dynamic> previous,
-  }) {
-    final previousHasData = (previous['total_clears'] as int) > 0;
-    if (!previousHasData) {
+  Widget _buildBestRecordSection(
+    AppLocalizations l10n,
+    Map<String, dynamic>? bestRecord,
+  ) {
+    if (bestRecord == null) {
       return Text(
-        l10n.recordsPaceEmpty,
-        style: TextStyle(
+        _bestRecordEmpty(),
+        style: const TextStyle(
           fontSize: 13,
           height: 1.4,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          color: _secondaryTextColor,
         ),
       );
     }
 
-    return Column(
-      children: [
-        _comparisonRow(
-          label: l10n.recordsTrendClears,
-          currentValue: '${current['total_clears']}',
-          previousValue: '${previous['total_clears']}',
-          deltaValue: _signedIntDelta(
-            current['total_clears'] as int,
-            previous['total_clears'] as int,
-          ),
-          positiveWhenHigher: true,
-          currentRaw: (current['total_clears'] as int).toDouble(),
-          previousRaw: (previous['total_clears'] as int).toDouble(),
-        ),
-        const SizedBox(height: 10),
-        _comparisonRow(
-          label: l10n.recordsTrendWindowAvgTime,
-          currentValue: _statisticsService.formatSeconds(
-            current['average_time'] as double,
-          ),
-          previousValue: _statisticsService.formatSeconds(
-            previous['average_time'] as double,
-          ),
-          deltaValue: _signedDurationDelta(
-            current['average_time'] as double,
-            previous['average_time'] as double,
-          ),
-          positiveWhenHigher: false,
-          currentRaw: current['average_time'] as double,
-          previousRaw: previous['average_time'] as double,
-        ),
-        const SizedBox(height: 10),
-        _comparisonRow(
-          label: l10n.recordsTrendWindowAvgWrong,
-          currentValue: (current['average_wrong'] as double).toStringAsFixed(1),
-          previousValue: (previous['average_wrong'] as double).toStringAsFixed(1),
-          deltaValue: _signedDoubleDelta(
-            current['average_wrong'] as double,
-            previous['average_wrong'] as double,
-          ),
-          positiveWhenHigher: false,
-          currentRaw: current['average_wrong'] as double,
-          previousRaw: previous['average_wrong'] as double,
-        ),
-      ],
+    final levelNameKey = bestRecord['level_name'] as String? ?? '';
+    final levelName = levelNameKey.localizedSudokuLevelName(l10n);
+    final gameNumber = _recordInt(bestRecord, 'game_number');
+    final wrongCount = _recordInt(bestRecord, 'wrong_count');
+    final clearTime = _formatDurationNatural(
+      _recordInt(bestRecord, 'clear_time').toDouble(),
     );
-  }
-
-  Widget _comparisonRow({
-    required String label,
-    required String currentValue,
-    required String previousValue,
-    required String deltaValue,
-    required bool positiveWhenHigher,
-    required double currentRaw,
-    required double previousRaw,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final difference = currentRaw - previousRaw;
-    final deltaColor = difference == 0
-        ? colorScheme.onSurfaceVariant
-        : ((difference > 0) == positiveWhenHigher)
-        ? const Color(0xFF2A9D8F)
-        : const Color(0xFFE76F51);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colorScheme.outlineVariant),
+        color: _cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
+            _isKorean
+                ? '$levelName · 게임 $gameNumber'
+                : '$levelName · Game $gameNumber',
+            style: const TextStyle(
+              fontSize: 12.5,
+              color: _secondaryTextColor,
               fontWeight: FontWeight.w600,
-              color: colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _comparisonCell(
-                  title: AppLocalizations.of(context)!.recordsPaceRecentWindow,
-                  value: currentValue,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _comparisonCell(
-                  title: AppLocalizations.of(context)!.recordsPacePreviousWindow,
-                  value: previousValue,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _comparisonCell(
-                  title: AppLocalizations.of(context)!.recordsPaceDelta,
-                  value: deltaValue,
-                  valueColor: deltaColor,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _comparisonCell({
-    required String title,
-    required String value,
-    Color? valueColor,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+          const SizedBox(height: 8),
           Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 10,
-              color: colorScheme.onSurfaceVariant,
+            clearTime,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: _primaryTextColor,
+              fontFeatures: [FontFeature.tabularFigures()],
             ),
           ),
           const SizedBox(height: 6),
           Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
+            wrongCount == 0
+                ? (_isKorean ? '실수 없이 클리어' : 'Cleared without mistakes')
+                : (_isKorean ? '오답 $wrongCount회' : '$wrongCount mistakes'),
+            style: const TextStyle(
               fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: valueColor ?? colorScheme.onSurface,
+              color: _secondaryTextColor,
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDetailStatsSection(
+    Map<String, dynamic> weekSummary,
+    int streakDays,
+  ) {
+    return _adaptiveMetricRow(
+      [
+        _levelMetricTile(
+          label: _hintUsageLabel(),
+          value: _hintUsageUnavailable(),
+        ),
+        _levelMetricTile(
+          label: _mistakeLabel(),
+          value: _isKorean
+              ? '${(weekSummary['average_wrong'] as double).toStringAsFixed(1)}회'
+              : (weekSummary['average_wrong'] as double).toStringAsFixed(1),
+        ),
+        _levelMetricTile(
+          label: _streakLabel(),
+          value: _isKorean ? '$streakDays일' : '$streakDays days',
+        ),
+      ],
     );
   }
 
@@ -940,24 +798,24 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     required String title,
     required Widget child,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 15, 16, 16),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
+        color: _lightAccentColor.withValues(alpha: 0.36),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colorScheme.outlineVariant),
+        border: Border.all(color: _borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: TextStyle(
-              fontSize: 14,
+            style: const TextStyle(
+              fontSize: 13.5,
               fontWeight: FontWeight.w700,
-              color: colorScheme.onSurface,
+              color: _primaryTextColor,
+              fontFeatures: [FontFeature.tabularFigures()],
             ),
           ),
           const SizedBox(height: 12),
@@ -987,53 +845,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           if (i != children.length - 1) const SizedBox(width: 10),
         ],
       ],
-    );
-  }
-
-  Widget _weeklyHighlightRow({
-    required String title,
-    required String value,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.wb_sunny_outlined,
-            size: 18,
-            color: colorScheme.primary,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 12,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: colorScheme.onSurface,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1072,53 +883,29 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     };
   }
 
-  List<Map<String, dynamic>> _buildTimelineRecordsForTrend(
-    List<Map<String, dynamic>> trend,
-  ) {
-    final dates = trend
-        .map((day) => day['date']?.toString())
-        .whereType<String>()
-        .toSet();
-    final filtered = _statisticsService.filterRecentRecords(
-      recent: _recent,
+  Map<String, dynamic>? _bestRecord() {
+    final records = _statisticsService.buildTopRecords(
+      recent: _recentForDisplayedStats,
       selectedLevel: _selectedLevel,
+      limit: 1,
     );
-    final records = filtered.where((record) {
-      final clearDate = record['clear_date']?.toString();
-      return clearDate != null && dates.contains(clearDate);
-    }).toList()
-      ..sort((a, b) {
-        final aDate = a['clear_date']?.toString() ?? '';
-        final bDate = b['clear_date']?.toString() ?? '';
-        final byDate = bDate.compareTo(aDate);
-        if (byDate != 0) {
-          return byDate;
-        }
-        final byTime = _recordInt(a, 'clear_time').compareTo(
-          _recordInt(b, 'clear_time'),
-        );
-        if (byTime != 0) {
-          return byTime;
-        }
-        return _recordInt(a, 'wrong_count').compareTo(
-          _recordInt(b, 'wrong_count'),
-        );
-      });
-    return records.take(5).toList(growable: false);
-  }
-
-  Map<String, dynamic>? _busiestTrendDay(List<Map<String, dynamic>> trend) {
-    Map<String, dynamic>? best;
-    for (final day in trend) {
-      final clears = day['clears'] as int? ?? 0;
-      if (best == null || clears > (best['clears'] as int? ?? 0)) {
-        best = day;
-      }
-    }
-    if ((best?['clears'] as int? ?? 0) <= 0) {
+    if (records.isEmpty) {
       return null;
     }
-    return best;
+    return records.first;
+  }
+
+  int _currentPlayStreakDays(List<Map<String, dynamic>> trend) {
+    var streak = 0;
+    for (final day in trend.reversed) {
+      final clears = day['clears'] as int? ?? 0;
+      if (clears > 0) {
+        streak += 1;
+      } else {
+        break;
+      }
+    }
+    return streak;
   }
 
   double _averageRecordField(
@@ -1143,54 +930,29 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 
-  String _signedIntDelta(int current, int previous) {
-    final delta = current - previous;
-    if (delta == 0) {
-      return '0';
-    }
-    return delta > 0 ? '+$delta' : '$delta';
-  }
-
-  String _signedDoubleDelta(double current, double previous) {
-    final delta = current - previous;
-    if (delta.abs() < 0.05) {
-      return '0.0';
-    }
-    final formatted = delta.abs().toStringAsFixed(1);
-    return delta > 0 ? '+$formatted' : '-$formatted';
-  }
-
-  String _signedDurationDelta(double current, double previous) {
-    final deltaSeconds = (current - previous).round();
-    if (deltaSeconds == 0) {
-      return '00:00:00';
-    }
-    final sign = deltaSeconds > 0 ? '+' : '-';
-    final value = _statisticsService.formatSeconds(deltaSeconds.abs().toDouble());
-    return '$sign$value';
-  }
-
   Widget _buildLoadErrorBanner(AppLocalizations l10n, String message) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: colorScheme.errorContainer.withValues(alpha: 0.45),
+        color: const Color(0xFFFFF3F0),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: colorScheme.error.withValues(alpha: 0.22),
+          color: const Color(0xFFF0D6CF),
         ),
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline_rounded, color: colorScheme.error),
+          const Icon(
+            Icons.error_outline_rounded,
+            color: Color(0xFFB45E4A),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
-              style: TextStyle(
-                color: colorScheme.onSurface,
+              style: const TextStyle(
+                color: _primaryTextColor,
                 fontSize: 13,
               ),
             ),
@@ -1207,17 +969,17 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   Color _levelAccent(String levelNameKey) {
     switch (levelNameKey) {
       case '초급':
-        return const Color(0xFF2A9D8F);
+        return const Color(0xFFAFC7B0);
       case '중급':
-        return const Color(0xFF457B9D);
+        return const Color(0xFF8FAA91);
       case '고급':
-        return const Color(0xFFF4A261);
+        return const Color(0xFFC7B692);
       case '전문가':
-        return const Color(0xFFE76F51);
+        return const Color(0xFFB79DAE);
       case '마스터':
-        return const Color(0xFF7A5C3E);
+        return const Color(0xFF8F9E86);
       default:
-        return const Color(0xFF285B3F);
+        return _selectedAccentColor;
     }
   }
 
@@ -1225,7 +987,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     AppLocalizations l10n,
     Map<String, dynamic> stat,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
     final levelNameKey = stat['level_name'] as String;
     final levelName = levelNameKey.localizedSudokuLevelName(l10n);
     final levelAccent = _levelAccent(levelNameKey);
@@ -1233,16 +994,15 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     final total = stat['total_count'] as int;
     final clearRate = stat['clear_rate'] as double;
     final perfectRate = stat['perfect_rate'] as double;
-    final avgTime = _statisticsService
-        .formatSeconds(stat['average_time'] as double);
+    final avgTime = _formatDurationNatural(stat['average_time'] as double);
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
+        color: _cardColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colorScheme.outlineVariant),
+        border: Border.all(color: _borderColor),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1250,25 +1010,23 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 10,
-                height: 10,
-                margin: const EdgeInsets.only(top: 5),
-                decoration: BoxDecoration(
+                margin: const EdgeInsets.only(top: 2),
+                child: SudokuGridBadge(
+                  size: 18,
                   color: levelAccent,
-                  shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 9),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       levelName,
-                      style: TextStyle(
-                        fontSize: 16,
+                      style: const TextStyle(
+                        fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: colorScheme.onSurface,
+                        color: _primaryTextColor,
                       ),
                     ),
                   ],
@@ -1277,30 +1035,30 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               const SizedBox(width: 12),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 8,
+                  horizontal: 9,
+                  vertical: 6,
                 ),
                 decoration: BoxDecoration(
                   color: levelAccent.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       '$cleared/$total',
-                      style: TextStyle(
-                        fontSize: 15,
+                      style: const TextStyle(
+                        fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: colorScheme.onSurface,
+                        color: _primaryTextColor,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(width: 6),
                     Text(
-                      l10n.recordsTrendClears,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: colorScheme.onSurfaceVariant,
+                      _isKorean ? '완료' : 'Done',
+                      style: const TextStyle(
+                        fontSize: 9.5,
+                        color: _secondaryTextColor,
                       ),
                     ),
                   ],
@@ -1308,53 +1066,48 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Row(
             children: [
               Text(
                 l10n.recordsLevelInfographicClearRate,
-                style: TextStyle(
-                  fontSize: 12,
+                style: const TextStyle(
+                  fontSize: 11.5,
                   fontWeight: FontWeight.w600,
-                  color: colorScheme.onSurfaceVariant,
+                  color: _secondaryTextColor,
                 ),
               ),
               const Spacer(),
               Text(
                 '${clearRate.toStringAsFixed(1)}%',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 12.5,
                   fontWeight: FontWeight.w700,
                   color: levelAccent,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 7),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
             child: LinearProgressIndicator(
-              minHeight: 8,
+              minHeight: 7,
               value: (clearRate / 100).clamp(0.0, 1.0),
-              backgroundColor: colorScheme.surfaceContainerHighest,
+              backgroundColor: _lightAccentColor,
               valueColor: AlwaysStoppedAnimation<Color>(levelAccent),
             ),
           ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: _levelMetricTile(
-                  label: l10n.recordsMetricAvgTime,
-                  value: avgTime,
-                ),
+          const SizedBox(height: 12),
+          _adaptiveMetricRow(
+            [
+              _levelMetricTile(
+                label: l10n.recordsMetricAvgTime,
+                value: avgTime,
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _levelMetricTile(
-                  label: l10n.recordsMetricPerfectRate,
-                  value: '${perfectRate.toStringAsFixed(1)}%',
-                ),
+              _levelMetricTile(
+                label: l10n.recordsMetricPerfectRate,
+                value: '${perfectRate.toStringAsFixed(1)}%',
               ),
             ],
           ),
@@ -1367,32 +1120,32 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     required String label,
     required String value,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
+        color: _cardColor,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: TextStyle(
-              fontSize: 11,
-              color: colorScheme.onSurfaceVariant,
+            style: const TextStyle(
+              fontSize: 10.5,
+              color: _secondaryTextColor,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 5),
           Text(
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 14,
+            style: const TextStyle(
+              fontSize: 13.5,
               fontWeight: FontWeight.w700,
-              color: colorScheme.onSurface,
+              color: _primaryTextColor,
             ),
           ),
         ],
@@ -1406,25 +1159,30 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     required IconData icon,
     required Color tone,
     required Color accent,
+    bool emphasized = false,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: emphasized ? _lightAccentColor.withValues(alpha: 0.72) : _cardColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colorScheme.outlineVariant),
+        border: Border.all(
+          color: emphasized
+              ? _selectedAccentColor.withValues(alpha: 0.34)
+              : _borderColor,
+        ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.12),
+                  color: emphasized ? _cardColor : tone,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -1438,24 +1196,25 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 child: Text(
                   eyebrow,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: emphasized ? 12.5 : 12,
                     fontWeight: FontWeight.w600,
-                    color: colorScheme.onSurfaceVariant,
+                    color: _secondaryTextColor,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Text(
             value,
-            textAlign: TextAlign.center,
+            textAlign: TextAlign.left,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 20,
+            style: TextStyle(
+              fontSize: emphasized ? 24 : 22,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF21382A),
+              color: _primaryTextColor,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
         ],
@@ -1468,57 +1227,99 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
 class _RecordsHeroCard extends StatelessWidget {
   const _RecordsHeroCard({required this.trend});
 
+  static const Color _cardColor = Color(0xFFFFFFFF);
+  static const Color _primaryTextColor = Color(0xFF1F3328);
+  static const Color _secondaryTextColor = Color(0xFF7B857D);
+  static const Color _selectedAccentColor = Color(0xFF8FAA91);
+  static const Color _lightAccentColor = Color(0xFFDCE8DD);
+  static const Color _borderColor = Color(0xFFE6E8E3);
+
   final List<Map<String, dynamic>> trend;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final hasClears = trend.any((d) => (d['clears'] as int) > 0);
-    final colorScheme = Theme.of(context).colorScheme;
+    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(24, 28, 24, 26),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: _cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.outlineVariant),
+        border: Border.all(color: _borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              const SudokuGridBadge(
+                size: 18,
+                color: _selectedAccentColor,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                isKorean ? '이번 주 기록' : 'THIS WEEK',
+                style: const TextStyle(
+                  color: _secondaryTextColor,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           Text(
-            l10n.recordsHeroTitle,
-            style: TextStyle(
-              color: colorScheme.onSurface,
-              fontSize: 28,
-              height: 1.15,
+            isKorean
+                ? '이번 주 스도쿠 기록을\n확인해보세요.'
+                : 'Check your Sudoku\nstats for this week.',
+            style: const TextStyle(
+              color: _primaryTextColor,
+              fontSize: 26,
+              height: 1.16,
               fontWeight: FontWeight.w700,
             ),
           ),
           if (hasClears) ...[
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: Container(
-                height: 110,
+                height: 104,
                 width: double.infinity,
-                color: colorScheme.surfaceContainerLow,
-                child: IgnorePointer(
-                  child: CustomPaint(
-                    painter: _RecordsTrendBackdropPainter(
-                      trend: trend,
-                      strokeColor: colorScheme.primary.withValues(alpha: 0.46),
-                      fillTopColor: colorScheme.primary.withValues(alpha: 0.12),
-                      fillBottomColor: colorScheme.primary.withValues(alpha: 0.02),
-                      pointColor: colorScheme.primary.withValues(alpha: 0.36),
+                color: _lightAccentColor.withValues(alpha: 0.34),
+                child: Stack(
+                  children: [
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: Opacity(
+                        opacity: 0.38,
+                        child: SudokuGridBadge(
+                          size: 26,
+                          color: _selectedAccentColor.withValues(alpha: 0.78),
+                        ),
+                      ),
                     ),
-                  ),
+                    IgnorePointer(
+                      child: CustomPaint(
+                        painter: _RecordsTrendBackdropPainter(
+                          trend: trend,
+                          strokeColor: _selectedAccentColor.withValues(alpha: 0.74),
+                          fillTopColor: _selectedAccentColor.withValues(alpha: 0.20),
+                          fillBottomColor: _selectedAccentColor.withValues(alpha: 0.05),
+                          pointColor: _selectedAccentColor.withValues(alpha: 0.42),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 9),
             SizedBox(
-              height: 16,
+              height: 14,
               child: Row(
                 children: trend.map((day) {
                   final isToday = day['is_today'] == true;
@@ -1533,12 +1334,11 @@ class _RecordsHeroCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 10.5,
                             fontWeight:
                                 isToday ? FontWeight.w700 : FontWeight.w500,
-                            color: isToday
-                                ? colorScheme.primary
-                                : colorScheme.onSurfaceVariant,
+                            color:
+                                isToday ? _selectedAccentColor : _secondaryTextColor,
                           ),
                         ),
                       ),
@@ -1550,9 +1350,11 @@ class _RecordsHeroCard extends StatelessWidget {
           ] else ...[
             const SizedBox(height: 14),
             Text(
-              l10n.recordsHeroChartEmptyHint,
-              style: TextStyle(
-                color: colorScheme.onSurfaceVariant,
+              isKorean
+                  ? '이번 주에 퍼즐을 완료하면 여기에 기록 그래프가 표시됩니다.'
+                  : 'Complete a puzzle this week to see your graph here.',
+              style: const TextStyle(
+                color: _secondaryTextColor,
                 fontSize: 13,
                 height: 1.45,
               ),

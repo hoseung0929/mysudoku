@@ -22,6 +22,7 @@ import 'package:mysudoku/view/settings_screen.dart';
 import 'package:mysudoku/view/sudoku_game_screen.dart';
 import 'package:mysudoku/widgets/profile_editor_sheet.dart';
 import 'package:mysudoku/widgets/profile_glass_header.dart';
+import 'package:mysudoku/widgets/sudoku_grid_badge.dart';
 
 class LevelSelectionMain extends StatefulWidget {
   const LevelSelectionMain({super.key});
@@ -496,8 +497,8 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFFAFAF8),
-              Color(0xFFF5F5F1),
+              AppTheme.backgroundColor,
+              AppTheme.backgroundColor,
             ],
           ),
         ),
@@ -796,6 +797,7 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
     final colorScheme = Theme.of(context).colorScheme;
     final challengeDone = _challengeProgress?.isTodayChallengeCleared ?? false;
     final myPaceLabel = _myPacePreviewLabel(l10n);
+    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Container(
@@ -805,19 +807,39 @@ class _LevelSelectionMainState extends State<LevelSelectionMain> {
           color: colorScheme.surface,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: colorScheme.outlineVariant),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.07),
-              blurRadius: 24,
-              offset: const Offset(0, 10),
-            ),
-          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Row(
+              children: [
+                const SudokuGridBadge(
+                  size: 18,
+                  color: Color(0xFF7F9B82),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  isKorean ? '오늘의 퍼즐' : 'TODAY',
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                const Spacer(),
+                Opacity(
+                  opacity: 0.42,
+                  child: SudokuGridBadge(
+                    size: 22,
+                    color: colorScheme.primary.withValues(alpha: 0.72),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             Text(
-              Localizations.localeOf(context).languageCode == 'ko'
+              isKorean
                   ? '오늘의 퍼즐 하나에\n조용히 집중해보세요.'
                   : 'Take a quiet moment\nwith today\'s puzzle.',
               style: TextStyle(

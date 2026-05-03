@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import 'package:mysudoku/theme/app_theme.dart';
 
 class ProfileGlassHeader extends StatelessWidget {
   const ProfileGlassHeader({
@@ -12,6 +13,8 @@ class ProfileGlassHeader extends StatelessWidget {
     required this.profileImagePath,
     required this.onTapSettings,
     this.sectionLabel,
+    this.titleOverride,
+    this.subtitleOverride,
     this.onTapEditProfile,
   });
 
@@ -21,6 +24,8 @@ class ProfileGlassHeader extends StatelessWidget {
   final String? profileImagePath;
   final VoidCallback onTapSettings;
   final String? sectionLabel;
+  final String? titleOverride;
+  final String? subtitleOverride;
   final VoidCallback? onTapEditProfile;
 
   @override
@@ -31,19 +36,21 @@ class ProfileGlassHeader extends StatelessWidget {
         profileImagePath != null && File(profileImagePath!).existsSync();
     final trimmedName = profileName?.trim() ?? '';
     final hasName = trimmedName.isNotEmpty;
-    final displayName = hasName ? trimmedName : guestTitle;
+    final displayName = titleOverride ?? (hasName ? trimmedName : guestTitle);
     final isKorean = Localizations.localeOf(context).languageCode == 'ko';
-    final subtitleText = _buildGreetingMessage(
-      isKorean: isKorean,
-      hour: DateTime.now().hour,
-    );
+    final subtitleText =
+        subtitleOverride ??
+        _buildGreetingMessage(
+          isKorean: isKorean,
+          hour: DateTime.now().hour,
+        );
 
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: const Color(0xFFFDFBF6).withValues(alpha: 0.34),
+            color: AppTheme.backgroundColor.withValues(alpha: 0.42),
             border: Border(
               bottom: BorderSide(
                 color: isTop
