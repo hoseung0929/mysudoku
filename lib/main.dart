@@ -8,14 +8,14 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:mysudoku/l10n/app_locale_scope.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/services/firebase_bootstrap_service.dart';
-import 'package:mysudoku/services/game_record_notifier.dart';
-import 'package:mysudoku/services/notification_service.dart';
+import 'package:mysudoku/services/firebase/firebase_bootstrap_service.dart';
+import 'package:mysudoku/services/records/game_record_notifier.dart';
+import 'package:mysudoku/services/settings/notification_service.dart';
 import 'package:mysudoku/theme/app_theme.dart';
 import 'package:mysudoku/navigation/root_nav_scope.dart';
-import 'package:mysudoku/view/level_selection_main.dart';
-import 'package:mysudoku/view/records_statistics_screen.dart';
-import 'package:mysudoku/view/startup_catalog_preparing_gate.dart';
+import 'package:mysudoku/view/home/home_screen.dart';
+import 'package:mysudoku/view/home/startup_catalog_preparing_gate.dart';
+import 'package:mysudoku/view/records/records_statistics_screen.dart';
 import 'package:mysudoku/widgets/bottom_nav_bar.dart';
 import 'package:mysudoku/utils/app_logger.dart';
 
@@ -174,7 +174,7 @@ class _MyHomePageState extends State<MyHomePage> {
         body: IndexedStack(
           index: _selectedIndex,
           children: [
-            const LevelSelectionMain(),
+            const HomeScreen(),
             _recordsTabLoaded
                 ? const RecordsStatisticsScreen()
                 : const SizedBox.shrink(),

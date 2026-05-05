@@ -3,11 +3,11 @@ import 'package:mysudoku/model/sudoku_game.dart';
 import 'package:mysudoku/model/sudoku_game_set.dart';
 import 'package:mysudoku/model/sudoku_level.dart';
 import 'package:mysudoku/database/database_helper.dart';
-import 'package:mysudoku/services/achievement_service.dart';
-import 'package:mysudoku/services/challenge_progress_service.dart';
-import 'package:mysudoku/services/game_record_notifier.dart';
-import 'package:mysudoku/services/game_record_service.dart';
-import 'package:mysudoku/services/notification_service.dart';
+import 'package:mysudoku/services/challenge/achievement_service.dart';
+import 'package:mysudoku/services/challenge/challenge_progress_service.dart';
+import 'package:mysudoku/services/records/game_record_notifier.dart';
+import 'package:mysudoku/services/records/game_record_service.dart';
+import 'package:mysudoku/services/settings/notification_service.dart';
 import 'package:mysudoku/utils/app_logger.dart';
 import 'package:flutter/foundation.dart';
 

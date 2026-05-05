@@ -567,10 +567,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsTrendTodayLabel => '오늘';
 
   @override
-  String get recordsPlayInsightsTitle => '최근 플레이 인사이트';
+  String get recordsPlayInsightsTitle => '최근 클리어 인사이트';
 
   @override
-  String get recordsPlayCalendarTitle => '플레이 캘린더';
+  String get recordsPlayCalendarTitle => '클리어 캘린더';
 
   @override
   String get recordsWeeklyReportTitle => '이번 주 리포트';
@@ -663,10 +663,83 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsRetry => '다시 시도';
 
   @override
-  String get recordsHeroChartEmptyHint => '이번 주에 퍼즐을 클리어하면 흐름 그래프가 여기에 나타나요.';
+  String get recordsStatsPageSubtitle => '나의 클리어 기록을 확인해보세요.';
 
   @override
-  String get recordsHeroSubtitleNoChart => '아래 카드에서 이번 주 일별 클리어를 확인할 수 있어요.';
+  String get recordsKpiWeeklyClearsLabel => '최근 7일 클리어 수';
+
+  @override
+  String get recordsKpiAvgSolveTimeLabel => '최근 7일 평균 시간';
+
+  @override
+  String get recordsSectionBestRecordTitle => '최고 기록';
+
+  @override
+  String get recordsSectionDifficultyTitle => '난이도별 기록';
+
+  @override
+  String get recordsSectionDetailStatsTitle => '세부 기록';
+
+  @override
+  String get recordsBestSingleEmpty => '아직 최고 기록을 표시할 데이터가 없어요.';
+
+  @override
+  String get recordsHintUsageLabel => '힌트 사용 기록';
+
+  @override
+  String get recordsHintUsageNoData => '기록 없음';
+
+  @override
+  String get recordsDetailMistakesShort => '실수 기록';
+
+  @override
+  String get recordsDetailStreakShort => '연속 플레이 일수';
+
+  @override
+  String recordsDetailStreakDays(int count) {
+    return '$count일';
+  }
+
+  @override
+  String recordsStatAverageWrongFormatted(String value) {
+    return '$value회';
+  }
+
+  @override
+  String get recordsDifficultySnapshotEmpty => '아직 난이도별 기록이 없어요.';
+
+  @override
+  String get recordsLevelDoneShort => '완료';
+
+  @override
+  String get recordsStatsHeroEyebrow => '최근 7일 스도쿠 기록';
+
+  @override
+  String get recordsStatsHeroHeadline => '최근 7일 스도쿠 기록을\n한눈에 확인하세요.';
+
+  @override
+  String recordsTrendA11yMaxClears(int count) {
+    return '최고 $count회';
+  }
+
+  @override
+  String get recordsHeroChartEmptyHint =>
+      '최근 7일 안에 퍼즐을 클리어하면 흐름 그래프가 여기에 나타나요.';
+
+  @override
+  String get recordsHeroSubtitleNoChart => '아래 카드에서 최근 7일 일별 클리어를 확인할 수 있어요.';
+
+  @override
+  String get recordsCalendarPlayedLabel => '클리어한 날';
+
+  @override
+  String get recordsCalendarEmptyLabel => '클리어 없음';
+
+  @override
+  String get recordsNoAverageTime => '기록 없음';
+
+  @override
+  String get recordsStatsBasisFootnote => '통계는 퍼즐별 최고 클리어 기록을 기준으로 계산됩니다.';
 
   @override
   String get recordsBestByLevelTitle => '난이도별 최고 기록';
@@ -961,10 +1034,38 @@ class AppLocalizationsKo extends AppLocalizations {
   String get levelLoadingGames => '게임을 불러오는 중...';
 
   @override
-  String get levelTapToStart => '클릭하여 게임 시작';
+  String get levelTapToStart => '바로 시작';
 
   @override
   String get levelClearedBadge => '클리어';
+
+  @override
+  String get levelOverviewTitle => '레벨 개요';
+
+  @override
+  String get levelPuzzlesSectionTitle => '퍼즐 목록';
+
+  @override
+  String get levelProgressLabel => '진행률';
+
+  @override
+  String get levelNoRecordYet => '기록 없음';
+
+  @override
+  String get levelStatusReady => '새 퍼즐';
+
+  @override
+  String get levelStatusCleared => '완료한 퍼즐';
+
+  @override
+  String levelEmptyCellsLabel(int count) {
+    return '빈칸 $count개';
+  }
+
+  @override
+  String levelPuzzleCountSummary(int count) {
+    return '총 $count개의 퍼즐';
+  }
 
   @override
   String levelCatalogPreparingShort(int done, int total) {

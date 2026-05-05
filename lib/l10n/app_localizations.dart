@@ -1139,13 +1139,13 @@ abstract class AppLocalizations {
   /// No description provided for @recordsPlayInsightsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Recent play insights'**
+  /// **'Recent clear insights'**
   String get recordsPlayInsightsTitle;
 
   /// No description provided for @recordsPlayCalendarTitle.
   ///
   /// In en, this message translates to:
-  /// **'Play calendar'**
+  /// **'Clear calendar'**
   String get recordsPlayCalendarTitle;
 
   /// No description provided for @recordsWeeklyReportTitle.
@@ -1316,17 +1316,149 @@ abstract class AppLocalizations {
   /// **'Try again'**
   String get recordsRetry;
 
+  /// No description provided for @recordsStatsPageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review your clear history.'**
+  String get recordsStatsPageSubtitle;
+
+  /// No description provided for @recordsKpiWeeklyClearsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Clears in the last 7 days'**
+  String get recordsKpiWeeklyClearsLabel;
+
+  /// No description provided for @recordsKpiAvgSolveTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg. time in the last 7 days'**
+  String get recordsKpiAvgSolveTimeLabel;
+
+  /// No description provided for @recordsSectionBestRecordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Best run'**
+  String get recordsSectionBestRecordTitle;
+
+  /// No description provided for @recordsSectionDifficultyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'By difficulty'**
+  String get recordsSectionDifficultyTitle;
+
+  /// No description provided for @recordsSectionDetailStatsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Session details'**
+  String get recordsSectionDetailStatsTitle;
+
+  /// No description provided for @recordsBestSingleEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No standout run yet.'**
+  String get recordsBestSingleEmpty;
+
+  /// No description provided for @recordsHintUsageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hints'**
+  String get recordsHintUsageLabel;
+
+  /// No description provided for @recordsHintUsageNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get recordsHintUsageNoData;
+
+  /// No description provided for @recordsDetailMistakesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg. mistakes'**
+  String get recordsDetailMistakesShort;
+
+  /// No description provided for @recordsDetailStreakShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Active streak'**
+  String get recordsDetailStreakShort;
+
+  /// No description provided for @recordsDetailStreakDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} day} other{{count} days}}'**
+  String recordsDetailStreakDays(int count);
+
+  /// No description provided for @recordsStatAverageWrongFormatted.
+  ///
+  /// In en, this message translates to:
+  /// **'{value}'**
+  String recordsStatAverageWrongFormatted(String value);
+
+  /// No description provided for @recordsDifficultySnapshotEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Play a few games to see your difficulty mix here.'**
+  String get recordsDifficultySnapshotEmpty;
+
+  /// No description provided for @recordsLevelDoneShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get recordsLevelDoneShort;
+
+  /// No description provided for @recordsStatsHeroEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sudoku in the last 7 days'**
+  String get recordsStatsHeroEyebrow;
+
+  /// No description provided for @recordsStatsHeroHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'See your last 7 days of\nSudoku at a glance.'**
+  String get recordsStatsHeroHeadline;
+
+  /// No description provided for @recordsTrendA11yMaxClears.
+  ///
+  /// In en, this message translates to:
+  /// **'Peak {count}'**
+  String recordsTrendA11yMaxClears(int count);
+
   /// No description provided for @recordsHeroChartEmptyHint.
   ///
   /// In en, this message translates to:
-  /// **'Clear a puzzle this week to see your flow sketch here.'**
+  /// **'Clear a puzzle within the last 7 days to see your flow sketch here.'**
   String get recordsHeroChartEmptyHint;
 
   /// No description provided for @recordsHeroSubtitleNoChart.
   ///
   /// In en, this message translates to:
-  /// **'Use the card below for this week’s daily clears.'**
+  /// **'Use the card below for daily clears from the last 7 days.'**
   String get recordsHeroSubtitleNoChart;
+
+  /// No description provided for @recordsCalendarPlayedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleared'**
+  String get recordsCalendarPlayedLabel;
+
+  /// No description provided for @recordsCalendarEmptyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'No clears'**
+  String get recordsCalendarEmptyLabel;
+
+  /// No description provided for @recordsNoAverageTime.
+  ///
+  /// In en, this message translates to:
+  /// **'No records'**
+  String get recordsNoAverageTime;
+
+  /// No description provided for @recordsStatsBasisFootnote.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics are calculated from the best clear record for each puzzle.'**
+  String get recordsStatsBasisFootnote;
 
   /// No description provided for @recordsBestByLevelTitle.
   ///
@@ -1829,7 +1961,7 @@ abstract class AppLocalizations {
   /// No description provided for @levelTapToStart.
   ///
   /// In en, this message translates to:
-  /// **'Tap to start'**
+  /// **'Start now'**
   String get levelTapToStart;
 
   /// No description provided for @levelClearedBadge.
@@ -1837,6 +1969,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cleared'**
   String get levelClearedBadge;
+
+  /// No description provided for @levelOverviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Level overview'**
+  String get levelOverviewTitle;
+
+  /// No description provided for @levelPuzzlesSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Puzzle list'**
+  String get levelPuzzlesSectionTitle;
+
+  /// No description provided for @levelProgressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get levelProgressLabel;
+
+  /// No description provided for @levelNoRecordYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No records yet'**
+  String get levelNoRecordYet;
+
+  /// No description provided for @levelStatusReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Fresh puzzle'**
+  String get levelStatusReady;
+
+  /// No description provided for @levelStatusCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed puzzle'**
+  String get levelStatusCleared;
+
+  /// No description provided for @levelEmptyCellsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} empty cells'**
+  String levelEmptyCellsLabel(int count);
+
+  /// No description provided for @levelPuzzleCountSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} puzzles'**
+  String levelPuzzleCountSummary(int count);
 
   /// No description provided for @levelCatalogPreparingShort.
   ///

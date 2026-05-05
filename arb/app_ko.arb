@@ -245,8 +245,8 @@
   "recordsTrendSectionSubtitle": "최근 일주일 동안 날짜별 클리어 수를 한눈에 보는 요약이에요.",
   "recordsTrendLegendDailyClears": "일별 클리어",
   "recordsTrendTodayLabel": "오늘",
-  "recordsPlayInsightsTitle": "최근 플레이 인사이트",
-  "recordsPlayCalendarTitle": "플레이 캘린더",
+  "recordsPlayInsightsTitle": "최근 클리어 인사이트",
+  "recordsPlayCalendarTitle": "클리어 캘린더",
   "recordsWeeklyReportTitle": "이번 주 리포트",
   "recordsWeeklyReportBusiestDay": "가장 많이 플레이한 날",
   "recordsWeeklyReportTopDayValue": "{day}, {count}회",
@@ -286,8 +286,45 @@
   "recordsLevelMiniAvgWrong": "평균 오답",
   "recordsStatsLoadError": "통계 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
   "recordsRetry": "다시 시도",
-  "recordsHeroChartEmptyHint": "이번 주에 퍼즐을 클리어하면 흐름 그래프가 여기에 나타나요.",
-  "recordsHeroSubtitleNoChart": "아래 카드에서 이번 주 일별 클리어를 확인할 수 있어요.",
+  "recordsStatsPageSubtitle": "나의 클리어 기록을 확인해보세요.",
+  "recordsKpiWeeklyClearsLabel": "최근 7일 클리어 수",
+  "recordsKpiAvgSolveTimeLabel": "최근 7일 평균 시간",
+  "recordsSectionBestRecordTitle": "최고 기록",
+  "recordsSectionDifficultyTitle": "난이도별 기록",
+  "recordsSectionDetailStatsTitle": "세부 기록",
+  "recordsBestSingleEmpty": "아직 최고 기록을 표시할 데이터가 없어요.",
+  "recordsHintUsageLabel": "힌트 사용 기록",
+  "recordsHintUsageNoData": "기록 없음",
+  "recordsDetailMistakesShort": "실수 기록",
+  "recordsDetailStreakShort": "연속 플레이 일수",
+  "recordsDetailStreakDays": "{count}일",
+  "@recordsDetailStreakDays": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "recordsStatAverageWrongFormatted": "{value}회",
+  "@recordsStatAverageWrongFormatted": {
+    "placeholders": {
+      "value": {"type": "String"}
+    }
+  },
+  "recordsDifficultySnapshotEmpty": "아직 난이도별 기록이 없어요.",
+  "recordsLevelDoneShort": "완료",
+  "recordsStatsHeroEyebrow": "최근 7일 스도쿠 기록",
+  "recordsStatsHeroHeadline": "최근 7일 스도쿠 기록을\n한눈에 확인하세요.",
+  "recordsTrendA11yMaxClears": "최고 {count}회",
+  "@recordsTrendA11yMaxClears": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "recordsHeroChartEmptyHint": "최근 7일 안에 퍼즐을 클리어하면 흐름 그래프가 여기에 나타나요.",
+  "recordsHeroSubtitleNoChart": "아래 카드에서 최근 7일 일별 클리어를 확인할 수 있어요.",
+  "recordsCalendarPlayedLabel": "클리어한 날",
+  "recordsCalendarEmptyLabel": "클리어 없음",
+  "recordsNoAverageTime": "기록 없음",
+  "recordsStatsBasisFootnote": "통계는 퍼즐별 최고 클리어 기록을 기준으로 계산됩니다.",
   "recordsBestByLevelTitle": "난이도별 최고 기록",
   "recordsBestByLevelEmpty": "표시할 난이도별 최고 기록이 없습니다.",
   "recordsBestByLevelDetail": "{time} · 오답 {wrongCount}",
@@ -478,8 +515,26 @@
     }
   },
   "levelLoadingGames": "게임을 불러오는 중...",
-  "levelTapToStart": "클릭하여 게임 시작",
+  "levelTapToStart": "바로 시작",
   "levelClearedBadge": "클리어",
+  "levelOverviewTitle": "레벨 개요",
+  "levelPuzzlesSectionTitle": "퍼즐 목록",
+  "levelProgressLabel": "진행률",
+  "levelNoRecordYet": "기록 없음",
+  "levelStatusReady": "새 퍼즐",
+  "levelStatusCleared": "완료한 퍼즐",
+  "levelEmptyCellsLabel": "빈칸 {count}개",
+  "@levelEmptyCellsLabel": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "levelPuzzleCountSummary": "총 {count}개의 퍼즐",
+  "@levelPuzzleCountSummary": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "levelCatalogPreparingShort": "추가 퍼즐 준비 중 · {done}/{total}판",
   "@levelCatalogPreparingShort": {
     "placeholders": {

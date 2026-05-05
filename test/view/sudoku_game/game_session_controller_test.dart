@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mysudoku/model/sudoku_game.dart';
 import 'package:mysudoku/model/sudoku_level.dart';
-import 'package:mysudoku/services/game_state_service.dart';
+import 'package:mysudoku/services/game/game_state_service.dart';
 import 'package:mysudoku/utils/app_logger.dart';
 import 'package:mysudoku/view/sudoku_game/game_session_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';

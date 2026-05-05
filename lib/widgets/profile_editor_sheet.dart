@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/services/profile_image_service.dart';
+import 'package:mysudoku/services/profile/profile_image_service.dart';
 
 typedef ProfileSaveCallback = Future<void> Function({
   required String? name,

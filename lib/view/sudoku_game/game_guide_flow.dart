@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/services/onboarding_service.dart';
+import 'package:mysudoku/services/settings/onboarding_service.dart';
 import 'package:mysudoku/view/sudoku_game/game_guide_item.dart';
 
 class GameGuideFlow {

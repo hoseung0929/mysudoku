@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:mysudoku/model/sudoku_game.dart';
 import 'package:mysudoku/model/sudoku_level.dart';
-import 'package:mysudoku/services/game_state_service.dart';
+import 'package:mysudoku/services/game/game_state_service.dart';
 import 'package:mysudoku/utils/app_logger.dart';
 
 class GameSessionSnapshot {

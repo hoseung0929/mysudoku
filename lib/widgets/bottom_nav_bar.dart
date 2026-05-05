@@ -26,7 +26,7 @@ class BottomNavBar extends StatelessWidget {
       ),
     ];
 
-    /// 홈 상단 프로필 글래스 바와 동일 톤 (level_selection_main)
+    /// 홈 상단 프로필 글래스 바와 동일 톤 (home_screen)
     return SafeArea(
       top: false,
       minimum: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -102,8 +102,8 @@ class _BottomNavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const iconColor = Color(0xFF8A958D);
-    const selectedIconColor = Color(0xFF1F3328);
+    const iconColor = AppTheme.mutedTextColor;
+    const selectedIconColor = AppTheme.textColor;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),

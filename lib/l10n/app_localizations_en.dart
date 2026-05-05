@@ -594,10 +594,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsTrendTodayLabel => 'Today';
 
   @override
-  String get recordsPlayInsightsTitle => 'Recent play insights';
+  String get recordsPlayInsightsTitle => 'Recent clear insights';
 
   @override
-  String get recordsPlayCalendarTitle => 'Play calendar';
+  String get recordsPlayCalendarTitle => 'Clear calendar';
 
   @override
   String get recordsWeeklyReportTitle => 'Weekly report';
@@ -705,12 +705,93 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsRetry => 'Try again';
 
   @override
+  String get recordsStatsPageSubtitle => 'Review your clear history.';
+
+  @override
+  String get recordsKpiWeeklyClearsLabel => 'Clears in the last 7 days';
+
+  @override
+  String get recordsKpiAvgSolveTimeLabel => 'Avg. time in the last 7 days';
+
+  @override
+  String get recordsSectionBestRecordTitle => 'Best run';
+
+  @override
+  String get recordsSectionDifficultyTitle => 'By difficulty';
+
+  @override
+  String get recordsSectionDetailStatsTitle => 'Session details';
+
+  @override
+  String get recordsBestSingleEmpty => 'No standout run yet.';
+
+  @override
+  String get recordsHintUsageLabel => 'Hints';
+
+  @override
+  String get recordsHintUsageNoData => 'No data';
+
+  @override
+  String get recordsDetailMistakesShort => 'Avg. mistakes';
+
+  @override
+  String get recordsDetailStreakShort => 'Active streak';
+
+  @override
+  String recordsDetailStreakDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '$count day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recordsStatAverageWrongFormatted(String value) {
+    return '$value';
+  }
+
+  @override
+  String get recordsDifficultySnapshotEmpty =>
+      'Play a few games to see your difficulty mix here.';
+
+  @override
+  String get recordsLevelDoneShort => 'Done';
+
+  @override
+  String get recordsStatsHeroEyebrow => 'Sudoku in the last 7 days';
+
+  @override
+  String get recordsStatsHeroHeadline =>
+      'See your last 7 days of\nSudoku at a glance.';
+
+  @override
+  String recordsTrendA11yMaxClears(int count) {
+    return 'Peak $count';
+  }
+
+  @override
   String get recordsHeroChartEmptyHint =>
-      'Clear a puzzle this week to see your flow sketch here.';
+      'Clear a puzzle within the last 7 days to see your flow sketch here.';
 
   @override
   String get recordsHeroSubtitleNoChart =>
-      'Use the card below for this week’s daily clears.';
+      'Use the card below for daily clears from the last 7 days.';
+
+  @override
+  String get recordsCalendarPlayedLabel => 'Cleared';
+
+  @override
+  String get recordsCalendarEmptyLabel => 'No clears';
+
+  @override
+  String get recordsNoAverageTime => 'No records';
+
+  @override
+  String get recordsStatsBasisFootnote =>
+      'Statistics are calculated from the best clear record for each puzzle.';
 
   @override
   String get recordsBestByLevelTitle => 'Best by level';
@@ -1025,10 +1106,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get levelLoadingGames => 'Loading puzzles…';
 
   @override
-  String get levelTapToStart => 'Tap to start';
+  String get levelTapToStart => 'Start now';
 
   @override
   String get levelClearedBadge => 'Cleared';
+
+  @override
+  String get levelOverviewTitle => 'Level overview';
+
+  @override
+  String get levelPuzzlesSectionTitle => 'Puzzle list';
+
+  @override
+  String get levelProgressLabel => 'Progress';
+
+  @override
+  String get levelNoRecordYet => 'No records yet';
+
+  @override
+  String get levelStatusReady => 'Fresh puzzle';
+
+  @override
+  String get levelStatusCleared => 'Completed puzzle';
+
+  @override
+  String levelEmptyCellsLabel(int count) {
+    return '$count empty cells';
+  }
+
+  @override
+  String levelPuzzleCountSummary(int count) {
+    return '$count puzzles';
+  }
 
   @override
   String levelCatalogPreparingShort(int done, int total) {

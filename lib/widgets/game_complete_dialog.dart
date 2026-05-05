@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mysudoku/l10n/app_localizations.dart';
+import 'package:mysudoku/theme/app_colors.dart';
 
 /// 게임 완료 축하 다이얼로그 위젯
 class GameCompleteDialog extends StatelessWidget {
@@ -14,9 +15,6 @@ class GameCompleteDialog extends StatelessWidget {
 
   /// 같은 난이도의 다음 게임이 있을 때만 전달합니다.
   final VoidCallback? onNextPuzzle;
-
-  static const Color mintColor = Color(0xFF285B3F);
-  static const Color goldColor = Color(0xFFF4A261);
 
   const GameCompleteDialog({
     super.key,
@@ -59,23 +57,25 @@ class GameCompleteDialog extends StatelessWidget {
     );
     final primaryActionStyle = ElevatedButton.styleFrom(
       minimumSize: const Size.fromHeight(50),
-      backgroundColor: mintColor,
-      foregroundColor: const Color(0xFFFDFBF6),
+      backgroundColor: AppColors.primary,
+      foregroundColor: AppColors.onPrimary,
+      elevation: 0,
+      shadowColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
     );
     return AlertDialog(
-      backgroundColor: const Color(0xFFFFFDF9),
+      backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(28),
-        side: const BorderSide(color: Color(0xFFE4DED3)),
+        side: const BorderSide(color: AppColors.border),
       ),
       title: Row(
         children: [
           const Icon(
             Icons.celebration,
-            color: goldColor,
+            color: AppColors.boardAccent2,
             size: 32,
           ),
           const SizedBox(width: 12),
@@ -101,7 +101,7 @@ class GameCompleteDialog extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: goldColor.withValues(alpha: 0.16),
+                    color: AppColors.attention.withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(

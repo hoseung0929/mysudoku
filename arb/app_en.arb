@@ -245,8 +245,8 @@
   "recordsTrendSectionSubtitle": "Day-by-day clears for the last seven days.",
   "recordsTrendLegendDailyClears": "Daily clears",
   "recordsTrendTodayLabel": "Today",
-  "recordsPlayInsightsTitle": "Recent play insights",
-  "recordsPlayCalendarTitle": "Play calendar",
+  "recordsPlayInsightsTitle": "Recent clear insights",
+  "recordsPlayCalendarTitle": "Clear calendar",
   "recordsWeeklyReportTitle": "Weekly report",
   "recordsWeeklyReportBusiestDay": "Most active day",
   "recordsWeeklyReportTopDayValue": "{day}, {count, plural, one{{count} clear} other{{count} clears}}",
@@ -286,8 +286,45 @@
   "recordsLevelMiniAvgWrong": "Avg wrong",
   "recordsStatsLoadError": "Unable to load statistics right now. Please try again shortly.",
   "recordsRetry": "Try again",
-  "recordsHeroChartEmptyHint": "Clear a puzzle this week to see your flow sketch here.",
-  "recordsHeroSubtitleNoChart": "Use the card below for this week’s daily clears.",
+  "recordsStatsPageSubtitle": "Review your clear history.",
+  "recordsKpiWeeklyClearsLabel": "Clears in the last 7 days",
+  "recordsKpiAvgSolveTimeLabel": "Avg. time in the last 7 days",
+  "recordsSectionBestRecordTitle": "Best run",
+  "recordsSectionDifficultyTitle": "By difficulty",
+  "recordsSectionDetailStatsTitle": "Session details",
+  "recordsBestSingleEmpty": "No standout run yet.",
+  "recordsHintUsageLabel": "Hints",
+  "recordsHintUsageNoData": "No data",
+  "recordsDetailMistakesShort": "Avg. mistakes",
+  "recordsDetailStreakShort": "Active streak",
+  "recordsDetailStreakDays": "{count, plural, one{{count} day} other{{count} days}}",
+  "@recordsDetailStreakDays": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "recordsStatAverageWrongFormatted": "{value}",
+  "@recordsStatAverageWrongFormatted": {
+    "placeholders": {
+      "value": {"type": "String"}
+    }
+  },
+  "recordsDifficultySnapshotEmpty": "Play a few games to see your difficulty mix here.",
+  "recordsLevelDoneShort": "Done",
+  "recordsStatsHeroEyebrow": "Sudoku in the last 7 days",
+  "recordsStatsHeroHeadline": "See your last 7 days of\nSudoku at a glance.",
+  "recordsTrendA11yMaxClears": "Peak {count}",
+  "@recordsTrendA11yMaxClears": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "recordsHeroChartEmptyHint": "Clear a puzzle within the last 7 days to see your flow sketch here.",
+  "recordsHeroSubtitleNoChart": "Use the card below for daily clears from the last 7 days.",
+  "recordsCalendarPlayedLabel": "Cleared",
+  "recordsCalendarEmptyLabel": "No clears",
+  "recordsNoAverageTime": "No records",
+  "recordsStatsBasisFootnote": "Statistics are calculated from the best clear record for each puzzle.",
   "recordsBestByLevelTitle": "Best by level",
   "recordsBestByLevelEmpty": "No best-by-level records for this filter.",
   "recordsBestByLevelDetail": "{time} · Mistakes: {wrongCount}",
@@ -478,8 +515,26 @@
     }
   },
   "levelLoadingGames": "Loading puzzles…",
-  "levelTapToStart": "Tap to start",
+  "levelTapToStart": "Start now",
   "levelClearedBadge": "Cleared",
+  "levelOverviewTitle": "Level overview",
+  "levelPuzzlesSectionTitle": "Puzzle list",
+  "levelProgressLabel": "Progress",
+  "levelNoRecordYet": "No records yet",
+  "levelStatusReady": "Fresh puzzle",
+  "levelStatusCleared": "Completed puzzle",
+  "levelEmptyCellsLabel": "{count} empty cells",
+  "@levelEmptyCellsLabel": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "levelPuzzleCountSummary": "{count} puzzles",
+  "@levelPuzzleCountSummary": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "levelCatalogPreparingShort": "Preparing more puzzles · {done}/{total}",
   "@levelCatalogPreparingShort": {
     "placeholders": {

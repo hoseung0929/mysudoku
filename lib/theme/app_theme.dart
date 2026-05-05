@@ -1,56 +1,77 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// 앱 전체에서 사용할 테마 클래스
+import 'package:mysudoku/theme/app_colors.dart';
+
+/// 앱 전체 테마. 팔레트는 [AppColors]·`skills/sudoku-design-guide`와 정렬한다.
 class AppTheme {
-  // 색상 정의
-  static const Color backgroundColor = Color(0xFFF7F6F0);
-  static const Color surfaceTint = Color(0xFFF1F0E8);
-  static const Color cardColor = Color(0xFFFFFFFF);
-  static const Color mintColor = Color(0xFF9DB59D);
-  static const Color lightBlueColor = Color(0xFF7F9B82);
-  static const Color yellowColor = Color(0xFFF1E5CD);
-  static const Color pinkColor = Color(0xFFF4A261);
-  static const Color hintYellowColor = Color(0xFFDCE8DD);
-  static const Color textColor = Color(0xFF263A2E);
-  static const Color lightTextColor = Color(0xFF7B857D);
-  static const Color lineColor = Color(0xFFE3E1D8);
+  static const Color backgroundColor = AppColors.background;
+  static const Color surfaceTint = AppColors.surfaceSubtle;
+  static const Color cardColor = AppColors.surface;
 
-  /// 홈 히어로 「나만의 속도」 주요 CTA.
-  static const Color homeMyPaceCtaBackground = Color(0xFF7F9B82);
-  static const Color homeMyPaceCtaForeground = textColor;
+  /// 보드·셀 하이라이트용 (낮은 채도)
+  static const Color mintColor = AppColors.boardAccent;
+  static const Color lightBlueColor = AppColors.boardAccent2;
+  static const Color yellowColor = AppColors.attentionSurface;
+  static const Color pinkColor = AppColors.attention;
+  static const Color hintYellowColor = AppColors.boardSurfaceTint;
 
-  /// 라이트 테마
+  static const Color textColor = AppColors.textPrimary;
+  static const Color lightTextColor = AppColors.textSecondary;
+  static const Color mutedTextColor = AppColors.textMuted;
+  static const Color disabledTextColor = AppColors.textDisabled;
+  static const Color lineColor = AppColors.border;
+  static const Color lineLightColor = AppColors.borderLight;
+
+  /// 홈 「나만의 속도」 CTA — 스킬: 포인트는 블랙·저채도
+  static const Color homeMyPaceCtaBackground = AppColors.primary;
+  static const Color homeMyPaceCtaForeground = AppColors.onPrimary;
+
+  /// 기록 통계 차트·배지 포인트 (보드 액센트와 동일 계열)
+  static const Color statisticsAccent = AppColors.boardAccent;
+
   static ThemeData lightTheme() {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: mintColor,
+      seedColor: AppColors.primary,
       brightness: Brightness.light,
     ).copyWith(
-      primary: mintColor,
-      onPrimary: textColor,
-      secondary: lightBlueColor,
-      tertiary: pinkColor,
-      surface: cardColor,
-      surfaceContainerLowest: backgroundColor,
-      surfaceContainerLow: const Color(0xFFF5F4ED),
-      surfaceContainer: surfaceTint,
-      surfaceContainerHigh: const Color(0xFFEFEEE6),
-      surfaceContainerHighest: const Color(0xFFE8E6DC),
-      outline: lineColor,
-      outlineVariant: lineColor,
-      onSurface: textColor,
-      onSurfaceVariant: lightTextColor,
+      primary: AppColors.primary,
+      onPrimary: AppColors.onPrimary,
+      primaryContainer: AppColors.surfaceSubtle,
+      onPrimaryContainer: AppColors.textPrimary,
+      secondary: AppColors.boardAccent,
+      onSecondary: AppColors.textPrimary,
+      secondaryContainer: AppColors.boardSurfaceTint,
+      onSecondaryContainer: AppColors.textPrimary,
+      tertiary: AppColors.boardAccent2,
+      onTertiary: AppColors.textPrimary,
+      tertiaryContainer: AppColors.borderLight,
+      onTertiaryContainer: AppColors.textPrimary,
+      surface: AppColors.surface,
+      onSurface: AppColors.textPrimary,
+      onSurfaceVariant: AppColors.textSecondary,
+      outline: AppColors.border,
+      outlineVariant: AppColors.borderLight,
+      surfaceContainerLowest: AppColors.background,
+      surfaceContainerLow: AppColors.surfaceSubtle,
+      surfaceContainer: AppColors.surfaceSubtle,
+      surfaceContainerHigh: AppColors.borderLight,
+      surfaceContainerHighest: AppColors.divider,
+      error: AppColors.attention,
+      onError: AppColors.onPrimary,
+      errorContainer: AppColors.attentionSurface,
+      onErrorContainer: AppColors.textPrimary,
     );
-    const primaryTextColor = textColor;
-    const secondaryTextColor = lightTextColor;
+
+    const primaryTextColor = AppColors.textPrimary;
+    const secondaryTextColor = AppColors.textSecondary;
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: backgroundColor,
-      canvasColor: backgroundColor,
+      scaffoldBackgroundColor: AppColors.background,
+      canvasColor: AppColors.background,
       textTheme: GoogleFonts.notoSansTextTheme().copyWith(
-        // 제목 스타일
         displayLarge: GoogleFonts.notoSans(
           fontSize: 32,
           fontWeight: FontWeight.bold,
@@ -66,7 +87,6 @@ class AppTheme {
           fontWeight: FontWeight.bold,
           color: primaryTextColor,
         ),
-        // 헤드라인 스타일
         headlineLarge: GoogleFonts.notoSans(
           fontSize: 22,
           fontWeight: FontWeight.w600,
@@ -82,7 +102,6 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           color: primaryTextColor,
         ),
-        // 제목 스타일
         titleLarge: GoogleFonts.notoSans(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -98,7 +117,6 @@ class AppTheme {
           fontWeight: FontWeight.w500,
           color: secondaryTextColor,
         ),
-        // 본문 스타일
         bodyLarge: GoogleFonts.notoSans(
           fontSize: 16,
           fontWeight: FontWeight.normal,
@@ -114,7 +132,6 @@ class AppTheme {
           fontWeight: FontWeight.normal,
           color: secondaryTextColor,
         ),
-        // 라벨 스타일
         labelLarge: GoogleFonts.notoSans(
           fontSize: 14,
           fontWeight: FontWeight.w500,
@@ -131,9 +148,8 @@ class AppTheme {
           color: secondaryTextColor,
         ),
       ),
-      // 앱바 테마
       appBarTheme: AppBarTheme(
-        backgroundColor: cardColor,
+        backgroundColor: AppColors.surface,
         foregroundColor: primaryTextColor,
         elevation: 0,
         shadowColor: Colors.transparent,
@@ -144,21 +160,22 @@ class AppTheme {
           color: primaryTextColor,
         ),
       ),
-      // 카드 테마
       cardTheme: CardThemeData(
-        color: cardColor,
+        color: AppColors.surface,
         elevation: 0,
-        shadowColor: Colors.black.withValues(alpha: 0.05),
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: lineColor),
+          side: const BorderSide(color: AppColors.border),
         ),
       ),
-      // 버튼 테마
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: mintColor,
-          foregroundColor: textColor,
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.onPrimary,
+          elevation: 0,
+          shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
@@ -168,7 +185,12 @@ class AppTheme {
           ),
         ),
       ),
-      // 텍스트 버튼 테마
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          elevation: 0,
+          shadowColor: Colors.transparent,
+        ),
+      ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: secondaryTextColor,
@@ -178,26 +200,21 @@ class AppTheme {
           ),
         ),
       ),
-      // 입력 필드 테마
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: backgroundColor,
+        fillColor: AppColors.surfaceSubtle,
         border: const OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(18)),
-          borderSide: BorderSide(
-            color: lineColor,
-          ),
+          borderSide: BorderSide(color: AppColors.border),
         ),
         enabledBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(18)),
-          borderSide: BorderSide(
-            color: lineColor,
-          ),
+          borderSide: BorderSide(color: AppColors.border),
         ),
         focusedBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(18)),
           borderSide: BorderSide(
-            color: lightBlueColor,
+            color: AppColors.boardAccent2,
             width: 2,
           ),
         ),
@@ -208,7 +225,6 @@ class AppTheme {
     );
   }
 
-  /// 스도쿠 숫자용 폰트 스타일
   static TextStyle get sudokuNumberStyle {
     return GoogleFonts.notoSans(
       fontSize: 28,
@@ -217,7 +233,6 @@ class AppTheme {
     );
   }
 
-  /// 스도쿠 고정 숫자용 폰트 스타일
   static TextStyle get sudokuFixedNumberStyle {
     return GoogleFonts.notoSans(
       fontSize: 28,
@@ -226,7 +241,6 @@ class AppTheme {
     );
   }
 
-  /// 스도쿠 오답 숫자용 폰트 스타일
   static TextStyle get sudokuWrongNumberStyle {
     return GoogleFonts.notoSans(
       fontSize: 28,
@@ -235,31 +249,20 @@ class AppTheme {
     );
   }
 
-  /// 숫자 버튼용 폰트 스타일
+  /// 숫자 패드 — 과한 그림자 지양 (스킬)
   static TextStyle get numberButtonStyle {
     return GoogleFonts.notoSans(
       fontSize: 38,
       fontWeight: FontWeight.w600,
       color: textColor,
-      shadows: const [
-        Shadow(
-          color: Colors.black12,
-          offset: Offset(0, 1),
-          blurRadius: 2,
-        ),
-      ],
     );
   }
 
-  /// 스도쿠 오답 숫자 배경색
   static Color get sudokuWrongNumberColor => pinkColor;
 
-  /// 스도쿠 힌트 숫자 배경색
   static Color get sudokuHintNumberColor => hintYellowColor;
 
-  /// 스도쿠 선택된 숫자 배경색
   static Color get sudokuSelectedNumberColor => lightBlueColor;
 
-  /// 스도쿠 같은 숫자 배경색
   static Color get sudokuSameNumberColor => mintColor;
 }

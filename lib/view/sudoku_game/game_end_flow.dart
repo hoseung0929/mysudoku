@@ -4,7 +4,7 @@ import 'package:mysudoku/model/sudoku_game.dart';
 import 'package:mysudoku/model/sudoku_level.dart';
 import 'package:mysudoku/view/sudoku_game/game_completion_coordinator.dart';
 import 'package:mysudoku/view/sudoku_game/game_over_flow.dart';
-import 'package:mysudoku/view/settings_screen.dart';
+import 'package:mysudoku/view/settings/settings_screen.dart';
 import 'package:mysudoku/widgets/game_complete_dialog.dart';
 
 class GameEndFlow {

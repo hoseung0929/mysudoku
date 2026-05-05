@@ -7,8 +7,8 @@ import 'package:mysudoku/utils/app_logger.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:mysudoku/model/sudoku_level.dart';
-import 'package:mysudoku/services/firestore_puzzle_service.dart';
-import 'package:mysudoku/services/remote_puzzle_service.dart';
+import 'package:mysudoku/services/catalog/firestore_puzzle_service.dart';
+import 'package:mysudoku/services/catalog/remote_puzzle_service.dart';
 import 'package:mysudoku/utils/sudoku_generator.dart';
 import 'package:mysudoku/utils/board_codec.dart';
 

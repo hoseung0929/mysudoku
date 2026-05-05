@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mysudoku/presenter/sudoku_game_presenter.dart';
+import 'package:mysudoku/presenter/game/sudoku_game_presenter.dart';
 import 'package:mysudoku/theme/app_theme.dart';
 import 'package:mysudoku/view/sudoku_game/sudoku_memo_notes_grid.dart';
 
