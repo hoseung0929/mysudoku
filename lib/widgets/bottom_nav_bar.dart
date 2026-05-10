@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:mysudoku/theme/app_theme.dart';
+import 'package:sudoku159/theme/app_theme.dart';
 
 /// 하단 네비게이션 바 위젯
 class BottomNavBar extends StatelessWidget {
@@ -126,7 +126,7 @@ class _BottomNavButton extends StatelessWidget {
                 Icon(
                   data.icon,
                   size: selected ? 22 : 21,
-                    color: selected ? selectedIconColor : iconColor,
+                  color: selected ? selectedIconColor : iconColor,
                 ),
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 180),

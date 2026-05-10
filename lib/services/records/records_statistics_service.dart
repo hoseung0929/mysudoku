@@ -1,5 +1,5 @@
-import 'package:mysudoku/constants/records_level_filter.dart';
-import 'package:mysudoku/database/database_helper.dart';
+import 'package:sudoku159/constants/records_level_filter.dart';
+import 'package:sudoku159/database/database_helper.dart';
 
 class RecordsStatisticsData {
   const RecordsStatisticsData({
@@ -72,12 +72,10 @@ class RecordsStatisticsService {
     final periodFirstDay =
         today.subtract(Duration(days: selectedPeriodDays - 1));
     final cutoff = _formatDate(periodFirstDay);
-    return recent
-        .where((record) {
-          final d = record['clear_date']?.toString();
-          return d != null && d.compareTo(cutoff) >= 0;
-        })
-        .toList(growable: false);
+    return recent.where((record) {
+      final d = record['clear_date']?.toString();
+      return d != null && d.compareTo(cutoff) >= 0;
+    }).toList(growable: false);
   }
 
   String formatSeconds(num value) {
@@ -158,8 +156,7 @@ class RecordsStatisticsService {
       final perfectClears = records
           .where((record) => _recordInt(record, 'wrong_count') == 0)
           .length;
-      final perfectRate =
-          cleared > 0 ? (perfectClears / cleared) * 100 : 0.0;
+      final perfectRate = cleared > 0 ? (perfectClears / cleared) * 100 : 0.0;
       final bestTime = records.isEmpty
           ? 0
           : records

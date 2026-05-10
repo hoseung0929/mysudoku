@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mysudoku/view/sudoku_game/game_effects_controller.dart';
+import 'package:sudoku159/view/sudoku_game/game_effects_controller.dart';
 
 void main() {
   group('GameEffectsController', () {

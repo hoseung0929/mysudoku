@@ -1,6 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:mysudoku/database/database_manager.dart';
-import 'package:mysudoku/l10n/app_localizations.dart';
+import 'package:flutter/foundation.dart';
+import 'package:sudoku159/database/database_manager.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
+
+const bool _catalogGatePreview = bool.fromEnvironment(
+  'CATALOG_GATE_PREVIEW',
+);
+const int _catalogGateMinSeconds = int.fromEnvironment(
+  'CATALOG_GATE_MIN_SECONDS',
+);
+const int _catalogGateDefaultMinMilliseconds = int.fromEnvironment(
+  'CATALOG_GATE_MIN_MS',
+  defaultValue: kDebugMode ? 3000 : 0,
+);
 
 class StartupCatalogPreparingGate extends StatefulWidget {
   const StartupCatalogPreparingGate({
@@ -15,7 +27,8 @@ class StartupCatalogPreparingGate extends StatefulWidget {
       _StartupCatalogPreparingGateState();
 }
 
-class _StartupCatalogPreparingGateState extends State<StartupCatalogPreparingGate> {
+class _StartupCatalogPreparingGateState
+    extends State<StartupCatalogPreparingGate> {
   final DatabaseManager _databaseManager = DatabaseManager();
   late PuzzleCatalogStatus _status;
   bool _isPreparing = false;
@@ -47,13 +60,18 @@ class _StartupCatalogPreparingGateState extends State<StartupCatalogPreparingGat
     if (_isPreparing) {
       return;
     }
+    final startedAt = DateTime.now();
     setState(() {
       _isPreparing = true;
       _error = null;
     });
 
     try {
+      if (_catalogGatePreview) {
+        return;
+      }
       await _databaseManager.ensureCatalogFullyPrepared();
+      await _waitForMinimumDisplayTime(startedAt);
       _databaseManager.markInitialCatalogIntroSeen();
       if (!mounted) return;
       setState(() {
@@ -74,6 +92,21 @@ class _StartupCatalogPreparingGateState extends State<StartupCatalogPreparingGat
     }
   }
 
+  Future<void> _waitForMinimumDisplayTime(DateTime startedAt) async {
+    const minimumDuration = _catalogGateMinSeconds > 0
+        ? Duration(seconds: _catalogGateMinSeconds)
+        : Duration(milliseconds: _catalogGateDefaultMinMilliseconds);
+    if (minimumDuration <= Duration.zero) {
+      return;
+    }
+
+    final elapsed = DateTime.now().difference(startedAt);
+    final remaining = minimumDuration - elapsed;
+    if (remaining > Duration.zero) {
+      await Future<void>.delayed(remaining);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isReady) {
@@ -82,8 +115,9 @@ class _StartupCatalogPreparingGateState extends State<StartupCatalogPreparingGat
 
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    final retryLabel =
-        Localizations.localeOf(context).languageCode == 'ko' ? '다시 시도' : 'Retry';
+    final retryLabel = Localizations.localeOf(context).languageCode == 'ko'
+        ? '다시 시도'
+        : 'Retry';
     final total = _status.totalTarget;
     final generated = _status.totalGenerated.clamp(0, total);
     final remaining = (total - generated).clamp(0, total);

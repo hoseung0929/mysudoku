@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mysudoku/services/settings/app_settings_service.dart';
-import 'package:mysudoku/services/firebase/firebase_identity_service.dart';
-import 'package:mysudoku/services/game/game_state_service.dart';
-import 'package:mysudoku/services/settings/notification_service.dart';
+import 'package:sudoku159/services/settings/app_settings_service.dart';
+import 'package:sudoku159/services/firebase/firebase_identity_service.dart';
+import 'package:sudoku159/services/settings/notification_service.dart';
 
 class CloudAccountState {
   const CloudAccountState({
@@ -83,15 +82,13 @@ class SettingsState {
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       streakReminderEnabled:
           streakReminderEnabled ?? this.streakReminderEnabled,
-      gameCompleteNotificationEnabled:
-          gameCompleteNotificationEnabled ??
+      gameCompleteNotificationEnabled: gameCompleteNotificationEnabled ??
           this.gameCompleteNotificationEnabled,
       dailyGoalNotificationEnabled:
           dailyGoalNotificationEnabled ?? this.dailyGoalNotificationEnabled,
       keepScreenAwake: keepScreenAwake ?? this.keepScreenAwake,
       oneHandModeEnabled: oneHandModeEnabled ?? this.oneHandModeEnabled,
-      memoHighlightEnabled:
-          memoHighlightEnabled ?? this.memoHighlightEnabled,
+      memoHighlightEnabled: memoHighlightEnabled ?? this.memoHighlightEnabled,
       notificationTime: notificationTime ?? this.notificationTime,
       cloudAccount: cloudAccount ?? this.cloudAccount,
     );
@@ -119,16 +116,13 @@ class SettingsController {
     AppSettingsService? settingsService,
     NotificationService? notificationService,
     FirebaseIdentityService? identityService,
-    GameStateService? gameStateService,
   })  : _settingsService = settingsService ?? AppSettingsService(),
         _notificationService = notificationService ?? NotificationService(),
-        _identityService = identityService ?? FirebaseIdentityService(),
-        _gameStateService = gameStateService ?? GameStateService();
+        _identityService = identityService ?? FirebaseIdentityService();
 
   final AppSettingsService _settingsService;
   final NotificationService _notificationService;
   final FirebaseIdentityService _identityService;
-  final GameStateService _gameStateService;
 
   Future<SettingsState> load() async {
     final notificationsEnabled = await _settingsService.getBool(
@@ -209,7 +203,6 @@ class SettingsController {
       email: email,
       password: password,
     );
-    await _gameStateService.syncBidirectional();
     return state.copyWith(
       cloudAccount: CloudAccountState.fromIdentity(status),
     );
@@ -224,15 +217,9 @@ class SettingsController {
       email: email,
       password: password,
     );
-    await _gameStateService.syncBidirectional();
     return state.copyWith(
       cloudAccount: CloudAccountState.fromIdentity(status),
     );
-  }
-
-  Future<SettingsState> syncCloudProgress(SettingsState state) async {
-    await _gameStateService.syncBidirectional();
-    return refreshCloudAccount(state);
   }
 
   Future<SettingsState> signOutCloudAccount(SettingsState state) async {
@@ -246,7 +233,8 @@ class SettingsController {
     SettingsState state,
     bool value,
   ) async {
-    await _settingsService.setBool(AppSettingsService.vibrationEnabledKey, value);
+    await _settingsService.setBool(
+        AppSettingsService.vibrationEnabledKey, value);
     return state.copyWith(isVibrationEnabled: value);
   }
 
@@ -335,7 +323,8 @@ class SettingsController {
     SettingsState state,
     bool value,
   ) async {
-    await _settingsService.setBool(AppSettingsService.keepScreenAwakeKey, value);
+    await _settingsService.setBool(
+        AppSettingsService.keepScreenAwakeKey, value);
     return state.copyWith(keepScreenAwake: value);
   }
 

@@ -42,13 +42,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsSectionGame => '게임';
 
   @override
-  String get settingsSectionCloud => '클라우드 저장';
+  String get settingsSectionCloud => '계정';
 
   @override
   String get settingsSectionInfo => '정보';
 
   @override
-  String get settingsCloudAccountTitle => '클라우드 저장 계정';
+  String get settingsCloudAccountTitle => 'Firebase 계정';
 
   @override
   String get settingsCloudUnavailableSubtitle =>
@@ -56,36 +56,29 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsCloudAnonymousSubtitle =>
-      '임시 기기 계정으로 저장 중이에요. 이메일 계정을 연결하면 다른 기기에서도 이어할 수 있어요.';
+      '임시 기기 계정으로 로그인되어 있어요. 이메일 계정을 연결할 수 있어요.';
 
   @override
-  String get settingsCloudDisconnectedSubtitle => '다른 기기에서도 이어하려면 로그인해 주세요.';
+  String get settingsCloudDisconnectedSubtitle => '이메일 계정으로 로그인할 수 있어요.';
 
   @override
   String settingsCloudConnectedSubtitle(String email) {
-    return '$email 계정으로 연결되어 있어요. 진행 상황을 다른 기기로 가져갈 수 있어요.';
+    return '$email 계정으로 로그인되어 있어요.';
   }
 
   @override
-  String get settingsCloudSyncNowTitle => '지금 동기화';
-
-  @override
-  String get settingsCloudSyncNowSubtitle =>
-      '로컬 진행 데이터를 올리고 최신 클라우드 저장을 받아옵니다.';
-
-  @override
-  String get settingsCloudConnectSheetTitle => '기기 간 이어하기 설정';
+  String get settingsCloudConnectSheetTitle => '계정 연결';
 
   @override
   String get settingsCloudConnectSheetBody =>
-      '새 계정을 만들거나 기존 이메일 계정으로 로그인하면 다른 기기에서도 이어서 플레이할 수 있어요.';
+      '새 이메일 계정을 만들거나 기존 계정으로 로그인할 수 있어요.';
 
   @override
-  String get settingsCloudManageSheetTitle => '클라우드 저장 관리';
+  String get settingsCloudManageSheetTitle => '계정 관리';
 
   @override
   String get settingsCloudManageSheetBody =>
-      '연결된 계정이 준비되어 있어요. 지금 동기화하거나 이 기기에서 로그아웃할 수 있어요.';
+      '연결된 계정이 준비되어 있어요. 이 기기에서 로그아웃할 수 있어요.';
 
   @override
   String get settingsCloudSignInAction => '로그인';
@@ -103,19 +96,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsCloudPasswordLabel => '비밀번호';
 
   @override
-  String get settingsCloudCreateDialogTitle => '클라우드 계정 만들기';
+  String get settingsCloudCreateDialogTitle => '계정 만들기';
 
   @override
-  String get settingsCloudSignInDialogTitle => '동기화 로그인';
+  String get settingsCloudSignInDialogTitle => '로그인';
 
   @override
-  String get settingsCloudAuthSuccessSignIn => '로그인 후 진행 데이터를 동기화했어요.';
+  String get settingsCloudAuthSuccessSignIn => '로그인했어요.';
 
   @override
-  String get settingsCloudAuthSuccessCreate => '클라우드 계정을 연결하고 동기화했어요.';
-
-  @override
-  String get settingsCloudSyncSuccess => '클라우드 동기화를 마쳤어요.';
+  String get settingsCloudAuthSuccessCreate => '계정을 연결했어요.';
 
   @override
   String get settingsCloudSignOutSuccess => '이 기기에서 로그아웃했어요.';
@@ -125,7 +115,7 @@ class AppLocalizationsKo extends AppLocalizations {
       '이메일과 비밀번호를 모두 입력해 주세요.';
 
   @override
-  String get settingsCloudErrorGeneric => '클라우드 계정 작업을 완료하지 못했어요.';
+  String get settingsCloudErrorGeneric => '계정 작업을 완료하지 못했어요.';
 
   @override
   String get settingsCloudErrorFirebaseUnavailable =>
@@ -284,30 +274,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get levelDescMaster => '최고의 스도쿠 도전';
 
   @override
-  String get gameGuideTitle => '게임 가이드';
-
-  @override
-  String get gameGuideTapCellTitle => '칸을 먼저 선택하세요';
-
-  @override
-  String get gameGuideTapCellBody => '비어 있는 칸을 누른 뒤 아래 숫자 버튼으로 입력합니다.';
-
-  @override
-  String get gameGuideMistakesTitle => '오답은 3번까지';
-
-  @override
-  String get gameGuideMistakesBody => '틀린 숫자를 3번 입력하면 해당 판은 종료됩니다.';
-
-  @override
-  String get gameGuideColorsTitle => '색상 힌트를 활용하세요';
-
-  @override
-  String get gameGuideColorsBody => '선택 칸, 같은 숫자, 관련 칸이 함께 강조되어 흐름을 읽기 쉽습니다.';
-
-  @override
-  String get gameGuidePlayButton => '바로 플레이';
-
-  @override
   String gameNumberLabel(int number) {
     return '게임 $number';
   }
@@ -407,7 +373,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get shareClearTags => '#MySudoku #SudokuChallenge';
+  String get shareClearTags => '#Sudoku159 #SudokuChallenge';
 
   @override
   String shareSummaryPattern(String time, int wrong) {
@@ -515,7 +481,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get recordsSummaryTitle => '요약 통계';
+  String get recordsSummaryTitle => '지난 7일';
 
   @override
   String get recordsTrendTitle => '최근 7일 추세';
@@ -567,10 +533,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsTrendTodayLabel => '오늘';
 
   @override
-  String get recordsPlayInsightsTitle => '최근 클리어 인사이트';
+  String get recordsPlayInsightsTitle => '이번 주 매일';
 
   @override
-  String get recordsPlayCalendarTitle => '클리어 캘린더';
+  String get recordsPlayCalendarTitle => '요일별';
 
   @override
   String get recordsWeeklyReportTitle => '이번 주 리포트';
@@ -663,13 +629,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsRetry => '다시 시도';
 
   @override
-  String get recordsStatsPageSubtitle => '나의 클리어 기록을 확인해보세요.';
+  String get recordsStatsPageSubtitle => '클리어 수와 평균 시간을 볼 수 있어요.';
 
   @override
-  String get recordsKpiWeeklyClearsLabel => '최근 7일 클리어 수';
+  String get recordsKpiWeeklyClearsLabel => '클리어';
 
   @override
-  String get recordsKpiAvgSolveTimeLabel => '최근 7일 평균 시간';
+  String get recordsKpiAvgSolveTimeLabel => '평균 시간';
 
   @override
   String get recordsSectionBestRecordTitle => '최고 기록';
@@ -925,30 +891,6 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get challengeHeroPendingCaption =>
       '오늘의 도전이 아직 남아 있어요. 지금 시작하면 스트릭을 이어갈 수 있어요.';
-
-  @override
-  String get homeOnboardingWelcomeTitle => '처음 오셨네요';
-
-  @override
-  String get homeOnboardingStepQuickTitle => '빠른 시작';
-
-  @override
-  String get homeOnboardingStepQuickBody => '추천 난이도로 바로 한 판 시작할 수 있어요.';
-
-  @override
-  String get homeOnboardingStepDailyTitle => '오늘의 도전';
-
-  @override
-  String get homeOnboardingStepDailyBody => '매일 바뀌는 대표 퍼즐로 가볍게 실력을 확인해보세요.';
-
-  @override
-  String get homeOnboardingStepResumeTitle => '이어하기';
-
-  @override
-  String get homeOnboardingStepResumeBody => '중단한 게임은 홈 상단 카드에서 곧바로 이어집니다.';
-
-  @override
-  String get homeOnboardingStartButton => '시작하기';
 
   @override
   String get homeGuestTitle => '게스트1';

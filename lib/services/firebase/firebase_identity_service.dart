@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
-import 'package:mysudoku/services/firebase/firebase_bootstrap_service.dart';
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/services/firebase/firebase_bootstrap_service.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 
 class FirebaseIdentityStatus {
   const FirebaseIdentityStatus({
@@ -44,7 +44,8 @@ class FirebaseIdentityService {
     FirebaseAuth? auth,
     FirebaseBootstrapService? bootstrapService,
   })  : _auth = auth,
-        _bootstrapService = bootstrapService ?? FirebaseBootstrapService.instance;
+        _bootstrapService =
+            bootstrapService ?? FirebaseBootstrapService.instance;
 
   FirebaseAuth? _auth;
   final FirebaseBootstrapService _bootstrapService;

@@ -1,7 +1,7 @@
-import 'package:mysudoku/database/database_helper.dart';
-import 'package:mysudoku/model/sudoku_game.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
-import 'package:mysudoku/services/home/home_dashboard_service.dart';
+import 'package:sudoku159/database/database_helper.dart';
+import 'package:sudoku159/model/sudoku_game.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
+import 'package:sudoku159/services/home/home_dashboard_service.dart';
 
 /// "나만의 속도" 플로우에서 다음으로 열어야 할 게임/레벨 정보를 담는 값 객체.
 class MyPaceTarget {
@@ -37,25 +37,21 @@ class MyPaceService {
     Future<bool> Function(String levelName, int gameNumber)? isGameCleared,
     Future<Map<String, dynamic>?> Function(String levelName, int gameNumber)?
         loadGameEntry,
-  })  : _loadRecentClearEvents =
-            loadRecentClearEvents ??
-                (databaseHelper ?? DatabaseHelper()).getRecentClearEvents,
-        _findFirstUnclearedGameNumber =
-            findFirstUnclearedGameNumber ??
-                (databaseHelper ?? DatabaseHelper()).findFirstUnclearedGameNumber,
+  })  : _loadRecentClearEvents = loadRecentClearEvents ??
+            (databaseHelper ?? DatabaseHelper()).getRecentClearEvents,
+        _findFirstUnclearedGameNumber = findFirstUnclearedGameNumber ??
+            (databaseHelper ?? DatabaseHelper()).findFirstUnclearedGameNumber,
         _findFirstUnclearedGameNumberAfter =
             findFirstUnclearedGameNumberAfter ??
                 (databaseHelper ?? DatabaseHelper())
                     .findFirstUnclearedGameNumberAfter,
-        _isGameCleared =
-            isGameCleared ??
-                ((levelName, gameNumber) async =>
-                    (await (databaseHelper ?? DatabaseHelper())
-                            .getClearRecord(levelName, gameNumber)) !=
-                        null),
+        _isGameCleared = isGameCleared ??
+            ((levelName, gameNumber) async =>
+                (await (databaseHelper ?? DatabaseHelper())
+                    .getClearRecord(levelName, gameNumber)) !=
+                null),
         _loadGameEntry =
-            loadGameEntry ??
-                (databaseHelper ?? DatabaseHelper()).getGameEntry;
+            loadGameEntry ?? (databaseHelper ?? DatabaseHelper()).getGameEntry;
 
   final Future<List<Map<String, dynamic>>> Function({int limit})
       _loadRecentClearEvents;
@@ -96,9 +92,9 @@ class MyPaceService {
 
   /// 이어하기는 고려하지 않고, 레벨 순회를 통해 새 퍼즐만 탐색한다.
   Future<MyPaceTarget?> resolveNextPlayableTarget() async {
-    final recentClearEvents =
-        await _loadRecentClearEvents(limit: 1);
-    final lastEvent = recentClearEvents.isEmpty ? null : recentClearEvents.first;
+    final recentClearEvents = await _loadRecentClearEvents(limit: 1);
+    final lastEvent =
+        recentClearEvents.isEmpty ? null : recentClearEvents.first;
     final lastClearedLevelName =
         lastEvent == null ? null : lastEvent['level_name'] as String?;
     final lastClearedGameNumber = _readGameNumber(lastEvent);
@@ -117,8 +113,7 @@ class MyPaceService {
 
     final startIndex = _indexAfterLastClearedLevel(lastClearedLevelName);
     for (var offset = 0; offset < orderedLevels.length; offset++) {
-      final level =
-          orderedLevels[(startIndex + offset) % orderedLevels.length];
+      final level = orderedLevels[(startIndex + offset) % orderedLevels.length];
       final gameNumber = await _findFirstUnclearedGameNumber(level.name);
       if (gameNumber == null) continue;
 

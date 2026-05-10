@@ -1,6 +1,6 @@
-import 'package:mysudoku/database/database_helper.dart';
-import 'package:mysudoku/model/sudoku_game.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
+import 'package:sudoku159/database/database_helper.dart';
+import 'package:sudoku159/model/sudoku_game.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
 
 class QuickGameService {
   QuickGameService({DatabaseHelper? databaseHelper})

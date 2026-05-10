@@ -1,8 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:mysudoku/services/settings/app_settings_service.dart';
-import 'package:mysudoku/services/challenge/challenge_progress_service.dart';
+import 'package:sudoku159/services/settings/app_settings_service.dart';
+import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -59,15 +59,12 @@ class NotificationService {
   Future<bool> requestPermissions() async {
     await initialize();
 
-    final androidImplementation =
-        _plugin.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
-    final iosImplementation =
-        _plugin.resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>();
-    final macImplementation =
-        _plugin.resolvePlatformSpecificImplementation<
-            MacOSFlutterLocalNotificationsPlugin>();
+    final androidImplementation = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    final iosImplementation = _plugin.resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>();
+    final macImplementation = _plugin.resolvePlatformSpecificImplementation<
+        MacOSFlutterLocalNotificationsPlugin>();
 
     final androidGranted =
         await androidImplementation?.requestNotificationsPermission();
@@ -167,8 +164,7 @@ class NotificationService {
           android: AndroidNotificationDetails(
             _dailyChallengeChannelId,
             _dailyChallengeChannelName,
-            channelDescription:
-                'Reminds you to keep your Sudoku streak going.',
+            channelDescription: 'Reminds you to keep your Sudoku streak going.',
             importance: Importance.defaultImportance,
             priority: Priority.defaultPriority,
           ),
@@ -210,8 +206,7 @@ class NotificationService {
         android: AndroidNotificationDetails(
           _gameCompleteChannelId,
           _gameCompleteChannelName,
-          channelDescription:
-              'Celebrates when you finish a Sudoku puzzle.',
+          channelDescription: 'Celebrates when you finish a Sudoku puzzle.',
           importance: Importance.defaultImportance,
           priority: Priority.defaultPriority,
         ),

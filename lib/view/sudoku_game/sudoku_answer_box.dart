@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 
 /// 선택된 셀의 정답 미리보기 박스
 class SudokuAnswerBox extends StatelessWidget {

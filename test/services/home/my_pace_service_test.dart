@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mysudoku/model/sudoku_game.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
-import 'package:mysudoku/services/home/home_dashboard_service.dart';
-import 'package:mysudoku/services/home/my_pace_service.dart';
+import 'package:sudoku159/model/sudoku_game.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
+import 'package:sudoku159/services/home/home_dashboard_service.dart';
+import 'package:sudoku159/services/home/my_pace_service.dart';
 
 void main() {
   group('MyPaceService', () {
@@ -41,7 +41,8 @@ void main() {
       expect(target.restoreSavedSession, isTrue);
     });
 
-    test('if continue game already cleared, moves to next uncleared game', () async {
+    test('if continue game already cleared, moves to next uncleared game',
+        () async {
       final continueSummary = _buildContinueSummary(
         levelName: '초급',
         gameNumber: 1,
@@ -90,7 +91,7 @@ void main() {
         final requestedLevels = <String>[];
         final requestedEntries = <String>[];
         final service = MyPaceService(
-        isGameCleared: (levelName, gameNumber) async => false,
+          isGameCleared: (levelName, gameNumber) async => false,
           loadRecentClearEvents: ({int limit = 1}) async => const [
             {'level_name': '중급'},
           ],
@@ -166,7 +167,8 @@ void main() {
       expect(target.restoreSavedSession, isFalse);
     });
 
-    test('returns null when there is no playable puzzle across all levels', () async {
+    test('returns null when there is no playable puzzle across all levels',
+        () async {
       final requestedLevels = <String>[];
       final requestedEntries = <String>[];
       final service = MyPaceService(
@@ -197,7 +199,7 @@ void main() {
       'after clearing beginner game 1, next target is beginner game 2',
       () async {
         final service = MyPaceService(
-        isGameCleared: (levelName, gameNumber) async => false,
+          isGameCleared: (levelName, gameNumber) async => false,
           loadRecentClearEvents: ({int limit = 1}) async => const [
             {'level_name': '초급', 'game_number': 1},
           ],

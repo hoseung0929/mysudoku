@@ -55,7 +55,8 @@ class GameEffectsController {
   }) {
     _completedRows = _getCompletedCorrectRows(board: board, solution: solution);
     _completedCols = _getCompletedCorrectCols(board: board, solution: solution);
-    _completedBoxes = _getCompletedCorrectBoxes(board: board, solution: solution);
+    _completedBoxes =
+        _getCompletedCorrectBoxes(board: board, solution: solution);
   }
 
   BoardCompletionDelta handleBoardChanged({
@@ -144,8 +145,9 @@ class GameEffectsController {
           });
         });
 
-        final returnDelayTime =
-            totalWaveTime + returnDelay + (waveSpeed * (maxDistance - distance));
+        final returnDelayTime = totalWaveTime +
+            returnDelay +
+            (waveSpeed * (maxDistance - distance));
         Future.delayed(Duration(milliseconds: returnDelayTime), () {
           if (!isMounted() || effectGeneration != _effectGeneration) {
             return;

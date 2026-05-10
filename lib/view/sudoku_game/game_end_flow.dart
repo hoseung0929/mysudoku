@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/model/sudoku_game.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
-import 'package:mysudoku/view/sudoku_game/game_completion_coordinator.dart';
-import 'package:mysudoku/view/sudoku_game/game_over_flow.dart';
-import 'package:mysudoku/view/settings/settings_screen.dart';
-import 'package:mysudoku/widgets/game_complete_dialog.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
+import 'package:sudoku159/model/sudoku_game.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
+import 'package:sudoku159/view/sudoku_game/game_completion_coordinator.dart';
+import 'package:sudoku159/view/sudoku_game/game_over_flow.dart';
+import 'package:sudoku159/view/settings/settings_screen.dart';
+import 'package:sudoku159/widgets/game_complete_dialog.dart';
 
 class GameEndFlow {
   GameEndFlow({

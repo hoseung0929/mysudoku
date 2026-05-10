@@ -1,6 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 
-import 'package:mysudoku/database/database_manager.dart';
+import 'package:sudoku159/database/database_manager.dart';
 
 /// '그 날의' 오늘의 도전 퍼즐을 클리어한 로컬 일자(YYYY-MM-DD)를 저장합니다.
 /// (레벨·게임당 1행인 `clear_records`와 달리, 연속 기록용으로 날짜만 누적합니다.)

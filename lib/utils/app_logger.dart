@@ -13,6 +13,6 @@ class AppLogger {
 
   static void debug(String message) {
     if (!kDebugMode || _muted) return;
-    debugPrint('[MySudoku] $message');
+    debugPrint('[Sudoku159] $message');
   }
 }

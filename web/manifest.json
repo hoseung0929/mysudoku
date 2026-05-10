@@ -1,6 +1,6 @@
 {
-    "name": "mysudoku",
-    "short_name": "mysudoku",
+    "name": "sudoku159",
+    "short_name": "sudoku159",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

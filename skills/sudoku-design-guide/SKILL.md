@@ -1,15 +1,15 @@
 ---
 name: sudoku-design-guide
-description: Apply the MySudoku product design guide when editing or creating UI in this project. Use this skill for screen redesigns, visual polish, layout cleanup, naming/label refinement, and feature UI work that should match the app's calm Sudoku-focused style instead of generic wellness or AI-generated dashboard aesthetics.
+description: Apply the Sudoku159 product design guide when editing or creating UI in this project. Use this skill for screen redesigns, visual polish, layout cleanup, naming/label refinement, and feature UI work that should match the app's calm Sudoku-focused style instead of generic wellness or AI-generated dashboard aesthetics.
 ---
 
 # Sudoku Design Guide
 
-Use this skill when changing UI for `mysudoku` so new work matches the app's established product direction.
+Use this skill when changing UI for `sudoku159` so new work matches the app's established product direction.
 
 ## Purpose
 
-이 Skill은 Flutter 화면을 **밝은 오프화이트 배경, 흰색 카드, 얇은 보더, 차분한 포인트 컬러, 정돈된 여백**을 가진 `MySudoku`의 제품 톤에 맞춰 구현하기 위한 디자인 기준이다.
+이 Skill은 Flutter 화면을 **밝은 오프화이트 배경, 흰색 카드, 얇은 보더, 차분한 포인트 컬러, 정돈된 여백**을 가진 `Sudoku159`의 제품 톤에 맞춰 구현하기 위한 디자인 기준이다.
 
 전체 UI는 화려한 장식보다 **정렬, 여백, 계층 구조, 카드 구분감**을 중심으로 완성한다. 화면은 웰니스 앱처럼 감성적으로 흐르거나, 범용 SaaS 대시보드처럼 건조하게 보이지 않도록 하고, **스도쿠 기록과 플레이 흐름이 중심인 제품 화면**처럼 느껴지게 만든다.
 

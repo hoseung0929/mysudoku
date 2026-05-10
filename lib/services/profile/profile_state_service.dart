@@ -1,4 +1,4 @@
-import 'package:mysudoku/services/profile/profile_image_service.dart';
+import 'package:sudoku159/services/profile/profile_image_service.dart';
 
 class ProfileStateSnapshot {
   const ProfileStateSnapshot({

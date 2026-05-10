@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
-import 'package:mysudoku/database/database_helper.dart';
-import 'package:mysudoku/database/database_manager.dart';
-import 'package:mysudoku/model/sudoku_game.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
-import 'package:mysudoku/services/home/level_progress_service.dart';
-import 'package:mysudoku/theme/app_colors.dart';
-import 'package:mysudoku/view/sudoku_game/sudoku_game_screen.dart';
-import 'package:mysudoku/widgets/custom_app_bar.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
+import 'package:sudoku159/l10n/sudoku_level_l10n.dart';
+import 'package:sudoku159/database/database_helper.dart';
+import 'package:sudoku159/database/database_manager.dart';
+import 'package:sudoku159/model/sudoku_game.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
+import 'package:sudoku159/services/home/level_progress_service.dart';
+import 'package:sudoku159/theme/app_colors.dart';
+import 'package:sudoku159/view/sudoku_game/sudoku_game_screen.dart';
+import 'package:sudoku159/widgets/custom_app_bar.dart';
 
 /// 난이도 선택 화면
 /// 사용자가 스도쿠 게임의 난이도를 선택할 수 있는 화면입니다.
@@ -685,21 +685,6 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: compact ? 10 : 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _buildSummaryChip(
-                    label: l10n.levelEmptyCellsLabel(level.emptyCells),
-                    colorScheme: colorScheme,
-                  ),
-                  _buildSummaryChip(
-                    label: l10n.levelPuzzleCountSummary(total),
-                    colorScheme: colorScheme,
-                  ),
-                ],
-              ),
             ],
           ),
         );
@@ -851,28 +836,6 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryChip({
-    required String label,
-    required ColorScheme colorScheme,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceSubtle,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: colorScheme.onSurfaceVariant,
-        ),
       ),
     );
   }

@@ -3,14 +3,13 @@ import 'dart:isolate';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
-import 'package:mysudoku/services/catalog/firestore_puzzle_service.dart';
-import 'package:mysudoku/services/catalog/remote_puzzle_service.dart';
-import 'package:mysudoku/utils/sudoku_generator.dart';
-import 'package:mysudoku/utils/board_codec.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
+import 'package:sudoku159/services/catalog/remote_puzzle_service.dart';
+import 'package:sudoku159/utils/sudoku_generator.dart';
+import 'package:sudoku159/utils/board_codec.dart';
 
 class PuzzleCatalogStatus {
   const PuzzleCatalogStatus({
@@ -58,7 +57,6 @@ class DatabaseManager {
   static const int _progressUpdateStride = 4;
   bool _isTopUpRunning = false;
   bool _shouldShowInitialCatalogIntro = false;
-  final FirestorePuzzleService _firestorePuzzleService = FirestorePuzzleService();
   final RemotePuzzleService _remotePuzzleService = RemotePuzzleService();
   final ValueNotifier<PuzzleCatalogStatus> catalogStatus =
       ValueNotifier<PuzzleCatalogStatus>(
@@ -296,9 +294,7 @@ class DatabaseManager {
   }
 
   Future<void> _syncRemoteCatalogInBackground(Database db) async {
-    if (_isTopUpRunning ||
-        (!_remotePuzzleService.isConfigured &&
-            !_firestorePuzzleService.isConfigured)) {
+    if (_isTopUpRunning || !_remotePuzzleService.isConfigured) {
       return;
     }
 
@@ -411,7 +407,9 @@ class DatabaseManager {
       return;
     }
 
-    for (var start = 0; start < gameNumbers.length; start += _generationChunkSize) {
+    for (var start = 0;
+        start < gameNumbers.length;
+        start += _generationChunkSize) {
       final end = min(start + _generationChunkSize, gameNumbers.length);
       final chunk = gameNumbers.sublist(start, end);
       final generatedChunk = await Isolate.run(
@@ -454,7 +452,8 @@ class DatabaseManager {
     }
   }
 
-  Future<List<int>> _loadExistingGameNumbers(Database db, String levelName) async {
+  Future<List<int>> _loadExistingGameNumbers(
+      Database db, String levelName) async {
     final maps = await db.query(
       'games',
       columns: ['game_number'],
@@ -498,8 +497,7 @@ class DatabaseManager {
       db,
       targetPerLevel: _targetGamesPerLevel,
     );
-    final source =
-        remoteSeeded ? _catalogSourceRemote : _catalogSourceLocal;
+    final source = remoteSeeded ? _catalogSourceRemote : _catalogSourceLocal;
     await _setCatalogSource(db, source);
     return source;
   }
@@ -570,19 +568,6 @@ class DatabaseManager {
     required String levelName,
     required int limit,
   }) async {
-    List<RemotePuzzleEntry> firestoreEntries = const [];
-    try {
-      firestoreEntries = await _firestorePuzzleService.fetchCatalogForLevel(
-        levelName: levelName,
-        limit: limit,
-      );
-    } catch (_) {
-      firestoreEntries = const [];
-    }
-    if (firestoreEntries.isNotEmpty) {
-      return firestoreEntries;
-    }
-
     if (!_remotePuzzleService.isConfigured) {
       return const [];
     }
@@ -668,7 +653,8 @@ class DatabaseManager {
     int generatedCount, {
     required bool isRunning,
   }) {
-    final nextCounts = Map<String, int>.from(catalogStatus.value.generatedCounts);
+    final nextCounts =
+        Map<String, int>.from(catalogStatus.value.generatedCounts);
     nextCounts[levelName] = generatedCount;
     catalogStatus.value = catalogStatus.value.copyWith(
       isRunning: isRunning,

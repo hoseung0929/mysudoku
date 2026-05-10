@@ -1,4 +1,4 @@
-import 'package:mysudoku/model/sudoku_level.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
 
 enum SudokuGameFeature {
   memo,

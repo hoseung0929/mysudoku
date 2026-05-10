@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mysudoku/widgets/progressive_blur_button.dart';
+import 'package:sudoku159/widgets/progressive_blur_button.dart';
 
 /// 태블릿 패널의 메모/힌트/일시정지 등 액션 버튼
 class SudokuGameActionButton extends StatelessWidget {

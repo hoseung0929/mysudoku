@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
-import 'package:mysudoku/presenter/game/sudoku_game_presenter.dart';
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
+import 'package:sudoku159/presenter/game/sudoku_game_presenter.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 
 void main() {
   AppLogger.setMuted(true);
@@ -97,7 +97,9 @@ void main() {
       expect(gameOverCount, 1);
     });
 
-    test('does not increase wrong count repeatedly on same already-wrong cell', () {
+    test(
+        'increases wrong count when an already-wrong cell changes to another wrong value',
+        () {
       presenter.selectCell(0, 1);
       presenter.setSelectedCellValue(4);
 
@@ -106,7 +108,7 @@ void main() {
       presenter.selectCell(0, 1);
       presenter.setSelectedCellValue(6);
 
-      expect(presenter.wrongCount, 1);
+      expect(presenter.wrongCount, 2);
       expect(presenter.isGameOver, isFalse);
     });
 
@@ -187,14 +189,16 @@ void main() {
       );
 
       expect(presenter.seconds, 125);
-      expect(presenter.formattedTime, '02:05');
+      expect(presenter.formattedTime, '00:02:05');
       expect(presenter.wrongCount, 2);
       expect(presenter.isMemoMode, isTrue);
       expect(presenter.isCellFixed(0, 2), isFalse);
       expect(presenter.getCellNotes(0, 1), equals({3, 8}));
     });
 
-    test('recomputes restored conflict markers and keeps restored cells editable', () {
+    test(
+        'recomputes restored conflict markers and keeps restored cells editable',
+        () {
       final restoredBoard = board.map((row) => List<int>.from(row)).toList();
       restoredBoard[0][2] = 5;
 
@@ -221,7 +225,8 @@ void main() {
       expect(presenter.isWrongNumber(0, 2), isTrue);
     });
 
-    test('ignores invalid restored hint cells so empty cells stay editable', () {
+    test('ignores invalid restored hint cells so empty cells stay editable',
+        () {
       presenter.dispose();
       presenter = SudokuGamePresenter(
         level: SudokuLevel.levels.first,
@@ -261,7 +266,8 @@ void main() {
       expect(presenter.wrongCount, 0);
     });
 
-    test('redo re-applies the undone wrong input and re-increments wrong count', () {
+    test('redo re-applies the undone wrong input and re-increments wrong count',
+        () {
       presenter.selectCell(0, 1);
       presenter.setSelectedCellValue(4);
 
@@ -377,7 +383,8 @@ void main() {
       expect(presenter.hintsRemaining, SudokuGamePresenter.maxHints - 1);
     });
 
-    test('clears selection on pause and blocks selection changes while paused', () {
+    test('clears selection on pause and blocks selection changes while paused',
+        () {
       presenter.selectCell(0, 1);
 
       expect(presenter.selectedRow, 0);

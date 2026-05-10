@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 
-import 'package:mysudoku/database/database_helper.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
+import 'package:sudoku159/database/database_helper.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
 
 typedef ClearedGameCountLoader = Future<int> Function(String levelName);
 typedef LevelRecordsClearer = Future<void> Function(String levelName);
@@ -12,10 +12,12 @@ class LevelProgressService {
     DatabaseHelper? databaseHelper,
     ClearedGameCountLoader? loadClearedGameCount,
     LevelRecordsClearer? clearRecordsForLevel,
-  })  : _loadClearedGameCount =
-            loadClearedGameCount ?? ((levelName) => (databaseHelper ?? DatabaseHelper()).getClearedGameCount(levelName)),
-        _clearRecordsForLevel =
-            clearRecordsForLevel ?? ((levelName) => (databaseHelper ?? DatabaseHelper()).clearRecordsForLevel(levelName));
+  })  : _loadClearedGameCount = loadClearedGameCount ??
+            ((levelName) => (databaseHelper ?? DatabaseHelper())
+                .getClearedGameCount(levelName)),
+        _clearRecordsForLevel = clearRecordsForLevel ??
+            ((levelName) => (databaseHelper ?? DatabaseHelper())
+                .clearRecordsForLevel(levelName));
 
   final ClearedGameCountLoader _loadClearedGameCount;
   final LevelRecordsClearer _clearRecordsForLevel;

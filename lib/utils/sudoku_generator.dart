@@ -203,7 +203,8 @@ class SudokuGenerator {
           return _EmptyCellCandidate(row: row, col: col, candidates: const []);
         }
 
-        if (bestCell == null || candidates.length < bestCell.candidates.length) {
+        if (bestCell == null ||
+            candidates.length < bestCell.candidates.length) {
           bestCell = _EmptyCellCandidate(
             row: row,
             col: col,

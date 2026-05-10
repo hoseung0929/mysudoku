@@ -1,12 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mysudoku/presenter/game/game_timer_controller.dart';
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/presenter/game/game_timer_controller.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 
 void main() {
   AppLogger.setMuted(true);
 
   group('GameTimerController', () {
-    test('formats updated time as mm:ss', () {
+    test('formats updated time as hh:mm:ss', () {
       int? lastTick;
       final controller = GameTimerController(
         onTick: (seconds) {
@@ -19,7 +19,7 @@ void main() {
 
       expect(lastTick, 125);
       expect(controller.seconds, 125);
-      expect(controller.formattedTime, '02:05');
+      expect(controller.formattedTime, '00:02:05');
     });
 
     test('reset clears elapsed time', () {
@@ -32,7 +32,7 @@ void main() {
       controller.reset();
 
       expect(controller.seconds, 0);
-      expect(controller.formattedTime, '00:00');
+      expect(controller.formattedTime, '00:00:00');
     });
   });
 }

@@ -1,8 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
-import 'package:mysudoku/firebase_options.dart';
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/firebase_options.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 
 class FirebaseBootstrapService {
   FirebaseBootstrapService._();

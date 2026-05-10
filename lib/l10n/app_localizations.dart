@@ -167,7 +167,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsSectionCloud.
   ///
   /// In en, this message translates to:
-  /// **'Cloud save'**
+  /// **'Account'**
   String get settingsSectionCloud;
 
   /// No description provided for @settingsSectionInfo.
@@ -179,7 +179,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsCloudAccountTitle.
   ///
   /// In en, this message translates to:
-  /// **'Cloud save account'**
+  /// **'Firebase account'**
   String get settingsCloudAccountTitle;
 
   /// No description provided for @settingsCloudUnavailableSubtitle.
@@ -191,55 +191,43 @@ abstract class AppLocalizations {
   /// No description provided for @settingsCloudAnonymousSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Using a temporary device account. Connect an email account to carry progress across devices.'**
+  /// **'Signed in with a temporary device account. You can connect an email account.'**
   String get settingsCloudAnonymousSubtitle;
 
   /// No description provided for @settingsCloudDisconnectedSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Sign in to sync your progress across devices.'**
+  /// **'Sign in with an email account.'**
   String get settingsCloudDisconnectedSubtitle;
 
   /// No description provided for @settingsCloudConnectedSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Signed in as {email}. Your progress can follow you to other devices.'**
+  /// **'Signed in as {email}.'**
   String settingsCloudConnectedSubtitle(String email);
-
-  /// No description provided for @settingsCloudSyncNowTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Sync now'**
-  String get settingsCloudSyncNowTitle;
-
-  /// No description provided for @settingsCloudSyncNowSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Upload local progress and pull the latest cloud saves.'**
-  String get settingsCloudSyncNowSubtitle;
 
   /// No description provided for @settingsCloudConnectSheetTitle.
   ///
   /// In en, this message translates to:
-  /// **'Keep your progress across devices'**
+  /// **'Connect account'**
   String get settingsCloudConnectSheetTitle;
 
   /// No description provided for @settingsCloudConnectSheetBody.
   ///
   /// In en, this message translates to:
-  /// **'Create an account or sign in with an existing email account to keep playing on another device.'**
+  /// **'Create a new email account or sign in with an existing one.'**
   String get settingsCloudConnectSheetBody;
 
   /// No description provided for @settingsCloudManageSheetTitle.
   ///
   /// In en, this message translates to:
-  /// **'Cloud save account'**
+  /// **'Account'**
   String get settingsCloudManageSheetTitle;
 
   /// No description provided for @settingsCloudManageSheetBody.
   ///
   /// In en, this message translates to:
-  /// **'Your linked account is ready. You can sync now or sign out on this device.'**
+  /// **'Your linked account is ready. You can sign out on this device.'**
   String get settingsCloudManageSheetBody;
 
   /// No description provided for @settingsCloudSignInAction.
@@ -275,32 +263,26 @@ abstract class AppLocalizations {
   /// No description provided for @settingsCloudCreateDialogTitle.
   ///
   /// In en, this message translates to:
-  /// **'Create cloud account'**
+  /// **'Create account'**
   String get settingsCloudCreateDialogTitle;
 
   /// No description provided for @settingsCloudSignInDialogTitle.
   ///
   /// In en, this message translates to:
-  /// **'Sign in to sync'**
+  /// **'Sign in'**
   String get settingsCloudSignInDialogTitle;
 
   /// No description provided for @settingsCloudAuthSuccessSignIn.
   ///
   /// In en, this message translates to:
-  /// **'Signed in and synced your progress.'**
+  /// **'Signed in.'**
   String get settingsCloudAuthSuccessSignIn;
 
   /// No description provided for @settingsCloudAuthSuccessCreate.
   ///
   /// In en, this message translates to:
-  /// **'Cloud account connected and synced.'**
+  /// **'Account connected.'**
   String get settingsCloudAuthSuccessCreate;
-
-  /// No description provided for @settingsCloudSyncSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Cloud sync completed.'**
-  String get settingsCloudSyncSuccess;
 
   /// No description provided for @settingsCloudSignOutSuccess.
   ///
@@ -317,7 +299,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsCloudErrorGeneric.
   ///
   /// In en, this message translates to:
-  /// **'We couldn\'t complete that cloud account request.'**
+  /// **'We couldn\'t complete that account request.'**
   String get settingsCloudErrorGeneric;
 
   /// No description provided for @settingsCloudErrorFirebaseUnavailable.
@@ -626,54 +608,6 @@ abstract class AppLocalizations {
   /// **'The ultimate challenge'**
   String get levelDescMaster;
 
-  /// No description provided for @gameGuideTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'How to play'**
-  String get gameGuideTitle;
-
-  /// No description provided for @gameGuideTapCellTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Select a cell first'**
-  String get gameGuideTapCellTitle;
-
-  /// No description provided for @gameGuideTapCellBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap an empty cell, then use the number buttons below.'**
-  String get gameGuideTapCellBody;
-
-  /// No description provided for @gameGuideMistakesTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Up to 3 mistakes'**
-  String get gameGuideMistakesTitle;
-
-  /// No description provided for @gameGuideMistakesBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Three wrong numbers end this puzzle.'**
-  String get gameGuideMistakesBody;
-
-  /// No description provided for @gameGuideColorsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Use color hints'**
-  String get gameGuideColorsTitle;
-
-  /// No description provided for @gameGuideColorsBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Selected cell, same numbers, and related cells are highlighted.'**
-  String get gameGuideColorsBody;
-
-  /// No description provided for @gameGuidePlayButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Play now'**
-  String get gameGuidePlayButton;
-
   /// No description provided for @gameNumberLabel.
   ///
   /// In en, this message translates to:
@@ -851,7 +785,7 @@ abstract class AppLocalizations {
   /// No description provided for @shareClearTags.
   ///
   /// In en, this message translates to:
-  /// **'#MySudoku #SudokuChallenge'**
+  /// **'#Sudoku159 #SudokuChallenge'**
   String get shareClearTags;
 
   /// No description provided for @shareSummaryPattern.
@@ -1043,7 +977,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordsSummaryTitle.
   ///
   /// In en, this message translates to:
-  /// **'Summary'**
+  /// **'Last 7 days'**
   String get recordsSummaryTitle;
 
   /// No description provided for @recordsTrendTitle.
@@ -1139,13 +1073,13 @@ abstract class AppLocalizations {
   /// No description provided for @recordsPlayInsightsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Recent clear insights'**
+  /// **'This week'**
   String get recordsPlayInsightsTitle;
 
   /// No description provided for @recordsPlayCalendarTitle.
   ///
   /// In en, this message translates to:
-  /// **'Clear calendar'**
+  /// **'By day'**
   String get recordsPlayCalendarTitle;
 
   /// No description provided for @recordsWeeklyReportTitle.
@@ -1319,19 +1253,19 @@ abstract class AppLocalizations {
   /// No description provided for @recordsStatsPageSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Review your clear history.'**
+  /// **'Clears and average time.'**
   String get recordsStatsPageSubtitle;
 
   /// No description provided for @recordsKpiWeeklyClearsLabel.
   ///
   /// In en, this message translates to:
-  /// **'Clears in the last 7 days'**
+  /// **'Clears'**
   String get recordsKpiWeeklyClearsLabel;
 
   /// No description provided for @recordsKpiAvgSolveTimeLabel.
   ///
   /// In en, this message translates to:
-  /// **'Avg. time in the last 7 days'**
+  /// **'Avg. time'**
   String get recordsKpiAvgSolveTimeLabel;
 
   /// No description provided for @recordsSectionBestRecordTitle.
@@ -1765,54 +1699,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Today\'s puzzle is still open—start now to keep your streak alive.'**
   String get challengeHeroPendingCaption;
-
-  /// No description provided for @homeOnboardingWelcomeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome!'**
-  String get homeOnboardingWelcomeTitle;
-
-  /// No description provided for @homeOnboardingStepQuickTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Quick start'**
-  String get homeOnboardingStepQuickTitle;
-
-  /// No description provided for @homeOnboardingStepQuickBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Jump into a recommended difficulty right away.'**
-  String get homeOnboardingStepQuickBody;
-
-  /// No description provided for @homeOnboardingStepDailyTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Daily challenge'**
-  String get homeOnboardingStepDailyTitle;
-
-  /// No description provided for @homeOnboardingStepDailyBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Try the daily puzzle to check your skills in one short game.'**
-  String get homeOnboardingStepDailyBody;
-
-  /// No description provided for @homeOnboardingStepResumeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Resume'**
-  String get homeOnboardingStepResumeTitle;
-
-  /// No description provided for @homeOnboardingStepResumeBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Continue saved games from the card at the top of Home.'**
-  String get homeOnboardingStepResumeBody;
-
-  /// No description provided for @homeOnboardingStartButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Get started'**
-  String get homeOnboardingStartButton;
 
   /// No description provided for @homeGuestTitle.
   ///

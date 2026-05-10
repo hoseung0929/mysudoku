@@ -118,7 +118,8 @@ class DatabaseHelper {
 
   /// 특정 레벨에서 클리어된 게임 번호 목록만 반환합니다.
   Future<List<int>> getClearedGameNumbersForLevel(String levelName) async {
-    return await _clearRecordRepository.getClearedGameNumbersForLevel(levelName);
+    return await _clearRecordRepository
+        .getClearedGameNumbersForLevel(levelName);
   }
 
   /// 특정 게임의 클리어 기록을 조회합니다.
@@ -160,7 +161,8 @@ class DatabaseHelper {
 
   /// 오늘의 도전을 깬 로컬 일자를 기록합니다 (같은 날 중복은 무시).
   Future<void> recordDailyChallengeCompletion(DateTime clearedAtLocal) async {
-    final d = DateTime(clearedAtLocal.year, clearedAtLocal.month, clearedAtLocal.day);
+    final d =
+        DateTime(clearedAtLocal.year, clearedAtLocal.month, clearedAtLocal.day);
     final dateStr =
         '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
     await _dailyChallengeCompletionRepository.addCompletionForDate(dateStr);
@@ -205,7 +207,8 @@ class DatabaseHelper {
   }
 
   /// 최근 클리어 이벤트를 반환합니다.
-  Future<List<Map<String, dynamic>>> getRecentClearEvents({int limit = 365}) async {
+  Future<List<Map<String, dynamic>>> getRecentClearEvents(
+      {int limit = 365}) async {
     return _clearRecordRepository.getRecentClearEvents(limit: limit);
   }
 

@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 import 'package:sqflite/sqflite.dart';
 import 'database_manager.dart';
-import 'package:mysudoku/utils/board_codec.dart';
+import 'package:sudoku159/utils/board_codec.dart';
 
 /// 게임 데이터 관리를 담당하는 클래스
 class GameRepository {

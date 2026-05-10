@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mysudoku/widgets/game_over_dialog.dart';
+import 'package:sudoku159/widgets/game_over_dialog.dart';
 
 class GameOverFlow {
   const GameOverFlow._();

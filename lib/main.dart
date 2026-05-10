@@ -6,18 +6,18 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:mysudoku/l10n/app_locale_scope.dart';
-import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/services/firebase/firebase_bootstrap_service.dart';
-import 'package:mysudoku/services/records/game_record_notifier.dart';
-import 'package:mysudoku/services/settings/notification_service.dart';
-import 'package:mysudoku/theme/app_theme.dart';
-import 'package:mysudoku/navigation/root_nav_scope.dart';
-import 'package:mysudoku/view/home/home_screen.dart';
-import 'package:mysudoku/view/home/startup_catalog_preparing_gate.dart';
-import 'package:mysudoku/view/records/records_statistics_screen.dart';
-import 'package:mysudoku/widgets/bottom_nav_bar.dart';
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/l10n/app_locale_scope.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
+import 'package:sudoku159/services/firebase/firebase_bootstrap_service.dart';
+import 'package:sudoku159/services/records/game_record_notifier.dart';
+import 'package:sudoku159/services/settings/notification_service.dart';
+import 'package:sudoku159/theme/app_theme.dart';
+import 'package:sudoku159/navigation/root_nav_scope.dart';
+import 'package:sudoku159/view/home/home_screen.dart';
+import 'package:sudoku159/view/home/startup_catalog_preparing_gate.dart';
+import 'package:sudoku159/view/records/records_statistics_screen.dart';
+import 'package:sudoku159/widgets/bottom_nav_bar.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 
 const String _prefsLocaleKey = 'app_locale';
 
@@ -38,17 +38,17 @@ void main() async {
     }
   }
 
-  runApp(const MySudokuApp());
+  runApp(const Sudoku159App());
 }
 
-class MySudokuApp extends StatefulWidget {
-  const MySudokuApp({super.key});
+class Sudoku159App extends StatefulWidget {
+  const Sudoku159App({super.key});
 
   @override
-  State<MySudokuApp> createState() => _MySudokuAppState();
+  State<Sudoku159App> createState() => _Sudoku159AppState();
 }
 
-class _MySudokuAppState extends State<MySudokuApp> {
+class _Sudoku159AppState extends State<Sudoku159App> {
   final NotificationService _notificationService = NotificationService();
   Locale? _localeOverride;
   bool _prefsLoaded = false;

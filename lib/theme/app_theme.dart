@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:mysudoku/theme/app_colors.dart';
+import 'package:sudoku159/theme/app_colors.dart';
 
 /// 앱 전체 테마. 팔레트는 [AppColors]·`skills/sudoku-design-guide`와 정렬한다.
 class AppTheme {
@@ -229,7 +229,7 @@ class AppTheme {
     return GoogleFonts.notoSans(
       fontSize: 28,
       fontWeight: FontWeight.w600,
-      color: textColor,
+      color: AppColors.boardUserNumber,
     );
   }
 

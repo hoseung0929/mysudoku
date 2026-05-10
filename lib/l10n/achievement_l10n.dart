@@ -1,5 +1,5 @@
-import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/services/challenge/achievement_service.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
+import 'package:sudoku159/services/challenge/achievement_service.dart';
 
 extension AchievementRarityL10n on AchievementRarity {
   String localizedName(AppLocalizations l10n) {

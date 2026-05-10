@@ -42,13 +42,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSectionGame => 'Game';
 
   @override
-  String get settingsSectionCloud => 'Cloud save';
+  String get settingsSectionCloud => 'Account';
 
   @override
   String get settingsSectionInfo => 'About';
 
   @override
-  String get settingsCloudAccountTitle => 'Cloud save account';
+  String get settingsCloudAccountTitle => 'Firebase account';
 
   @override
   String get settingsCloudUnavailableSubtitle =>
@@ -56,38 +56,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsCloudAnonymousSubtitle =>
-      'Using a temporary device account. Connect an email account to carry progress across devices.';
+      'Signed in with a temporary device account. You can connect an email account.';
 
   @override
   String get settingsCloudDisconnectedSubtitle =>
-      'Sign in to sync your progress across devices.';
+      'Sign in with an email account.';
 
   @override
   String settingsCloudConnectedSubtitle(String email) {
-    return 'Signed in as $email. Your progress can follow you to other devices.';
+    return 'Signed in as $email.';
   }
 
   @override
-  String get settingsCloudSyncNowTitle => 'Sync now';
-
-  @override
-  String get settingsCloudSyncNowSubtitle =>
-      'Upload local progress and pull the latest cloud saves.';
-
-  @override
-  String get settingsCloudConnectSheetTitle =>
-      'Keep your progress across devices';
+  String get settingsCloudConnectSheetTitle => 'Connect account';
 
   @override
   String get settingsCloudConnectSheetBody =>
-      'Create an account or sign in with an existing email account to keep playing on another device.';
+      'Create a new email account or sign in with an existing one.';
 
   @override
-  String get settingsCloudManageSheetTitle => 'Cloud save account';
+  String get settingsCloudManageSheetTitle => 'Account';
 
   @override
   String get settingsCloudManageSheetBody =>
-      'Your linked account is ready. You can sync now or sign out on this device.';
+      'Your linked account is ready. You can sign out on this device.';
 
   @override
   String get settingsCloudSignInAction => 'Sign in';
@@ -105,21 +97,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsCloudPasswordLabel => 'Password';
 
   @override
-  String get settingsCloudCreateDialogTitle => 'Create cloud account';
+  String get settingsCloudCreateDialogTitle => 'Create account';
 
   @override
-  String get settingsCloudSignInDialogTitle => 'Sign in to sync';
+  String get settingsCloudSignInDialogTitle => 'Sign in';
 
   @override
-  String get settingsCloudAuthSuccessSignIn =>
-      'Signed in and synced your progress.';
+  String get settingsCloudAuthSuccessSignIn => 'Signed in.';
 
   @override
-  String get settingsCloudAuthSuccessCreate =>
-      'Cloud account connected and synced.';
-
-  @override
-  String get settingsCloudSyncSuccess => 'Cloud sync completed.';
+  String get settingsCloudAuthSuccessCreate => 'Account connected.';
 
   @override
   String get settingsCloudSignOutSuccess => 'Signed out on this device.';
@@ -130,7 +117,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsCloudErrorGeneric =>
-      'We couldn\'t complete that cloud account request.';
+      'We couldn\'t complete that account request.';
 
   @override
   String get settingsCloudErrorFirebaseUnavailable =>
@@ -301,32 +288,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get levelDescMaster => 'The ultimate challenge';
 
   @override
-  String get gameGuideTitle => 'How to play';
-
-  @override
-  String get gameGuideTapCellTitle => 'Select a cell first';
-
-  @override
-  String get gameGuideTapCellBody =>
-      'Tap an empty cell, then use the number buttons below.';
-
-  @override
-  String get gameGuideMistakesTitle => 'Up to 3 mistakes';
-
-  @override
-  String get gameGuideMistakesBody => 'Three wrong numbers end this puzzle.';
-
-  @override
-  String get gameGuideColorsTitle => 'Use color hints';
-
-  @override
-  String get gameGuideColorsBody =>
-      'Selected cell, same numbers, and related cells are highlighted.';
-
-  @override
-  String get gameGuidePlayButton => 'Play now';
-
-  @override
   String gameNumberLabel(int number) {
     return 'Game $number';
   }
@@ -426,7 +387,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get shareClearTags => '#MySudoku #SudokuChallenge';
+  String get shareClearTags => '#Sudoku159 #SudokuChallenge';
 
   @override
   String shareSummaryPattern(String time, int wrong) {
@@ -534,7 +495,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get recordsSummaryTitle => 'Summary';
+  String get recordsSummaryTitle => 'Last 7 days';
 
   @override
   String get recordsTrendTitle => 'Last 7 days';
@@ -594,10 +555,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsTrendTodayLabel => 'Today';
 
   @override
-  String get recordsPlayInsightsTitle => 'Recent clear insights';
+  String get recordsPlayInsightsTitle => 'This week';
 
   @override
-  String get recordsPlayCalendarTitle => 'Clear calendar';
+  String get recordsPlayCalendarTitle => 'By day';
 
   @override
   String get recordsWeeklyReportTitle => 'Weekly report';
@@ -705,13 +666,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsRetry => 'Try again';
 
   @override
-  String get recordsStatsPageSubtitle => 'Review your clear history.';
+  String get recordsStatsPageSubtitle => 'Clears and average time.';
 
   @override
-  String get recordsKpiWeeklyClearsLabel => 'Clears in the last 7 days';
+  String get recordsKpiWeeklyClearsLabel => 'Clears';
 
   @override
-  String get recordsKpiAvgSolveTimeLabel => 'Avg. time in the last 7 days';
+  String get recordsKpiAvgSolveTimeLabel => 'Avg. time';
 
   @override
   String get recordsSectionBestRecordTitle => 'Best run';
@@ -989,33 +950,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get challengeHeroPendingCaption =>
       'Today\'s puzzle is still open—start now to keep your streak alive.';
-
-  @override
-  String get homeOnboardingWelcomeTitle => 'Welcome!';
-
-  @override
-  String get homeOnboardingStepQuickTitle => 'Quick start';
-
-  @override
-  String get homeOnboardingStepQuickBody =>
-      'Jump into a recommended difficulty right away.';
-
-  @override
-  String get homeOnboardingStepDailyTitle => 'Daily challenge';
-
-  @override
-  String get homeOnboardingStepDailyBody =>
-      'Try the daily puzzle to check your skills in one short game.';
-
-  @override
-  String get homeOnboardingStepResumeTitle => 'Resume';
-
-  @override
-  String get homeOnboardingStepResumeBody =>
-      'Continue saved games from the card at the top of Home.';
-
-  @override
-  String get homeOnboardingStartButton => 'Get started';
 
   @override
   String get homeGuestTitle => 'Guest';

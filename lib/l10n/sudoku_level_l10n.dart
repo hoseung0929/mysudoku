@@ -1,5 +1,5 @@
-import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
 
 /// DB/로직용 `name`(한글 키)과 UI 표시용 문자열을 매핑합니다.
 extension SudokuLevelL10n on SudokuLevel {

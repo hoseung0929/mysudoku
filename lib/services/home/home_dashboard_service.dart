@@ -1,11 +1,11 @@
-import 'package:mysudoku/database/database_helper.dart';
-import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/model/sudoku_game.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
-import 'package:mysudoku/services/challenge/achievement_service.dart';
-import 'package:mysudoku/services/challenge/challenge_progress_service.dart';
-import 'package:mysudoku/services/game/game_state_service.dart';
-import 'package:mysudoku/utils/sudoku_generator.dart';
+import 'package:sudoku159/database/database_helper.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
+import 'package:sudoku159/model/sudoku_game.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
+import 'package:sudoku159/services/challenge/achievement_service.dart';
+import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
+import 'package:sudoku159/services/game/game_state_service.dart';
+import 'package:sudoku159/utils/sudoku_generator.dart';
 
 class ContinueGameSummary {
   const ContinueGameSummary({
@@ -64,26 +64,23 @@ class HomeDashboardService {
     Future<Map<String, dynamic>> Function()? loadOverallStatistics,
     Future<List<Map<String, dynamic>>> Function()? loadRecentRecords,
   })  : _gameStateService = gameStateService ?? GameStateService(),
-        _challengeProgressService =
-            challengeProgressService ??
-                ChallengeProgressService(databaseHelper: databaseHelper),
-        _achievementService =
-            achievementService ?? AchievementService(databaseHelper: databaseHelper),
+        _challengeProgressService = challengeProgressService ??
+            ChallengeProgressService(databaseHelper: databaseHelper),
+        _achievementService = achievementService ??
+            AchievementService(databaseHelper: databaseHelper),
         _loadGameEntry =
             loadGameEntry ?? (databaseHelper ?? DatabaseHelper()).getGameEntry,
-        _loadGameEntriesForLevel =
-            loadGameEntriesForLevel ??
-                (databaseHelper ?? DatabaseHelper()).getGameEntriesForLevel,
-        _loadOverallStatistics =
-            loadOverallStatistics ??
-                (achievementService != null && databaseHelper == null
-                    ? (() async => const <String, dynamic>{})
-                    : (databaseHelper ?? DatabaseHelper()).getOverallStatistics),
-        _loadRecentRecords =
-            loadRecentRecords ??
-                (achievementService != null && databaseHelper == null
-                    ? (() async => const <Map<String, dynamic>>[])
-                    : (() => (databaseHelper ?? DatabaseHelper()).getRecentClearRecords(limit: 10000)));
+        _loadGameEntriesForLevel = loadGameEntriesForLevel ??
+            (databaseHelper ?? DatabaseHelper()).getGameEntriesForLevel,
+        _loadOverallStatistics = loadOverallStatistics ??
+            (achievementService != null && databaseHelper == null
+                ? (() async => const <String, dynamic>{})
+                : (databaseHelper ?? DatabaseHelper()).getOverallStatistics),
+        _loadRecentRecords = loadRecentRecords ??
+            (achievementService != null && databaseHelper == null
+                ? (() async => const <Map<String, dynamic>>[])
+                : (() => (databaseHelper ?? DatabaseHelper())
+                    .getRecentClearRecords(limit: 10000)));
 
   final GameStateService _gameStateService;
   final ChallengeProgressService _challengeProgressService;
@@ -169,8 +166,7 @@ class HomeDashboardService {
         gameNumber: saved.gameNumber,
       );
 
-      summaries.add(
-        ContinueGameSummary(
+      summaries.add(ContinueGameSummary(
         level: level,
         game: game,
         progress: _calculateProgress(
@@ -217,7 +213,8 @@ class HomeDashboardService {
     final sameLevelEntries = await _loadGameEntriesForLevel(levelName);
     final fallbackEntry = _firstPlayableEntry(sameLevelEntries);
     if (fallbackEntry != null) {
-      final fallbackGameNumber = fallbackEntry['game_number'] as int? ?? gameNumber;
+      final fallbackGameNumber =
+          fallbackEntry['game_number'] as int? ?? gameNumber;
       return _gameFromEntry(
         level: level,
         levelName: levelName,
@@ -242,10 +239,7 @@ class HomeDashboardService {
     required List<List<int>> savedBoard,
   }) {
     final totalToFill = 81 -
-        originalBoard
-            .expand((row) => row)
-            .where((value) => value != 0)
-            .length;
+        originalBoard.expand((row) => row).where((value) => value != 0).length;
     if (totalToFill <= 0) {
       return 1.0;
     }
@@ -303,7 +297,8 @@ class HomeDashboardService {
     return entry;
   }
 
-  Map<String, dynamic>? _firstPlayableEntry(List<Map<String, dynamic>> entries) {
+  Map<String, dynamic>? _firstPlayableEntry(
+      List<Map<String, dynamic>> entries) {
     for (final entry in entries) {
       final board = entry['board'] as List<List<int>>?;
       final solution = entry['solution'] as List<List<int>>?;

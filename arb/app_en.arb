@@ -11,13 +11,13 @@
   "settingsSectionNotifications": "Notifications",
   "settingsSectionLanguage": "Language",
   "settingsSectionGame": "Game",
-  "settingsSectionCloud": "Cloud save",
+  "settingsSectionCloud": "Account",
   "settingsSectionInfo": "About",
-  "settingsCloudAccountTitle": "Cloud save account",
+  "settingsCloudAccountTitle": "Firebase account",
   "settingsCloudUnavailableSubtitle": "Firebase setup is not available in this build.",
-  "settingsCloudAnonymousSubtitle": "Using a temporary device account. Connect an email account to carry progress across devices.",
-  "settingsCloudDisconnectedSubtitle": "Sign in to sync your progress across devices.",
-  "settingsCloudConnectedSubtitle": "Signed in as {email}. Your progress can follow you to other devices.",
+  "settingsCloudAnonymousSubtitle": "Signed in with a temporary device account. You can connect an email account.",
+  "settingsCloudDisconnectedSubtitle": "Sign in with an email account.",
+  "settingsCloudConnectedSubtitle": "Signed in as {email}.",
   "@settingsCloudConnectedSubtitle": {
     "placeholders": {
       "email": {
@@ -25,25 +25,22 @@
       }
     }
   },
-  "settingsCloudSyncNowTitle": "Sync now",
-  "settingsCloudSyncNowSubtitle": "Upload local progress and pull the latest cloud saves.",
-  "settingsCloudConnectSheetTitle": "Keep your progress across devices",
-  "settingsCloudConnectSheetBody": "Create an account or sign in with an existing email account to keep playing on another device.",
-  "settingsCloudManageSheetTitle": "Cloud save account",
-  "settingsCloudManageSheetBody": "Your linked account is ready. You can sync now or sign out on this device.",
+  "settingsCloudConnectSheetTitle": "Connect account",
+  "settingsCloudConnectSheetBody": "Create a new email account or sign in with an existing one.",
+  "settingsCloudManageSheetTitle": "Account",
+  "settingsCloudManageSheetBody": "Your linked account is ready. You can sign out on this device.",
   "settingsCloudSignInAction": "Sign in",
   "settingsCloudCreateAccountAction": "Create account",
   "settingsCloudSignOutAction": "Sign out",
   "settingsCloudEmailLabel": "Email",
   "settingsCloudPasswordLabel": "Password",
-  "settingsCloudCreateDialogTitle": "Create cloud account",
-  "settingsCloudSignInDialogTitle": "Sign in to sync",
-  "settingsCloudAuthSuccessSignIn": "Signed in and synced your progress.",
-  "settingsCloudAuthSuccessCreate": "Cloud account connected and synced.",
-  "settingsCloudSyncSuccess": "Cloud sync completed.",
+  "settingsCloudCreateDialogTitle": "Create account",
+  "settingsCloudSignInDialogTitle": "Sign in",
+  "settingsCloudAuthSuccessSignIn": "Signed in.",
+  "settingsCloudAuthSuccessCreate": "Account connected.",
   "settingsCloudSignOutSuccess": "Signed out on this device.",
   "settingsCloudValidationMissingCredentials": "Enter both an email address and password.",
-  "settingsCloudErrorGeneric": "We couldn't complete that cloud account request.",
+  "settingsCloudErrorGeneric": "We couldn't complete that account request.",
   "settingsCloudErrorFirebaseUnavailable": "Firebase is not configured in this build.",
   "settingsCloudErrorInvalidEmail": "Enter a valid email address.",
   "settingsCloudErrorWrongPassword": "The password is incorrect.",
@@ -95,18 +92,12 @@
   "levelDescAdvanced": "For experienced players",
   "levelDescExpert": "For Sudoku masters",
   "levelDescMaster": "The ultimate challenge",
-  "gameGuideTitle": "How to play",
-  "gameGuideTapCellTitle": "Select a cell first",
-  "gameGuideTapCellBody": "Tap an empty cell, then use the number buttons below.",
-  "gameGuideMistakesTitle": "Up to 3 mistakes",
-  "gameGuideMistakesBody": "Three wrong numbers end this puzzle.",
-  "gameGuideColorsTitle": "Use color hints",
-  "gameGuideColorsBody": "Selected cell, same numbers, and related cells are highlighted.",
-  "gameGuidePlayButton": "Play now",
   "gameNumberLabel": "Game {number}",
   "@gameNumberLabel": {
     "placeholders": {
-      "number": {"type": "int"}
+      "number": {
+        "type": "int"
+      }
     }
   },
   "gameHintShort": "Hint",
@@ -128,19 +119,25 @@
   "gameRowsCompleted": "{count} row cleared",
   "@gameRowsCompleted": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "gameColsCompleted": "{count} column cleared",
   "@gameColsCompleted": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "gameBoxesCompleted": "{count} box cleared",
   "@gameBoxesCompleted": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "gamePause": "Pause",
@@ -153,23 +150,35 @@
   "shareClearLine": "{level} · Game {number}",
   "@shareClearLine": {
     "placeholders": {
-      "level": {"type": "String"},
-      "number": {"type": "int"}
+      "level": {
+        "type": "String"
+      },
+      "number": {
+        "type": "int"
+      }
     }
   },
   "shareClearStats": "{time} · {wrong} mistakes",
   "@shareClearStats": {
     "placeholders": {
-      "time": {"type": "String"},
-      "wrong": {"type": "int"}
+      "time": {
+        "type": "String"
+      },
+      "wrong": {
+        "type": "int"
+      }
     }
   },
-  "shareClearTags": "#MySudoku #SudokuChallenge",
+  "shareClearTags": "#Sudoku159 #SudokuChallenge",
   "shareSummaryPattern": "{time} · {wrong} mistakes",
   "@shareSummaryPattern": {
     "placeholders": {
-      "time": {"type": "String"},
-      "wrong": {"type": "int"}
+      "time": {
+        "type": "String"
+      },
+      "wrong": {
+        "type": "int"
+      }
     }
   },
   "dialogCongratulations": "Congratulations!",
@@ -181,7 +190,9 @@
   "dialogWrongCountValue": "{count} times",
   "@dialogWrongCountValue": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "dialogSharePreview": "Share text",
@@ -211,7 +222,9 @@
   "gameOverWrongLabel": "Mistakes: {count}/3",
   "@gameOverWrongLabel": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recordsFilterSectionTitle": "Filters",
@@ -221,10 +234,12 @@
   "recordsPeriodLastDays": "Last {days} days",
   "@recordsPeriodLastDays": {
     "placeholders": {
-      "days": {"type": "int"}
+      "days": {
+        "type": "int"
+      }
     }
   },
-  "recordsSummaryTitle": "Summary",
+  "recordsSummaryTitle": "Last 7 days",
   "recordsTrendTitle": "Last 7 days",
   "recordsTrendEmpty": "Not enough recent clears to show a 7-day trend.",
   "recordsTrendClears": "Clears",
@@ -238,22 +253,28 @@
   "recordsInsightClearsValue": "{count, plural, one{{count} clear} other{{count} clears}}",
   "@recordsInsightClearsValue": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recordsInsightAvgPaceEyebrow": "Average pace",
   "recordsTrendSectionSubtitle": "Day-by-day clears for the last seven days.",
   "recordsTrendLegendDailyClears": "Daily clears",
   "recordsTrendTodayLabel": "Today",
-  "recordsPlayInsightsTitle": "Recent clear insights",
-  "recordsPlayCalendarTitle": "Clear calendar",
+  "recordsPlayInsightsTitle": "This week",
+  "recordsPlayCalendarTitle": "By day",
   "recordsWeeklyReportTitle": "Weekly report",
   "recordsWeeklyReportBusiestDay": "Most active day",
   "recordsWeeklyReportTopDayValue": "{day}, {count, plural, one{{count} clear} other{{count} clears}}",
   "@recordsWeeklyReportTopDayValue": {
     "placeholders": {
-      "day": {"type": "String"},
-      "count": {"type": "int"}
+      "day": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recordsWeeklyReportTopDayFallback": "No clears yet",
@@ -262,7 +283,9 @@
   "recordsTimelineMistakesValue": "{count, plural, one{{count} mistake} other{{count} mistakes}}",
   "@recordsTimelineMistakesValue": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recordsTimelinePerfect": "Perfect clear",
@@ -286,9 +309,9 @@
   "recordsLevelMiniAvgWrong": "Avg wrong",
   "recordsStatsLoadError": "Unable to load statistics right now. Please try again shortly.",
   "recordsRetry": "Try again",
-  "recordsStatsPageSubtitle": "Review your clear history.",
-  "recordsKpiWeeklyClearsLabel": "Clears in the last 7 days",
-  "recordsKpiAvgSolveTimeLabel": "Avg. time in the last 7 days",
+  "recordsStatsPageSubtitle": "Clears and average time.",
+  "recordsKpiWeeklyClearsLabel": "Clears",
+  "recordsKpiAvgSolveTimeLabel": "Avg. time",
   "recordsSectionBestRecordTitle": "Best run",
   "recordsSectionDifficultyTitle": "By difficulty",
   "recordsSectionDetailStatsTitle": "Session details",
@@ -300,13 +323,17 @@
   "recordsDetailStreakDays": "{count, plural, one{{count} day} other{{count} days}}",
   "@recordsDetailStreakDays": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recordsStatAverageWrongFormatted": "{value}",
   "@recordsStatAverageWrongFormatted": {
     "placeholders": {
-      "value": {"type": "String"}
+      "value": {
+        "type": "String"
+      }
     }
   },
   "recordsDifficultySnapshotEmpty": "Play a few games to see your difficulty mix here.",
@@ -316,7 +343,9 @@
   "recordsTrendA11yMaxClears": "Peak {count}",
   "@recordsTrendA11yMaxClears": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recordsHeroChartEmptyHint": "Clear a puzzle within the last 7 days to see your flow sketch here.",
@@ -330,15 +359,21 @@
   "recordsBestByLevelDetail": "{time} · Mistakes: {wrongCount}",
   "@recordsBestByLevelDetail": {
     "placeholders": {
-      "time": {"type": "String"},
-      "wrongCount": {"type": "int"}
+      "time": {
+        "type": "String"
+      },
+      "wrongCount": {
+        "type": "int"
+      }
     }
   },
   "recordsPerfectBadge": "Perfect",
   "recordsAvgTimeDetail": "Avg. time {time}",
   "@recordsAvgTimeDetail": {
     "placeholders": {
-      "time": {"type": "String"}
+      "time": {
+        "type": "String"
+      }
     }
   },
   "recordsRecentTitle": "Recent clears",
@@ -348,23 +383,37 @@
   "recordsGameNumberTitle": "{level} · Game {number}",
   "@recordsGameNumberTitle": {
     "placeholders": {
-      "level": {"type": "String"},
-      "number": {"type": "int"}
+      "level": {
+        "type": "String"
+      },
+      "number": {
+        "type": "int"
+      }
     }
   },
   "recordsRecentDetail": "{time} · Mistakes: {wrongCount} · {date}",
   "@recordsRecentDetail": {
     "placeholders": {
-      "time": {"type": "String"},
-      "wrongCount": {"type": "int"},
-      "date": {"type": "String"}
+      "time": {
+        "type": "String"
+      },
+      "wrongCount": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
     }
   },
   "recordsBestDetail": "{time} · Mistakes: {wrongCount}",
   "@recordsBestDetail": {
     "placeholders": {
-      "time": {"type": "String"},
-      "wrongCount": {"type": "int"}
+      "time": {
+        "type": "String"
+      },
+      "wrongCount": {
+        "type": "int"
+      }
     }
   },
   "recordsGameLoadError": "Could not load puzzle data.",
@@ -382,7 +431,9 @@
   "challengeWeeklyGoalRemainingTitle": "{count} more clears to hit your weekly goal",
   "@challengeWeeklyGoalRemainingTitle": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "challengeWeeklyGoalReachedBody": "Add more perfect clears to build an even stronger rhythm.",
@@ -390,7 +441,9 @@
   "challengePerfectThisWeek": "{count} perfect clears this week",
   "@challengePerfectThisWeek": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "challengePerfectThisWeekFirst": "Try your first perfect clear this week",
@@ -400,35 +453,49 @@
   "challengeWeeklyClearsLine": "{count} clears this week",
   "@challengeWeeklyClearsLine": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "challengeWeeklyProgressShort": "{done} / {target} done",
   "@challengeWeeklyProgressShort": {
     "placeholders": {
-      "done": {"type": "int"},
-      "target": {"type": "int"}
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
     }
   },
   "challengeWeeklyPerfectShort": "{count} perfect",
   "@challengeWeeklyPerfectShort": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "challengeWeeklyCongratsFooter": "Weekly goal complete—keep stacking great records!",
   "challengeWeeklyAlmostFooter": "{count} more clears to finish the week.",
   "@challengeWeeklyAlmostFooter": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "challengeAchievementsHeading": "Achievements · badges",
   "challengeBadgesCollected": "{unlocked} / {total} earned",
   "@challengeBadgesCollected": {
     "placeholders": {
-      "unlocked": {"type": "int"},
-      "total": {"type": "int"}
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "challengeViewAllBadges": "View all",
@@ -437,14 +504,20 @@
   "challengeBadgeProgressLine": "{desc} · Progress: {progress}",
   "@challengeBadgeProgressLine": {
     "placeholders": {
-      "desc": {"type": "String"},
-      "progress": {"type": "String"}
+      "desc": {
+        "type": "String"
+      },
+      "progress": {
+        "type": "String"
+      }
     }
   },
   "challengeStreakDays": "{days}-day streak",
   "@challengeStreakDays": {
     "placeholders": {
-      "days": {"type": "int"}
+      "days": {
+        "type": "int"
+      }
     }
   },
   "challengeStreakStartToday": "Chase your first clear today",
@@ -454,23 +527,21 @@
   "challengeOpenTodayOnHomeButton": "Open today's puzzle on Home",
   "challengeHeroDoneCaption": "You finished today's challenge. Come back tomorrow to extend your streak.",
   "challengeHeroPendingCaption": "Today's puzzle is still open—start now to keep your streak alive.",
-  "homeOnboardingWelcomeTitle": "Welcome!",
-  "homeOnboardingStepQuickTitle": "Quick start",
-  "homeOnboardingStepQuickBody": "Jump into a recommended difficulty right away.",
-  "homeOnboardingStepDailyTitle": "Daily challenge",
-  "homeOnboardingStepDailyBody": "Try the daily puzzle to check your skills in one short game.",
-  "homeOnboardingStepResumeTitle": "Resume",
-  "homeOnboardingStepResumeBody": "Continue saved games from the card at the top of Home.",
-  "homeOnboardingStartButton": "Get started",
   "homeGuestTitle": "Guest",
   "homeGuestSubtitle": "Start a game in one tap",
   "homeContinueTitle": "Resume",
   "homeContinueSubtitle": "{level} · Game {gameNumber} · {cells} cells filled",
   "@homeContinueSubtitle": {
     "placeholders": {
-      "level": {"type": "String"},
-      "gameNumber": {"type": "int"},
-      "cells": {"type": "int"}
+      "level": {
+        "type": "String"
+      },
+      "gameNumber": {
+        "type": "int"
+      },
+      "cells": {
+        "type": "int"
+      }
     }
   },
   "homeContinueDescription": "Pick up your paused puzzle where you left off.",
@@ -479,7 +550,9 @@
   "homeProgressPercent": "Progress {percent}%",
   "@homeProgressPercent": {
     "placeholders": {
-      "percent": {"type": "int"}
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "homeTodayChallengeCardDoneBody": "You finished today's challenge. Keep your streak going!",
@@ -487,7 +560,9 @@
   "homeTodayChallengeFooterDoneStreak": "Today's challenge done · {days}-day streak",
   "@homeTodayChallengeFooterDoneStreak": {
     "placeholders": {
-      "days": {"type": "int"}
+      "days": {
+        "type": "int"
+      }
     }
   },
   "homeTodayChallengeFooterPending": "Use today's puzzle to build a streak.",
@@ -500,9 +575,15 @@
   "homeCatalogProgressDetail": "{generated}/{target} puzzles ready · {remaining} to go",
   "@homeCatalogProgressDetail": {
     "placeholders": {
-      "generated": {"type": "int"},
-      "target": {"type": "int"},
-      "remaining": {"type": "int"}
+      "generated": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
     }
   },
   "levelPickDifficultyTitle": "Choose difficulty",
@@ -511,7 +592,9 @@
   "levelGamesScreenTitle": "{levelName} games",
   "@levelGamesScreenTitle": {
     "placeholders": {
-      "levelName": {"type": "String"}
+      "levelName": {
+        "type": "String"
+      }
     }
   },
   "levelLoadingGames": "Loading puzzles…",
@@ -526,20 +609,28 @@
   "levelEmptyCellsLabel": "{count} empty cells",
   "@levelEmptyCellsLabel": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "levelPuzzleCountSummary": "{count} puzzles",
   "@levelPuzzleCountSummary": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "levelCatalogPreparingShort": "Preparing more puzzles · {done}/{total}",
   "@levelCatalogPreparingShort": {
     "placeholders": {
-      "done": {"type": "int"},
-      "total": {"type": "int"}
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "achievementCollectionAppBarTitle": "Badges",
@@ -559,8 +650,12 @@
   "achievementHeroProgress": "{unlocked} / {total} unlocked",
   "@achievementHeroProgress": {
     "placeholders": {
-      "unlocked": {"type": "int"},
-      "total": {"type": "int"}
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "achievementHeroAllUnlocked": "You collected every badge. Amazing!",
@@ -578,22 +673,34 @@
   "achievementProgressFraction": "{current}/{max}",
   "@achievementProgressFraction": {
     "placeholders": {
-      "current": {"type": "int"},
-      "max": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
     }
   },
   "achievementProgressStreak": "{current}/{max} days",
   "@achievementProgressStreak": {
     "placeholders": {
-      "current": {"type": "int"},
-      "max": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
     }
   },
   "achievementProgressWeekly": "{current}/{max} clears",
   "@achievementProgressWeekly": {
     "placeholders": {
-      "current": {"type": "int"},
-      "max": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
     }
   },
   "achievementStatusDone": "Done",
@@ -602,13 +709,17 @@
   "achievementTileProgress": "Progress: {label}",
   "@achievementTileProgress": {
     "placeholders": {
-      "label": {"type": "String"}
+      "label": {
+        "type": "String"
+      }
     }
   },
   "achievementTileRarity": "Rarity: {label}",
   "@achievementTileRarity": {
     "placeholders": {
-      "label": {"type": "String"}
+      "label": {
+        "type": "String"
+      }
     }
   },
   "achievementRarityCommon": "Common",

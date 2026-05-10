@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:mysudoku/l10n/app_locale_scope.dart';
-import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/presenter/settings/settings_controller.dart';
-import 'package:mysudoku/services/firebase/firebase_identity_service.dart';
-import 'package:mysudoku/theme/app_colors.dart';
-import 'package:mysudoku/theme/app_theme.dart';
+import 'package:sudoku159/l10n/app_locale_scope.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
+import 'package:sudoku159/presenter/settings/settings_controller.dart';
+import 'package:sudoku159/services/firebase/firebase_identity_service.dart';
+import 'package:sudoku159/theme/app_colors.dart';
+import 'package:sudoku159/theme/app_theme.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -85,18 +85,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   FilledButton.icon(
                     onPressed: () {
                       Navigator.of(sheetContext).pop();
-                      _syncCloudProgress();
-                    },
-                    icon: const Icon(Icons.sync),
-                    label: Text(l10n.settingsCloudSyncNowTitle),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(sheetContext).pop();
                       _signOutCloudAccount();
                     },
-                    child: Text(l10n.settingsCloudSignOutAction),
+                    icon: const Icon(Icons.logout),
+                    label: Text(l10n.settingsCloudSignOutAction),
                   ),
                 ],
               ),
@@ -264,23 +256,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return result;
   }
 
-  Future<void> _syncCloudProgress() async {
-    final l10n = AppLocalizations.of(context)!;
-    if (!_state.cloudAccount.isAvailable) {
-      _showSnackBar(l10n.settingsCloudErrorFirebaseUnavailable);
-      return;
-    }
-    if (!_state.cloudAccount.isSignedIn) {
-      await _showCloudAccountSheet();
-      return;
-    }
-
-    await _runCloudAction(
-      action: () => _settingsController.syncCloudProgress(_state),
-      successMessage: l10n.settingsCloudSyncSuccess,
-    );
-  }
-
   Future<void> _signOutCloudAccount() async {
     final l10n = AppLocalizations.of(context)!;
     await _runCloudAction(
@@ -372,22 +347,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
-    );
-  }
-
-  Future<void> _showCloudComingSoonDialog() async {
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('안내'),
-        content: const Text('다음 버전에 제공 될 기능입니다.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('확인'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -541,24 +500,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   [
                     _buildSettingsTile(
                       icon: _state.cloudAccount.isCrossDeviceReady
-                          ? Icons.cloud_done_outlined
-                          : Icons.cloud_sync_outlined,
+                          ? Icons.verified_user_outlined
+                          : Icons.person_outline,
                       title: AppLocalizations.of(context)!
                           .settingsCloudAccountTitle,
                       subtitle: _cloudAccountSubtitle(
                         AppLocalizations.of(context)!,
                       ),
-                      onTap: _showCloudComingSoonDialog,
-                    ),
-                    _buildSettingsTile(
-                      icon: Icons.sync_outlined,
-                      title: AppLocalizations.of(context)!
-                          .settingsCloudSyncNowTitle,
-                      subtitle: AppLocalizations.of(
-                        context,
-                      )!
-                          .settingsCloudSyncNowSubtitle,
-                      onTap: _showCloudComingSoonDialog,
+                      onTap: _showCloudAccountSheet,
                     ),
                   ],
                 ),

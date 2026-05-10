@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:mysudoku/services/catalog/remote_puzzle_service.dart';
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/services/catalog/remote_puzzle_service.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 
 void main() {
   AppLogger.setMuted(true);

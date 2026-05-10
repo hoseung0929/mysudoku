@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mysudoku/services/home/home_dashboard_service.dart';
+import 'package:sudoku159/services/home/home_dashboard_service.dart';
 
 enum _SavedGameSort { recent, progress, playTime }
 
@@ -170,23 +170,23 @@ class _SavedGamesScreenState extends State<SavedGamesScreen> {
                   ),
                 )
               else
-              Expanded(
-                child: ListView.separated(
-                  itemCount: _visibleGames.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    final summary = _visibleGames[index];
-                    return _SavedGameListTile(
-                      title: widget.itemTitleBuilder(summary),
-                      subtitle: widget.itemSubtitleBuilder(summary),
-                      isBusy: _isDeleting,
-                      deleteTooltip: widget.deleteTooltip,
-                      onTap: () => Navigator.of(context).pop(summary),
-                      onDelete: () => _delete(summary),
-                    );
-                  },
+                Expanded(
+                  child: ListView.separated(
+                    itemCount: _visibleGames.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final summary = _visibleGames[index];
+                      return _SavedGameListTile(
+                        title: widget.itemTitleBuilder(summary),
+                        subtitle: widget.itemSubtitleBuilder(summary),
+                        isBusy: _isDeleting,
+                        deleteTooltip: widget.deleteTooltip,
+                        onTap: () => Navigator.of(context).pop(summary),
+                        onDelete: () => _delete(summary),
+                      );
+                    },
+                  ),
                 ),
-              ),
             ],
           ),
         ),

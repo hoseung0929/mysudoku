@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mysudoku/model/sudoku_game_feature_policy.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
+import 'package:sudoku159/model/sudoku_game_feature_policy.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
 
 void main() {
   group('SudokuGameFeaturePolicy', () {

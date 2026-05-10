@@ -1,4 +1,4 @@
-import 'package:mysudoku/services/settings/app_settings_service.dart';
+import 'package:sudoku159/services/settings/app_settings_service.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 class GameViewSettings {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mysudoku/presenter/game/sudoku_game_presenter.dart';
-import 'package:mysudoku/theme/app_theme.dart';
-import 'package:mysudoku/view/sudoku_game/sudoku_memo_notes_grid.dart';
+import 'package:sudoku159/presenter/game/sudoku_game_presenter.dart';
+import 'package:sudoku159/theme/app_theme.dart';
+import 'package:sudoku159/view/sudoku_game/sudoku_memo_notes_grid.dart';
 
 /// 9x9 스도쿠 보드 (셀 탭은 부모에서 setState 처리)
 class SudokuBoardGrid extends StatelessWidget {
@@ -47,12 +47,10 @@ class SudokuBoardGrid extends StatelessWidget {
         final cellExtent = constraints.maxWidth / 9;
         final digitFontSize = (cellExtent * 0.62).clamp(18.0, 28.0);
         final memoCellExtent = (cellExtent * 0.54).clamp(10.0, 16.0);
-        final boardRadius = (cellExtent * 0.55).clamp(14.0, 20.0);
 
         return Container(
           decoration: BoxDecoration(
             color: const Color(0xFFFFFDF9),
-            borderRadius: BorderRadius.circular(boardRadius),
             border: Border.all(color: const Color(0xFFE4DED3)),
             boxShadow: [
               BoxShadow(
@@ -67,32 +65,33 @@ class SudokuBoardGrid extends StatelessWidget {
               return Expanded(
                 child: Row(
                   children: List.generate(9, (col) {
-                final value = presenter.getCellValue(row, col);
-                final isFixed = presenter.isCellFixed(row, col);
-                final isSelected = presenter.isCellSelected(row, col);
-                final isSameNumber = presenter.isSameNumber(row, col);
-                final isRelated = presenter.isRelated(row, col);
-                final isWrong = presenter.isWrongNumber(row, col);
-                final isHint = presenter.isHintCell(row, col);
-                final notes = presenter.getCellNotes(row, col);
-                final isSingleCandidateCell =
-                    enableMemoHighlights && value == 0 && notes.length == 1;
-                final hasHighlightedMemoCandidate =
-                    highlightedMemo != null &&
-                    value == 0 &&
-                    notes.contains(highlightedMemo);
-                final isHiddenSingleForHighlightedMemo =
-                    hasHighlightedMemoCandidate &&
-                    _isUniqueMemoCandidate(
-                      row: row,
-                      col: col,
-                      candidate: highlightedMemo,
-                    );
+                    final value = presenter.getCellValue(row, col);
+                    final isFixed = presenter.isCellFixed(row, col);
+                    final isSelected = presenter.isCellSelected(row, col);
+                    final isSameNumber = presenter.isSameNumber(row, col);
+                    final isRelated = presenter.isRelated(row, col);
+                    final isWrong = presenter.isWrongNumber(row, col);
+                    final isHint = presenter.isHintCell(row, col);
+                    final notes = presenter.getCellNotes(row, col);
+                    final isSingleCandidateCell =
+                        enableMemoHighlights && value == 0 && notes.length == 1;
+                    final hasHighlightedMemoCandidate =
+                        highlightedMemo != null &&
+                            value == 0 &&
+                            notes.contains(highlightedMemo);
+                    final isHiddenSingleForHighlightedMemo =
+                        hasHighlightedMemoCandidate &&
+                            _isUniqueMemoCandidate(
+                              row: row,
+                              col: col,
+                              candidate: highlightedMemo,
+                            );
 
-                final isWave = waveActive['$row,$col'] == true;
-                final isLineComplete = lineCompleteActive['$row,$col'] == true;
-                final isErrorActive = errorActive['$row,$col'] == true;
-                final horizontalOffset = errorOffset['$row,$col'] ?? 0.0;
+                    final isWave = waveActive['$row,$col'] == true;
+                    final isLineComplete =
+                        lineCompleteActive['$row,$col'] == true;
+                    final isErrorActive = errorActive['$row,$col'] == true;
+                    final horizontalOffset = errorOffset['$row,$col'] ?? 0.0;
 
                     return Expanded(
                       child: GestureDetector(
@@ -106,75 +105,99 @@ class SudokuBoardGrid extends StatelessWidget {
                               border: Border(
                                 top: BorderSide(
                                   color: borderColor,
-                                  width:
-                                      (row == 0 || row == 3 || row == 6) ? 1.2 : 0.35,
+                                  width: (row == 0 || row == 3 || row == 6)
+                                      ? 1.2
+                                      : 0.35,
                                 ),
                                 left: BorderSide(
                                   color: borderColor,
-                                  width:
-                                      (col == 0 || col == 3 || col == 6) ? 1.2 : 0.35,
+                                  width: (col == 0 || col == 3 || col == 6)
+                                      ? 1.2
+                                      : 0.35,
                                 ),
                                 right: BorderSide(
                                   color: borderColor,
-                                  width:
-                                      (col == 2 || col == 5 || col == 8) ? 1.2 : 0.35,
+                                  width: (col == 2 || col == 5 || col == 8)
+                                      ? 1.2
+                                      : 0.35,
                                 ),
                                 bottom: BorderSide(
                                   color: borderColor,
-                                  width:
-                                      (row == 2 || row == 5 || row == 8) ? 1.2 : 0.35,
+                                  width: (row == 2 || row == 5 || row == 8)
+                                      ? 1.2
+                                      : 0.35,
                                 ),
                               ),
                               color: isErrorActive
                                   ? AppTheme.pinkColor.withValues(alpha: 0.28)
                                   : isWave
-                                      ? AppTheme.mintColor.withValues(alpha: 0.22)
-                                              : isLineComplete
-                                          ? AppTheme.yellowColor.withValues(alpha: 0.26)
+                                      ? AppTheme.mintColor
+                                          .withValues(alpha: 0.22)
+                                      : isLineComplete
+                                          ? AppTheme.yellowColor
+                                              .withValues(alpha: 0.26)
                                           : isSelected
-                                              ? AppTheme.lightBlueColor.withValues(alpha: 0.22)
-                                          : isWrong
-                                                  ? AppTheme.pinkColor.withValues(alpha: 0.18)
+                                              ? AppTheme.lightBlueColor
+                                                  .withValues(alpha: 0.22)
+                                              : isWrong
+                                                  ? AppTheme.pinkColor
+                                                      .withValues(alpha: 0.18)
                                                   : isSameNumber
-                                                          ? AppTheme.lightBlueColor.withValues(alpha: 0.14)
-                                                          : isHiddenSingleForHighlightedMemo
-                                                              ? AppTheme.lightBlueColor
-                                                                  .withValues(alpha: 0.24)
+                                                      ? AppTheme.lightBlueColor
+                                                          .withValues(
+                                                              alpha: 0.14)
+                                                      : isHiddenSingleForHighlightedMemo
+                                                          ? AppTheme
+                                                              .lightBlueColor
+                                                              .withValues(
+                                                                  alpha: 0.24)
                                                           : hasHighlightedMemoCandidate
-                                                              ? AppTheme.lightBlueColor
-                                                                  .withValues(alpha: 0.14)
-                                                          : isSingleCandidateCell
-                                                              ? AppTheme.yellowColor
-                                                                  .withValues(alpha: 0.16)
-                                                          : isRelated
-                                                              ? relatedFill
-                                                              : null,
+                                                              ? AppTheme
+                                                                  .lightBlueColor
+                                                                  .withValues(
+                                                                      alpha:
+                                                                          0.14)
+                                                              : isSingleCandidateCell
+                                                                  ? AppTheme
+                                                                      .yellowColor
+                                                                      .withValues(
+                                                                          alpha:
+                                                                              0.16)
+                                                                  : isRelated
+                                                                      ? relatedFill
+                                                                      : null,
                             ),
                             child: Center(
                               child: value != 0
                                   ? Text(
                                       value.toString(),
                                       style: isWrong
-                                          ? AppTheme.sudokuWrongNumberStyle.copyWith(
+                                          ? AppTheme.sudokuWrongNumberStyle
+                                              .copyWith(
                                               fontSize: digitFontSize,
                                             )
                                           : isFixed
+                                              ? GoogleFonts.notoSans(
+                                                  fontSize: digitFontSize,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: digitOnBoard,
+                                                )
+                                              : isHint
                                                   ? GoogleFonts.notoSans(
                                                       fontSize: digitFontSize,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: digitOnBoard,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: const Color(
+                                                          0xFF457B9D),
                                                     )
-                                                  : isHint
-                                                      ? GoogleFonts.notoSans(
-                                                          fontSize: digitFontSize,
-                                                          fontWeight: FontWeight.w600,
-                                                          color: const Color(0xFF457B9D),
-                                                        )
-                                                      : GoogleFonts.notoSans(
-                                                          fontSize: digitFontSize,
-                                                          fontWeight: FontWeight.w600,
-                                                          color: const Color(0xFF285B3F),
-                                                        ),
+                                                  : GoogleFonts.notoSans(
+                                                      fontSize: digitFontSize,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: AppTheme
+                                                          .sudokuNumberStyle
+                                                          .color,
+                                                    ),
                                     )
                                   : SudokuMemoNotesGrid(
                                       notes: notes,

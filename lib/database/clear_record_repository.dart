@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 import 'package:sqflite/sqflite.dart';
 import 'database_manager.dart';
 
@@ -61,7 +61,8 @@ class ClearRecordRepository {
   }
 
   /// 최근 클리어 이벤트를 반환합니다.
-  Future<List<Map<String, dynamic>>> getRecentClearEvents({int limit = 365}) async {
+  Future<List<Map<String, dynamic>>> getRecentClearEvents(
+      {int limit = 365}) async {
     final db = await _dbManager.database;
     return db.query(
       'clear_events',

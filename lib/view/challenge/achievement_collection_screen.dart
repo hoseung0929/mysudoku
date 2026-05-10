@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mysudoku/l10n/achievement_l10n.dart';
-import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/services/challenge/achievement_service.dart';
-import 'package:mysudoku/widgets/custom_app_bar.dart';
+import 'package:sudoku159/l10n/achievement_l10n.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
+import 'package:sudoku159/services/challenge/achievement_service.dart';
+import 'package:sudoku159/widgets/custom_app_bar.dart';
 
 class AchievementCollectionScreen extends StatefulWidget {
   const AchievementCollectionScreen({super.key});
@@ -261,7 +261,8 @@ class _CollectionHero extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.military_tech, color: Color(0xFFDA8B00), size: 24),
+              const Icon(Icons.military_tech,
+                  color: Color(0xFFDA8B00), size: 24),
               const SizedBox(width: 8),
               Text(
                 l10n.achievementHeroTitle,
@@ -376,7 +377,9 @@ class _CollectionBadgeTile extends StatelessWidget {
         color: unlocked ? badge.surfaceColor : const Color(0xFFF8F9FA),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: unlocked ? badge.accentColor.withValues(alpha: 0.35) : const Color(0xFFE2E8F0),
+          color: unlocked
+              ? badge.accentColor.withValues(alpha: 0.35)
+              : const Color(0xFFE2E8F0),
         ),
       ),
       child: Row(
@@ -420,7 +423,8 @@ class _CollectionBadgeTile extends StatelessWidget {
                   ),
                   style: TextStyle(
                     fontSize: 12,
-                    color: unlocked ? badge.accentColor : const Color(0xFF7F8C8D),
+                    color:
+                        unlocked ? badge.accentColor : const Color(0xFF7F8C8D),
                   ),
                 ),
               ],

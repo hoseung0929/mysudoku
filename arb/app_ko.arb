@@ -11,13 +11,13 @@
   "settingsSectionNotifications": "알림",
   "settingsSectionLanguage": "언어",
   "settingsSectionGame": "게임",
-  "settingsSectionCloud": "클라우드 저장",
+  "settingsSectionCloud": "계정",
   "settingsSectionInfo": "정보",
-  "settingsCloudAccountTitle": "클라우드 저장 계정",
+  "settingsCloudAccountTitle": "Firebase 계정",
   "settingsCloudUnavailableSubtitle": "이 빌드에는 Firebase 설정이 연결되지 않았어요.",
-  "settingsCloudAnonymousSubtitle": "임시 기기 계정으로 저장 중이에요. 이메일 계정을 연결하면 다른 기기에서도 이어할 수 있어요.",
-  "settingsCloudDisconnectedSubtitle": "다른 기기에서도 이어하려면 로그인해 주세요.",
-  "settingsCloudConnectedSubtitle": "{email} 계정으로 연결되어 있어요. 진행 상황을 다른 기기로 가져갈 수 있어요.",
+  "settingsCloudAnonymousSubtitle": "임시 기기 계정으로 로그인되어 있어요. 이메일 계정을 연결할 수 있어요.",
+  "settingsCloudDisconnectedSubtitle": "이메일 계정으로 로그인할 수 있어요.",
+  "settingsCloudConnectedSubtitle": "{email} 계정으로 로그인되어 있어요.",
   "@settingsCloudConnectedSubtitle": {
     "placeholders": {
       "email": {
@@ -25,25 +25,22 @@
       }
     }
   },
-  "settingsCloudSyncNowTitle": "지금 동기화",
-  "settingsCloudSyncNowSubtitle": "로컬 진행 데이터를 올리고 최신 클라우드 저장을 받아옵니다.",
-  "settingsCloudConnectSheetTitle": "기기 간 이어하기 설정",
-  "settingsCloudConnectSheetBody": "새 계정을 만들거나 기존 이메일 계정으로 로그인하면 다른 기기에서도 이어서 플레이할 수 있어요.",
-  "settingsCloudManageSheetTitle": "클라우드 저장 관리",
-  "settingsCloudManageSheetBody": "연결된 계정이 준비되어 있어요. 지금 동기화하거나 이 기기에서 로그아웃할 수 있어요.",
+  "settingsCloudConnectSheetTitle": "계정 연결",
+  "settingsCloudConnectSheetBody": "새 이메일 계정을 만들거나 기존 계정으로 로그인할 수 있어요.",
+  "settingsCloudManageSheetTitle": "계정 관리",
+  "settingsCloudManageSheetBody": "연결된 계정이 준비되어 있어요. 이 기기에서 로그아웃할 수 있어요.",
   "settingsCloudSignInAction": "로그인",
   "settingsCloudCreateAccountAction": "계정 만들기",
   "settingsCloudSignOutAction": "로그아웃",
   "settingsCloudEmailLabel": "이메일",
   "settingsCloudPasswordLabel": "비밀번호",
-  "settingsCloudCreateDialogTitle": "클라우드 계정 만들기",
-  "settingsCloudSignInDialogTitle": "동기화 로그인",
-  "settingsCloudAuthSuccessSignIn": "로그인 후 진행 데이터를 동기화했어요.",
-  "settingsCloudAuthSuccessCreate": "클라우드 계정을 연결하고 동기화했어요.",
-  "settingsCloudSyncSuccess": "클라우드 동기화를 마쳤어요.",
+  "settingsCloudCreateDialogTitle": "계정 만들기",
+  "settingsCloudSignInDialogTitle": "로그인",
+  "settingsCloudAuthSuccessSignIn": "로그인했어요.",
+  "settingsCloudAuthSuccessCreate": "계정을 연결했어요.",
   "settingsCloudSignOutSuccess": "이 기기에서 로그아웃했어요.",
   "settingsCloudValidationMissingCredentials": "이메일과 비밀번호를 모두 입력해 주세요.",
-  "settingsCloudErrorGeneric": "클라우드 계정 작업을 완료하지 못했어요.",
+  "settingsCloudErrorGeneric": "계정 작업을 완료하지 못했어요.",
   "settingsCloudErrorFirebaseUnavailable": "이 빌드에는 Firebase 설정이 아직 없어요.",
   "settingsCloudErrorInvalidEmail": "올바른 이메일 주소를 입력해 주세요.",
   "settingsCloudErrorWrongPassword": "비밀번호가 올바르지 않아요.",
@@ -95,18 +92,12 @@
   "levelDescAdvanced": "스도쿠에 익숙한 분들을 위한 레벨",
   "levelDescExpert": "스도쿠 마스터를 위한 레벨",
   "levelDescMaster": "최고의 스도쿠 도전",
-  "gameGuideTitle": "게임 가이드",
-  "gameGuideTapCellTitle": "칸을 먼저 선택하세요",
-  "gameGuideTapCellBody": "비어 있는 칸을 누른 뒤 아래 숫자 버튼으로 입력합니다.",
-  "gameGuideMistakesTitle": "오답은 3번까지",
-  "gameGuideMistakesBody": "틀린 숫자를 3번 입력하면 해당 판은 종료됩니다.",
-  "gameGuideColorsTitle": "색상 힌트를 활용하세요",
-  "gameGuideColorsBody": "선택 칸, 같은 숫자, 관련 칸이 함께 강조되어 흐름을 읽기 쉽습니다.",
-  "gameGuidePlayButton": "바로 플레이",
   "gameNumberLabel": "게임 {number}",
   "@gameNumberLabel": {
     "placeholders": {
-      "number": {"type": "int"}
+      "number": {
+        "type": "int"
+      }
     }
   },
   "gameHintShort": "힌트",
@@ -128,19 +119,25 @@
   "gameRowsCompleted": "행 {count}개 완성",
   "@gameRowsCompleted": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "gameColsCompleted": "열 {count}개 완성",
   "@gameColsCompleted": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "gameBoxesCompleted": "박스 {count}개 완성",
   "@gameBoxesCompleted": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "gamePause": "일시정지",
@@ -153,23 +150,35 @@
   "shareClearLine": "{level} · 게임 {number}",
   "@shareClearLine": {
     "placeholders": {
-      "level": {"type": "String"},
-      "number": {"type": "int"}
+      "level": {
+        "type": "String"
+      },
+      "number": {
+        "type": "int"
+      }
     }
   },
   "shareClearStats": "기록 {time} · 오답 {wrong}회",
   "@shareClearStats": {
     "placeholders": {
-      "time": {"type": "String"},
-      "wrong": {"type": "int"}
+      "time": {
+        "type": "String"
+      },
+      "wrong": {
+        "type": "int"
+      }
     }
   },
-  "shareClearTags": "#MySudoku #SudokuChallenge",
+  "shareClearTags": "#Sudoku159 #SudokuChallenge",
   "shareSummaryPattern": "{time} · 오답 {wrong}회",
   "@shareSummaryPattern": {
     "placeholders": {
-      "time": {"type": "String"},
-      "wrong": {"type": "int"}
+      "time": {
+        "type": "String"
+      },
+      "wrong": {
+        "type": "int"
+      }
     }
   },
   "dialogCongratulations": "축하합니다!",
@@ -181,7 +190,9 @@
   "dialogWrongCountValue": "{count}회",
   "@dialogWrongCountValue": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "dialogSharePreview": "공유용 결과",
@@ -211,7 +222,9 @@
   "gameOverWrongLabel": "오답: {count}/3",
   "@gameOverWrongLabel": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recordsFilterSectionTitle": "필터",
@@ -221,10 +234,12 @@
   "recordsPeriodLastDays": "최근 {days}일",
   "@recordsPeriodLastDays": {
     "placeholders": {
-      "days": {"type": "int"}
+      "days": {
+        "type": "int"
+      }
     }
   },
-  "recordsSummaryTitle": "요약 통계",
+  "recordsSummaryTitle": "지난 7일",
   "recordsTrendTitle": "최근 7일 추세",
   "recordsTrendEmpty": "최근 7일 추세를 만들 기록이 없습니다.",
   "recordsTrendClears": "클리어 수",
@@ -238,22 +253,28 @@
   "recordsInsightClearsValue": "{count}회",
   "@recordsInsightClearsValue": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recordsInsightAvgPaceEyebrow": "평균 호흡",
   "recordsTrendSectionSubtitle": "최근 일주일 동안 날짜별 클리어 수를 한눈에 보는 요약이에요.",
   "recordsTrendLegendDailyClears": "일별 클리어",
   "recordsTrendTodayLabel": "오늘",
-  "recordsPlayInsightsTitle": "최근 클리어 인사이트",
-  "recordsPlayCalendarTitle": "클리어 캘린더",
+  "recordsPlayInsightsTitle": "이번 주 매일",
+  "recordsPlayCalendarTitle": "요일별",
   "recordsWeeklyReportTitle": "이번 주 리포트",
   "recordsWeeklyReportBusiestDay": "가장 많이 플레이한 날",
   "recordsWeeklyReportTopDayValue": "{day}, {count}회",
   "@recordsWeeklyReportTopDayValue": {
     "placeholders": {
-      "day": {"type": "String"},
-      "count": {"type": "int"}
+      "day": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recordsWeeklyReportTopDayFallback": "아직 클리어가 없어요",
@@ -262,7 +283,9 @@
   "recordsTimelineMistakesValue": "오답 {count}회",
   "@recordsTimelineMistakesValue": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recordsTimelinePerfect": "퍼펙트 클리어",
@@ -286,9 +309,9 @@
   "recordsLevelMiniAvgWrong": "평균 오답",
   "recordsStatsLoadError": "통계 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
   "recordsRetry": "다시 시도",
-  "recordsStatsPageSubtitle": "나의 클리어 기록을 확인해보세요.",
-  "recordsKpiWeeklyClearsLabel": "최근 7일 클리어 수",
-  "recordsKpiAvgSolveTimeLabel": "최근 7일 평균 시간",
+  "recordsStatsPageSubtitle": "클리어 수와 평균 시간을 볼 수 있어요.",
+  "recordsKpiWeeklyClearsLabel": "클리어",
+  "recordsKpiAvgSolveTimeLabel": "평균 시간",
   "recordsSectionBestRecordTitle": "최고 기록",
   "recordsSectionDifficultyTitle": "난이도별 기록",
   "recordsSectionDetailStatsTitle": "세부 기록",
@@ -300,13 +323,17 @@
   "recordsDetailStreakDays": "{count}일",
   "@recordsDetailStreakDays": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recordsStatAverageWrongFormatted": "{value}회",
   "@recordsStatAverageWrongFormatted": {
     "placeholders": {
-      "value": {"type": "String"}
+      "value": {
+        "type": "String"
+      }
     }
   },
   "recordsDifficultySnapshotEmpty": "아직 난이도별 기록이 없어요.",
@@ -316,7 +343,9 @@
   "recordsTrendA11yMaxClears": "최고 {count}회",
   "@recordsTrendA11yMaxClears": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recordsHeroChartEmptyHint": "최근 7일 안에 퍼즐을 클리어하면 흐름 그래프가 여기에 나타나요.",
@@ -330,15 +359,21 @@
   "recordsBestByLevelDetail": "{time} · 오답 {wrongCount}",
   "@recordsBestByLevelDetail": {
     "placeholders": {
-      "time": {"type": "String"},
-      "wrongCount": {"type": "int"}
+      "time": {
+        "type": "String"
+      },
+      "wrongCount": {
+        "type": "int"
+      }
     }
   },
   "recordsPerfectBadge": "퍼펙트",
   "recordsAvgTimeDetail": "평균 시간 {time}",
   "@recordsAvgTimeDetail": {
     "placeholders": {
-      "time": {"type": "String"}
+      "time": {
+        "type": "String"
+      }
     }
   },
   "recordsRecentTitle": "최근 클리어",
@@ -348,23 +383,37 @@
   "recordsGameNumberTitle": "{level} · 게임 {number}",
   "@recordsGameNumberTitle": {
     "placeholders": {
-      "level": {"type": "String"},
-      "number": {"type": "int"}
+      "level": {
+        "type": "String"
+      },
+      "number": {
+        "type": "int"
+      }
     }
   },
   "recordsRecentDetail": "{time} · 오답 {wrongCount} · {date}",
   "@recordsRecentDetail": {
     "placeholders": {
-      "time": {"type": "String"},
-      "wrongCount": {"type": "int"},
-      "date": {"type": "String"}
+      "time": {
+        "type": "String"
+      },
+      "wrongCount": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
     }
   },
   "recordsBestDetail": "{time} · 오답 {wrongCount}",
   "@recordsBestDetail": {
     "placeholders": {
-      "time": {"type": "String"},
-      "wrongCount": {"type": "int"}
+      "time": {
+        "type": "String"
+      },
+      "wrongCount": {
+        "type": "int"
+      }
     }
   },
   "recordsGameLoadError": "게임 데이터를 불러올 수 없습니다.",
@@ -382,7 +431,9 @@
   "challengeWeeklyGoalRemainingTitle": "주간 목표까지 {count}판 남았어요",
   "@challengeWeeklyGoalRemainingTitle": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "challengeWeeklyGoalReachedBody": "이제 퍼펙트 클리어를 늘려서 더 좋은 리듬을 만들어보세요.",
@@ -390,7 +441,9 @@
   "challengePerfectThisWeek": "이번 주 퍼펙트 클리어 {count}회",
   "@challengePerfectThisWeek": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "challengePerfectThisWeekFirst": "이번 주 첫 퍼펙트 클리어에 도전해보세요",
@@ -400,35 +453,49 @@
   "challengeWeeklyClearsLine": "이번 주 {count}판 클리어",
   "@challengeWeeklyClearsLine": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "challengeWeeklyProgressShort": "{done}/{target} 완료",
   "@challengeWeeklyProgressShort": {
     "placeholders": {
-      "done": {"type": "int"},
-      "target": {"type": "int"}
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
     }
   },
   "challengeWeeklyPerfectShort": "퍼펙트 {count}회",
   "@challengeWeeklyPerfectShort": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "challengeWeeklyCongratsFooter": "이번 주 목표를 달성했습니다. 기록을 더 멋지게 쌓아보세요.",
   "challengeWeeklyAlmostFooter": "지금 흐름이면 이번 주 목표까지 {count}판 남았습니다.",
   "@challengeWeeklyAlmostFooter": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "challengeAchievementsHeading": "업적 · 배지",
   "challengeBadgesCollected": "획득 {unlocked}/{total}",
   "@challengeBadgesCollected": {
     "placeholders": {
-      "unlocked": {"type": "int"},
-      "total": {"type": "int"}
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "challengeViewAllBadges": "전체 보기",
@@ -437,14 +504,20 @@
   "challengeBadgeProgressLine": "{desc} 현재 진행: {progress}",
   "@challengeBadgeProgressLine": {
     "placeholders": {
-      "desc": {"type": "String"},
-      "progress": {"type": "String"}
+      "desc": {
+        "type": "String"
+      },
+      "progress": {
+        "type": "String"
+      }
     }
   },
   "challengeStreakDays": "{days}일 연속 클리어",
   "@challengeStreakDays": {
     "placeholders": {
-      "days": {"type": "int"}
+      "days": {
+        "type": "int"
+      }
     }
   },
   "challengeStreakStartToday": "오늘 첫 클리어 도전",
@@ -454,23 +527,21 @@
   "challengeOpenTodayOnHomeButton": "홈에서 오늘 퍼즐 열기",
   "challengeHeroDoneCaption": "오늘의 도전을 완료했습니다. 내일도 이어서 기록을 쌓아보세요.",
   "challengeHeroPendingCaption": "오늘의 도전이 아직 남아 있어요. 지금 시작하면 스트릭을 이어갈 수 있어요.",
-  "homeOnboardingWelcomeTitle": "처음 오셨네요",
-  "homeOnboardingStepQuickTitle": "빠른 시작",
-  "homeOnboardingStepQuickBody": "추천 난이도로 바로 한 판 시작할 수 있어요.",
-  "homeOnboardingStepDailyTitle": "오늘의 도전",
-  "homeOnboardingStepDailyBody": "매일 바뀌는 대표 퍼즐로 가볍게 실력을 확인해보세요.",
-  "homeOnboardingStepResumeTitle": "이어하기",
-  "homeOnboardingStepResumeBody": "중단한 게임은 홈 상단 카드에서 곧바로 이어집니다.",
-  "homeOnboardingStartButton": "시작하기",
   "homeGuestTitle": "게스트1",
   "homeGuestSubtitle": "지금 바로 한 판 시작해보세요",
   "homeContinueTitle": "이어하기",
   "homeContinueSubtitle": "{level} · 게임 {gameNumber} · {cells}칸 진행",
   "@homeContinueSubtitle": {
     "placeholders": {
-      "level": {"type": "String"},
-      "gameNumber": {"type": "int"},
-      "cells": {"type": "int"}
+      "level": {
+        "type": "String"
+      },
+      "gameNumber": {
+        "type": "int"
+      },
+      "cells": {
+        "type": "int"
+      }
     }
   },
   "homeContinueDescription": "중단한 퍼즐을 바로 이어서 플레이할 수 있어요.",
@@ -479,7 +550,9 @@
   "homeProgressPercent": "진행률 {percent}%",
   "@homeProgressPercent": {
     "placeholders": {
-      "percent": {"type": "int"}
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "homeTodayChallengeCardDoneBody": "오늘의 도전을 완료했어요. 연속 기록을 이어가고 있어요.",
@@ -487,7 +560,9 @@
   "homeTodayChallengeFooterDoneStreak": "오늘 도전 완료 · 현재 {days}일 연속 기록",
   "@homeTodayChallengeFooterDoneStreak": {
     "placeholders": {
-      "days": {"type": "int"}
+      "days": {
+        "type": "int"
+      }
     }
   },
   "homeTodayChallengeFooterPending": "오늘의 공통 퍼즐로 연속 도전 흐름을 만들어보세요.",
@@ -500,9 +575,15 @@
   "homeCatalogProgressDetail": "{generated}/{target}판 준비됨 · 남은 {remaining}판",
   "@homeCatalogProgressDetail": {
     "placeholders": {
-      "generated": {"type": "int"},
-      "target": {"type": "int"},
-      "remaining": {"type": "int"}
+      "generated": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
     }
   },
   "levelPickDifficultyTitle": "난이도 선택",
@@ -511,7 +592,9 @@
   "levelGamesScreenTitle": "{levelName} 게임",
   "@levelGamesScreenTitle": {
     "placeholders": {
-      "levelName": {"type": "String"}
+      "levelName": {
+        "type": "String"
+      }
     }
   },
   "levelLoadingGames": "게임을 불러오는 중...",
@@ -526,20 +609,28 @@
   "levelEmptyCellsLabel": "빈칸 {count}개",
   "@levelEmptyCellsLabel": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "levelPuzzleCountSummary": "총 {count}개의 퍼즐",
   "@levelPuzzleCountSummary": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "levelCatalogPreparingShort": "추가 퍼즐 준비 중 · {done}/{total}판",
   "@levelCatalogPreparingShort": {
     "placeholders": {
-      "done": {"type": "int"},
-      "total": {"type": "int"}
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "achievementCollectionAppBarTitle": "배지 컬렉션",
@@ -559,8 +650,12 @@
   "achievementHeroProgress": "획득 {unlocked} / 전체 {total}",
   "@achievementHeroProgress": {
     "placeholders": {
-      "unlocked": {"type": "int"},
-      "total": {"type": "int"}
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "achievementHeroAllUnlocked": "모든 배지를 모았어요. 정말 멋집니다.",
@@ -578,22 +673,34 @@
   "achievementProgressFraction": "{current}/{max}",
   "@achievementProgressFraction": {
     "placeholders": {
-      "current": {"type": "int"},
-      "max": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
     }
   },
   "achievementProgressStreak": "{current}/{max}일",
   "@achievementProgressStreak": {
     "placeholders": {
-      "current": {"type": "int"},
-      "max": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
     }
   },
   "achievementProgressWeekly": "{current}/{max}판",
   "@achievementProgressWeekly": {
     "placeholders": {
-      "current": {"type": "int"},
-      "max": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
     }
   },
   "achievementStatusDone": "완료",
@@ -602,13 +709,17 @@
   "achievementTileProgress": "진행: {label}",
   "@achievementTileProgress": {
     "placeholders": {
-      "label": {"type": "String"}
+      "label": {
+        "type": "String"
+      }
     }
   },
   "achievementTileRarity": "희귀도: {label}",
   "@achievementTileRarity": {
     "placeholders": {
-      "label": {"type": "String"}
+      "label": {
+        "type": "String"
+      }
     }
   },
   "achievementRarityCommon": "기본",

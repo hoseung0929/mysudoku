@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mysudoku/model/sudoku_game.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
-import 'package:mysudoku/services/game/game_state_service.dart';
-import 'package:mysudoku/utils/app_logger.dart';
-import 'package:mysudoku/view/sudoku_game/game_session_controller.dart';
+import 'package:sudoku159/model/sudoku_game.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
+import 'package:sudoku159/services/game/game_state_service.dart';
+import 'package:sudoku159/utils/app_logger.dart';
+import 'package:sudoku159/view/sudoku_game/game_session_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -52,7 +52,8 @@ void main() {
     });
 
     test('restores active saved session when requested', () async {
-      final restoredBoard = puzzleBoard.map((row) => List<int>.from(row)).toList();
+      final restoredBoard =
+          puzzleBoard.map((row) => List<int>.from(row)).toList();
       restoredBoard[0][1] = 3;
 
       await gameStateService.saveSession(
@@ -85,8 +86,10 @@ void main() {
       expect(bootstrap.activeSession!.notes[0][2], equals({4, 7}));
     });
 
-    test('starts from puzzle board and clears saved state when not restoring', () async {
-      final restoredBoard = puzzleBoard.map((row) => List<int>.from(row)).toList();
+    test('starts from puzzle board and clears saved state when not restoring',
+        () async {
+      final restoredBoard =
+          puzzleBoard.map((row) => List<int>.from(row)).toList();
       restoredBoard[0][1] = 3;
 
       await gameStateService.saveSession(
@@ -147,7 +150,8 @@ void main() {
       );
     });
 
-    test('clears persisted session when flush receives completed snapshot', () async {
+    test('clears persisted session when flush receives completed snapshot',
+        () async {
       await gameStateService.saveSession(
         levelName: level.name,
         gameNumber: game.gameNumber,

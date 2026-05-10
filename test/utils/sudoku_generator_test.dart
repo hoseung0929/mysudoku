@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mysudoku/utils/app_logger.dart';
-import 'package:mysudoku/utils/sudoku_generator.dart';
+import 'package:sudoku159/utils/app_logger.dart';
+import 'package:sudoku159/utils/sudoku_generator.dart';
 
 void main() {
   AppLogger.setMuted(true);

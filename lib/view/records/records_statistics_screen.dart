@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:mysudoku/constants/records_level_filter.dart';
-import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
-import 'package:mysudoku/services/records/game_record_notifier.dart';
-import 'package:mysudoku/services/profile/profile_state_service.dart';
-import 'package:mysudoku/services/records/records_statistics_service.dart';
-import 'package:mysudoku/theme/app_theme.dart';
-import 'package:mysudoku/view/settings/settings_screen.dart';
-import 'package:mysudoku/widgets/profile_editor_sheet.dart';
-import 'package:mysudoku/widgets/profile_glass_header.dart';
-import 'package:mysudoku/widgets/sudoku_grid_badge.dart';
+import 'package:sudoku159/constants/records_level_filter.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
+import 'package:sudoku159/l10n/sudoku_level_l10n.dart';
+import 'package:sudoku159/services/records/game_record_notifier.dart';
+import 'package:sudoku159/services/profile/profile_state_service.dart';
+import 'package:sudoku159/services/records/records_statistics_service.dart';
+import 'package:sudoku159/theme/app_theme.dart';
+import 'package:sudoku159/view/settings/settings_screen.dart';
+import 'package:sudoku159/widgets/profile_editor_sheet.dart';
+import 'package:sudoku159/widgets/profile_glass_header.dart';
+import 'package:sudoku159/widgets/sudoku_grid_badge.dart';
 
 class RecordsStatisticsScreen extends StatefulWidget {
   const RecordsStatisticsScreen({super.key});
@@ -254,60 +254,108 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         '${l10n.recordsTrendA11yMaxClears(maxClears)}. $dayBreakdown';
   }
 
-  Widget _buildInsightCards(
+  Widget _buildSummarySection(
     AppLocalizations l10n,
     Map<String, dynamic> trendSummaryUi,
   ) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final textScale = MediaQuery.textScalerOf(context).scale(14) / 14.0;
-    final useStackedLayout = textScale > 1.08;
+    final stacked = textScale > 1.08;
     final totalClears = trendSummaryUi['total_clears'] as int;
     final averageTime = trendSummaryUi['average_time'] as double;
     final averageTimeLabel = totalClears > 0
         ? _formatDurationNatural(averageTime)
         : l10n.recordsNoAverageTime;
-    if (useStackedLayout) {
-      return Column(
-        children: [
-          _recordsInsightCard(
-            eyebrow: l10n.recordsKpiWeeklyClearsLabel,
-            value: l10n.recordsInsightClearsValue(totalClears),
-            icon: Icons.grid_view_rounded,
-            tone: AppTheme.hintYellowColor,
-            accent: AppTheme.statisticsAccent,
-            emphasized: true,
-          ),
-          const SizedBox(height: 12),
-          _recordsInsightCard(
-            eyebrow: l10n.recordsKpiAvgSolveTimeLabel,
-            value: averageTimeLabel,
-            icon: Icons.schedule_rounded,
-            tone: Theme.of(context).colorScheme.surfaceContainerLow,
-            accent: AppTheme.statisticsAccent,
-          ),
-        ],
-      );
-    }
 
-    return Row(
+    final clearsChild = _summaryMetricColumn(
+      label: l10n.recordsKpiWeeklyClearsLabel,
+      value: l10n.recordsInsightClearsValue(totalClears),
+    );
+    final timeChild = _summaryMetricColumn(
+      label: l10n.recordsKpiAvgSolveTimeLabel,
+      value: averageTimeLabel,
+    );
+
+    final dividerColor = scheme.outlineVariant;
+
+    return Card(
+      color: scheme.surface,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: dividerColor),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.recordsSummaryTitle,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: scheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 14),
+            if (stacked) ...[
+              clearsChild,
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                child: Divider(height: 1, color: dividerColor),
+              ),
+              timeChild,
+            ] else
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: clearsChild),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: VerticalDivider(
+                        width: 1,
+                        thickness: 1,
+                        color: dividerColor,
+                      ),
+                    ),
+                    Expanded(child: timeChild),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _summaryMetricColumn({
+    required String label,
+    required String value,
+  }) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: _recordsInsightCard(
-            eyebrow: l10n.recordsKpiWeeklyClearsLabel,
-            value: l10n.recordsInsightClearsValue(totalClears),
-            icon: Icons.grid_view_rounded,
-            tone: AppTheme.hintYellowColor,
-            accent: AppTheme.statisticsAccent,
-            emphasized: true,
+        Text(
+          label,
+          style: theme.textTheme.labelLarge?.copyWith(
+            color: scheme.onSurfaceVariant,
+            fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _recordsInsightCard(
-            eyebrow: l10n.recordsKpiAvgSolveTimeLabel,
-            value: averageTimeLabel,
-            icon: Icons.schedule_rounded,
-            tone: Theme.of(context).colorScheme.surfaceContainerLow,
-            accent: AppTheme.statisticsAccent,
+        const SizedBox(height: 6),
+        Text(
+          value,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: scheme.onSurface,
+            height: 1.15,
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
       ],
@@ -356,7 +404,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
             RefreshIndicator(
               onRefresh: _loadStats,
               color: Theme.of(context).colorScheme.onSurface,
-              backgroundColor: Colors.white,
+              backgroundColor: Theme.of(context).colorScheme.surface,
               displacement: 28,
               child: ListView(
                 controller: _scrollController,
@@ -372,9 +420,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                     _buildLoadErrorBanner(l10n, _loadErrorMessage!),
                     const SizedBox(height: 12),
                   ],
-                  const _RecordsHeroCard(),
-                  const SizedBox(height: 16),
-                  _buildInsightCards(l10n, trendSummaryUi),
+                  _buildSummarySection(l10n, trendSummaryUi),
                   const SizedBox(height: 20),
                   _buildTrendSection(
                     l10n,
@@ -385,7 +431,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: Text(
                       l10n.recordsStatsBasisFootnote,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 12.5,
@@ -430,13 +476,14 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
 
   Widget _buildLevelSection(AppLocalizations l10n) {
     final stats = _displayLevelStats;
+    final theme = Theme.of(context);
 
     return Card(
-      color: Theme.of(context).colorScheme.surface,
+      color: theme.colorScheme.surface,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -447,20 +494,18 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               l10n.recordsByLevelTitle,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               l10n.recordsByLevelSectionSubtitle,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 13,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
                 height: 1.4,
               ),
             ),
@@ -495,12 +540,13 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     AppLocalizations l10n, {
     required List<Map<String, dynamic>> trend,
   }) {
+    final theme = Theme.of(context);
     return Card(
-      color: Theme.of(context).colorScheme.surface,
+      color: theme.colorScheme.surface,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -511,17 +557,13 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               l10n.recordsPlayInsightsTitle,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 14),
-            _insightsSectionBlock(
-              title: l10n.recordsPlayCalendarTitle,
-              child: _buildPlayCalendar(l10n, trend),
-            ),
+            _buildPlayCalendar(l10n, trend),
           ],
         ),
       ),
@@ -568,12 +610,12 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                       ),
                       const SizedBox(height: 14),
                       Container(
-                        width: 42,
-                        height: 42,
+                        width: 40,
+                        height: 40,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
                           color: isPlayed ? fillColor : Colors.transparent,
-                          shape: BoxShape.circle,
+                          borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: isPlayed
                                 ? fillColor
@@ -599,7 +641,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           const SizedBox(height: 18),
           Row(
             children: [
-              _calendarLegendDot(
+              _calendarLegendSwatch(
                 fillColor: AppTheme.statisticsAccent.withValues(alpha: 0.28),
                 borderColor: AppTheme.statisticsAccent.withValues(alpha: 0.28),
               ),
@@ -616,13 +658,13 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 ),
               ),
               const SizedBox(width: 28),
-              _calendarLegendDot(
+              _calendarLegendSwatch(
                 fillColor: Colors.transparent,
                 borderColor: AppTheme.statisticsAccent.withValues(alpha: 0.64),
                 child: Text(
                   '-',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 10,
                     color: AppTheme.statisticsAccent.withValues(alpha: 0.84),
                   ),
                 ),
@@ -646,54 +688,21 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     );
   }
 
-  Widget _calendarLegendDot({
+  Widget _calendarLegendSwatch({
     required Color fillColor,
     required Color borderColor,
     Widget? child,
   }) {
     return Container(
-      width: 16,
-      height: 16,
+      width: 14,
+      height: 14,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: fillColor,
-        shape: BoxShape.circle,
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(color: borderColor),
       ),
       child: child,
-    );
-  }
-
-  Widget _insightsSectionBlock({
-    required String title,
-    required Widget child,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 15, 16, 16),
-      decoration: BoxDecoration(
-        color: AppTheme.hintYellowColor.withValues(alpha: 0.36),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.onSurface,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
     );
   }
 
@@ -954,133 +963,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               fontSize: 13.5,
               fontWeight: FontWeight.w700,
               color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _recordsInsightCard({
-    required String eyebrow,
-    required String value,
-    required IconData icon,
-    required Color tone,
-    required Color accent,
-    bool emphasized = false,
-  }) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-      decoration: BoxDecoration(
-        color: emphasized
-            ? AppTheme.hintYellowColor.withValues(alpha: 0.36)
-            : Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: emphasized
-              ? AppTheme.statisticsAccent.withValues(alpha: 0.34)
-              : Theme.of(context).colorScheme.outlineVariant,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color:
-                      emphasized ? Theme.of(context).colorScheme.surface : tone,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  icon,
-                  size: 18,
-                  color: emphasized
-                      ? AppTheme.statisticsAccent.withValues(alpha: 0.92)
-                      : Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  eyebrow,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            textAlign: TextAlign.left,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: emphasized ? 26 : 24,
-              fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.onSurface,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RecordsHeroCard extends StatelessWidget {
-  const _RecordsHeroCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 28, 24, 26),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.bar_chart_rounded,
-                size: 26,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                l10n.recordsStatsHeroEyebrow,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            l10n.recordsStatsHeroHeadline,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 26,
-              height: 1.16,
-              fontWeight: FontWeight.w700,
             ),
           ),
         ],

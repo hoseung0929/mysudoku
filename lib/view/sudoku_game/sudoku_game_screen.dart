@@ -4,27 +4,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
-import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
-import 'package:mysudoku/model/sudoku_game.dart';
-import 'package:mysudoku/model/sudoku_game_feature_policy.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
-import 'package:mysudoku/presenter/game/sudoku_game_presenter.dart';
-import 'package:mysudoku/services/settings/onboarding_service.dart';
-import 'package:mysudoku/theme/app_colors.dart';
-import 'package:mysudoku/theme/app_theme.dart';
-import 'package:mysudoku/utils/app_logger.dart';
-import 'package:mysudoku/view/sudoku_game/game_end_flow.dart';
-import 'package:mysudoku/view/sudoku_game/game_guide_flow.dart';
-import 'package:mysudoku/view/sudoku_game/game_session_controller.dart';
-import 'package:mysudoku/view/sudoku_game/game_settings_controller.dart';
-import 'package:mysudoku/view/sudoku_game/sudoku_answer_box.dart';
-import 'package:mysudoku/view/sudoku_game/sudoku_board_grid.dart';
-import 'package:mysudoku/view/sudoku_game/game_effects_controller.dart';
-import 'package:mysudoku/view/sudoku_game/sudoku_game_action_button.dart';
-import 'package:mysudoku/view/home/level_picker_screen.dart';
-import 'package:mysudoku/widgets/custom_app_bar.dart';
-import 'package:mysudoku/widgets/progressive_blur_button.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
+import 'package:sudoku159/l10n/sudoku_level_l10n.dart';
+import 'package:sudoku159/model/sudoku_game.dart';
+import 'package:sudoku159/model/sudoku_game_feature_policy.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
+import 'package:sudoku159/presenter/game/sudoku_game_presenter.dart';
+import 'package:sudoku159/theme/app_colors.dart';
+import 'package:sudoku159/theme/app_theme.dart';
+import 'package:sudoku159/utils/app_logger.dart';
+import 'package:sudoku159/view/sudoku_game/game_end_flow.dart';
+import 'package:sudoku159/view/sudoku_game/game_session_controller.dart';
+import 'package:sudoku159/view/sudoku_game/game_settings_controller.dart';
+import 'package:sudoku159/view/sudoku_game/sudoku_answer_box.dart';
+import 'package:sudoku159/view/sudoku_game/sudoku_board_grid.dart';
+import 'package:sudoku159/view/sudoku_game/game_effects_controller.dart';
+import 'package:sudoku159/view/sudoku_game/sudoku_game_action_button.dart';
+import 'package:sudoku159/view/home/level_picker_screen.dart';
+import 'package:sudoku159/widgets/custom_app_bar.dart';
+import 'package:sudoku159/widgets/progressive_blur_button.dart';
 import 'package:vibration/vibration.dart';
 
 /// 스도쿠 게임의 메인 화면
@@ -50,9 +48,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   static const double _kReservedBannerAdHeight = 56;
   static const double _kReservedBannerGap = 10;
 
-  bool get _showDebugBannerSlot => kDebugMode;
-
-  final OnboardingService _onboardingService = OnboardingService();
   late final GameEndFlow _gameEndFlow = GameEndFlow();
   final GameSessionController _sessionController = GameSessionController();
   final GameSettingsController _settingsController = GameSettingsController();
@@ -62,10 +57,11 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   bool _isVibrationEnabled = true;
   bool _oneHandModeEnabled = false;
   bool _memoHighlightEnabled = true;
-  bool _hasShownGameGuide = false;
   bool _showDeveloperAnswerPreview = false;
   int? _memoFocusNumber;
   final GameEffectsController _effectsController = GameEffectsController();
+  OverlayEntry? _completionFeedbackEntry;
+  Timer? _completionFeedbackTimer;
 
   bool get _hasEditableSelection {
     final row = _presenter.selectedRow;
@@ -156,10 +152,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     );
   }
 
-  Future<void> _flushAndSyncCloudSession() async {
+  Future<void> _flushPendingSessionOnPause() async {
     if (!_presenterReady) return;
     await _flushPendingSessionSave();
-    await _sessionController.syncToCloud();
   }
 
   @override
@@ -260,6 +255,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           setState: setState,
           isMounted: () => mounted,
         );
+        _showWrongAnswerFeedback();
       },
     );
     if (mounted) {
@@ -270,7 +266,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     }
     _presenter.clearSelection();
     await _flushPendingSessionSave();
-    await _maybeShowGameGuide();
     if (kDebugMode) {
       AppLogger.debug('게임 초기화 완료');
     }
@@ -284,22 +279,11 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         return;
       case AppLifecycleState.paused:
       case AppLifecycleState.detached:
-        unawaited(_flushAndSyncCloudSession());
+        unawaited(_flushPendingSessionOnPause());
         return;
       case AppLifecycleState.resumed:
         return;
     }
-  }
-
-  Future<void> _maybeShowGameGuide() async {
-    if (!mounted) return;
-    final started = await GameGuideFlow.showIfNeeded(
-      context: context,
-      onboardingService: _onboardingService,
-      hasShownGuide: _hasShownGameGuide,
-    );
-    if (!mounted || !started) return;
-    _hasShownGameGuide = true;
   }
 
   void _showCompletionFeedback(BoardCompletionDelta completionDelta) {
@@ -322,15 +306,100 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       return;
     }
 
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        duration: const Duration(milliseconds: 1100),
-        behavior: SnackBarBehavior.floating,
-        content: Text(parts.join(' · ')),
+    _showTopFeedback(parts.join(' · '));
+  }
+
+  void _showWrongAnswerFeedback() {
+    if (!mounted) {
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    _showTopFeedback(
+      l10n.gameWrongShort,
+      backgroundColor: const Color(0xFF7A342B),
+    );
+  }
+
+  void _showTopFeedback(
+    String message, {
+    Color backgroundColor = const Color(0xFF242B2D),
+  }) {
+    if (!mounted) {
+      return;
+    }
+
+    _hideCompletionFeedback();
+    final overlay = Overlay.maybeOf(context);
+    if (overlay == null) {
+      return;
+    }
+
+    final mediaQuery = MediaQuery.of(context);
+    final isTablet = mediaQuery.size.width > 600;
+    final topOffset =
+        mediaQuery.padding.top + (isTablet ? kToolbarHeight : 50) + 8;
+
+    _completionFeedbackEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: topOffset,
+        left: 16,
+        right: 16,
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: IgnorePointer(
+            child: Material(
+              color: Colors.transparent,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 340),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: backgroundColor,
+                    borderRadius: BorderRadius.circular(999),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.16),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    child: Text(
+                      message,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.notoSans(
+                        fontSize: 13,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
+    overlay.insert(_completionFeedbackEntry!);
+    _completionFeedbackTimer = Timer(
+      const Duration(milliseconds: 1100),
+      _hideCompletionFeedback,
+    );
+  }
+
+  void _hideCompletionFeedback() {
+    _completionFeedbackTimer?.cancel();
+    _completionFeedbackTimer = null;
+    _completionFeedbackEntry?.remove();
+    _completionFeedbackEntry = null;
   }
 
   Future<void> _clearCurrentGameState() async {
@@ -421,6 +490,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     _sessionController.dispose();
     unawaited(_settingsController.dispose());
     _effectsController.dispose();
+    _hideCompletionFeedback();
     if (_presenterReady) {
       _presenter.dispose();
     }
@@ -744,7 +814,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                   icon: Icons.undo,
                                   label: l10n.gameUndoShort,
                                   backgroundColor: AppTheme.lightBlueColor,
-                                  isActive: _canUndo,
                                   onPressed: _canUndo
                                       ? () {
                                           setState(() {
@@ -777,13 +846,11 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                 ),
                               ],
                             ),
-                            if (_showDebugBannerSlot) ...[
-                              const SizedBox(height: 12),
-                              _buildReservedBannerAdSlot(
-                                height: _kReservedBannerAdHeight,
-                              ),
-                              const SizedBox(height: 12),
-                            ],
+                            const SizedBox(height: 12),
+                            _buildReservedBannerAdSlot(
+                              height: _kReservedBannerAdHeight,
+                            ),
+                            const SizedBox(height: 12),
                             _buildDeveloperAnswerPreview(l10n),
                           ],
                         ),
@@ -889,7 +956,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                   icon: Icons.undo,
                                   label: '',
                                   color: AppTheme.lightBlueColor,
-                                  isActive: _canUndo,
                                   onPressed: _canUndo
                                       ? () {
                                           setState(() {
@@ -915,12 +981,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                 ),
                               ],
                             ),
-                            if (_showDebugBannerSlot) ...[
-                              SizedBox(height: metrics.bannerAdGap),
-                              _buildReservedBannerAdSlot(
-                                height: metrics.bannerAdHeight,
-                              ),
-                            ],
+                            SizedBox(height: metrics.bannerAdGap),
+                            _buildReservedBannerAdSlot(
+                              height: metrics.bannerAdHeight,
+                            ),
                           ],
                         ),
                       ),
@@ -1324,8 +1388,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   }
 
   Widget _buildReservedBannerAdSlot({required double height}) {
-    if (!_showDebugBannerSlot) {
-      return const SizedBox.shrink();
+    if (!kDebugMode) {
+      return SizedBox(height: height);
     }
     final isKorean = Localizations.localeOf(context).languageCode == 'ko';
     final colorScheme = Theme.of(context).colorScheme;

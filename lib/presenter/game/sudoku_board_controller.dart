@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 
-import 'package:mysudoku/utils/sudoku_generator.dart';
+import 'package:sudoku159/utils/sudoku_generator.dart';
 
 sealed class BoardAction {
   const BoardAction();
@@ -84,8 +84,7 @@ class SudokuBoardController {
   int? get selectedCol => _selectedCol;
   bool get canUndo => _undoStack.isNotEmpty;
   bool get canRedo => _redoStack.isNotEmpty;
-  BoardAction? get lastAction =>
-      _undoStack.isNotEmpty ? _undoStack.last : null;
+  BoardAction? get lastAction => _undoStack.isNotEmpty ? _undoStack.last : null;
 
   void initializeBoard(
     List<List<int>> board, {
@@ -112,7 +111,8 @@ class SudokuBoardController {
     _redoStack.clear();
   }
 
-  void initializeGeneratedBoard(List<List<int>> board, List<List<int>> solution) {
+  void initializeGeneratedBoard(
+      List<List<int>> board, List<List<int>> solution) {
     _solution = solution;
     initializeBoard(board);
   }
@@ -344,10 +344,8 @@ class SudokuBoardController {
   }
 
   double get progress {
-    final fixedCellCount = _fixedNumbers
-        .expand((row) => row)
-        .where((isFixed) => isFixed)
-        .length;
+    final fixedCellCount =
+        _fixedNumbers.expand((row) => row).where((isFixed) => isFixed).length;
 
     final totalCellsToFill = 81 - fixedCellCount;
     if (totalCellsToFill == 0) return 1.0;
@@ -367,6 +365,7 @@ class SudokuBoardController {
     if (ratio > 1) return 1;
     return ratio;
   }
+
   void _recomputeConflictStatus() {
     _wrongNumbers = List.generate(9, (row) {
       return List.generate(9, (col) => _hasConflictAt(row, col));

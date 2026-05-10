@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// MySudoku 제품 디자인 스킬 (`skills/sudoku-design-guide/SKILL.md`) 기준 색상.
+/// Sudoku159 제품 디자인 스킬 (`skills/sudoku-design-guide/SKILL.md`) 기준 색상.
 /// 밝은 오프화이트 배경, 흰 카드, 얇은 보더, 낮은 채도·부드러운 대비.
 abstract final class AppColors {
   static const background = Color(0xFFF4F4F3);
@@ -24,6 +24,7 @@ abstract final class AppColors {
   static const boardAccent = Color(0xFF8A9A8C);
   static const boardAccent2 = Color(0xFF7A8B84);
   static const boardSurfaceTint = Color(0xFFE8EDEA);
+  static const boardUserNumber = Color(0xFF1D4ED8);
 
   /// 오답·주의 (과한 원색 지양)
   static const attention = Color(0xFFC27B6B);

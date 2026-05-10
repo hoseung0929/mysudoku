@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import 'package:mysudoku/model/today_challenge_target.dart';
-import 'package:mysudoku/utils/board_codec.dart';
+import 'package:sudoku159/model/today_challenge_target.dart';
+import 'package:sudoku159/utils/board_codec.dart';
 
 class RemotePuzzleEntry {
   const RemotePuzzleEntry({
@@ -24,8 +24,7 @@ class RemotePuzzleService {
     http.Client? client,
     String? baseUrl,
   })  : _client = client,
-        _baseUrl =
-            baseUrl ??
+        _baseUrl = baseUrl ??
             const String.fromEnvironment(
               'SUDOKU_API_BASE_URL',
               defaultValue: '',

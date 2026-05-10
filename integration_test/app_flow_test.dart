@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:mysudoku/main.dart' as app;
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/main.dart' as app;
+import 'package:sudoku159/utils/app_logger.dart';
 
 Future<void> _waitUntilFound(
   WidgetTester tester,

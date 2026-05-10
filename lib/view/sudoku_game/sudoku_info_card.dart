@@ -19,7 +19,8 @@ class SudokuInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final Color bg = accentColor?.withValues(alpha: 0.18) ?? cs.surfaceContainerHigh;
+    final Color bg =
+        accentColor?.withValues(alpha: 0.18) ?? cs.surfaceContainerHigh;
     final Color fg = accentColor ?? cs.onSurface;
     final Color ic = accentColor ?? cs.onSurfaceVariant;
 

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mysudoku/l10n/app_localizations_ko.dart';
-import 'package:mysudoku/services/game/result_share_service.dart';
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/l10n/app_localizations_ko.dart';
+import 'package:sudoku159/services/game/result_share_service.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 
 void main() {
   AppLogger.setMuted(true);
@@ -22,7 +22,7 @@ void main() {
 
       expect(text, contains('NEW BEST'));
       expect(text, contains('중급 · 게임 12'));
-      expect(text, contains('03:05'));
+      expect(text, contains('00:03:05'));
       expect(text, contains('오답 1회'));
     });
 
@@ -33,7 +33,7 @@ void main() {
         wrongCount: 2,
       );
 
-      expect(summary, '02:05 · 오답 2회');
+      expect(summary, '00:02:05 · 오답 2회');
     });
   });
 }

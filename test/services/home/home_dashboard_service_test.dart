@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mysudoku/l10n/app_localizations_en.dart';
-import 'package:mysudoku/model/today_challenge_target.dart';
-import 'package:mysudoku/services/challenge/achievement_service.dart';
-import 'package:mysudoku/services/challenge/challenge_progress_service.dart';
-import 'package:mysudoku/services/game/game_state_service.dart';
-import 'package:mysudoku/services/home/home_dashboard_service.dart';
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/l10n/app_localizations_en.dart';
+import 'package:sudoku159/model/today_challenge_target.dart';
+import 'package:sudoku159/services/challenge/achievement_service.dart';
+import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
+import 'package:sudoku159/services/game/game_state_service.dart';
+import 'package:sudoku159/services/home/home_dashboard_service.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 
 void main() {
   AppLogger.setMuted(true);
@@ -28,26 +28,26 @@ void main() {
           return {
             'game_number': gameNumber,
             'board': [
-            [5, 0, 0, 6, 7, 8, 9, 1, 2],
-            [0, 3, 4, 1, 9, 5, 6, 7, 8],
-            [6, 7, 8, 2, 3, 4, 1, 5, 9],
-            [1, 2, 3, 4, 5, 6, 7, 8, 9],
-            [4, 5, 6, 7, 8, 9, 2, 3, 1],
-            [7, 8, 9, 3, 1, 2, 4, 6, 5],
-            [2, 1, 5, 8, 6, 7, 3, 9, 4],
-            [3, 4, 7, 9, 2, 1, 5, 8, 6],
-            [8, 9, 6, 5, 4, 3, 0, 2, 7],
+              [5, 0, 0, 6, 7, 8, 9, 1, 2],
+              [0, 3, 4, 1, 9, 5, 6, 7, 8],
+              [6, 7, 8, 2, 3, 4, 1, 5, 9],
+              [1, 2, 3, 4, 5, 6, 7, 8, 9],
+              [4, 5, 6, 7, 8, 9, 2, 3, 1],
+              [7, 8, 9, 3, 1, 2, 4, 6, 5],
+              [2, 1, 5, 8, 6, 7, 3, 9, 4],
+              [3, 4, 7, 9, 2, 1, 5, 8, 6],
+              [8, 9, 6, 5, 4, 3, 0, 2, 7],
             ],
             'solution': [
-            [5, 4, 1, 6, 7, 8, 9, 1, 2],
-            [9, 3, 4, 1, 9, 5, 6, 7, 8],
-            [6, 7, 8, 2, 3, 4, 1, 5, 9],
-            [1, 2, 3, 4, 5, 6, 7, 8, 9],
-            [4, 5, 6, 7, 8, 9, 2, 3, 1],
-            [7, 8, 9, 3, 1, 2, 4, 6, 5],
-            [2, 1, 5, 8, 6, 7, 3, 9, 4],
-            [3, 4, 7, 9, 2, 1, 5, 8, 6],
-            [8, 9, 6, 5, 4, 3, 1, 2, 7],
+              [5, 4, 1, 6, 7, 8, 9, 1, 2],
+              [9, 3, 4, 1, 9, 5, 6, 7, 8],
+              [6, 7, 8, 2, 3, 4, 1, 5, 9],
+              [1, 2, 3, 4, 5, 6, 7, 8, 9],
+              [4, 5, 6, 7, 8, 9, 2, 3, 1],
+              [7, 8, 9, 3, 1, 2, 4, 6, 5],
+              [2, 1, 5, 8, 6, 7, 3, 9, 4],
+              [3, 4, 7, 9, 2, 1, 5, 8, 6],
+              [8, 9, 6, 5, 4, 3, 1, 2, 7],
             ],
           };
         },
@@ -92,13 +92,15 @@ void main() {
       expect(summaries, isEmpty);
     });
 
-    test('falls back to first playable challenge entry when target is missing', () async {
+    test('falls back to first playable challenge entry when target is missing',
+        () async {
       final challengeFake = _FakeChallengeProgressService(
         target: const TodayChallengeTarget(levelName: '초급', gameNumber: 99),
       );
       final fallbackBoard = List.generate(
         9,
-        (row) => List.generate(9, (col) => row == col ? 0 : ((row + col) % 9) + 1),
+        (row) =>
+            List.generate(9, (col) => row == col ? 0 : ((row + col) % 9) + 1),
       );
       final fallbackSolution = List.generate(
         9,
@@ -136,7 +138,7 @@ void main() {
 class _FakeGameStateService extends GameStateService {
   @override
   Future<List<SavedGameState>> getSavedGames() async {
-      return const [
+    return const [
       SavedGameState(
         levelName: '초급',
         gameNumber: 1,
@@ -165,15 +167,105 @@ class _FakeGameStateService extends GameStateService {
             [8, 9, 6, 5, 4, 3, 0, 2, 7],
           ],
           notes: [
-            [<int>{}, <int>{}, <int>{2, 4}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-            [<int>{1}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
+            [
+              <int>{},
+              <int>{},
+              <int>{2, 4},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{}
+            ],
+            [
+              <int>{1},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{}
+            ],
+            [
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{}
+            ],
+            [
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{}
+            ],
+            [
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{}
+            ],
+            [
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{}
+            ],
+            [
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{}
+            ],
+            [
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{}
+            ],
+            [
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{}
+            ],
           ],
           elapsedSeconds: 185,
           hintsRemaining: 2,
@@ -212,15 +304,105 @@ class _FakeGameStateService extends GameStateService {
             [8, 9, 6, 5, 4, 3, 0, 2, 7],
           ],
           notes: [
-            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
-            [<int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}, <int>{}],
+            [
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{}
+            ],
+            [
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{}
+            ],
+            [
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{}
+            ],
+            [
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{}
+            ],
+            [
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{}
+            ],
+            [
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{}
+            ],
+            [
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{}
+            ],
+            [
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{}
+            ],
+            [
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{},
+              <int>{}
+            ],
           ],
           elapsedSeconds: 90,
           hintsRemaining: 3,

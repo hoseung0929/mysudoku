@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mysudoku/presenter/game/sudoku_board_controller.dart';
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/presenter/game/sudoku_board_controller.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 
 void main() {
   AppLogger.setMuted(true);
@@ -191,7 +191,8 @@ void main() {
       expect(controller.canRedo, isFalse);
     });
 
-    test('removes matching candidate notes from related cells on value commit', () {
+    test('removes matching candidate notes from related cells on value commit',
+        () {
       final boardWithMoreEmpties = List.generate(
         9,
         (row) => List<int>.from(board[row]),
@@ -218,7 +219,8 @@ void main() {
       expect(localController.getCellNotes(4, 4), equals({4, 8}));
     });
 
-    test('removes matching candidate notes from column and box on value commit', () {
+    test('removes matching candidate notes from column and box on value commit',
+        () {
       final boardWithMoreEmpties = List.generate(
         9,
         (row) => List<int>.from(board[row]),

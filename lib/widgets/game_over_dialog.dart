@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mysudoku/l10n/app_localizations.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
 
 /// 게임 오버 다이얼로그 위젯
 class GameOverDialog extends StatelessWidget {

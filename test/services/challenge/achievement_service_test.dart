@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mysudoku/l10n/app_localizations_ko.dart';
-import 'package:mysudoku/services/challenge/achievement_service.dart';
-import 'package:mysudoku/services/challenge/challenge_progress_service.dart';
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/l10n/app_localizations_ko.dart';
+import 'package:sudoku159/services/challenge/achievement_service.dart';
+import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 
 class _FixedChallengeProgressService extends ChallengeProgressService {
   _FixedChallengeProgressService(this._summary);
@@ -22,7 +22,9 @@ void main() {
   final l10nKo = AppLocalizationsKo();
 
   group('AchievementService', () {
-    test('unlocks badges from overall clears, streaks, weekly progress, and master wins', () async {
+    test(
+        'unlocks badges from overall clears, streaks, weekly progress, and master wins',
+        () async {
       final today = DateTime.now();
       String format(DateTime value) =>
           '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
@@ -45,10 +47,26 @@ void main() {
         },
         loadRecentRecords: () async => [
           {'clear_date': format(today), 'wrong_count': 0, 'level_name': '마스터'},
-          {'clear_date': format(today.subtract(const Duration(days: 1))), 'wrong_count': 1, 'level_name': '중급'},
-          {'clear_date': format(today.subtract(const Duration(days: 2))), 'wrong_count': 2, 'level_name': '초급'},
-          {'clear_date': format(today.subtract(const Duration(days: 3))), 'wrong_count': 1, 'level_name': '고급'},
-          {'clear_date': format(today.subtract(const Duration(days: 4))), 'wrong_count': 0, 'level_name': '전문가'},
+          {
+            'clear_date': format(today.subtract(const Duration(days: 1))),
+            'wrong_count': 1,
+            'level_name': '중급'
+          },
+          {
+            'clear_date': format(today.subtract(const Duration(days: 2))),
+            'wrong_count': 2,
+            'level_name': '초급'
+          },
+          {
+            'clear_date': format(today.subtract(const Duration(days: 3))),
+            'wrong_count': 1,
+            'level_name': '고급'
+          },
+          {
+            'clear_date': format(today.subtract(const Duration(days: 4))),
+            'wrong_count': 0,
+            'level_name': '전문가'
+          },
         ],
       );
 
@@ -85,7 +103,8 @@ void main() {
       );
 
       final summary = await service.load(l10nKo);
-      final firstClear = summary.badges.firstWhere((badge) => badge.id == 'first_clear');
+      final firstClear =
+          summary.badges.firstWhere((badge) => badge.id == 'first_clear');
       final perfectClear =
           summary.badges.firstWhere((badge) => badge.id == 'perfect_clear');
       final masterClear =

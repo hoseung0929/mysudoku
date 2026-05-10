@@ -1,12 +1,11 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:mysudoku/database/daily_challenge_completion_repository.dart';
-import 'package:mysudoku/database/database_helper.dart';
-import 'package:mysudoku/database/database_manager.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
-import 'package:mysudoku/model/today_challenge_target.dart';
-import 'package:mysudoku/services/catalog/firestore_puzzle_service.dart';
-import 'package:mysudoku/services/catalog/remote_puzzle_service.dart';
+import 'package:sudoku159/database/daily_challenge_completion_repository.dart';
+import 'package:sudoku159/database/database_helper.dart';
+import 'package:sudoku159/database/database_manager.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
+import 'package:sudoku159/model/today_challenge_target.dart';
+import 'package:sudoku159/services/catalog/remote_puzzle_service.dart';
 
 class ChallengeProgressSummary {
   const ChallengeProgressSummary({
@@ -42,7 +41,6 @@ class ChallengeProgressService {
     Future<List<int>> Function(String levelName)? loadGameNumbersForLevel,
     Future<List<Map<String, dynamic>>> Function({int limit})?
         loadRecentClearEvents,
-    FirestorePuzzleService? firestorePuzzleService,
     RemotePuzzleService? remotePuzzleService,
     Future<bool> Function()? shouldUseRemoteDailyChallenge,
   })  : _databaseHelper = databaseHelper ?? DatabaseHelper(),
@@ -52,8 +50,6 @@ class ChallengeProgressService {
             (databaseHelper ?? DatabaseHelper()).getGameNumbersForLevel,
         _loadRecentClearEvents = loadRecentClearEvents ??
             (databaseHelper ?? DatabaseHelper()).getRecentClearEvents,
-        _firestorePuzzleService =
-            firestorePuzzleService ?? FirestorePuzzleService(),
         _remotePuzzleService = remotePuzzleService ?? RemotePuzzleService(),
         _shouldUseRemoteDailyChallenge = shouldUseRemoteDailyChallenge ??
             (() async {
@@ -71,7 +67,6 @@ class ChallengeProgressService {
   final Future<List<int>> Function(String levelName) _loadGameNumbersForLevel;
   final Future<List<Map<String, dynamic>>> Function({int limit})
       _loadRecentClearEvents;
-  final FirestorePuzzleService _firestorePuzzleService;
   final RemotePuzzleService _remotePuzzleService;
   final Future<bool> Function() _shouldUseRemoteDailyChallenge;
 
@@ -207,22 +202,13 @@ class ChallengeProgressService {
   Future<TodayChallengeTarget> getChallengeTargetForCalendarDay(
     DateTime calendarDay,
   ) async {
-    if (await _shouldUseRemoteDailyChallenge()) {
-      final firestoreTarget =
-          await _firestorePuzzleService.fetchDailyChallengeTarget(
+    if (await _shouldUseRemoteDailyChallenge() &&
+        _remotePuzzleService.isConfigured) {
+      final remoteTarget = await _remotePuzzleService.fetchDailyChallengeTarget(
         date: calendarDay,
       );
-      if (firestoreTarget != null) {
-        return firestoreTarget;
-      }
-      if (_remotePuzzleService.isConfigured) {
-        final remoteTarget =
-            await _remotePuzzleService.fetchDailyChallengeTarget(
-          date: calendarDay,
-        );
-        if (remoteTarget != null) {
-          return remoteTarget;
-        }
+      if (remoteTarget != null) {
+        return remoteTarget;
       }
     }
 

@@ -24,13 +24,10 @@ class SudokuMemoNotesGrid extends StatelessWidget {
       return const SizedBox();
     }
 
-    final noteColor = Theme.of(context)
-        .colorScheme
-        .onSurfaceVariant
-        .withValues(alpha: 0.85);
+    final noteColor =
+        Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.85);
     final noteFontSize = (cellExtent * 0.62).clamp(7.0, 10.0);
     final emphasizedNoteFontSize = (cellExtent * 0.7).clamp(8.0, 11.0);
-    final noteRadius = (cellExtent * 0.38).clamp(4.0, 6.0);
     final gridPadding = (cellExtent * 0.18).clamp(1.5, 3.0);
 
     return Padding(
@@ -42,45 +39,50 @@ class SudokuMemoNotesGrid extends StatelessWidget {
         children: List.generate(9, (index) {
           final noteValue = index + 1;
           final isVisible = notes.contains(noteValue);
-          final isHighlighted =
-              isVisible && highlightedNote != null && highlightedNote == noteValue;
+          final isHighlighted = isVisible &&
+              highlightedNote != null &&
+              highlightedNote == noteValue;
           final isSingleCandidateNote = isVisible && isSingleCandidate;
-          final isHiddenSingleNote =
-              isVisible && isHiddenSingleCandidate && highlightedNote == noteValue;
+          final isHiddenSingleNote = isVisible &&
+              isHiddenSingleCandidate &&
+              highlightedNote == noteValue;
           return Center(
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
               width: cellExtent,
               height: cellExtent,
               alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: isHiddenSingleNote
-                    ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.28)
-                    : isHighlighted
-                    ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.18)
-                    : isSingleCandidateNote
-                        ? const Color(0xFFF1E5CD)
-                        : Colors.transparent,
-                borderRadius: BorderRadius.circular(noteRadius),
-              ),
               child: Text(
                 isVisible ? '$noteValue' : '',
+                textAlign: TextAlign.center,
+                strutStyle: StrutStyle(
+                  fontSize: isHighlighted ||
+                          isSingleCandidateNote ||
+                          isHiddenSingleNote
+                      ? emphasizedNoteFontSize
+                      : noteFontSize,
+                  height: 1,
+                  forceStrutHeight: true,
+                ),
                 style: GoogleFonts.notoSans(
-                  fontSize:
-                      isHighlighted || isSingleCandidateNote || isHiddenSingleNote
-                          ? emphasizedNoteFontSize
-                          : noteFontSize,
-                  fontWeight:
-                      isHighlighted || isSingleCandidateNote || isHiddenSingleNote
+                  fontSize: isHighlighted ||
+                          isSingleCandidateNote ||
+                          isHiddenSingleNote
+                      ? emphasizedNoteFontSize
+                      : noteFontSize,
+                  height: 1,
+                  fontWeight: isHighlighted ||
+                          isSingleCandidateNote ||
+                          isHiddenSingleNote
                       ? FontWeight.w800
                       : FontWeight.w600,
                   color: isHiddenSingleNote
                       ? Theme.of(context).colorScheme.primary
                       : isHighlighted
-                      ? Theme.of(context).colorScheme.primary
-                      : isSingleCandidateNote
-                          ? const Color(0xFFB87638)
-                          : noteColor,
+                          ? Theme.of(context).colorScheme.primary
+                          : isSingleCandidateNote
+                              ? const Color(0xFFB87638)
+                              : noteColor,
                 ),
               ),
             ),

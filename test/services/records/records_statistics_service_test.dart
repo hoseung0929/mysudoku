@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mysudoku/constants/records_level_filter.dart';
-import 'package:mysudoku/services/records/records_statistics_service.dart';
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/constants/records_level_filter.dart';
+import 'package:sudoku159/services/records/records_statistics_service.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 
 void main() {
   AppLogger.setMuted(true);

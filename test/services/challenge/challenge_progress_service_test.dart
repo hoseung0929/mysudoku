@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mysudoku/database/daily_challenge_completion_repository.dart';
-import 'package:mysudoku/model/today_challenge_target.dart';
-import 'package:mysudoku/services/challenge/challenge_progress_service.dart';
-import 'package:mysudoku/services/catalog/remote_puzzle_service.dart';
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/database/daily_challenge_completion_repository.dart';
+import 'package:sudoku159/model/today_challenge_target.dart';
+import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
+import 'package:sudoku159/services/catalog/remote_puzzle_service.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

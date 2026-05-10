@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mysudoku/database/database_helper.dart';
-import 'package:mysudoku/l10n/app_localizations.dart';
+import 'package:sudoku159/database/database_helper.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
 
-import 'package:mysudoku/services/challenge/challenge_progress_service.dart';
+import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
 
 class AchievementBadge {
   const AchievementBadge({
@@ -89,14 +89,13 @@ class AchievementService {
     ChallengeProgressService? challengeProgressService,
     Future<Map<String, dynamic>> Function()? loadOverallStatistics,
     Future<List<Map<String, dynamic>>> Function()? loadRecentRecords,
-  }) : _challengeProgressService =
-            challengeProgressService ?? ChallengeProgressService(databaseHelper: databaseHelper),
-        _loadOverallStatistics =
-            loadOverallStatistics ??
-                (() => (databaseHelper ?? DatabaseHelper()).getOverallStatistics()),
-        _loadRecentRecords =
-            loadRecentRecords ??
-                (() => (databaseHelper ?? DatabaseHelper()).getRecentClearRecords(limit: 10000));
+  })  : _challengeProgressService = challengeProgressService ??
+            ChallengeProgressService(databaseHelper: databaseHelper),
+        _loadOverallStatistics = loadOverallStatistics ??
+            (() => (databaseHelper ?? DatabaseHelper()).getOverallStatistics()),
+        _loadRecentRecords = loadRecentRecords ??
+            (() => (databaseHelper ?? DatabaseHelper())
+                .getRecentClearRecords(limit: 10000));
 
   final ChallengeProgressService _challengeProgressService;
   final Future<Map<String, dynamic>> Function() _loadOverallStatistics;
@@ -135,7 +134,6 @@ class AchievementService {
     required List<Map<String, dynamic>> records,
     required ChallengeProgressSummary progress,
   }) {
-
     final totalCleared = overall['total_cleared'] as int? ?? 0;
     final streakDays = progress.streakDays;
     final weeklyClearCount = progress.weeklyClearCount;

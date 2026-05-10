@@ -1,28 +1,23 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
-import 'package:mysudoku/database/database_helper.dart';
-import 'package:mysudoku/database/database_manager.dart';
-import 'package:mysudoku/model/sudoku_game.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
-import 'package:mysudoku/services/challenge/challenge_progress_service.dart';
-import 'package:mysudoku/services/game/game_state_service.dart';
-import 'package:mysudoku/services/records/game_record_notifier.dart';
-import 'package:mysudoku/services/home/home_dashboard_service.dart';
-import 'package:mysudoku/services/home/level_progress_service.dart';
-import 'package:mysudoku/services/home/my_pace_service.dart';
-import 'package:mysudoku/services/settings/onboarding_service.dart';
-import 'package:mysudoku/theme/app_theme.dart';
-import 'package:mysudoku/services/profile/profile_state_service.dart';
-import 'package:mysudoku/utils/app_logger.dart';
-import 'package:mysudoku/view/home/level_picker_screen.dart';
-import 'package:mysudoku/view/settings/settings_screen.dart';
-import 'package:mysudoku/view/sudoku_game/sudoku_game_screen.dart';
-import 'package:mysudoku/widgets/profile_editor_sheet.dart';
-import 'package:mysudoku/widgets/profile_glass_header.dart';
-import 'package:mysudoku/widgets/sudoku_grid_badge.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
+import 'package:sudoku159/l10n/sudoku_level_l10n.dart';
+import 'package:sudoku159/database/database_helper.dart';
+import 'package:sudoku159/database/database_manager.dart';
+import 'package:sudoku159/model/sudoku_game.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
+import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
+import 'package:sudoku159/services/records/game_record_notifier.dart';
+import 'package:sudoku159/services/home/home_dashboard_service.dart';
+import 'package:sudoku159/services/home/level_progress_service.dart';
+import 'package:sudoku159/services/home/my_pace_service.dart';
+import 'package:sudoku159/theme/app_theme.dart';
+import 'package:sudoku159/services/profile/profile_state_service.dart';
+import 'package:sudoku159/view/home/level_picker_screen.dart';
+import 'package:sudoku159/view/settings/settings_screen.dart';
+import 'package:sudoku159/view/sudoku_game/sudoku_game_screen.dart';
+import 'package:sudoku159/widgets/profile_editor_sheet.dart';
+import 'package:sudoku159/widgets/profile_glass_header.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -44,17 +39,13 @@ class _HomeScreenState extends State<HomeScreen> {
   final DatabaseManager _databaseManager = DatabaseManager();
   final LevelProgressService _levelProgressService = LevelProgressService();
   final HomeDashboardService _homeDashboardService = HomeDashboardService();
-  final OnboardingService _onboardingService = OnboardingService();
   final ProfileStateService _profileStateService = ProfileStateService();
   final MyPaceService _myPaceService = MyPaceService();
-  int? _selectedIndex;
   final ScrollController _scrollController = ScrollController();
   bool _isTop = true;
   bool _isLoadingHome = true;
   bool _isLevelTransitioning = false;
   int? _transitioningLevelIndex;
-  bool _isShowingOnboarding = false;
-  bool _hasResolvedHomeOnboarding = false;
   bool _showCatalogIntro = false;
   String? _profileImagePath;
   String? _profileName;
@@ -89,8 +80,8 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _loadHomeDashboard();
+      _syncCatalogIntroVisibility();
     });
-    _maybeShowHomeOnboarding();
   }
 
   @override
@@ -99,11 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _loadHomeDashboard();
-      if (_hasResolvedHomeOnboarding) {
-        _syncCatalogIntroVisibility();
-      } else {
-        _maybeShowHomeOnboarding();
-      }
+      _syncCatalogIntroVisibility();
     });
   }
 
@@ -199,14 +186,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       if (!mounted) return;
-      try {
-        await GameStateService().syncBidirectional();
-      } catch (e) {
-        if (kDebugMode) {
-          AppLogger.debug('클라우드 세이브 동기화 실패: $e');
-        }
-      }
-      if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
       final data = await _homeDashboardService.load(l10n);
       final myPacePreview = await _myPaceService.resolveTarget(
@@ -229,74 +208,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _maybeShowHomeOnboarding() async {
-    final shouldShow = await _onboardingService.shouldShowHomeOnboarding();
-    if (!mounted) return;
-    if (!shouldShow || _isShowingOnboarding) {
-      _hasResolvedHomeOnboarding = true;
-      _syncCatalogIntroVisibility();
-      return;
-    }
-
-    _isShowingOnboarding = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted) return;
-      await showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (dialogContext) {
-          final l10n = AppLocalizations.of(dialogContext)!;
-          final colorScheme = Theme.of(dialogContext).colorScheme;
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            title: Text(
-              l10n.homeOnboardingWelcomeTitle,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _GuideStep(
-                  icon: Icons.play_circle_fill,
-                  title: l10n.homeOnboardingStepQuickTitle,
-                  description: l10n.homeOnboardingStepQuickBody,
-                ),
-                const SizedBox(height: 12),
-                _GuideStep(
-                  icon: Icons.bolt,
-                  title: l10n.homeOnboardingStepDailyTitle,
-                  description: l10n.homeOnboardingStepDailyBody,
-                ),
-                const SizedBox(height: 12),
-                _GuideStep(
-                  icon: Icons.history,
-                  title: l10n.homeOnboardingStepResumeTitle,
-                  description: l10n.homeOnboardingStepResumeBody,
-                ),
-              ],
-            ),
-            actions: [
-              FilledButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: Text(l10n.homeOnboardingStartButton),
-              ),
-            ],
-          );
-        },
-      );
-      await _onboardingService.markHomeOnboardingSeen();
-      _isShowingOnboarding = false;
-      _hasResolvedHomeOnboarding = true;
-      _syncCatalogIntroVisibility();
-    });
-  }
-
   @override
   void dispose() {
     _databaseManager.catalogStatus.removeListener(_handleCatalogStatusChanged);
@@ -312,10 +223,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _syncCatalogIntroVisibility() {
     final status = _databaseManager.catalogStatus.value;
-    final shouldShow = _hasResolvedHomeOnboarding &&
-        !_isShowingOnboarding &&
-        _databaseManager.shouldShowInitialCatalogIntro &&
-        status.isRunning;
+    final shouldShow =
+        _databaseManager.shouldShowInitialCatalogIntro && status.isRunning;
 
     if (_showCatalogIntro == shouldShow) {
       return;
@@ -812,9 +721,11 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Row(
               children: [
-                const SudokuGridBadge(
-                  size: 18,
-                  color: AppTheme.mintColor,
+                Image.asset(
+                  'assets/images/app_logo.png',
+                  width: 18,
+                  height: 18,
+                  fit: BoxFit.contain,
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -824,14 +735,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.3,
-                  ),
-                ),
-                const Spacer(),
-                Opacity(
-                  opacity: 0.42,
-                  child: SudokuGridBadge(
-                    size: 22,
-                    color: colorScheme.primary.withValues(alpha: 0.72),
                   ),
                 ),
               ],
@@ -985,8 +888,6 @@ class _HomeScreenState extends State<HomeScreen> {
       title: level.localizedName(l10n),
       completed: completed,
       remaining: remaining,
-      progressColor: AppTheme.statisticsAccent,
-      isSelected: _selectedIndex == index,
       isEnabled: !_isLevelTransitioning,
       isTransitioning:
           _isLevelTransitioning && _transitioningLevelIndex == index,
@@ -996,59 +897,6 @@ class _HomeScreenState extends State<HomeScreen> {
         }
         _goToGame(levelTitles[index], levelIndex: index);
       },
-    );
-  }
-}
-
-class _GuideStep extends StatelessWidget {
-  const _GuideStep({
-    required this.icon,
-    required this.title,
-    required this.description,
-  });
-
-  final IconData icon;
-  final String title;
-  final String description;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: colorScheme.primaryContainer.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: colorScheme.onSurface, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                description,
-                style: TextStyle(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }
@@ -1126,8 +974,6 @@ class _LevelCard extends StatefulWidget {
   final String title;
   final int completed;
   final int remaining;
-  final Color progressColor;
-  final bool isSelected;
   final bool isEnabled;
   final bool isTransitioning;
   final VoidCallback? onTap;
@@ -1138,8 +984,6 @@ class _LevelCard extends StatefulWidget {
     required this.title,
     required this.completed,
     required this.remaining,
-    required this.progressColor,
-    required this.isSelected,
     required this.isEnabled,
     required this.isTransitioning,
     this.onTap,
@@ -1177,13 +1021,9 @@ class _LevelCardState extends State<_LevelCard> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final total = widget.completed + widget.remaining;
-    final percent = total == 0 ? 0.0 : widget.completed / total;
-    final solvedLabel = Localizations.localeOf(context).languageCode == 'ko'
-        ? '${widget.completed}개 완료'
-        : '${widget.completed} solved';
-    final remainingLabel = Localizations.localeOf(context).languageCode == 'ko'
-        ? '${widget.remaining}개 남음'
-        : '${widget.remaining} left';
+    final progressLabel = Localizations.localeOf(context).languageCode == 'ko'
+        ? '${widget.completed} / $total 완료'
+        : '${widget.completed} / $total solved';
     return IgnorePointer(
       ignoring: !widget.isEnabled,
       child: AnimatedOpacity(
@@ -1195,121 +1035,80 @@ class _LevelCardState extends State<_LevelCard> {
           onTapUp: _handleTapUp,
           onTapCancel: _handleTapCancel,
           child: Container(
-            padding: const EdgeInsets.all(12),
+            constraints: const BoxConstraints(minHeight: 86),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
             decoration: BoxDecoration(
               color: _pressed
                   ? colorScheme.surfaceContainerLow
                   : colorScheme.surface,
-              borderRadius: BorderRadius.circular(28),
+              borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: colorScheme.outlineVariant,
-                width: 1.5,
+                width: 1,
               ),
             ),
             child: Row(
               children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: widget.color,
-                    borderRadius: BorderRadius.circular(18),
-                  ),
+                SizedBox(
+                  width: 28,
+                  height: 28,
                   child: Icon(
                     widget.icon,
-                    size: 36,
-                    color: colorScheme.onPrimary,
+                    size: 24,
+                    color: widget.color,
                   ),
                 ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            widget.title,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 23,
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 160),
-                            switchInCurve: Curves.easeOutCubic,
-                            switchOutCurve: Curves.easeInCubic,
-                            child: widget.isTransitioning
-                                ? SizedBox(
-                                    key: const ValueKey('loading'),
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.1,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        colorScheme.primary,
-                                      ),
-                                    ),
-                                  )
-                                : Icon(
-                                    key: const ValueKey('chevron'),
-                                    Icons.chevron_right_rounded,
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                          ),
-                        ],
+                      Text(
+                        widget.title,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 20,
+                          color: colorScheme.onSurface,
+                        ),
                       ),
                       const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: widget.color.withValues(alpha: 0.28),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              solvedLabel,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12,
-                                color: colorScheme.onSurface,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              remainingLabel,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: colorScheme.onSurfaceVariant
-                                    .withValues(alpha: 0.82),
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: LinearProgressIndicator(
-                          value: percent,
-                          minHeight: 7,
-                          backgroundColor: widget.color.withValues(alpha: 0.25),
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                              widget.progressColor),
+                      Text(
+                        progressLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
+                ),
+                const SizedBox(width: 12),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 160),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  child: widget.isTransitioning
+                      ? SizedBox(
+                          key: const ValueKey('loading'),
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.1,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              colorScheme.primary,
+                            ),
+                          ),
+                        )
+                      : Icon(
+                          key: const ValueKey('chevron'),
+                          Icons.chevron_right_rounded,
+                          size: 28,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                 ),
               ],
             ),

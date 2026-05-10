@@ -1,12 +1,10 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:mysudoku/services/game/cloud_game_sync_service.dart';
-import 'package:mysudoku/utils/app_logger.dart';
-import 'package:mysudoku/utils/board_codec.dart';
+import 'package:sudoku159/utils/app_logger.dart';
+import 'package:sudoku159/utils/board_codec.dart';
 
 class SavedGameState {
   const SavedGameState({
@@ -49,16 +47,10 @@ class GameSessionState {
 }
 
 class GameStateService {
-  GameStateService({
-    CloudGameSyncService? cloudSyncService,
-  }) : _cloudSyncService = cloudSyncService ?? FirestoreCloudGameSyncService();
-
   static const String _gamePrefix = 'game_';
   static const String _metaPrefix = 'game_meta_';
   static const int _boardSize = 9;
   static final RegExp _savedGameKeyPattern = RegExp(r'^game_(.+)_(\d+)$');
-
-  final CloudGameSyncService _cloudSyncService;
 
   String _gameKey(String levelName, int gameNumber) {
     return 'game_${levelName}_$gameNumber';
@@ -217,14 +209,6 @@ class GameStateService {
     await prefs.remove(key);
     await prefs.remove(metaKey);
 
-    _runCloudTask(
-      () => _cloudSyncService.deleteSave(
-        levelName: levelName,
-        gameNumber: gameNumber,
-      ),
-      action: '저장 삭제',
-    );
-
     if (kDebugMode) {
       AppLogger.debug('게임 상태 삭제 완료: $key');
     }
@@ -297,62 +281,6 @@ class GameStateService {
     savedGames
         .sort((a, b) => b.lastPlayedAtMillis.compareTo(a.lastPlayedAtMillis));
     return savedGames;
-  }
-
-  Future<void> syncFromCloud() async {
-    final prefs = await SharedPreferences.getInstance();
-    final cloudSaves = await _cloudSyncService.fetchSaves();
-
-    for (final save in cloudSaves) {
-      final localUpdatedAt =
-          prefs.getInt(_metaKey(save.levelName, save.gameNumber)) ?? 0;
-      if (localUpdatedAt >= save.updatedAtMillis) {
-        continue;
-      }
-
-      await _persistLocalSession(
-        levelName: save.levelName,
-        gameNumber: save.gameNumber,
-        board: save.board,
-        notes: save.notes,
-        elapsedSeconds: save.elapsedSeconds,
-        hintsRemaining: save.hintsRemaining,
-        wrongCount: save.wrongCount,
-        isMemoMode: save.isMemoMode,
-        hintCells: save.hintCells,
-        isGameComplete: save.isGameComplete,
-        isGameOver: save.isGameOver,
-        updatedAtMillis: save.updatedAtMillis,
-      );
-    }
-  }
-
-  Future<void> syncToCloud() async {
-    final localSaves = await getSavedGames();
-
-    for (final save in localSaves) {
-      await _cloudSyncService.upsertSave(
-        CloudGameSavePayload(
-          levelName: save.levelName,
-          gameNumber: save.gameNumber,
-          board: save.session.board,
-          notes: save.session.notes,
-          elapsedSeconds: save.session.elapsedSeconds,
-          hintsRemaining: save.session.hintsRemaining,
-          wrongCount: save.session.wrongCount,
-          isMemoMode: save.session.isMemoMode,
-          hintCells: save.session.hintCells,
-          isGameComplete: save.session.isGameComplete,
-          isGameOver: save.session.isGameOver,
-          updatedAtMillis: save.lastPlayedAtMillis,
-        ),
-      );
-    }
-  }
-
-  Future<void> syncBidirectional() async {
-    await syncFromCloud();
-    await syncToCloud();
   }
 
   GameSessionState _decodeSessionPayload(String payload) {
@@ -458,20 +386,5 @@ class GameStateService {
     }
 
     return true;
-  }
-
-  void _runCloudTask(
-    Future<void> Function() task, {
-    required String action,
-  }) {
-    unawaited(() async {
-      try {
-        await task();
-      } catch (e) {
-        if (kDebugMode) {
-          AppLogger.debug('클라우드 동기화($action) 실패: $e');
-        }
-      }
-    }());
   }
 }

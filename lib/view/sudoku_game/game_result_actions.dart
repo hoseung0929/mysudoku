@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
-import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/services/game/result_share_service.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
+import 'package:sudoku159/services/game/result_share_service.dart';
 import 'package:share_plus/share_plus.dart';
 
 class GameResultActions {

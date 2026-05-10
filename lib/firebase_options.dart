@@ -29,10 +29,10 @@ class DefaultFirebaseOptions {
       case TargetPlatform.windows:
         return windows;
       case TargetPlatform.linux:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for linux - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        // Linux 데스크톱은 Firebase 콘솔에 별도 앱을 추가한 뒤 FlutterFire CLI로
+        // 전용 옵션을 생성하는 것이 이상적입니다. 여기서는 동일 프로젝트의 웹 설정을
+        // 사용해 초기화 오류를 피합니다(필요 시 콘솔에서 Linux 앱 등록 후 교체).
+        return web;
       default:
         throw UnsupportedError(
           'DefaultFirebaseOptions are not supported for this platform.',
@@ -64,7 +64,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '638773305398',
     projectId: 'mysudoku-386bc',
     storageBucket: 'mysudoku-386bc.firebasestorage.app',
-    iosBundleId: 'com.hoseung.mysudoku',
+    iosBundleId: 'com.hoseung.sudoku159',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -73,7 +73,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '638773305398',
     projectId: 'mysudoku-386bc',
     storageBucket: 'mysudoku-386bc.firebasestorage.app',
-    iosBundleId: 'com.example.mysudoku',
+    iosBundleId: 'com.example.sudoku159',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

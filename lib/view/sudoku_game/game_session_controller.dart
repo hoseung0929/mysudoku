@@ -1,10 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
-import 'package:mysudoku/model/sudoku_game.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
-import 'package:mysudoku/services/game/game_state_service.dart';
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/model/sudoku_game.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
+import 'package:sudoku159/services/game/game_state_service.dart';
 
 class GameSessionSnapshot {
   const GameSessionSnapshot({
@@ -44,18 +42,14 @@ class GameSessionController {
   GameSessionController({
     GameStateService? gameStateService,
     this.debounceDuration = const Duration(milliseconds: 800),
-    this.cloudSyncCooldown = const Duration(seconds: 45),
   }) : _gameStateService = gameStateService ?? GameStateService();
 
   final GameStateService _gameStateService;
   final Duration debounceDuration;
-  final Duration cloudSyncCooldown;
   Timer? _saveTimer;
   String? _pendingSaveKey;
   String? _pendingSaveSignature;
   final Map<String, String> _lastSavedSignatureByGame = <String, String>{};
-  DateTime? _lastCloudSyncAt;
-  bool _cloudSyncInFlight = false;
 
   Future<GameSessionBootstrap> prepareSession({
     required SudokuGame game,
@@ -174,28 +168,6 @@ class GameSessionController {
       levelName: level.name,
       gameNumber: gameNumber,
     );
-  }
-
-  Future<void> syncToCloud() async {
-    if (_cloudSyncInFlight) {
-      return;
-    }
-    final lastSyncAt = _lastCloudSyncAt;
-    if (lastSyncAt != null &&
-        DateTime.now().difference(lastSyncAt) < cloudSyncCooldown) {
-      return;
-    }
-    _cloudSyncInFlight = true;
-    try {
-      await _gameStateService.syncToCloud();
-      _lastCloudSyncAt = DateTime.now();
-    } catch (e) {
-      if (kDebugMode) {
-        AppLogger.debug('게임 세션 클라우드 업로드 실패(무시): $e');
-      }
-    } finally {
-      _cloudSyncInFlight = false;
-    }
   }
 
   void dispose() {

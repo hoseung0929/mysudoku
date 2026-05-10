@@ -1,14 +1,14 @@
-import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/model/sudoku_game.dart';
-import 'package:mysudoku/model/sudoku_game_set.dart';
-import 'package:mysudoku/model/sudoku_level.dart';
-import 'package:mysudoku/database/database_helper.dart';
-import 'package:mysudoku/services/challenge/achievement_service.dart';
-import 'package:mysudoku/services/challenge/challenge_progress_service.dart';
-import 'package:mysudoku/services/records/game_record_notifier.dart';
-import 'package:mysudoku/services/records/game_record_service.dart';
-import 'package:mysudoku/services/settings/notification_service.dart';
-import 'package:mysudoku/utils/app_logger.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
+import 'package:sudoku159/model/sudoku_game.dart';
+import 'package:sudoku159/model/sudoku_game_set.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
+import 'package:sudoku159/database/database_helper.dart';
+import 'package:sudoku159/services/challenge/achievement_service.dart';
+import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
+import 'package:sudoku159/services/records/game_record_notifier.dart';
+import 'package:sudoku159/services/records/game_record_service.dart';
+import 'package:sudoku159/services/settings/notification_service.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 import 'package:flutter/foundation.dart';
 
 class GameCompletionData {

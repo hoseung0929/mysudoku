@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:mysudoku/l10n/achievement_l10n.dart';
-import 'package:mysudoku/l10n/app_localizations.dart';
-import 'package:mysudoku/l10n/sudoku_level_l10n.dart';
-import 'package:mysudoku/services/challenge/achievement_service.dart';
-import 'package:mysudoku/services/challenge/challenge_progress_service.dart';
-import 'package:mysudoku/services/records/game_record_notifier.dart';
-import 'package:mysudoku/services/home/home_dashboard_service.dart';
-import 'package:mysudoku/services/home/my_pace_service.dart';
-import 'package:mysudoku/theme/app_theme.dart';
-import 'package:mysudoku/view/challenge/achievement_collection_screen.dart';
-import 'package:mysudoku/view/settings/settings_screen.dart';
-import 'package:mysudoku/view/sudoku_game/sudoku_game_screen.dart';
+import 'package:sudoku159/l10n/achievement_l10n.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
+import 'package:sudoku159/l10n/sudoku_level_l10n.dart';
+import 'package:sudoku159/services/challenge/achievement_service.dart';
+import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
+import 'package:sudoku159/services/records/game_record_notifier.dart';
+import 'package:sudoku159/services/home/home_dashboard_service.dart';
+import 'package:sudoku159/services/home/my_pace_service.dart';
+import 'package:sudoku159/theme/app_theme.dart';
+import 'package:sudoku159/view/challenge/achievement_collection_screen.dart';
+import 'package:sudoku159/view/settings/settings_screen.dart';
+import 'package:sudoku159/view/sudoku_game/sudoku_game_screen.dart';
 
 class ChallengeScreen extends StatefulWidget {
   const ChallengeScreen({super.key});
@@ -264,7 +264,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                             width: 42,
                             height: 42,
                             decoration: BoxDecoration(
-                              color: colorScheme.surface.withValues(alpha: 0.86),
+                              color:
+                                  colorScheme.surface.withValues(alpha: 0.86),
                               borderRadius: BorderRadius.circular(18),
                               border: Border.all(
                                 color: colorScheme.outlineVariant
