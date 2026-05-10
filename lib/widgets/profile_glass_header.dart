@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
@@ -42,19 +43,26 @@ class ProfileGlassHeader extends StatelessWidget {
           hour: DateTime.now().hour,
         );
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 32, sigmaY: 32),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOut,
+          decoration: BoxDecoration(
             color: isTop
-                ? Colors.transparent
-                : colorScheme.outlineVariant.withValues(alpha: 0.28),
-            width: 0.8,
+                ? Colors.white
+                : Colors.white.withValues(alpha: 0.52),
+            border: Border(
+              bottom: BorderSide(
+                color: isTop
+                    ? Colors.transparent
+                    : Colors.white.withValues(alpha: 0.35),
+                width: 1.0,
+              ),
+            ),
           ),
-        ),
-      ),
-      child: Padding(
+          child: Padding(
         padding: EdgeInsets.fromLTRB(16, 22 + topInset, 16, 18),
         child: Row(
           children: [
@@ -184,6 +192,8 @@ class ProfileGlassHeader extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
         ),
       ),
     );

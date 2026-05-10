@@ -147,6 +147,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
   bool _recordsTabLoaded = false;
+  bool _isBottom = false;
 
   void _onItemTapped(int index) {
     final isChanged = _selectedIndex != index;
@@ -171,14 +172,26 @@ class _MyHomePageState extends State<MyHomePage> {
       child: Scaffold(
         extendBody: true,
         backgroundColor: Colors.transparent,
-        body: IndexedStack(
-          index: _selectedIndex,
-          children: [
-            const HomeScreen(),
-            _recordsTabLoaded
-                ? const RecordsStatisticsScreen()
-                : const SizedBox.shrink(),
-          ],
+        body: NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            final atBottom =
+                notification.metrics.pixels >= notification.metrics.maxScrollExtent;
+            if (_isBottom != atBottom) {
+              setState(() {
+                _isBottom = atBottom;
+              });
+            }
+            return false;
+          },
+          child: IndexedStack(
+            index: _selectedIndex,
+            children: [
+              const HomeScreen(),
+              _recordsTabLoaded
+                  ? const RecordsStatisticsScreen()
+                  : const SizedBox.shrink(),
+            ],
+          ),
         ),
         bottomNavigationBar: Material(
           color: Colors.transparent,
@@ -188,6 +201,7 @@ class _MyHomePageState extends State<MyHomePage> {
           child: BottomNavBar(
             selectedIndex: _selectedIndex,
             onItemTapped: _onItemTapped,
+            isTop: _isBottom,
           ),
         ),
       ),

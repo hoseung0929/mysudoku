@@ -33,8 +33,8 @@ class _HomeScreenState extends State<HomeScreen> {
   /// 프로필 헤더 아래와 스크롤 본문(히어로) 사이 여백.
   static const double _kBelowProfileHeaderGap = 18;
 
-  /// `extendBody` + 플로팅 하단 탭 높이(68)·SafeArea(20)·그림자 대략값.
-  static const double _kHomeScrollBottomPad = 100;
+  /// `extendBody` + 플로팅 하단 탭 높이(68) + 여유 공간.
+  static const double _kHomeScrollBottomPad = 80;
 
   final DatabaseManager _databaseManager = DatabaseManager();
   final LevelProgressService _levelProgressService = LevelProgressService();
@@ -756,10 +756,7 @@ class _HomeScreenState extends State<HomeScreen> {
               myPaceLabel ??
                   (challengeDone
                       ? l10n.challengeTodayDoneHint
-                      : l10n.recordsGameNumberTitle(
-                          game.levelName.localizedSudokuLevelName(l10n),
-                          game.gameNumber,
-                        )),
+                      : '${game.levelName.localizedSudokuLevelName(l10n)} · #${game.gameNumber.toString().padLeft(3, '0')}'),
               style: TextStyle(
                 color: colorScheme.onSurfaceVariant,
                 fontSize: 14,
@@ -816,10 +813,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (target == null) {
       return null;
     }
-    return l10n.recordsGameNumberTitle(
-      target.level.localizedName(l10n),
-      target.game.gameNumber,
-    );
+    return '${target.level.localizedName(l10n)} · #${target.game.gameNumber.toString().padLeft(3, '0')}';
   }
 
   Widget _buildLevelExplorer() {
@@ -868,23 +862,33 @@ class _HomeScreenState extends State<HomeScreen> {
     final completed = level.clearedGames;
     final remaining = total - completed;
     final colors = [
-      const Color(0xFFBFE2D0),
-      const Color(0xFFCDE7E0),
-      const Color(0xFFE6D4B8),
-      const Color(0xFFE6B8C8),
-      const Color(0xFFB8D4E6),
+      const Color(0xFFBFE7D5), // 초급 - 라이트 민트
+      const Color(0xFF7FCFC7), // 중급 - 티얼 (hue 차이로 구분)
+      const Color(0xFFD8C08E), // 고급 - 탄/골드
+      const Color(0xFFD8A6BE), // 전문가 - 핑크
+      const Color(0xFFA8CBE6), // 마스터 - 블루
     ];
-    final icons = [
-      Icons.grid_view,
-      Icons.diamond,
-      Icons.star,
-      Icons.flash_on,
-      Icons.workspace_premium,
+    final badgeColors = [
+      null,
+      const Color(0xFF4FA89F), // 중급 badge - 더 진한 티얼
+      const Color(0xFFC4A05A), // 고급 badge - 더 진한 탄
+      const Color(0xFFC07898), // 전문가 badge - 더 진한 핑크
+      const Color(0xFF7AAAC8), // 마스터 badge - 더 진한 블루
     ];
+    final badges = <IconData?>[
+      null,
+      Icons.diamond_rounded,
+      Icons.star_rounded,
+      Icons.bolt_rounded,
+      Icons.workspace_premium_rounded,
+    ];
+    final badgeSizes = [15.0, 15.0, 15.0, 15.0, 17.0]; // 마스터만 살짝 크게
 
     return _LevelCard(
       color: colors[index],
-      icon: icons[index],
+      badgeColor: badgeColors[index],
+      badgeIcon: badges[index],
+      badgeSize: badgeSizes[index],
       title: level.localizedName(l10n),
       completed: completed,
       remaining: remaining,
@@ -970,7 +974,9 @@ class _CatalogProgressBanner extends StatelessWidget {
 
 class _LevelCard extends StatefulWidget {
   final Color color;
-  final IconData icon;
+  final Color? badgeColor;
+  final IconData? badgeIcon;
+  final double badgeSize;
   final String title;
   final int completed;
   final int remaining;
@@ -980,7 +986,9 @@ class _LevelCard extends StatefulWidget {
 
   const _LevelCard({
     required this.color,
-    required this.icon,
+    required this.badgeColor,
+    required this.badgeIcon,
+    required this.badgeSize,
     required this.title,
     required this.completed,
     required this.remaining,
@@ -1035,58 +1043,50 @@ class _LevelCardState extends State<_LevelCard> {
           onTapUp: _handleTapUp,
           onTapCancel: _handleTapCancel,
           child: Container(
-            constraints: const BoxConstraints(minHeight: 86),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            constraints: const BoxConstraints(minHeight: 72),
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
             decoration: BoxDecoration(
-              color: _pressed
-                  ? colorScheme.surfaceContainerLow
-                  : colorScheme.surface,
-              borderRadius: BorderRadius.circular(8),
+              color: _pressed ? colorScheme.surfaceContainerLow : Colors.white,
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: colorScheme.outlineVariant,
                 width: 1,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.055),
+                  blurRadius: 12,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
             child: Row(
               children: [
-                SizedBox(
-                  width: 28,
-                  height: 28,
-                  child: Icon(
-                    widget.icon,
-                    size: 24,
-                    color: widget.color,
+                _DifficultyIcon(
+                  color: widget.color,
+                  badgeIcon: widget.badgeIcon,
+                  badgeColor: widget.badgeColor,
+                  badgeSize: widget.badgeSize,
+                ),
+                const SizedBox(width: 24),
+                Text(
+                  widget.title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 17,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  progressLabel,
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        widget.title,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 20,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        progressLabel,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: colorScheme.onSurfaceVariant,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 160),
                   switchInCurve: Curves.easeOutCubic,
@@ -1114,6 +1114,41 @@ class _LevelCardState extends State<_LevelCard> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DifficultyIcon extends StatelessWidget {
+  const _DifficultyIcon({
+    required this.color,
+    required this.badgeIcon,
+    required this.badgeColor,
+    required this.badgeSize,
+  });
+
+  final Color color;
+  final IconData? badgeIcon;
+  final Color? badgeColor;
+  final double badgeSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 46,
+      height: 46,
+      child: Stack(
+        children: [
+          Center(
+            child: Icon(Icons.grid_view_rounded, size: 32, color: color),
+          ),
+          if (badgeIcon != null)
+            Positioned(
+              right: 4,
+              bottom: 4,
+              child: Icon(badgeIcon!, size: badgeSize, color: badgeColor ?? color),
+            ),
+        ],
       ),
     );
   }

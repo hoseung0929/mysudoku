@@ -9,10 +9,12 @@ class BottomNavBar extends StatelessWidget {
     super.key,
     required this.selectedIndex,
     required this.onItemTapped,
+    this.isTop = true,
   });
 
   final int selectedIndex;
   final ValueChanged<int> onItemTapped;
+  final bool isTop;
 
   @override
   Widget build(BuildContext context) {
@@ -47,12 +49,18 @@ class BottomNavBar extends StatelessWidget {
           child: ClipRect(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-              child: DecoratedBox(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOut,
                 decoration: BoxDecoration(
-                  color: AppTheme.backgroundColor.withValues(alpha: 0.38),
+                  color: isTop
+                      ? Colors.white
+                      : AppTheme.backgroundColor.withValues(alpha: 0.38),
                   borderRadius: BorderRadius.circular(52),
                   border: Border.all(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.28),
+                    color: isTop
+                        ? colorScheme.outlineVariant.withValues(alpha: 0.55)
+                        : colorScheme.outlineVariant.withValues(alpha: 0.28),
                   ),
                 ),
                 child: SizedBox(
