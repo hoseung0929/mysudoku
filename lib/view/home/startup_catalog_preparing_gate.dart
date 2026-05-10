@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:sudoku159/database/database_manager.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
 
@@ -8,10 +7,6 @@ const bool _catalogGatePreview = bool.fromEnvironment(
 );
 const int _catalogGateMinSeconds = int.fromEnvironment(
   'CATALOG_GATE_MIN_SECONDS',
-);
-const int _catalogGateDefaultMinMilliseconds = int.fromEnvironment(
-  'CATALOG_GATE_MIN_MS',
-  defaultValue: kDebugMode ? 3000 : 0,
 );
 
 class StartupCatalogPreparingGate extends StatefulWidget {
@@ -71,7 +66,9 @@ class _StartupCatalogPreparingGateState
         return;
       }
       await _databaseManager.ensureCatalogFullyPrepared();
-      await _waitForMinimumDisplayTime(startedAt);
+      if (_catalogGateMinSeconds > 0) {
+        await _waitForMinimumDisplayTime(startedAt);
+      }
       _databaseManager.markInitialCatalogIntroSeen();
       if (!mounted) return;
       setState(() {
@@ -95,10 +92,7 @@ class _StartupCatalogPreparingGateState
   Future<void> _waitForMinimumDisplayTime(DateTime startedAt) async {
     const minimumDuration = _catalogGateMinSeconds > 0
         ? Duration(seconds: _catalogGateMinSeconds)
-        : Duration(milliseconds: _catalogGateDefaultMinMilliseconds);
-    if (minimumDuration <= Duration.zero) {
-      return;
-    }
+        : Duration.zero;
 
     final elapsed = DateTime.now().difference(startedAt);
     final remaining = minimumDuration - elapsed;

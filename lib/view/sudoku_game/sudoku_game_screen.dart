@@ -58,6 +58,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   bool _oneHandModeEnabled = false;
   bool _memoHighlightEnabled = true;
   bool _showDeveloperAnswerPreview = false;
+  bool _isLeavingScreen = false;
   int? _memoFocusNumber;
   final GameEffectsController _effectsController = GameEffectsController();
   OverlayEntry? _completionFeedbackEntry;
@@ -155,6 +156,14 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   Future<void> _flushPendingSessionOnPause() async {
     if (!_presenterReady) return;
     await _flushPendingSessionSave();
+  }
+
+  Future<void> _popAfterSaving() async {
+    if (_isLeavingScreen) return;
+    _isLeavingScreen = true;
+    await _flushPendingSessionSave();
+    if (!mounted) return;
+    Navigator.of(context).pop();
   }
 
   @override
@@ -337,16 +346,15 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
 
     final mediaQuery = MediaQuery.of(context);
     final isTablet = mediaQuery.size.width > 600;
-    final topOffset =
-        mediaQuery.padding.top + (isTablet ? kToolbarHeight : 50) + 8;
+    final bottomOffset = mediaQuery.padding.bottom + (isTablet ? 28 : 18);
 
     _completionFeedbackEntry = OverlayEntry(
       builder: (context) => Positioned(
-        top: topOffset,
+        bottom: bottomOffset,
         left: 16,
         right: 16,
         child: Align(
-          alignment: Alignment.topCenter,
+          alignment: Alignment.bottomCenter,
           child: IgnorePointer(
             child: Material(
               color: Colors.transparent,
@@ -456,12 +464,11 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
 
   Future<void> _exitToLevelSelection() async {
     final levelNavigator = Navigator.of(context);
-    unawaited(
-      levelNavigator.pushReplacement(
-        MaterialPageRoute<void>(
-          builder: (context) => LevelPickerScreen(level: widget.level),
-        ),
+    await levelNavigator.pushAndRemoveUntil(
+      MaterialPageRoute<void>(
+        builder: (context) => LevelPickerScreen(level: widget.level),
       ),
+      (route) => route.isFirst,
     );
     unawaited(
       _clearCurrentGameState().catchError((error) {
@@ -504,19 +511,33 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     final surface = Theme.of(context).colorScheme.surface;
 
     if (!_presenterReady) {
-      return Scaffold(
-        backgroundColor: surface,
-        appBar: _buildAppBar(),
-        body: const Center(
-          child: CircularProgressIndicator(),
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          unawaited(_popAfterSaving());
+        },
+        child: Scaffold(
+          backgroundColor: surface,
+          appBar: _buildAppBar(),
+          body: const Center(
+            child: CircularProgressIndicator(),
+          ),
         ),
       );
     }
 
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      appBar: _buildAppBar(),
-      body: isTablet ? _buildTabletLayout() : _buildMobileLayout(),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        unawaited(_popAfterSaving());
+      },
+      child: Scaffold(
+        backgroundColor: AppTheme.backgroundColor,
+        appBar: _buildAppBar(),
+        body: isTablet ? _buildTabletLayout() : _buildMobileLayout(),
+      ),
     );
   }
 
@@ -551,9 +572,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           visualDensity: VisualDensity.compact,
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: _popAfterSaving,
         ),
         actions: [
           _buildDeveloperMenuButton(),
@@ -583,9 +602,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       ),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
-        onPressed: () {
-          Navigator.pop(context);
-        },
+        onPressed: _popAfterSaving,
       ),
       actions: [_buildDeveloperMenuButton()],
     );
@@ -1432,6 +1449,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
             builder: (ctx) => SudokuGameScreen(
               game: nextGame,
               level: widget.level,
+              restoreSavedSession: true,
             ),
           ),
         );
