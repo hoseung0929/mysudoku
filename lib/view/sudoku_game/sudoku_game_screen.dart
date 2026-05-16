@@ -205,8 +205,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       solution: widget.game.solution,
       initialElapsedSeconds: activeSession?.elapsedSeconds ?? 0,
       initialWrongCount: activeSession?.wrongCount ?? 0,
-      initialMemoMode:
-          _featurePolicy.memoEnabled && (activeSession?.isMemoMode ?? false),
+      initialMemoMode: false,
       initialNotes: activeSession?.notes,
       initialHintsRemaining:
           activeSession?.hintsRemaining ?? SudokuGamePresenter.maxHints,

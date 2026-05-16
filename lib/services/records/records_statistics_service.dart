@@ -250,6 +250,7 @@ class RecordsStatisticsService {
     required List<Map<String, dynamic>> recent,
     required String selectedLevel,
     int days = 7,
+    bool thisWeek = false,
   }) {
     final filtered = filterRecentRecords(
       recent: recent,
@@ -259,9 +260,17 @@ class RecordsStatisticsService {
     final todayKey = _formatDate(today);
     final buckets = <String, List<Map<String, dynamic>>>{};
 
-    for (int i = days - 1; i >= 0; i--) {
-      final date = today.subtract(Duration(days: i));
-      buckets[_formatDate(date)] = <Map<String, dynamic>>[];
+    if (thisWeek) {
+      final monday = today.subtract(Duration(days: today.weekday - 1));
+      for (int i = 0; i < 7; i++) {
+        final date = monday.add(Duration(days: i));
+        buckets[_formatDate(date)] = <Map<String, dynamic>>[];
+      }
+    } else {
+      for (int i = days - 1; i >= 0; i--) {
+        final date = today.subtract(Duration(days: i));
+        buckets[_formatDate(date)] = <Map<String, dynamic>>[];
+      }
     }
 
     for (final record in filtered) {

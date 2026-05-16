@@ -28,7 +28,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   static const double _kBelowProfileHeaderGap = 18;
 
   /// 하단 플로팅 탭바 여유 — [HomeScreen._kHomeScrollBottomPad] 와 동일.
-  static const double _kScrollBottomPad = 130;
+  static const double _kScrollBottomPad = 80;
 
   final RecordsStatisticsService _statisticsService =
       RecordsStatisticsService();
@@ -386,6 +386,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     final dailyTrend = _statisticsService.buildDailyTrend(
       recent: _recent,
       selectedLevel: _selectedLevel,
+      thisWeek: true,
     );
     final trendSummaryUi = _statisticsService.buildTrendSummary(
       recent: _recent,
