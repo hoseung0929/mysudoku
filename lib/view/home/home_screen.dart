@@ -873,16 +873,16 @@ class _HomeScreenState extends State<HomeScreen> {
       const Color(0xFF4FA89F), // 중급 badge - 더 진한 티얼
       const Color(0xFFC4A05A), // 고급 badge - 더 진한 탄
       const Color(0xFFC07898), // 전문가 badge - 더 진한 핑크
-      const Color(0xFF7AAAC8), // 마스터 badge - 더 진한 블루
+      const Color(0xFFC9A227), // 마스터 badge - 골드
     ];
-    final badges = <IconData?>[
-      null,
-      Icons.diamond_rounded,
+    final badges = <IconData>[
+      Icons.eco_rounded,
+      Icons.local_fire_department_rounded,
       Icons.star_rounded,
-      Icons.bolt_rounded,
-      Icons.workspace_premium_rounded,
+      Icons.diamond_rounded,
+      Icons.emoji_events_rounded,
     ];
-    final badgeSizes = [15.0, 15.0, 15.0, 15.0, 17.0]; // 마스터만 살짝 크게
+    final badgeSizes = [34.0, 32.0, 32.0, 32.0, 34.0];
 
     return _LevelCard(
       color: colors[index],
@@ -975,7 +975,7 @@ class _CatalogProgressBanner extends StatelessWidget {
 class _LevelCard extends StatefulWidget {
   final Color color;
   final Color? badgeColor;
-  final IconData? badgeIcon;
+  final IconData badgeIcon;
   final double badgeSize;
   final String title;
   final int completed;
@@ -1128,7 +1128,7 @@ class _DifficultyIcon extends StatelessWidget {
   });
 
   final Color color;
-  final IconData? badgeIcon;
+  final IconData badgeIcon;
   final Color? badgeColor;
   final double badgeSize;
 
@@ -1137,18 +1137,8 @@ class _DifficultyIcon extends StatelessWidget {
     return SizedBox(
       width: 46,
       height: 46,
-      child: Stack(
-        children: [
-          Center(
-            child: Icon(Icons.grid_view_rounded, size: 32, color: color),
-          ),
-          if (badgeIcon != null)
-            Positioned(
-              right: 4,
-              bottom: 4,
-              child: Icon(badgeIcon!, size: badgeSize, color: badgeColor ?? color),
-            ),
-        ],
+      child: Center(
+        child: Icon(badgeIcon, size: badgeSize, color: badgeColor ?? color),
       ),
     );
   }

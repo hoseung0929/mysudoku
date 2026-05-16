@@ -106,14 +106,14 @@ class GameCompletionCoordinator {
 
     SudokuGame? nextGame;
     try {
-      final gamesInLevel = await SudokuGameSet.create(level.name);
-      gamesInLevel.sort((a, b) => a.gameNumber.compareTo(b.gameNumber));
-      final currentIndex = gamesInLevel.indexWhere(
-        (candidate) => candidate.gameNumber == game.gameNumber,
+      final nextGameNumber = await _databaseHelper.findFirstUnclearedGameNumberAfter(
+        level.name,
+        game.gameNumber,
       );
-      nextGame = currentIndex >= 0 && currentIndex < gamesInLevel.length - 1
-          ? gamesInLevel[currentIndex + 1]
-          : null;
+      if (nextGameNumber != null) {
+        final gamesInLevel = await SudokuGameSet.create(level.name);
+        nextGame = gamesInLevel.where((g) => g.gameNumber == nextGameNumber).firstOrNull;
+      }
     } catch (e) {
       if (kDebugMode) {
         AppLogger.debug('다음 퍼즐 계산 실패(무시): $e');
