@@ -58,6 +58,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   bool _oneHandModeEnabled = false;
   bool _memoHighlightEnabled = true;
   bool _showDeveloperAnswerPreview = false;
+  final ValueNotifier<String> _timeNotifier = ValueNotifier<String>('0m');
   bool _isLeavingScreen = false;
   int? _memoFocusNumber;
   final GameEffectsController _effectsController = GameEffectsController();
@@ -158,6 +159,15 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     await _flushPendingSessionSave();
   }
 
+  String _formatCalmTime(int totalSeconds) {
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    final seconds = totalSeconds % 60;
+    return '${hours.toString().padLeft(2, '0')}:'
+        '${minutes.toString().padLeft(2, '0')}:'
+        '${seconds.toString().padLeft(2, '0')}';
+  }
+
   Future<void> _popAfterSaving() async {
     if (_isLeavingScreen) return;
     _isLeavingScreen = true;
@@ -176,12 +186,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
 
   /// 게임 초기화
   Future<void> _initializeGame() async {
-    if (kDebugMode) {
-      AppLogger.debug(
-        '게임 초기화 시작: ${widget.level.name} 게임 ${widget.game.gameNumber}',
-      );
-    }
-
     await _loadGameSettings();
 
     final sessionBootstrap = await _sessionController.prepareSession(
@@ -189,11 +193,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       level: widget.level,
       restoreSavedSession: widget.restoreSavedSession,
     );
+
     final activeSession = sessionBootstrap.activeSession;
     final initialBoard = sessionBootstrap.initialBoard;
-    if (activeSession != null && kDebugMode) {
-      AppLogger.debug('저장된 게임 상태 발견');
-    }
+
     _effectsController.resetForBoard(
       board: initialBoard,
       solution: widget.game.solution,
@@ -205,7 +208,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       solution: widget.game.solution,
       initialElapsedSeconds: activeSession?.elapsedSeconds ?? 0,
       initialWrongCount: activeSession?.wrongCount ?? 0,
-      initialMemoMode: false,
+      initialMemoMode: activeSession?.isMemoMode ?? false,
       initialNotes: activeSession?.notes,
       initialHintsRemaining:
           activeSession?.hintsRemaining ?? SudokuGamePresenter.maxHints,
@@ -229,7 +232,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         setState(() {});
       },
       onTimeChanged: (time) {
-        setState(() {});
+        _timeNotifier.value = _formatCalmTime(time);
       },
       onPauseStateChanged: (isPaused) {
         setState(() {});
@@ -266,17 +269,18 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         _showWrongAnswerFeedback();
       },
     );
+
     if (mounted) {
       setState(() {
         _presenterReady = true;
         _memoFocusNumber = null;
       });
     }
+    _timeNotifier.value = _presenter.calmFormattedTime;
+
     _presenter.clearSelection();
+
     await _flushPendingSessionSave();
-    if (kDebugMode) {
-      AppLogger.debug('게임 초기화 완료');
-    }
   }
 
   @override
@@ -497,6 +501,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     unawaited(_settingsController.dispose());
     _effectsController.dispose();
     _hideCompletionFeedback();
+    _timeNotifier.dispose();
     if (_presenterReady) {
       _presenter.dispose();
     }
@@ -578,12 +583,15 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           Padding(
             padding: const EdgeInsets.only(right: 14),
             child: Center(
-              child: Text(
-                _presenterReady ? _presenter.calmFormattedTime : '0m',
-                style: GoogleFonts.notoSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.lightTextColor,
+              child: ValueListenableBuilder<String>(
+                valueListenable: _timeNotifier,
+                builder: (context, time, _) => Text(
+                  time,
+                  style: GoogleFonts.notoSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.lightTextColor,
+                  ),
                 ),
               ),
             ),
@@ -743,7 +751,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                           _StatusStripItem(
                             icon: Icons.timer_outlined,
                             label: l10n.gameTimeShort,
-                            value: _presenter.calmFormattedTime,
+                            value: _timeNotifier.value,
                           ),
                           _StatusStripItem(
                             icon: Icons.error_outline,
@@ -1007,7 +1015,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                     ],
                   ),
                 ),
-                if (_showDeveloperAnswerPreview)
+                if (kDebugMode && _showDeveloperAnswerPreview)
                   Positioned(
                     right: metrics.horizontalPadding,
                     bottom: metrics.scrollBottomPadding +
@@ -1413,18 +1421,32 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       width: double.infinity,
       height: height,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(
+          color: colorScheme.outlineVariant,
+          width: 1,
+        ),
       ),
       child: Center(
-        child: Text(
-          isKorean ? '배너 광고 영역' : 'Banner ad slot',
-          style: GoogleFonts.notoSans(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: colorScheme.onSurfaceVariant,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.campaign_outlined,
+              size: 14,
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              isKorean ? '광고' : 'Ad',
+              style: GoogleFonts.notoSans(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+              ),
+            ),
+          ],
         ),
       ),
     );

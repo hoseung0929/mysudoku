@@ -396,28 +396,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final info = await PackageInfo.fromPlatform();
     if (!mounted) return;
-    showAboutDialog(
-      context: context,
-      applicationName: l10n.appTitle,
-      applicationVersion: l10n.settingsAboutVersionLabel(info.version),
-      applicationLegalese: '© ${DateTime.now().year}',
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Text(l10n.settingsAboutDeveloperNote),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _showPrivacyDialog() async {
-    final l10n = AppLocalizations.of(context)!;
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.settingsPrivacyDialogTitle),
-        content: SingleChildScrollView(
-          child: Text(l10n.settingsPrivacyDialogBody),
+        contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.appTitle,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              l10n.settingsAboutVersionLabel(info.version),
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 13, color: Color(0xFF888888)),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              l10n.settingsAboutDeveloperNote,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '© ${DateTime.now().year}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12, color: Color(0xFFAAAAAA)),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -456,6 +465,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   [
                     _buildSettingsTile(
                       icon: Icons.language,
+                      iconColor: const Color(0xFF5B8DD9),
                       title:
                           AppLocalizations.of(context)!.settingsLanguageTitle,
                       subtitle: AppLocalizations.of(context)!
@@ -470,6 +480,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   [
                     _buildSettingsSwitchTile(
                       icon: Icons.vibration,
+                      iconColor: const Color(0xFF4EAD7C),
                       title:
                           AppLocalizations.of(context)!.settingsVibrationTitle,
                       subtitle: AppLocalizations.of(
@@ -481,6 +492,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     _buildSettingsSwitchTile(
                       icon: Icons.screen_lock_portrait,
+                      iconColor: const Color(0xFF4EAD7C),
                       title: AppLocalizations.of(
                         context,
                       )!
@@ -494,40 +506,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                _buildSettingsSection(
-                  AppLocalizations.of(context)!.settingsSectionCloud,
-                  [
-                    _buildSettingsTile(
-                      icon: _state.cloudAccount.isCrossDeviceReady
-                          ? Icons.verified_user_outlined
-                          : Icons.person_outline,
-                      title: AppLocalizations.of(context)!
-                          .settingsCloudAccountTitle,
-                      subtitle: _cloudAccountSubtitle(
-                        AppLocalizations.of(context)!,
-                      ),
-                      onTap: _showCloudAccountSheet,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
+                // TODO: 계정 세션 섹션 — 출시 후 활성화 예정
+                // _buildSettingsSection(
+                //   AppLocalizations.of(context)!.settingsSectionCloud,
+                //   [
+                //     _buildSettingsTile(
+                //       icon: _state.cloudAccount.isCrossDeviceReady
+                //           ? Icons.verified_user_outlined
+                //           : Icons.person_outline,
+                //       iconColor: const Color(0xFF4FA89F),
+                //       title: AppLocalizations.of(context)!
+                //           .settingsCloudAccountTitle,
+                //       subtitle: _cloudAccountSubtitle(
+                //         AppLocalizations.of(context)!,
+                //       ),
+                //       onTap: _showCloudAccountSheet,
+                //     ),
+                //   ],
+                // ),
                 _buildSettingsSection(
                   AppLocalizations.of(context)!.settingsSectionInfo,
                   [
                     _buildSettingsTile(
                       icon: Icons.info_outline,
+                      iconColor: const Color(0xFF9E9E9E),
                       title: AppLocalizations.of(context)!.settingsAppInfoTitle,
                       subtitle:
                           AppLocalizations.of(context)!.settingsAppInfoSubtitle,
                       onTap: _showAppAbout,
-                    ),
-                    _buildSettingsTile(
-                      icon: Icons.privacy_tip_outlined,
-                      title: AppLocalizations.of(context)!.settingsPrivacyTitle,
-                      subtitle:
-                          AppLocalizations.of(context)!.settingsPrivacySubtitle,
-                      onTap: _showPrivacyDialog,
                     ),
                   ],
                 ),
@@ -550,7 +556,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: IconButton(
-              icon: const Icon(Icons.arrow_back),
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+              color: const Color(0xFF1A1A1A),
               onPressed: () => Navigator.of(context).pop(),
             ),
           ),
@@ -574,46 +581,59 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildSettingsSection(String title, List<Widget> children) {
-    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final cs = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(4, 0, 4, 10),
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
           child: Text(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: onSurface,
-                ),
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: cs.onSurfaceVariant,
+              letterSpacing: 0.2,
+            ),
           ),
         ),
         Container(
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(24),
-            border:
-                Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: cs.outlineVariant),
           ),
           child: Column(
-            children: children,
+            children: [
+              for (int i = 0; i < children.length; i++) ...[
+                children[i],
+                if (i < children.length - 1)
+                  Divider(
+                    height: 1,
+                    indent: 72,
+                    endIndent: 0,
+                    color: cs.outlineVariant,
+                  ),
+              ],
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSettingIcon(IconData icon) {
+  Widget _buildSettingIcon(IconData icon, {Color? color}) {
+    final c = color ?? AppTheme.mintColor;
     return Container(
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: AppTheme.mintColor.withValues(alpha: 0.14),
+        color: c.withValues(alpha: 0.13),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(
         icon,
-        color: Theme.of(context).colorScheme.onSurface,
+        color: c.withValues(alpha: 0.85),
         size: 20,
       ),
     );
@@ -624,11 +644,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    Color? iconColor,
   }) {
     final cs = Theme.of(context).colorScheme;
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-      leading: _buildSettingIcon(icon),
+      leading: _buildSettingIcon(icon, color: iconColor),
       title: Text(
         title,
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -656,13 +677,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String subtitle,
     required bool value,
     required ValueChanged<bool> onChanged,
+    Color? iconColor,
   }) {
     final cs = Theme.of(context).colorScheme;
     return SwitchListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
       value: value,
       onChanged: onChanged,
-      secondary: _buildSettingIcon(icon),
+      secondary: _buildSettingIcon(icon, color: iconColor),
       title: Text(
         title,
         style: Theme.of(context).textTheme.titleMedium?.copyWith(

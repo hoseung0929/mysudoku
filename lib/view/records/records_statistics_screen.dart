@@ -10,7 +10,6 @@ import 'package:sudoku159/theme/app_theme.dart';
 import 'package:sudoku159/view/settings/settings_screen.dart';
 import 'package:sudoku159/widgets/profile_editor_sheet.dart';
 import 'package:sudoku159/widgets/profile_glass_header.dart';
-import 'package:sudoku159/widgets/sudoku_grid_badge.dart';
 
 class RecordsStatisticsScreen extends StatefulWidget {
   const RecordsStatisticsScreen({super.key});
@@ -38,6 +37,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   bool _isTop = true;
   int _loadRequestId = 0;
   String? _loadErrorMessage;
+  String? _selectedTrendDate;
 
   Map<String, dynamic> _overall = {};
   List<Map<String, dynamic>> _levels = [];
@@ -45,8 +45,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   String? _profileImagePath;
   String? _profileName;
 
-  final String _selectedLevel = RecordsLevelFilter.allLevels;
-  final int _selectedPeriodDays = 0;
+  static const String _selectedLevel = RecordsLevelFilter.allLevels;
+  static const int _selectedPeriodDays = 0;
 
   @override
   void initState() {
@@ -222,17 +222,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         .format(parsed);
   }
 
-  String _trendDayCalendarLabel(Map<String, dynamic> day) {
-    final parsed = DateTime.parse(day['date'] as String);
-    final languageCode = Localizations.localeOf(context).languageCode;
-    if (languageCode == 'ko') {
-      const labels = ['월', '화', '수', '목', '금', '토', '일'];
-      return labels[parsed.weekday - 1];
-    }
-    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return labels[parsed.weekday - 1];
-  }
-
   String _trendA11ySummary(
     AppLocalizations l10n,
     List<Map<String, dynamic>> trend,
@@ -254,112 +243,272 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         '${l10n.recordsTrendA11yMaxClears(maxClears)}. $dayBreakdown';
   }
 
-  Widget _buildSummarySection(
-    AppLocalizations l10n,
-    Map<String, dynamic> trendSummaryUi,
-  ) {
+  // ─── Weekly Activity Card ─────────────────────────────────────────────────
+
+  Widget _buildWeeklyActivityCard(
+    AppLocalizations l10n, {
+    required List<Map<String, dynamic>> trend,
+    required Map<String, dynamic> trendSummaryUi,
+  }) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final textScale = MediaQuery.textScalerOf(context).scale(14) / 14.0;
-    final stacked = textScale > 1.08;
     final totalClears = trendSummaryUi['total_clears'] as int;
     final averageTime = trendSummaryUi['average_time'] as double;
-    final averageTimeLabel = totalClears > 0
-        ? _formatDurationNatural(averageTime)
+    final selectedDay = _selectedTrendDay(trend);
+    final selectedClears = selectedDay?['clears'] as int? ?? totalClears;
+    final selectedAverageTime =
+        selectedDay?['average_time'] as double? ?? averageTime;
+    final selectedDate = selectedDay?['date'] as String?;
+    final averageTimeLabel = selectedClears > 0
+        ? _formatDurationNatural(selectedAverageTime)
         : l10n.recordsNoAverageTime;
 
-    final clearsChild = _summaryMetricColumn(
-      label: l10n.recordsKpiWeeklyClearsLabel,
-      value: l10n.recordsInsightClearsValue(totalClears),
-    );
-    final timeChild = _summaryMetricColumn(
-      label: l10n.recordsKpiAvgSolveTimeLabel,
-      value: averageTimeLabel,
-    );
-
-    final dividerColor = scheme.outlineVariant;
-
     return Card(
-      color: scheme.surface,
+      color: theme.colorScheme.surface,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: dividerColor),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              l10n.recordsSummaryTitle,
+              l10n.recordsPlayInsightsTitle,
               style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: scheme.onSurface,
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.onSurface,
               ),
             ),
+            const SizedBox(height: 16),
+            _buildWeekRow(l10n, trend, selectedDate: selectedDate),
             const SizedBox(height: 14),
-            if (stacked) ...[
-              clearsChild,
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                child: Divider(height: 1, color: dividerColor),
-              ),
-              timeChild,
-            ] else
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(child: clearsChild),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: VerticalDivider(
-                        width: 1,
-                        thickness: 1,
-                        color: dividerColor,
-                      ),
-                    ),
-                    Expanded(child: timeChild),
-                  ],
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 180),
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              child: Text(
+                _selectedTrendLabel(l10n, selectedDay),
+                key: ValueKey(selectedDate ?? 'weekly-summary'),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatMiniCard(
+                    icon: Icons.grid_view_rounded,
+                    label: l10n.recordsKpiWeeklyClearsLabel,
+                    value: l10n.recordsInsightClearsValue(selectedClears),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildStatMiniCard(
+                    icon: Icons.timer_outlined,
+                    label: l10n.recordsKpiAvgSolveTimeLabel,
+                    value: averageTimeLabel,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _summaryMetricColumn({
+  Widget _buildWeekRow(
+    AppLocalizations l10n,
+    List<Map<String, dynamic>> trend, {
+    required String? selectedDate,
+  }) {
+    const accent = AppTheme.statisticsAccent;
+    return Semantics(
+      container: true,
+      label: _trendA11ySummary(l10n, trend),
+      child: Row(
+        children: trend.map((day) {
+          final isToday = day['is_today'] == true;
+          final isPlayed = (day['clears'] as int) > 0;
+          final parsed = DateTime.parse(day['date'] as String);
+          final dateNum = parsed.day.toString();
+          final dayLetter = _trendDayShortLabel(parsed);
+          final dateKey = day['date'] as String;
+          final isSelected = selectedDate == dateKey;
+
+          return Expanded(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => setState(() => _selectedTrendDate = dateKey),
+              child: AnimatedScale(
+                duration: const Duration(milliseconds: 160),
+                curve: Curves.easeOut,
+                scale: isSelected ? 1.04 : 1.0,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      dayLetter,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w600,
+                        color: isSelected || isToday
+                            ? accent
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      curve: Curves.easeOut,
+                      width: isSelected ? 36 : 32,
+                      height: isSelected ? 42 : 40,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? accent
+                            : isPlayed
+                                ? accent.withValues(alpha: 0.15)
+                                : Colors.transparent,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected
+                              ? accent
+                              : isPlayed
+                                  ? Colors.transparent
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .outlineVariant,
+                        ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: accent.withValues(alpha: 0.20),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Text(
+                        dateNum,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                          color: isSelected
+                              ? Colors.white
+                              : isPlayed
+                                  ? accent
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildStatMiniCard({
+    required IconData icon,
     required String label,
     required String value,
   }) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: theme.textTheme.labelLarge?.copyWith(
-            color: scheme.onSurfaceVariant,
-            fontWeight: FontWeight.w500,
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: AppTheme.statisticsAccent),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: scheme.onSurface,
-            height: 1.15,
-            fontFeatures: const [FontFeature.tabularFigures()],
+          const SizedBox(height: 4),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 180),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            child: Text(
+              value,
+              key: ValueKey('$label-$value'),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.onSurface,
+                height: 1.2,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
+  }
+
+  Map<String, dynamic>? _selectedTrendDay(List<Map<String, dynamic>> trend) {
+    if (trend.isEmpty) return null;
+    if (_selectedTrendDate != null) {
+      for (final day in trend) {
+        if (day['date'] == _selectedTrendDate) {
+          return day;
+        }
+      }
+    }
+    for (final day in trend) {
+      if (day['is_today'] == true) {
+        return day;
+      }
+    }
+    return trend.last;
+  }
+
+  String _selectedTrendLabel(
+    AppLocalizations l10n,
+    Map<String, dynamic>? day,
+  ) {
+    if (day == null) return l10n.recordsTrendTitle;
+    if (day['is_today'] == true) return l10n.recordsTrendTodayLabel;
+    final parsed = DateTime.parse(day['date'] as String);
+    return DateFormat.MMMd(Localizations.localeOf(context).toString())
+        .format(parsed);
+  }
+
+  String _trendDayShortLabel(DateTime date) {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    if (languageCode == 'ko') {
+      const labels = ['월', '화', '수', '목', '금', '토', '일'];
+      return labels[date.weekday - 1];
+    }
+    const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    return labels[date.weekday - 1];
   }
 
   @override
@@ -386,7 +535,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     final dailyTrend = _statisticsService.buildDailyTrend(
       recent: _recent,
       selectedLevel: _selectedLevel,
-      thisWeek: true,
     );
     final trendSummaryUi = _statisticsService.buildTrendSummary(
       recent: _recent,
@@ -421,29 +569,15 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                     _buildLoadErrorBanner(l10n, _loadErrorMessage!),
                     const SizedBox(height: 12),
                   ],
-                  _buildSummarySection(l10n, trendSummaryUi),
-                  const SizedBox(height: 20),
-                  _buildTrendSection(
+                  _buildOverallSummaryCard(l10n),
+                  const SizedBox(height: 14),
+                  _buildWeeklyActivityCard(
                     l10n,
                     trend: dailyTrend,
-                  ),
-                  const SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Text(
-                      l10n.recordsStatsBasisFootnote,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        height: 1.45,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
+                    trendSummaryUi: trendSummaryUi,
                   ),
                   const SizedBox(height: 22),
                   _buildLevelSection(l10n),
-                  const SizedBox(height: 130),
                 ],
               ),
             ),
@@ -475,6 +609,144 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     );
   }
 
+  Widget _buildOverallSummaryCard(AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    final totalCleared = (_overall['total_cleared'] as num?)?.toInt() ?? 0;
+    final totalGames = (_overall['total_games'] as num?)?.toInt() ?? 0;
+    final clearRate = (_overall['total_clear_rate'] as num?)?.toDouble() ?? 0.0;
+    final averageTime =
+        (_overall['total_average_time'] as num?)?.toDouble() ?? 0.0;
+    final averageWrong =
+        (_overall['total_average_wrong_count'] as num?)?.toDouble() ?? 0.0;
+    final avgTimeLabel = totalCleared > 0
+        ? _formatDurationNatural(averageTime)
+        : l10n.recordsNoAverageTime;
+    final avgWrongLabel = l10n.recordsStatAverageWrongFormatted(
+      averageWrong.toStringAsFixed(
+        averageWrong == averageWrong.roundToDouble() ? 0 : 1,
+      ),
+    );
+
+    return Card(
+      color: theme.colorScheme.surface,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  '$totalCleared/$totalGames',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: theme.colorScheme.onSurface,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.statisticsAccent.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    _formatRate(clearRate),
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.statisticsAccent,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              l10n.recordsMetricClearRate,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _adaptiveMetricRow([
+              _summaryMetricTile(
+                icon: Icons.timer_outlined,
+                label: l10n.recordsMetricAvgTime,
+                value: avgTimeLabel,
+              ),
+              _summaryMetricTile(
+                icon: Icons.close_rounded,
+                label: l10n.recordsMetricAvgWrong,
+                value: avgWrongLabel,
+              ),
+            ]),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _summaryMetricTile({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color:
+            theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.38),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: AppTheme.statisticsAccent),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onSurface,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLevelSection(AppLocalizations l10n) {
     final stats = _displayLevelStats;
     final theme = Theme.of(context);
@@ -500,16 +772,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 color: theme.colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              l10n.recordsByLevelSectionSubtitle,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                height: 1.4,
-              ),
-            ),
             const SizedBox(height: 16),
             if (stats.isEmpty)
               Padding(
@@ -525,185 +787,12 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                   ),
                 ),
               ),
-            ...stats.map(
-              (stat) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _buildLevelStatCard(l10n, stat),
-              ),
-            ),
+            for (int i = 0; i < stats.length; i++)
+              _buildLevelStatCard(l10n, stats[i],
+                  isLast: i == stats.length - 1),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildTrendSection(
-    AppLocalizations l10n, {
-    required List<Map<String, dynamic>> trend,
-  }) {
-    final theme = Theme.of(context);
-    return Card(
-      color: theme.colorScheme.surface,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.recordsPlayInsightsTitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 14),
-            _buildPlayCalendar(l10n, trend),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPlayCalendar(
-    AppLocalizations l10n,
-    List<Map<String, dynamic>> trend,
-  ) {
-    final maxClears = trend.isEmpty
-        ? 1
-        : trend
-            .map((day) => day['clears'] as int)
-            .reduce((a, b) => a > b ? a : b)
-            .clamp(1, 99);
-    return Semantics(
-      container: true,
-      label: _trendA11ySummary(l10n, trend),
-      child: Column(
-        children: [
-          Row(
-            children: trend.map((day) {
-              final clears = day['clears'] as int;
-              final ratio = clears == 0 ? 0.0 : clears / maxClears;
-              final isPlayed = clears > 0;
-              final fillColor = AppTheme.statisticsAccent.withValues(
-                alpha: 0.20 + ratio * 0.50,
-              );
-              return Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Column(
-                    children: [
-                      Text(
-                        _trendDayCalendarLabel(day),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      Container(
-                        width: 40,
-                        height: 40,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: isPlayed ? fillColor : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: isPlayed
-                                ? fillColor
-                                : Theme.of(context).colorScheme.outlineVariant,
-                          ),
-                        ),
-                        child: Text(
-                          isPlayed ? '' : '-',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              _calendarLegendSwatch(
-                fillColor: AppTheme.statisticsAccent.withValues(alpha: 0.28),
-                borderColor: AppTheme.statisticsAccent.withValues(alpha: 0.28),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  l10n.recordsCalendarPlayedLabel,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 28),
-              _calendarLegendSwatch(
-                fillColor: Colors.transparent,
-                borderColor: AppTheme.statisticsAccent.withValues(alpha: 0.64),
-                child: Text(
-                  '-',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: AppTheme.statisticsAccent.withValues(alpha: 0.84),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  l10n.recordsCalendarEmptyLabel,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _calendarLegendSwatch({
-    required Color fillColor,
-    required Color borderColor,
-    Widget? child,
-  }) {
-    return Container(
-      width: 14,
-      height: 14,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: fillColor,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: borderColor),
-      ),
-      child: child,
     );
   }
 
@@ -768,18 +857,41 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     );
   }
 
+  String _formatRate(double rate) {
+    final rounded = rate.round();
+    if ((rate - rounded).abs() < 0.05) return '$rounded%';
+    return '${rate.toStringAsFixed(1)}%';
+  }
+
+  IconData _levelIcon(String levelNameKey) {
+    switch (levelNameKey) {
+      case '초급':
+        return Icons.eco_rounded;
+      case '중급':
+        return Icons.local_fire_department_rounded;
+      case '고급':
+        return Icons.star_rounded;
+      case '전문가':
+        return Icons.diamond_rounded;
+      case '마스터':
+        return Icons.emoji_events_rounded;
+      default:
+        return Icons.eco_rounded;
+    }
+  }
+
   Color _levelAccent(String levelNameKey) {
     switch (levelNameKey) {
       case '초급':
-        return AppTheme.mintColor;
+        return const Color(0xFF4EAD7C);
       case '중급':
-        return AppTheme.statisticsAccent;
+        return const Color(0xFF4FA89F);
       case '고급':
-        return const Color(0xFFBFB39B);
+        return const Color(0xFFC4A05A);
       case '전문가':
-        return const Color(0xFFAEA0B5);
+        return const Color(0xFFC07898);
       case '마스터':
-        return const Color(0xFF96A08E);
+        return const Color(0xFFC9A227);
       default:
         return AppTheme.statisticsAccent;
     }
@@ -787,8 +899,9 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
 
   Widget _buildLevelStatCard(
     AppLocalizations l10n,
-    Map<String, dynamic> stat,
-  ) {
+    Map<String, dynamic> stat, {
+    bool isLast = false,
+  }) {
     final levelNameKey = stat['level_name'] as String;
     final levelName = levelNameKey.localizedSudokuLevelName(l10n);
     final levelAccent = _levelAccent(levelNameKey);
@@ -801,24 +914,27 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         : l10n.recordsNoAverageTime;
 
     return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-      ),
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      padding: const EdgeInsets.fromLTRB(0, 14, 0, 14),
+      decoration: isLast
+          ? null
+          : BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                  width: 0.8,
+                ),
+              ),
+            ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                margin: const EdgeInsets.only(top: 2),
-                child: SudokuGridBadge(
-                  size: 18,
-                  color: levelAccent,
-                ),
+              Icon(
+                _levelIcon(levelNameKey),
+                size: 20,
+                color: levelAccent,
               ),
               const SizedBox(width: 9),
               Expanded(
@@ -848,52 +964,35 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                   color: levelAccent.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '$cleared/$total',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      l10n.recordsLevelDoneShort,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 9.5,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  '$cleared/$total',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(
-                child: Text(
-                  l10n.recordsLevelInfographicClearRate,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+              Text(
+                l10n.recordsLevelInfographicClearRate,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
-              const Spacer(),
               Text(
-                '${clearRate.toStringAsFixed(1)}%',
+                _formatRate(clearRate),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
@@ -910,7 +1009,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
             child: LinearProgressIndicator(
               minHeight: 7,
               value: (clearRate / 100).clamp(0.0, 1.0),
-              backgroundColor: AppTheme.hintYellowColor,
+              backgroundColor: levelAccent.withValues(alpha: 0.15),
               valueColor: AlwaysStoppedAnimation<Color>(levelAccent),
             ),
           ),
@@ -923,7 +1022,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               ),
               _levelMetricTile(
                 label: l10n.recordsMetricPerfectRate,
-                value: '${perfectRate.toStringAsFixed(1)}%',
+                value: _formatRate(perfectRate),
+                alignment: CrossAxisAlignment.end,
               ),
             ],
           ),
@@ -935,39 +1035,32 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   Widget _levelMetricTile({
     required String label,
     required String value,
+    CrossAxisAlignment alignment = CrossAxisAlignment.start,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 10.5,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+    return Column(
+      crossAxisAlignment: alignment,
+      children: [
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
-          const SizedBox(height: 5),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 13.5,
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

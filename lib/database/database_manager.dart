@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:sudoku159/utils/app_logger.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -15,31 +17,41 @@ class PuzzleCatalogStatus {
   const PuzzleCatalogStatus({
     required this.isRunning,
     required this.generatedCounts,
-    required this.targetPerLevel,
+    required this.targetCounts,
   });
 
   final bool isRunning;
   final Map<String, int> generatedCounts;
-  final int targetPerLevel;
+  final Map<String, int> targetCounts;
 
   int get totalGenerated =>
       generatedCounts.values.fold(0, (sum, count) => sum + count);
 
-  int get totalTarget => SudokuLevel.levels.length * targetPerLevel;
+  int get totalTarget =>
+      targetCounts.values.fold(0, (sum, count) => sum + count);
 
   int get remaining => totalTarget - totalGenerated;
 
   bool get isComplete => remaining <= 0;
 
+  /// 각 레벨에 최소 1개 이상 퍼즐이 있으면 플레이 가능 (로딩 화면 탈출 기준)
+  bool get isReadyToPlay => SudokuLevel.levels.every(
+        (level) => (generatedCounts[level.name] ?? 0) >= 1,
+      );
+
+  // UI 호환용: 레벨 중 가장 큰 target (표시용)
+  int get targetPerLevel =>
+      targetCounts.values.fold(0, (max, t) => t > max ? t : max);
+
   PuzzleCatalogStatus copyWith({
     bool? isRunning,
     Map<String, int>? generatedCounts,
-    int? targetPerLevel,
+    Map<String, int>? targetCounts,
   }) {
     return PuzzleCatalogStatus(
       isRunning: isRunning ?? this.isRunning,
       generatedCounts: generatedCounts ?? this.generatedCounts,
-      targetPerLevel: targetPerLevel ?? this.targetPerLevel,
+      targetCounts: targetCounts ?? this.targetCounts,
     );
   }
 }
@@ -51,13 +63,17 @@ class DatabaseManager {
   static const String _catalogSourceMetadataKey = 'catalog_source';
   static const String _catalogSourceLocal = 'local';
   static const String _catalogSourceRemote = 'remote';
-  static const int _targetGamesPerLevel = 100;
+  static const int _targetGamesPerLevel = 159;
+  static const int _targetMasterGames = 20;
   static const int _initialSeedGamesPerLevel = 12;
   static const int _generationChunkSize = 4;
   static const int _progressUpdateStride = 4;
   bool _isTopUpRunning = false;
   bool _shouldShowInitialCatalogIntro = false;
   final RemotePuzzleService _remotePuzzleService = RemotePuzzleService();
+  static int _levelTarget(SudokuLevel level) =>
+      level.isMasterLevel ? _targetMasterGames : _targetGamesPerLevel;
+
   final ValueNotifier<PuzzleCatalogStatus> catalogStatus =
       ValueNotifier<PuzzleCatalogStatus>(
     PuzzleCatalogStatus(
@@ -65,7 +81,10 @@ class DatabaseManager {
       generatedCounts: {
         for (final level in SudokuLevel.levels) level.name: 0,
       },
-      targetPerLevel: _targetGamesPerLevel,
+      targetCounts: {
+        for (final level in SudokuLevel.levels)
+          level.name: _levelTarget(level),
+      },
     ),
   );
 
@@ -86,14 +105,37 @@ class DatabaseManager {
     return _database!;
   }
 
+  /// 앱 번들의 초기 DB를 앱 문서 폴더로 복사합니다 (최초 설치 시에만).
+  Future<void> _copyAssetDatabaseIfNeeded(String dbPath) async {
+    if (File(dbPath).existsSync()) return;
+    try {
+      final data = await rootBundle.load('assets/initial_puzzles.db');
+      final bytes = data.buffer.asUint8List(
+        data.offsetInBytes,
+        data.lengthInBytes,
+      );
+      await File(dbPath).writeAsBytes(bytes, flush: true);
+      if (kDebugMode) {
+        AppLogger.debug('번들 DB 복사 완료: $dbPath');
+      }
+    } catch (e) {
+      // asset이 없거나 실패하면 기존 onCreate 로직으로 진행
+      if (kDebugMode) {
+        AppLogger.debug('번들 DB 복사 실패 (fallback): $e');
+      }
+    }
+  }
+
   /// 데이터베이스를 초기화합니다.
   Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), 'sudoku_games.db');
     _shouldShowInitialCatalogIntro = false;
 
+    await _copyAssetDatabaseIfNeeded(path);
+
     return await openDatabase(
       path,
-      version: 5,
+      version: 6,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onOpen: (db) async {
@@ -210,6 +252,11 @@ class DatabaseManager {
         )
       ''');
     }
+    if (oldVersion < 6) {
+      // 잘못 생성된 마스터 레벨 퍼즐 삭제 (빈 칸 없는 완성 보드로 저장된 데이터)
+      // 삭제 후 백그라운드 보충 로직(_missingGameNumbers)이 자동으로 재생성함
+      await db.delete('games', where: 'level_name = ?', whereArgs: ['마스터']);
+    }
   }
 
   /// 초기 게임 데이터를 생성하여 데이터베이스에 삽입합니다.
@@ -264,8 +311,10 @@ class DatabaseManager {
           level.name,
         );
         final currentCount = existingGameNumbers.length;
+        final target = _levelTarget(level);
         final missingGameNumbers = _missingGameNumbersForTarget(
           existingGameNumbers,
+          target: target,
         );
 
         if (missingGameNumbers.isEmpty) {
@@ -467,10 +516,13 @@ class DatabaseManager {
         .toList();
   }
 
-  List<int> _missingGameNumbersForTarget(List<int> existingGameNumbers) {
+  List<int> _missingGameNumbersForTarget(
+    List<int> existingGameNumbers, {
+    required int target,
+  }) {
     final existingSet = existingGameNumbers.toSet();
     final missing = <int>[];
-    for (var gameNumber = 1; gameNumber <= _targetGamesPerLevel; gameNumber++) {
+    for (var gameNumber = 1; gameNumber <= target; gameNumber++) {
       if (!existingSet.contains(gameNumber)) {
         missing.add(gameNumber);
       }
@@ -644,7 +696,10 @@ class DatabaseManager {
     catalogStatus.value = PuzzleCatalogStatus(
       isRunning: isRunning,
       generatedCounts: counts,
-      targetPerLevel: _targetGamesPerLevel,
+      targetCounts: {
+        for (final level in SudokuLevel.levels)
+          level.name: _levelTarget(level),
+      },
     );
   }
 
@@ -677,7 +732,10 @@ List<Map<String, dynamic>> _generateEncodedPuzzleChunk({
 }) {
   final generated = <Map<String, dynamic>>[];
   for (final gameNumber in gameNumbers) {
-    final board = SudokuGenerator.generateSudoku(emptyCells);
+    List<List<int>>? board;
+    while (board == null) {
+      board = SudokuGenerator.tryGenerateSudoku(emptyCells);
+    }
     final solution = SudokuGenerator.getSolution(board);
     generated.add({
       'game_number': gameNumber,

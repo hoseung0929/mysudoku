@@ -21,6 +21,7 @@ class SudokuGamePresenter {
   final Function(int, int)? onIncorrectAnswer;
 
   static const int maxHints = 3;
+  static const int maxWrongCount = 3;
 
   bool _isPaused = false;
   bool _isGameComplete = false;
@@ -102,7 +103,10 @@ class SudokuGamePresenter {
   void _initializeBoard(
       [List<List<int>>? initialBoard, List<List<int>>? puzzleBoard]) {
     if (initialBoard == null) {
-      final board = SudokuGenerator.generateSudoku(level.emptyCells);
+      List<List<int>>? board;
+      while (board == null) {
+        board = SudokuGenerator.tryGenerateSudoku(level.emptyCells);
+      }
       final solution = SudokuGenerator.getSolution(board);
       _boardController.initializeGeneratedBoard(board, solution);
     } else {
@@ -141,12 +145,6 @@ class SudokuGamePresenter {
   void _checkCellStatus(int row, int col) {
     _boardController.updateWrongStatus(row, col);
     onWrongNumbersChanged(_boardController.wrongNumbers);
-  }
-
-  /// 숫자 입력 처리
-  /// [number] 입력된 숫자 (1-9)
-  void onNumberSelected(int number) {
-    _applySelectedCellValue(number);
   }
 
   /// 실제 해답과 비교하여 오답을 체크하고, 스도쿠 규칙 위반도 시각적으로 표시
@@ -242,15 +240,6 @@ class SudokuGamePresenter {
     _startTimer();
   }
 
-  /// 같은 레벨의 새로운 게임으로 재시작
-  /// 모든 게임 상태를 초기화하고 새로운 보드 생성
-  void restartWithNewGame() {
-    _resetSessionState();
-
-    _initializeBoard();
-    _startTimer();
-  }
-
   void _resetSessionState() {
     _stopTimer();
     _isPaused = false;
@@ -281,7 +270,7 @@ class SudokuGamePresenter {
     int hintsRemaining = maxHints,
     Set<String> hintCells = const {},
   }) {
-    _wrongCount = wrongCount.clamp(0, 3);
+    _wrongCount = wrongCount.clamp(0, maxWrongCount);
     _isMemoMode = isMemoMode;
     _hintsRemaining = hintsRemaining.clamp(0, maxHints);
     _hintCells
@@ -337,7 +326,6 @@ class SudokuGamePresenter {
   int get hintsRemaining => _hintsRemaining;
   Set<String> get hintCells => Set<String>.unmodifiable(_hintCells);
   bool get canUndo => _boardController.canUndo;
-  bool get canRedo => _boardController.canRedo;
   int? get selectedRow => _boardController.selectedRow;
   int? get selectedCol => _boardController.selectedCol;
 
@@ -368,25 +356,6 @@ class SudokuGamePresenter {
     _applySelectedCellValue(value);
   }
 
-  void clearSelectedCell() {
-    if (_boardController.selectedRow == null ||
-        _boardController.selectedCol == null ||
-        _isGameComplete ||
-        _isPaused ||
-        _isGameOver) {
-      return;
-    }
-
-    final row = _boardController.selectedRow!;
-    final col = _boardController.selectedCol!;
-    if (_boardController.isCellFixed(row, col)) return;
-    if (_hintCells.contains('$row,$col')) return;
-
-    _boardController.setCellValue(row, col, 0);
-    onBoardChanged(_boardController.board);
-    _checkWrongNumbers();
-  }
-
   void undo() {
     if (_isGameComplete || _isGameOver || _isPaused) return;
     final action = _boardController.undoAction();
@@ -406,32 +375,6 @@ class SudokuGamePresenter {
     _boardController.recomputeWrongStatus();
     onBoardChanged(_boardController.board);
     onWrongNumbersChanged(_boardController.wrongNumbers);
-  }
-
-  void redo() {
-    if (_isGameComplete || _isGameOver || _isPaused) return;
-    final action = _boardController.redoAction();
-    if (action == null) return;
-
-    if (action is CellValueAction) {
-      if (action.didIncreaseWrongCount) {
-        _wrongCount++;
-        onWrongCountChanged(_wrongCount);
-        if (_wrongCount >= 3) {
-          _handleGameOver();
-          return;
-        }
-      }
-      if (action.isHint) {
-        _hintsRemaining = (_hintsRemaining - 1).clamp(0, maxHints);
-        _hintCells.add('${action.row},${action.col}');
-      }
-    }
-
-    _boardController.recomputeWrongStatus();
-    onBoardChanged(_boardController.board);
-    onWrongNumbersChanged(_boardController.wrongNumbers);
-    _checkGameComplete();
   }
 
   void useHint() {
@@ -608,7 +551,7 @@ class SudokuGamePresenter {
       _wrongCount++;
       onWrongCountChanged(_wrongCount);
 
-      if (_wrongCount >= 3) {
+      if (_wrongCount >= maxWrongCount) {
         _handleGameOver();
         return;
       }

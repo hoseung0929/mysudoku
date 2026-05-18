@@ -5,6 +5,7 @@ class SudokuLevel {
   final int emptyCells; // 비워둘 셀의 개수
   final int gameCount; // 해당 레벨의 게임 수
   final int clearedGames; // 클리어한 게임 수
+  final bool isMasterLevel; // 생성 난이도가 높은 특수 레벨 여부
 
   const SudokuLevel({
     required this.name,
@@ -13,6 +14,7 @@ class SudokuLevel {
     required this.emptyCells,
     required this.gameCount,
     this.clearedGames = 0,
+    this.isMasterLevel = false,
   });
 
   SudokuLevel copyWith({
@@ -68,6 +70,7 @@ class SudokuLevel {
       difficulty: 5,
       emptyCells: 60,
       gameCount: 100,
+      isMasterLevel: true,
     ),
   ];
 }

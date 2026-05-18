@@ -223,7 +223,10 @@ class HomeDashboardService {
       );
     }
 
-    final emergencyBoard = SudokuGenerator.generateSudoku(level.emptyCells);
+    List<List<int>>? emergencyBoard;
+    while (emergencyBoard == null) {
+      emergencyBoard = SudokuGenerator.tryGenerateSudoku(level.emptyCells);
+    }
     final emergencySolution = SudokuGenerator.getSolution(emergencyBoard);
     return SudokuGame(
       board: emergencyBoard,

@@ -51,69 +51,17 @@ Future<void> showProfileEditorSheet({
                     Localizations.localeOf(context).languageCode == 'ko'
                         ? '프로필 편집'
                         : 'Edit profile',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
                           color: colorScheme.onSurface,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    Localizations.localeOf(context).languageCode == 'ko'
-                        ? '사진과 이름을 한 번에 바꿀 수 있어요.'
-                        : 'Update your photo and name together.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
                         ),
                   ),
                   const SizedBox(height: 20),
                   Center(
-                    child: Stack(
-                      clipBehavior: Clip.none,
+                    child: Column(
                       children: [
-                        CircleAvatar(
-                          radius: 42,
-                          backgroundColor: colorScheme.primaryContainer,
-                          backgroundImage: hasImage
-                              ? FileImage(File(effectiveImagePath))
-                              : null,
-                          child: hasImage
-                              ? null
-                              : Icon(
-                                  Icons.person,
-                                  size: 46,
-                                  color: colorScheme.onPrimaryContainer,
-                                ),
-                        ),
-                        Positioned(
-                          right: -2,
-                          bottom: -2,
-                          child: Container(
-                            width: 28,
-                            height: 28,
-                            decoration: BoxDecoration(
-                              color: colorScheme.primary,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: colorScheme.surface,
-                                width: 2,
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.photo_camera,
-                              size: 14,
-                              color: colorScheme.onPrimary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () async {
+                        GestureDetector(
+                          onTap: () async {
                             final pickedPath = await profileImageService
                                 .pickAndSaveProfileImage();
                             if (pickedPath == null) return;
@@ -122,33 +70,73 @@ Future<void> showProfileEditorSheet({
                               removeImage = false;
                             });
                           },
-                          icon: const Icon(Icons.photo_library_outlined),
-                          label: Text(
-                            Localizations.localeOf(context).languageCode == 'ko'
-                                ? '사진 변경'
-                                : 'Change photo',
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              CircleAvatar(
+                                radius: 40,
+                                backgroundColor:
+                                    colorScheme.surfaceContainerHighest,
+                                backgroundImage: hasImage
+                                    ? FileImage(File(effectiveImagePath))
+                                    : null,
+                                child: hasImage
+                                    ? null
+                                    : Icon(
+                                        Icons.person,
+                                        size: 44,
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                              ),
+                              Positioned(
+                                right: -2,
+                                bottom: -2,
+                                child: Container(
+                                  width: 26,
+                                  height: 26,
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.onSurface,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: colorScheme.surface,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.photo_camera,
+                                    size: 13,
+                                    color: colorScheme.surface,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                      if (hasSavedImage || hasImage) ...[
-                        const SizedBox(width: 12),
-                        TextButton(
-                          onPressed: () {
-                            setSheetState(() {
-                              removeImage = true;
-                              draftImagePath = null;
-                            });
-                          },
-                          child: Text(
-                            Localizations.localeOf(context).languageCode == 'ko'
-                                ? '사진 제거'
-                                : 'Remove',
+                        if (hasSavedImage || hasImage) ...[
+                          const SizedBox(height: 8),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              foregroundColor: colorScheme.onSurfaceVariant,
+                              textStyle: const TextStyle(fontSize: 12.5),
+                            ),
+                            onPressed: () {
+                              setSheetState(() {
+                                removeImage = true;
+                                draftImagePath = null;
+                              });
+                            },
+                            child: Text(
+                              Localizations.localeOf(context).languageCode ==
+                                      'ko'
+                                  ? '사진 제거'
+                                  : 'Remove photo',
+                            ),
                           ),
-                        ),
+                        ] else
+                          const SizedBox(height: 16),
                       ],
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 12),
                   TextField(
                     controller: controller,
                     autofocus: true,
@@ -160,6 +148,7 @@ Future<void> showProfileEditorSheet({
                               ? '이름'
                               : 'Name',
                       hintText: l10n.homeGuestTitle,
+                      counterText: '',
                     ),
                   ),
                   const SizedBox(height: 8),

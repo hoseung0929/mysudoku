@@ -63,6 +63,10 @@ class _StartupCatalogPreparingGateState
 
     try {
       if (_catalogGatePreview) {
+        if (!mounted) return;
+        setState(() {
+          _isReady = true;
+        });
         return;
       }
       await _databaseManager.ensureCatalogFullyPrepared();

@@ -46,7 +46,8 @@ class GameCompleteDialog extends StatelessWidget {
     final secondaryActionStyle = OutlinedButton.styleFrom(
       minimumSize: const Size.fromHeight(46),
       foregroundColor: onVar,
-      side: BorderSide(color: cs.outlineVariant),
+      backgroundColor: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+      side: BorderSide(color: cs.outline.withValues(alpha: 0.4)),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
       ),
@@ -71,14 +72,14 @@ class GameCompleteDialog extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         side: const BorderSide(color: AppColors.border),
       ),
-      title: Row(
+      title: Column(
         children: [
           const Icon(
             Icons.celebration,
             color: AppColors.boardAccent2,
-            size: 32,
+            size: 44,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(height: 8),
           Text(
             l10n.dialogCongratulations,
             style: GoogleFonts.notoSans(
@@ -99,17 +100,18 @@ class GameCompleteDialog extends StatelessWidget {
                 Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                   decoration: BoxDecoration(
-                    color: AppColors.attention.withValues(alpha: 0.14),
+                    color: AppColors.attention.withValues(alpha: 0.22),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     l10n.dialogNewBest,
                     style: GoogleFonts.notoSans(
-                      fontSize: 12,
+                      fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      color: onSurface,
+                      color: AppColors.attention,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),

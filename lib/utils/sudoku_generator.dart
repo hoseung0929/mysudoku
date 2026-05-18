@@ -4,52 +4,34 @@ import 'dart:math';
 class SudokuGenerator {
   /// 주어진 빈 칸의 개수에 맞는 스도쿠 보드를 생성합니다.
   /// [emptyCells] 비워둘 셀의 개수
-  static List<List<int>> generateSudoku(int emptyCells) {
+  /// [emptyCells]개 빈 칸을 가지는 유일해 퍼즐 생성을 시도합니다.
+  /// 목표치 달성 시 해당 퍼즐을 반환하고, 실패 시 null을 반환합니다.
+  static List<List<int>>? tryGenerateSudoku(int emptyCells) {
     final random = Random();
-    const maxAttempts = 8;
+    final solutionBoard = List.generate(9, (_) => List.filled(9, 0));
+    _fillDiagonal(solutionBoard, random);
+    _solveSudoku(solutionBoard, random: random);
 
-    for (int attempt = 0; attempt < maxAttempts; attempt++) {
-      // 완성된 스도쿠 보드 생성
-      final solutionBoard = List.generate(9, (_) => List.filled(9, 0));
-      _fillDiagonal(solutionBoard, random);
-      _solveSudoku(solutionBoard, random: random);
+    final puzzle = List.generate(9, (row) => List<int>.from(solutionBoard[row]));
+    final positions = List.generate(81, (index) => index)..shuffle(random);
 
-      final puzzle = List.generate(
-        9,
-        (row) => List<int>.from(solutionBoard[row]),
-      );
+    int removed = 0;
+    for (final pos in positions) {
+      if (removed >= emptyCells) break;
 
-      final positions = List.generate(81, (index) => index);
-      positions.shuffle(random);
+      final row = pos ~/ 9;
+      final col = pos % 9;
+      final backup = puzzle[row][col];
+      puzzle[row][col] = 0;
 
-      int removed = 0;
-      for (final pos in positions) {
-        if (removed >= emptyCells) {
-          break;
-        }
-
-        final row = pos ~/ 9;
-        final col = pos % 9;
-        final backup = puzzle[row][col];
-        puzzle[row][col] = 0;
-
-        if (hasUniqueSolution(puzzle)) {
-          removed++;
-        } else {
-          puzzle[row][col] = backup;
-        }
-      }
-
-      if (removed == emptyCells) {
-        return puzzle;
+      if (hasUniqueSolution(puzzle)) {
+        removed++;
+      } else {
+        puzzle[row][col] = backup;
       }
     }
 
-    // 유일해 조건을 맞추지 못한 드문 경우 마지막 시도의 결과를 반환합니다.
-    final fallback = List.generate(9, (_) => List.filled(9, 0));
-    _fillDiagonal(fallback, random);
-    _solveSudoku(fallback, random: random);
-    return fallback;
+    return removed == emptyCells ? puzzle : null;
   }
 
   /// 대각선 3x3 박스를 채웁니다.

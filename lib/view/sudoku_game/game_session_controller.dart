@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:sudoku159/model/sudoku_game.dart';
 import 'package:sudoku159/model/sudoku_level.dart';
 import 'package:sudoku159/services/game/game_state_service.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 
 class GameSessionSnapshot {
   const GameSessionSnapshot({
@@ -69,7 +71,6 @@ class GameSessionController {
             )
         ? null
         : restoredSession;
-
     if (restoredSession != null && activeSession == null) {
       await clear(level: level, gameNumber: game.gameNumber);
     }
@@ -86,7 +87,6 @@ class GameSessionController {
       await clear(level: level, gameNumber: game.gameNumber);
       restoredBoard = null;
     }
-
     return GameSessionBootstrap(
       initialBoard: restoredBoard ?? game.board,
       activeSession: restoredBoard == null ? null : activeSession,
@@ -118,7 +118,11 @@ class GameSessionController {
           level: level,
           gameNumber: gameNumber,
           snapshot: snapshot,
-        ),
+        ).catchError((Object error, StackTrace st) {
+          if (kDebugMode) {
+            AppLogger.debug('게임 세션 저장 실패: $error\n$st');
+          }
+        }),
       );
     });
   }
@@ -237,8 +241,8 @@ class GameSessionController {
       return true;
     }
 
-    return _gameStateService.isBoardCompatible(
-      originalBoard: game.solution,
+    return !_gameStateService.isBoardCompatible(
+      originalBoard: game.board,
       restoredBoard: session.board,
     );
   }

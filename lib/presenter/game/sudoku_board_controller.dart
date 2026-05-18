@@ -72,18 +72,15 @@ class SudokuBoardController {
   int? _selectedRow;
   int? _selectedCol;
   final List<BoardAction> _undoStack = [];
-  final List<BoardAction> _redoStack = [];
 
   List<List<int>> get board => _board;
   List<List<int>> get solution => _solution;
   List<List<bool>> get fixedNumbers => _fixedNumbers;
   List<List<bool>> get wrongNumbers => _wrongNumbers;
   List<List<int>> get initialBoard => _initialBoard;
-  List<List<Set<int>>> get noteNumbers => _noteNumbers;
   int? get selectedRow => _selectedRow;
   int? get selectedCol => _selectedCol;
   bool get canUndo => _undoStack.isNotEmpty;
-  bool get canRedo => _redoStack.isNotEmpty;
   BoardAction? get lastAction => _undoStack.isNotEmpty ? _undoStack.last : null;
 
   void initializeBoard(
@@ -108,7 +105,6 @@ class SudokuBoardController {
 
   void clearHistory() {
     _undoStack.clear();
-    _redoStack.clear();
   }
 
   void initializeGeneratedBoard(
@@ -168,7 +164,6 @@ class SudokuBoardController {
       clearedRelatedNoteKeys: clearedKeys,
       isHint: isHint,
     ));
-    _redoStack.clear();
 
     _board[row][col] = value;
     _noteNumbers[row][col].clear();
@@ -191,7 +186,6 @@ class SudokuBoardController {
       noteValue: value,
       wasAdded: !wasPresent,
     ));
-    _redoStack.clear();
 
     if (wasPresent) {
       notes.remove(value);
@@ -203,16 +197,7 @@ class SudokuBoardController {
   BoardAction? undoAction() {
     if (_undoStack.isEmpty) return null;
     final action = _undoStack.removeLast();
-    _redoStack.add(action);
     _applyReverse(action);
-    return action;
-  }
-
-  BoardAction? redoAction() {
-    if (_redoStack.isEmpty) return null;
-    final action = _redoStack.removeLast();
-    _undoStack.add(action);
-    _applyForward(action);
     return action;
   }
 
@@ -232,23 +217,6 @@ class SudokuBoardController {
           _noteNumbers[action.row][action.col].remove(action.noteValue);
         } else {
           _noteNumbers[action.row][action.col].add(action.noteValue);
-        }
-    }
-  }
-
-  void _applyForward(BoardAction action) {
-    switch (action) {
-      case CellValueAction():
-        _board[action.row][action.col] = action.newValue;
-        _noteNumbers[action.row][action.col].clear();
-        if (action.newValue != 0) {
-          _clearRelatedNotes(action.row, action.col, action.newValue);
-        }
-      case NoteToggleAction():
-        if (action.wasAdded) {
-          _noteNumbers[action.row][action.col].add(action.noteValue);
-        } else {
-          _noteNumbers[action.row][action.col].remove(action.noteValue);
         }
     }
   }
