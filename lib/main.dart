@@ -9,6 +9,7 @@ import 'package:path/path.dart';
 import 'package:sudoku159/l10n/app_locale_scope.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/services/firebase/firebase_bootstrap_service.dart';
+import 'package:sudoku159/services/firebase/firebase_identity_service.dart';
 import 'package:sudoku159/services/records/game_record_notifier.dart';
 import 'package:sudoku159/services/settings/notification_service.dart';
 import 'package:sudoku159/theme/app_theme.dart';
@@ -28,6 +29,7 @@ void main() async {
   ]);
 
   await FirebaseBootstrapService.instance.initialize();
+  unawaited(FirebaseIdentityService().ensureSignedIn());
 
   if (kDebugMode) {
     try {
