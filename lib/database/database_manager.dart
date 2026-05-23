@@ -644,7 +644,9 @@ class DatabaseManager {
     final db = await database;
     while (true) {
       await _refreshCatalogStatus(db, isRunning: _isTopUpRunning);
-      if (catalogStatus.value.isComplete) {
+      // 각 레벨에 퍼즐이 1개 이상 있으면 플레이 가능 → 즉시 반환.
+      // 나머지 퍼즐은 onOpen에서 시작된 백그라운드 보충 작업이 채운다.
+      if (catalogStatus.value.isReadyToPlay) {
         return;
       }
 
@@ -654,7 +656,7 @@ class DatabaseManager {
         await _syncRemoteCatalogInBackground(db);
         await _waitForCatalogWorkerToIdle();
         await _refreshCatalogStatus(db, isRunning: _isTopUpRunning);
-        if (catalogStatus.value.isComplete) {
+        if (catalogStatus.value.isReadyToPlay) {
           return;
         }
       }
@@ -663,7 +665,7 @@ class DatabaseManager {
       await _topUpGamesInBackground(db);
       await _waitForCatalogWorkerToIdle();
       await _refreshCatalogStatus(db, isRunning: _isTopUpRunning);
-      if (catalogStatus.value.isComplete) {
+      if (catalogStatus.value.isReadyToPlay) {
         return;
       }
 
