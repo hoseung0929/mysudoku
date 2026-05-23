@@ -1069,12 +1069,15 @@ class _LevelCardState extends State<_LevelCard> {
                   badgeSize: widget.badgeSize,
                 ),
                 const SizedBox(width: 24),
-                Text(
-                  widget.title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 17,
-                    color: colorScheme.onSurface,
+                Flexible(
+                  child: Text(
+                    widget.title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 17,
+                      color: colorScheme.onSurface,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const Spacer(),
