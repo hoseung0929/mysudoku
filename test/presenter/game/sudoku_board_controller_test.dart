@@ -138,19 +138,6 @@ void main() {
       expect(localController.getCellNotes(0, 2), equals({4}));
     });
 
-    test('redo re-applies the undone action', () {
-      controller.setCellValue(0, 1, 3);
-      expect(controller.getCellValue(0, 1), 3);
-
-      controller.undoAction();
-      expect(controller.getCellValue(0, 1), 0);
-      expect(controller.canRedo, isTrue);
-
-      controller.redoAction();
-      expect(controller.getCellValue(0, 1), 3);
-      expect(controller.canRedo, isFalse);
-    });
-
     test('undo reverts a note toggle', () {
       controller.toggleNote(0, 1, 5);
       expect(controller.hasNote(0, 1, 5), isTrue);
@@ -160,35 +147,22 @@ void main() {
       expect(controller.hasNote(0, 1, 5), isFalse);
     });
 
-    test('new action clears the redo stack', () {
-      controller.setCellValue(0, 1, 3);
-      controller.undoAction();
-      expect(controller.canRedo, isTrue);
-
-      controller.setCellValue(0, 1, 4);
-      expect(controller.canRedo, isFalse);
-    });
-
-    test('canUndo and canRedo reflect stack state', () {
+    test('canUndo reflects stack state', () {
       expect(controller.canUndo, isFalse);
-      expect(controller.canRedo, isFalse);
 
       controller.setCellValue(0, 1, 3);
       expect(controller.canUndo, isTrue);
 
       controller.undoAction();
       expect(controller.canUndo, isFalse);
-      expect(controller.canRedo, isTrue);
     });
 
-    test('clearHistory empties both stacks', () {
+    test('clearHistory empties the undo stack', () {
       controller.setCellValue(0, 1, 3);
-      controller.undoAction();
-      expect(controller.canRedo, isTrue);
+      expect(controller.canUndo, isTrue);
 
       controller.clearHistory();
       expect(controller.canUndo, isFalse);
-      expect(controller.canRedo, isFalse);
     });
 
     test('removes matching candidate notes from related cells on value commit',

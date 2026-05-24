@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sudoku159/presenter/game/sudoku_game_presenter.dart';
+import 'package:sudoku159/theme/app_colors.dart';
 import 'package:sudoku159/theme/app_theme.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_memo_notes_grid.dart';
 
@@ -30,8 +31,8 @@ class SudokuBoardGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    const borderColor = Color(0xFFE4DED3);
-    const relatedFill = Color(0xFFF7F3EB);
+    final borderColor = context.colors.border;
+    final relatedFill = context.colors.surfaceSubtle;
     final digitOnBoard = cs.onSurface;
     final selectedRow = presenter.selectedRow;
     final selectedCol = presenter.selectedCol;
@@ -50,8 +51,8 @@ class SudokuBoardGrid extends StatelessWidget {
 
         return Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFFFFDF9),
-            border: Border.all(color: const Color(0xFFE4DED3)),
+            color: context.colors.surface,
+            border: Border.all(color: context.colors.border),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF21382A).withValues(alpha: 0.06),

@@ -15,6 +15,7 @@ class ProfileGlassHeader extends StatelessWidget {
     this.titleOverride,
     this.subtitleOverride,
     this.onTapEditProfile,
+    this.compact = false,
   });
 
   final bool isTop;
@@ -26,6 +27,7 @@ class ProfileGlassHeader extends StatelessWidget {
   final String? titleOverride;
   final String? subtitleOverride;
   final VoidCallback? onTapEditProfile;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +39,18 @@ class ProfileGlassHeader extends StatelessWidget {
     final hasName = trimmedName.isNotEmpty;
     final displayName = titleOverride ?? (hasName ? trimmedName : guestTitle);
     final isKorean = Localizations.localeOf(context).languageCode == 'ko';
+    final avatarRadius = compact ? 22.0 : 25.0;
+    final avatarIconSize = compact ? 28.0 : 31.0;
+    final headerPadding = EdgeInsets.fromLTRB(
+      16,
+      (compact ? 18 : 22) + topInset,
+      16,
+      compact ? 14 : 18,
+    );
+    final profileGap = compact ? 14.0 : 18.0;
+    final titleFontSize = compact ? 18.0 : 20.0;
+    final subtitleFontSize = compact ? 11.0 : 11.5;
+    final settingButtonSize = compact ? 40.0 : 42.0;
     final subtitleText = subtitleOverride ??
         _buildGreetingMessage(
           isKorean: isKorean,
@@ -51,149 +65,149 @@ class ProfileGlassHeader extends StatelessWidget {
           curve: Curves.easeOut,
           decoration: BoxDecoration(
             color: isTop
-                ? Colors.white
-                : Colors.white.withValues(alpha: 0.52),
+                ? colorScheme.surface
+                : colorScheme.surface.withValues(alpha: 0.85),
             border: Border(
               bottom: BorderSide(
                 color: isTop
                     ? Colors.transparent
-                    : Colors.white.withValues(alpha: 0.35),
+                    : colorScheme.outlineVariant.withValues(alpha: 0.35),
                 width: 1.0,
               ),
             ),
           ),
           child: Padding(
-        padding: EdgeInsets.fromLTRB(16, 22 + topInset, 16, 18),
-        child: Row(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    Stack(
-                      clipBehavior: Clip.none,
+            padding: headerPadding,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: colorScheme.surface,
-                            border: Border.all(
-                              color: colorScheme.outlineVariant.withValues(
-                                alpha: 0.9,
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: colorScheme.surface,
+                                border: Border.all(
+                                  color: colorScheme.outlineVariant.withValues(
+                                    alpha: 0.9,
+                                  ),
+                                  width: 2.5,
+                                ),
                               ),
-                              width: 2.5,
+                              child: CircleAvatar(
+                                radius: avatarRadius,
+                                backgroundColor: colorScheme.primaryContainer,
+                                backgroundImage: hasProfileImage
+                                    ? FileImage(File(profileImagePath!))
+                                    : null,
+                                child: hasProfileImage
+                                    ? null
+                                    : Icon(
+                                        Icons.person,
+                                        size: avatarIconSize,
+                                        color: colorScheme.onPrimaryContainer,
+                                      ),
+                              ),
                             ),
-                          ),
-                          child: CircleAvatar(
-                            radius: 25,
-                            backgroundColor: colorScheme.primaryContainer,
-                            backgroundImage: hasProfileImage
-                                ? FileImage(File(profileImagePath!))
-                                : null,
-                            child: hasProfileImage
-                                ? null
-                                : Icon(
-                                    Icons.person,
-                                    size: 31,
-                                    color: colorScheme.onPrimaryContainer,
-                                  ),
-                          ),
-                        ),
-                        if (onTapEditProfile != null)
-                          Positioned(
-                            right: -2,
-                            bottom: -2,
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: onTapEditProfile,
-                                customBorder: const CircleBorder(),
-                                child: Container(
-                                  width: 20,
-                                  height: 20,
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.primary,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: colorScheme.surface,
-                                      width: 2,
+                            if (onTapEditProfile != null)
+                              Positioned(
+                                right: -2,
+                                bottom: -2,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: onTapEditProfile,
+                                    customBorder: const CircleBorder(),
+                                    child: Container(
+                                      width: 20,
+                                      height: 20,
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.primary,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: colorScheme.surface,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: Icon(
+                                        Icons.edit,
+                                        size: 10,
+                                        color: colorScheme.onPrimary,
+                                      ),
                                     ),
-                                  ),
-                                  child: Icon(
-                                    Icons.edit,
-                                    size: 10,
-                                    color: colorScheme.onPrimary,
                                   ),
                                 ),
                               ),
-                            ),
+                          ],
+                        ),
+                        SizedBox(width: profileGap),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                displayName,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: titleFontSize,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                subtitleText,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: colorScheme.onSurfaceVariant
+                                      .withValues(alpha: 0.9),
+                                  fontSize: subtitleFontSize,
+                                  height: 1.15,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
+                        ),
                       ],
                     ),
-                    const SizedBox(width: 18),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            displayName,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 20,
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            subtitleText,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: colorScheme.onSurfaceVariant.withValues(
-                                alpha: 0.9,
-                              ),
-                              fontSize: 11.5,
-                              height: 1.15,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: onTapSettings,
+                    borderRadius: BorderRadius.circular(18),
+                    child: Container(
+                      width: settingButtonSize,
+                      height: settingButtonSize,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: colorScheme.outlineVariant
+                              .withValues(alpha: 0.55),
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.tune_rounded,
+                        size: 20,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onTapSettings,
-                borderRadius: BorderRadius.circular(18),
-                child: Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.55),
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.tune_rounded,
-                    size: 20,
-                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
         ),
       ),
     );

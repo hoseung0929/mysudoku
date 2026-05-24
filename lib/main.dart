@@ -8,11 +8,12 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:sudoku159/l10n/app_locale_scope.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
-import 'package:sudoku159/services/firebase/firebase_bootstrap_service.dart';
-import 'package:sudoku159/services/firebase/firebase_identity_service.dart';
+import 'package:sudoku159/services/identity/install_id_service.dart';
 import 'package:sudoku159/services/records/game_record_notifier.dart';
+import 'package:sudoku159/services/settings/app_settings_service.dart';
 import 'package:sudoku159/services/settings/notification_service.dart';
 import 'package:sudoku159/theme/app_theme.dart';
+import 'package:sudoku159/theme/app_theme_scope.dart';
 import 'package:sudoku159/navigation/root_nav_scope.dart';
 import 'package:sudoku159/view/home/home_screen.dart';
 import 'package:sudoku159/view/home/startup_catalog_preparing_gate.dart';
@@ -28,8 +29,7 @@ void main() async {
     DeviceOrientation.portraitUp,
   ]);
 
-  await FirebaseBootstrapService.instance.initialize();
-  unawaited(FirebaseIdentityService().ensureSignedIn());
+  unawaited(InstallIdService().getOrCreate());
 
   if (kDebugMode) {
     try {
@@ -53,6 +53,7 @@ class Sudoku159App extends StatefulWidget {
 class _Sudoku159AppState extends State<Sudoku159App> {
   final NotificationService _notificationService = NotificationService();
   Locale? _localeOverride;
+  ThemeMode _themeMode = ThemeMode.system;
   bool _prefsLoaded = false;
 
   @override
@@ -64,6 +65,7 @@ class _Sudoku159AppState extends State<Sudoku159App> {
   Future<void> _loadSavedPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     final code = prefs.getString(_prefsLocaleKey);
+    final themeModeIndex = prefs.getInt(AppSettingsService.themeModeKey);
     if (!mounted) return;
     setState(() {
       if (code == null || code.isEmpty || code == 'system') {
@@ -71,10 +73,20 @@ class _Sudoku159AppState extends State<Sudoku159App> {
       } else {
         _localeOverride = Locale(code);
       }
+      if (themeModeIndex != null) {
+        _themeMode = ThemeMode.values[themeModeIndex.clamp(0, ThemeMode.values.length - 1)];
+      }
       _prefsLoaded = true;
     });
 
     unawaited(_bootstrapNotificationState());
+  }
+
+  Future<void> _setThemeMode(ThemeMode mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(AppSettingsService.themeModeKey, mode.index);
+    if (!mounted) return;
+    setState(() => _themeMode = mode);
   }
 
   Future<void> _bootstrapNotificationState() async {
@@ -109,30 +121,35 @@ class _Sudoku159AppState extends State<Sudoku159App> {
       );
     }
 
-    return AppLocaleScope(
-      appLocale: _localeOverride,
-      setAppLocale: _setAppLocale,
-      child: MaterialApp(
-        onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
-        theme: AppTheme.lightTheme(),
-        themeMode: ThemeMode.light,
-        locale: _localeOverride,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        localeResolutionCallback: (locale, supported) {
-          if (_localeOverride != null) {
-            return _localeOverride;
-          }
-          if (locale == null) return supported.first;
-          for (final supportedLocale in supported) {
-            if (supportedLocale.languageCode == locale.languageCode) {
-              return supportedLocale;
+    return AppThemeScope(
+      themeMode: _themeMode,
+      setThemeMode: _setThemeMode,
+      child: AppLocaleScope(
+        appLocale: _localeOverride,
+        setAppLocale: _setAppLocale,
+        child: MaterialApp(
+          onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
+          theme: AppTheme.lightTheme(),
+          darkTheme: AppTheme.darkTheme(),
+          themeMode: _themeMode,
+          locale: _localeOverride,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          localeResolutionCallback: (locale, supported) {
+            if (_localeOverride != null) {
+              return _localeOverride;
             }
-          }
-          return supported.first;
-        },
-        home: const StartupCatalogPreparingGate(
-          child: MyHomePage(),
+            if (locale == null) return supported.first;
+            for (final supportedLocale in supported) {
+              if (supportedLocale.languageCode == locale.languageCode) {
+                return supportedLocale;
+              }
+            }
+            return supported.first;
+          },
+          home: const StartupCatalogPreparingGate(
+            child: MyHomePage(),
+          ),
         ),
       ),
     );
@@ -176,8 +193,8 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Colors.transparent,
         body: NotificationListener<ScrollNotification>(
           onNotification: (notification) {
-            final atBottom =
-                notification.metrics.pixels >= notification.metrics.maxScrollExtent;
+            final atBottom = notification.metrics.pixels >=
+                notification.metrics.maxScrollExtent;
             if (_isBottom != atBottom) {
               setState(() {
                 _isBottom = atBottom;

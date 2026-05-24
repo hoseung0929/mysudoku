@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:sudoku159/theme/app_theme.dart';
 
 /// 하단 네비게이션 바 위젯
 class BottomNavBar extends StatelessWidget {
@@ -31,21 +30,21 @@ class BottomNavBar extends StatelessWidget {
     /// 홈 상단 프로필 글래스 바와 동일 톤 (home_screen)
     return SafeArea(
       top: false,
-      minimum: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      minimum: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(52),
+          borderRadius: BorderRadius.circular(46),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.textColor.withValues(alpha: 0.04),
-              blurRadius: 24,
-              offset: const Offset(0, 12),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(52),
+          borderRadius: BorderRadius.circular(46),
           child: ClipRect(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
@@ -55,8 +54,8 @@ class BottomNavBar extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isTop
                       ? Colors.white
-                      : AppTheme.backgroundColor.withValues(alpha: 0.38),
-                  borderRadius: BorderRadius.circular(52),
+                      : Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.38),
+                  borderRadius: BorderRadius.circular(46),
                   border: Border.all(
                     color: isTop
                         ? colorScheme.outlineVariant.withValues(alpha: 0.55)
@@ -64,7 +63,7 @@ class BottomNavBar extends StatelessWidget {
                   ),
                 ),
                 child: SizedBox(
-                  height: 68,
+                  height: 62,
                   child: Row(
                     children: [
                       for (var index = 0; index < items.length; index++)
@@ -110,11 +109,11 @@ class _BottomNavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const iconColor = AppTheme.mutedTextColor;
-    const selectedIconColor = AppTheme.textColor;
+    final iconColor = Theme.of(context).colorScheme.onSurfaceVariant;
+    final selectedIconColor = Theme.of(context).colorScheme.onSurface;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: Material(
         color: Colors.transparent,
         child: GestureDetector(
@@ -123,7 +122,7 @@ class _BottomNavButton extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
               color: Colors.transparent,
               borderRadius: BorderRadius.circular(22),
@@ -141,7 +140,7 @@ class _BottomNavButton extends StatelessWidget {
                   margin: const EdgeInsets.only(top: 1),
                   width: selected ? 4 : 0,
                   height: selected ? 4 : 0,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: selectedIconColor,
                     shape: BoxShape.circle,
                   ),

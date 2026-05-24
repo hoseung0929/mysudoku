@@ -96,7 +96,7 @@ Future<void> main() async {
   for (final level in SudokuLevel.levels) {
     final count = level.name == '마스터' ? _masterGamesCount : _gamesPerLevel;
     final levelStopwatch = Stopwatch()..start();
-    print('\n[${level.name}] ${count}개 생성 시작 (빈칸: ${level.emptyCells})');
+    print('\n[${level.name}] $count개 생성 시작 (빈칸: ${level.emptyCells})');
 
     for (int i = 1; i <= count; i++) {
       List<List<int>>? board;
@@ -124,6 +124,6 @@ Future<void> main() async {
 
   totalStopwatch.stop();
   final sizeKb = file.lengthSync() ~/ 1024;
-  print('\n생성 완료: 총 ${total}개, ${sizeKb}KB, 소요시간: ${totalStopwatch.elapsed.inSeconds}초');
+  print('\n생성 완료: 총 $total개, ${sizeKb}KB, 소요시간: ${totalStopwatch.elapsed.inSeconds}초');
   print('저장 위치: $outputPath');
 }

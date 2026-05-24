@@ -268,7 +268,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
       body: SafeArea(
         child: Column(
@@ -298,14 +298,14 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     final level = _currentLevelInfo();
     return AppBar(
       toolbarHeight: 52,
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       elevation: 0,
       scrolledUnderElevation: 0,
       automaticallyImplyLeading: false,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
         onPressed: () => Navigator.pop(context),
-        color: const Color(0xFF1A1A1A),
+        color: context.colors.textPrimary,
       ),
       title: Row(
         mainAxisSize: MainAxisSize.min,
@@ -314,10 +314,10 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
           const SizedBox(width: 8),
           Text(
             level.localizedName(l10n),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF1A1A1A),
+              color: context.colors.textPrimary,
             ),
           ),
         ],
@@ -361,7 +361,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-              child: _buildProgressStrip(totalCount: games.length),
+              child: _buildProgressCard(totalCount: games.length),
             ),
             const SizedBox(height: 8),
             Padding(
@@ -375,9 +375,9 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                   ? Center(
                       child: Text(
                         _isKo ? '해당 항목이 없습니다.' : 'No results.',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
-                          color: Color(0xFFBDBDBD),
+                          color: context.colors.textDisabled,
                         ),
                       ),
                     )
@@ -386,6 +386,48 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
           ],
         );
       },
+    );
+  }
+
+  // ─── Progress card ────────────────────────────────────────────────────────
+
+  Widget _buildProgressCard({required int totalCount}) {
+    final level = _currentLevelInfo();
+    final l10n = AppLocalizations.of(context)!;
+    final message = _isKo
+        ? '오늘은 ${level.localizedName(l10n)} 퍼즐부터 시작해보세요'
+        : 'Start with ${level.localizedName(l10n)} puzzles today';
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: const [
+          BoxShadow(
+              color: Color(0x0C000000), blurRadius: 8, offset: Offset(0, 2)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(_levelIcon(level), size: 16, color: _levelAccentColor(level)),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(
+                  message,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      fontSize: 13, color: context.colors.textSecondary),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          _buildProgressStrip(totalCount: totalCount),
+        ],
+      ),
     );
   }
 
@@ -407,16 +449,16 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
           children: [
             RichText(
               text: TextSpan(
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                 ),
                 children: [
                   TextSpan(
                     text: '$cleared',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: context.colors.textPrimary,
                     ),
                   ),
                   TextSpan(
@@ -431,10 +473,10 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
             const Spacer(),
             Text(
               '$progressPercent%',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textMuted,
+                color: context.colors.textMuted,
               ),
             ),
           ],
@@ -445,7 +487,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
           child: LinearProgressIndicator(
             minHeight: 7,
             value: visibleProgress,
-            backgroundColor: AppColors.borderLight,
+            backgroundColor: context.colors.borderLight,
             valueColor: AlwaysStoppedAnimation<Color>(barColor),
           ),
         ),
@@ -482,10 +524,10 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
         height: 34,
         padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
-          color: isSelected ? selectedFill : AppColors.surface,
+          color: isSelected ? selectedFill : context.colors.surface,
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: isSelected ? selectedBorder : AppColors.border,
+            color: isSelected ? selectedBorder : context.colors.border,
             width: 1,
           ),
         ),
@@ -497,7 +539,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
               fontWeight: FontWeight.w600,
               color: isSelected
                   ? _levelAccentColor(level)
-                  : AppColors.textSecondary,
+                  : context.colors.textSecondary,
             ),
           ),
         ),
@@ -575,23 +617,28 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
 
     final Color bgColor;
     final Color textColor;
+    final Color iconColor;
     final Color borderColor;
     final double borderWidth;
+    final accentColor = _levelAccentColor(_currentLevelInfo());
 
     if (isCompleted) {
-      bgColor = const Color(0xFFDDF3E7);
-      textColor = const Color(0xFF1B6A46);
+      bgColor = const Color(0xFFEDF8F2);
+      textColor = context.colors.textSecondary;
+      iconColor = accentColor;
       borderColor = const Color(0xFFC7E5D4);
       borderWidth = 1.0;
     } else if (isInProgress) {
-      bgColor = const Color(0xFFEAF3FB);
-      textColor = const Color(0xFF2E6B99);
-      borderColor = const Color(0xFF97B9D6);
+      bgColor = context.colors.surface;
+      textColor = accentColor;
+      iconColor = accentColor.withValues(alpha: 0.72);
+      borderColor = accentColor.withValues(alpha: 0.55);
       borderWidth = isRecent ? 1.6 : 1.2;
     } else {
-      bgColor = AppColors.surface;
-      textColor = const Color(0xFF6C6C6C);
-      borderColor = AppColors.border;
+      bgColor = context.colors.surface;
+      textColor = context.colors.textSecondary;
+      iconColor = textColor.withValues(alpha: 0.55);
+      borderColor = context.colors.border;
       borderWidth = 1.0;
     }
 
@@ -653,9 +700,9 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
-                  if (isInProgress || isCompleted)
+                  if (isInProgress)
                     Text(
-                      isCompleted ? '100%' : '$progressPct%',
+                      '$progressPct%',
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w500,
@@ -680,8 +727,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                     _statusIcon(kind),
                     key: ValueKey(kind),
                     size: isCompleted ? 14 : 12,
-                    color:
-                        textColor.withValues(alpha: isCompleted ? 0.82 : 0.72),
+                    color: iconColor,
                   ),
                 ),
               ),
@@ -730,7 +776,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
               height: 68,
               clipBehavior: Clip.hardEdge,
               decoration: BoxDecoration(
-                color: const Color(0xFFF6FAFF),
+                color: context.colors.surface,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: const Color(0xFF97B9D6), width: 1.2),
                 boxShadow: [
@@ -1088,7 +1134,7 @@ class _InteractiveTileState extends State<_InteractiveTile>
                     borderRadius: BorderRadius.circular(13),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF4E7FAD)
+                        color: const Color(0xFF4EAD7C)
                             .withValues(alpha: 0.05 + _pulseAnim.value * 0.08),
                         blurRadius: 6 + _pulseAnim.value * 6,
                         spreadRadius: _pulseAnim.value,
@@ -1115,13 +1161,19 @@ class _CatalogStatusBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF7E8),
+        color: isDark ? cs.surfaceContainerLow : const Color(0xFFFFF7E8),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFF0D48A)),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF6B4F00).withValues(alpha: 0.6)
+              : const Color(0xFFF0D48A),
+        ),
       ),
       child: Row(
         children: [
@@ -1131,10 +1183,12 @@ class _CatalogStatusBar extends StatelessWidget {
             child: Text(
               l10n.levelCatalogPreparingShort(
                   status.totalGenerated, status.totalTarget),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF6A4C00),
+                color: isDark
+                    ? const Color(0xFFEED280)
+                    : const Color(0xFF6A4C00),
               ),
             ),
           ),

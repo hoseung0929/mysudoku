@@ -401,13 +401,13 @@ class _HomeScreenState extends State<HomeScreen> {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: DecoratedBox(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              AppTheme.backgroundColor,
-              AppTheme.backgroundColor,
+              Theme.of(context).scaffoldBackgroundColor,
+              Theme.of(context).scaffoldBackgroundColor,
             ],
           ),
         ),
@@ -1069,7 +1069,7 @@ class _LevelCardState extends State<_LevelCard> {
                   badgeSize: widget.badgeSize,
                 ),
                 const SizedBox(width: 24),
-                Flexible(
+                Expanded(
                   child: Text(
                     widget.title,
                     style: TextStyle(
@@ -1080,7 +1080,6 @@ class _LevelCardState extends State<_LevelCard> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const Spacer(),
                 Text(
                   progressLabel,
                   style: TextStyle(

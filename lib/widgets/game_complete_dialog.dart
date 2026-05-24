@@ -58,8 +58,8 @@ class GameCompleteDialog extends StatelessWidget {
     );
     final primaryActionStyle = ElevatedButton.styleFrom(
       minimumSize: const Size.fromHeight(50),
-      backgroundColor: AppColors.primary,
-      foregroundColor: AppColors.onPrimary,
+      backgroundColor: cs.primary,
+      foregroundColor: cs.onPrimary,
       elevation: 0,
       shadowColor: Colors.transparent,
       shape: RoundedRectangleBorder(
@@ -67,10 +67,10 @@ class GameCompleteDialog extends StatelessWidget {
       ),
     );
     return AlertDialog(
-      backgroundColor: AppColors.surface,
+      backgroundColor: cs.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(28),
-        side: const BorderSide(color: AppColors.border),
+        side: BorderSide(color: cs.outlineVariant),
       ),
       title: Column(
         children: [
@@ -102,7 +102,7 @@ class GameCompleteDialog extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                   decoration: BoxDecoration(
-                    color: AppColors.attention.withValues(alpha: 0.22),
+                    color: context.colors.attention.withValues(alpha: 0.22),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -110,7 +110,7 @@ class GameCompleteDialog extends StatelessWidget {
                     style: GoogleFonts.notoSans(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.attention,
+                      color: context.colors.attention,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -128,7 +128,7 @@ class GameCompleteDialog extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE7F0E8),
+                    color: cs.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Row(
@@ -154,9 +154,9 @@ class GameCompleteDialog extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF6F0E5),
+                    color: cs.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE4DED3)),
+                    border: Border.all(color: cs.outlineVariant),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,9 +202,9 @@ class GameCompleteDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEFF4EF),
+                  color: cs.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE4DED3)),
+                  border: Border.all(color: cs.outlineVariant),
                 ),
                 child: Column(
                   children: [

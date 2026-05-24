@@ -1,0 +1,705 @@
+{
+  "@@locale": "ja",
+  "appTitle": "マイ数独",
+  "navHome": "ホーム",
+  "navChallenge": "チャレンジ",
+  "navRecords": "記録",
+  "navSettings": "設定",
+  "recordsScreenTitle": "記録 · 統計",
+  "challengeScreenTitle": "チャレンジ",
+  "settingsTitle": "設定",
+  "settingsSectionNotifications": "通知",
+  "settingsSectionLanguage": "言語",
+  "settingsSectionGame": "ゲーム",
+  "settingsSectionInfo": "情報",
+  "settingsNotificationsTitle": "通知設定",
+  "settingsNotificationsSubtitle": "今日のチャレンジが未完了の場合にリマインドを送ります",
+  "settingsStreakReminderTitle": "連続プレイリマインド",
+  "settingsStreakReminderSubtitle": "連続記録がある場合にもう一度プレイを促します",
+  "settingsNotificationTimeTitle": "通知時間",
+  "settingsNotificationTimeSubtitle": "リマインドを受け取る時間を設定します",
+  "settingsNotificationsPermissionDenied": "通知権限が許可されていないため、リマインドをオンにできません。",
+  "settingsLanguageTitle": "言語設定",
+  "settingsLanguageSubtitle": "アプリの言語を変更します",
+  "settingsLanguageSystem": "システムに従う",
+  "settingsLanguageEnglish": "English",
+  "settingsLanguageKorean": "한국어",
+  "settingsLanguageJapanese": "日本語",
+  "settingsLanguagePickerTitle": "言語を選択",
+  "settingsVibrationTitle": "入力バイブ",
+  "settingsVibrationSubtitle": "数字入力時に振動フィードバックを使用します",
+  "settingsKeepScreenAwakeTitle": "画面をオンに保つ",
+  "settingsKeepScreenAwakeSubtitle": "ゲーム画面が自動でスリープしないようにします",
+  "settingsOneHandModeTitle": "片手モード",
+  "settingsOneHandModeSubtitle": "モバイルのゲーム画面でよりコンパクトなボタン配置を使用します",
+  "settingsMemoHighlightTitle": "メモ候補のハイライト",
+  "settingsMemoHighlightSubtitle": "メモのフォーカス、候補数字、唯一候補のハイライトを表示します",
+  "settingsSmartHintTitle": "入力可能マスのハイライト",
+  "settingsSmartHintSubtitle": "ルール上すぐに入力できるマスを薄くハイライトします",
+  "settingsAppInfoTitle": "アプリ情報",
+  "settingsAppInfoSubtitle": "バージョンと開発者情報",
+  "settingsPrivacyTitle": "プライバシーポリシー",
+  "settingsPrivacySubtitle": "データの取り扱いについて",
+  "settingsTabletNotificationsHeader": "通知設定",
+  "settingsTabletNotificationsBody": "ゲーム通知を管理・設定できます。",
+  "settingsGameCompleteNotifTitle": "ゲーム完了通知",
+  "settingsGameCompleteNotifSubtitle": "パズルを完了したときに通知を受け取ります",
+  "settingsDailyGoalNotifTitle": "デイリー目標通知",
+  "settingsDailyGoalNotifSubtitle": "週間目標を達成した瞬間にお祝い通知を受け取ります",
+  "settingsHintNotifTitle": "ヒント使用通知",
+  "settingsHintNotifSubtitle": "ヒントを使用したときに通知を受け取ります",
+  "levelBeginner": "初級",
+  "levelIntermediate": "中級",
+  "levelAdvanced": "上級",
+  "levelExpert": "エキスパート",
+  "levelMaster": "マスター",
+  "levelDescBeginner": "数独を初めてプレイする方向けのレベル",
+  "levelDescIntermediate": "基本的なルールを知っている方向けのレベル",
+  "levelDescAdvanced": "数独に慣れている方向けのレベル",
+  "levelDescExpert": "数独マスター向けのレベル",
+  "levelDescMaster": "究極の数独チャレンジ",
+  "gameNumberLabel": "ゲーム {number}",
+  "@gameNumberLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "gameHintShort": "ヒント",
+  "gameUndoShort": "元に戻す",
+  "gameRedoShort": "やり直し",
+  "gameMemoShort": "メモ",
+  "gameMemoOnShort": "メモ ON",
+  "gameMemoStateOn": "ON",
+  "gameMemoStateOff": "OFF",
+  "gameMemoFocusShort": "フォーカス",
+  "gameMemoFocusIdle": "なし",
+  "gameWrongShort": "ミス",
+  "gamePerfectShort": "パーフェクト",
+  "gamePerfectReady": "継続中",
+  "gamePerfectMissed": "失敗",
+  "gameProgressShort": "進捗",
+  "gameTimeShort": "タイム",
+  "gameNumberInputTitle": "数字入力",
+  "gameRowsCompleted": "{count}行クリア",
+  "@gameRowsCompleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "gameColsCompleted": "{count}列クリア",
+  "@gameColsCompleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "gameBoxesCompleted": "{count}ブロッククリア",
+  "@gameBoxesCompleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "gamePause": "一時停止",
+  "gameResume": "再開",
+  "gameAnswerPreview": "解答",
+  "challengeCompletedToday": "今日のチャレンジを完了しました！",
+  "shareCopySuccess": "結果をクリップボードにコピーしました。",
+  "shareSubject": "My Sudoku 結果",
+  "shareClearHeader": "My Sudoku クリア",
+  "shareClearLine": "{level} · ゲーム {number}",
+  "@shareClearLine": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      },
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "shareClearStats": "{time} · ミス {wrong}回",
+  "@shareClearStats": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "wrong": {
+        "type": "int"
+      }
+    }
+  },
+  "shareClearTags": "#Sudoku159 #SudokuChallenge",
+  "shareSummaryPattern": "{time} · ミス {wrong}回",
+  "@shareSummaryPattern": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "wrong": {
+        "type": "int"
+      }
+    }
+  },
+  "dialogCongratulations": "おめでとうございます！",
+  "dialogNewBest": "NEW BEST",
+  "dialogSudokuComplete": "数独を完成させました！",
+  "dialogNewBadges": "新しいバッジ獲得",
+  "dialogElapsedTime": "タイム",
+  "dialogWrongCount": "ミス回数",
+  "dialogWrongCountValue": "{count}回",
+  "@dialogWrongCountValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dialogSharePreview": "シェアテキスト",
+  "dialogCopyResult": "コピー",
+  "dialogShare": "シェア",
+  "dialogBackToLevels": "レベル一覧",
+  "dialogPlayAgain": "もう一度",
+  "dialogNextPuzzle": "次のパズル",
+  "settingsNotificationsComingSoonTitle": "通知",
+  "settingsNotificationsComingSoonBody": "プッシュ通知や詳細な通知設定は今後のアップデートで提供予定です。",
+  "settingsAboutDialogTitle": "アプリ情報",
+  "settingsAboutVersionLabel": "バージョン {version}",
+  "@settingsAboutVersionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAboutDeveloperNote": "マイ数独をお楽しみください！",
+  "settingsPrivacyDialogTitle": "プライバシー",
+  "settingsPrivacyDialogBody": "このアプリはゲームの進行、記録、プロフィール情報、アプリ設定をこのデバイスにのみ保存します。アカウントは不要で、サーバーへの個人情報の収集は行いません。プロフィール画像を選択する場合、写真ライブラリへのアクセスはデバイス上での画像の選択と保存にのみ使用されます。通知設定もローカルに保存されます。アプリをアンインストールすると、デバイスのバックアップがない限りローカルデータが削除される場合があります。",
+  "commonOk": "OK",
+  "commonCancel": "キャンセル",
+  "gameOverTitle": "ゲームオーバー",
+  "gameOverMessage": "ミスが3回を超えました。",
+  "gameOverWrongLabel": "ミス: {count}/3",
+  "@gameOverWrongLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsFilterSectionTitle": "フィルター",
+  "recordsFilterAllLevels": "全レベル",
+  "recordsPeriodLabel": "期間",
+  "recordsPeriodAll": "全期間",
+  "recordsPeriodLastDays": "直近 {days}日",
+  "@recordsPeriodLastDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsSummaryTitle": "直近7日間",
+  "recordsTrendTitle": "直近7日間の推移",
+  "recordsTrendEmpty": "7日間の推移を表示するための記録が足りません。",
+  "recordsTrendClears": "クリア数",
+  "recordsTrendActiveDays": "プレイ日数",
+  "recordsTrendWindowAvgTime": "平均タイム（同期間）",
+  "recordsTrendWindowAvgWrong": "平均ミス（同期間）",
+  "recordsHeroBadgeFlow": "フロー",
+  "recordsHeroTitle": "積み上げてきた流れを\n落ち着いて眺めてみましょう。",
+  "recordsHeroSubtitle": "上のグラフは同じ7日間をなめらかに表現しています。日別クリア数は下のカードで確認できます。",
+  "recordsInsightThisWeekEyebrow": "今週の記録",
+  "recordsInsightClearsValue": "{count}回",
+  "@recordsInsightClearsValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsInsightAvgPaceEyebrow": "平均ペース",
+  "recordsTrendSectionSubtitle": "直近1週間の日別クリア数をまとめて確認できます。",
+  "recordsTrendLegendDailyClears": "日別クリア",
+  "recordsTrendTodayLabel": "今日",
+  "recordsPlayInsightsTitle": "今週の記録",
+  "recordsPlayCalendarTitle": "曜日別",
+  "recordsWeeklyReportTitle": "今週のレポート",
+  "recordsWeeklyReportBusiestDay": "最もプレイした曜日",
+  "recordsWeeklyReportTopDayValue": "{day}、{count}回",
+  "@recordsWeeklyReportTopDayValue": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsWeeklyReportTopDayFallback": "まだクリアがありません",
+  "recordsTimelineTitle": "最近のタイムライン",
+  "recordsTimelineEmpty": "クリアした記録がここに表示されます。",
+  "recordsTimelineMistakesValue": "ミス {count}回",
+  "@recordsTimelineMistakesValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsTimelinePerfect": "パーフェクトクリア",
+  "recordsPaceTitle": "ペースの変化",
+  "recordsPaceEmpty": "前の週と比較するにはもう少し記録が必要です。",
+  "recordsPaceRecentWindow": "直近7日",
+  "recordsPacePreviousWindow": "前の7日",
+  "recordsPaceDelta": "変化",
+  "recordsMetricClears": "クリア（フィルター）",
+  "recordsMetricClearRate": "全体進捗率",
+  "recordsMetricPerfectRate": "パーフェクト率",
+  "recordsSummaryMetricsFootnote": "クリア数はフィルターを反映しています。全体進捗率は同じ範囲で解いたパズル数を全パズル数と比較した値です。",
+  "recordsMetricAvgTime": "平均タイム",
+  "recordsMetricAvgWrong": "平均ミス",
+  "recordsByLevelTitle": "レベル別統計",
+  "recordsByLevelEmpty": "表示するレベル統計がありません。",
+  "recordsByLevelSectionSubtitle": "難易度別にどのレベルで成長を感じているか確認できます。",
+  "recordsLevelInfographicClearRate": "クリア率",
+  "recordsLevelMiniBest": "ベスト",
+  "recordsLevelMiniPerfectRate": "パーフェクト率",
+  "recordsLevelMiniAvgWrong": "平均ミス",
+  "recordsStatsLoadError": "統計データを読み込めませんでした。しばらくしてから再試行してください。",
+  "recordsRetry": "再試行",
+  "recordsStatsPageSubtitle": "クリアと平均タイムを一目で確認できます。",
+  "recordsKpiWeeklyClearsLabel": "クリア",
+  "recordsKpiAvgSolveTimeLabel": "平均タイム",
+  "recordsSectionBestRecordTitle": "ベスト記録",
+  "recordsSectionDifficultyTitle": "難易度別記録",
+  "recordsSectionDetailStatsTitle": "詳細記録",
+  "recordsBestSingleEmpty": "まだ表示できるベスト記録がありません。",
+  "recordsHintUsageLabel": "ヒント使用記録",
+  "recordsHintUsageNoData": "記録なし",
+  "recordsDetailMistakesShort": "平均ミス",
+  "recordsDetailStreakShort": "連続プレイ日数",
+  "recordsDetailStreakDays": "{count}日",
+  "@recordsDetailStreakDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsStatAverageWrongFormatted": "{value}回",
+  "@recordsStatAverageWrongFormatted": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "recordsDifficultySnapshotEmpty": "まだ難易度別の記録がありません。",
+  "recordsLevelDoneShort": "完了",
+  "recordsStatsHeroEyebrow": "直近7日間の数独記録",
+  "recordsStatsHeroHeadline": "直近7日間の数独記録を\n一目で確認しましょう。",
+  "recordsTrendA11yMaxClears": "最高 {count}回",
+  "@recordsTrendA11yMaxClears": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsHeroChartEmptyHint": "直近7日間にパズルをクリアすると、フローグラフがここに表示されます。",
+  "recordsHeroSubtitleNoChart": "下のカードで直近7日間の日別クリアを確認できます。",
+  "recordsCalendarPlayedLabel": "クリアした日",
+  "recordsCalendarEmptyLabel": "クリアなし",
+  "recordsNoAverageTime": "記録なし",
+  "recordsStatsBasisFootnote": "統計はパズルごとのベストクリア記録をもとに計算されます。",
+  "recordsBestByLevelTitle": "レベル別ベスト記録",
+  "recordsBestByLevelEmpty": "表示するレベル別ベスト記録がありません。",
+  "recordsBestByLevelDetail": "{time} · ミス {wrongCount}回",
+  "@recordsBestByLevelDetail": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "wrongCount": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsPerfectBadge": "パーフェクト",
+  "recordsAvgTimeDetail": "平均タイム {time}",
+  "@recordsAvgTimeDetail": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recordsRecentTitle": "最近のクリア",
+  "recordsRecentEmpty": "このフィルターに合うクリア記録がありません。",
+  "recordsBestTitle": "ベストタイム Top 5",
+  "recordsBestEmpty": "このフィルターのベスト記録がありません。",
+  "recordsGameNumberTitle": "{level} · ゲーム {number}",
+  "@recordsGameNumberTitle": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      },
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsRecentDetail": "{time} · ミス {wrongCount}回 · {date}",
+  "@recordsRecentDetail": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "wrongCount": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "recordsBestDetail": "{time} · ミス {wrongCount}回",
+  "@recordsBestDetail": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "wrongCount": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsGameLoadError": "ゲームデータを読み込めません。",
+  "recordsChallengeTabHint": "週間目標と連続記録はチャレンジタブで確認できます。",
+  "recordsGoToChallengeTab": "チャレンジタブへ",
+  "challengeLoadError": "チャレンジ情報を読み込めません。",
+  "challengeTodaysChallengeTitle": "今日のチャレンジ",
+  "challengeTodayDoneHint": "今日のチャレンジは完了済みです。いつでも見直せます。",
+  "challengeTodayPendingHint": "今日のパズルでストリークを続けましょう。",
+  "challengeTodayReviewButton": "自分のペースで続ける",
+  "challengeTodayStartButton": "自分のペースで始める",
+  "myPaceNoPlayableTitle": "プレイできるゲームがありません",
+  "myPaceNoPlayableMessage": "全レベルで新しくプレイできるパズルがありません。",
+  "challengeWeeklyGoalReachedTitle": "今週の目標を達成しました",
+  "challengeWeeklyGoalRemainingTitle": "週間目標まであと {count}回",
+  "@challengeWeeklyGoalRemainingTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeWeeklyGoalReachedBody": "パーフェクトクリアを増やして、さらに良いリズムを作りましょう。",
+  "challengeWeeklyGoalCatchUpBody": "いくつかのセッションで今週の目標を達成できます。",
+  "challengePerfectThisWeek": "今週 {count}回のパーフェクトクリア",
+  "@challengePerfectThisWeek": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengePerfectThisWeekFirst": "今週初のパーフェクトクリアに挑戦しましょう",
+  "challengePerfectPositiveBody": "ミスなしのクリアを続けると成長が見えやすくなります。",
+  "challengePerfectZeroBody": "メモ機能を使うとミスなしクリアにぐっと近づけます。",
+  "challengeWeeklyGoalHeading": "週間目標",
+  "challengeWeeklyClearsLine": "今週 {count}回クリア",
+  "@challengeWeeklyClearsLine": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeWeeklyProgressShort": "{done}/{target} 完了",
+  "@challengeWeeklyProgressShort": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeWeeklyPerfectShort": "パーフェクト {count}回",
+  "@challengeWeeklyPerfectShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeWeeklyCongratsFooter": "週間目標達成！引き続き記録を積み上げましょう！",
+  "challengeWeeklyAlmostFooter": "週間目標まであと {count}回です。",
+  "@challengeWeeklyAlmostFooter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeAchievementsHeading": "実績 · バッジ",
+  "challengeBadgesCollected": "獲得 {unlocked}/{total}",
+  "@challengeBadgesCollected": {
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeViewAllBadges": "全て見る",
+  "challengeEarnedBadgesHeading": "獲得したバッジ",
+  "challengeNextBadgeTargets": "次の目標",
+  "challengeBadgeProgressLine": "{desc} 進捗: {progress}",
+  "@challengeBadgeProgressLine": {
+    "placeholders": {
+      "desc": {
+        "type": "String"
+      },
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
+  "challengeStreakDays": "{days}日連続クリア",
+  "@challengeStreakDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeStreakStartToday": "今日の初クリアに挑戦",
+  "challengeTabHeroHeadline": "今日のパズルと週間リズムを\nひとつの画面で。",
+  "challengeHeroPendingDetail": "ホームのカードからプレイを始められます。",
+  "challengeHeroDoneDetail": "今日のチャレンジは完了しました。バッジと週間進捗はこのタブにまとめてあります。",
+  "challengeOpenTodayOnHomeButton": "ホームで今日のパズルを開く",
+  "challengeHeroDoneCaption": "今日のチャレンジを完了しました。明日も続けて記録を積み上げましょう。",
+  "challengeHeroPendingCaption": "今日のチャレンジがまだ残っています。今すぐ始めてストリークを続けましょう。",
+  "homeGuestTitle": "ゲスト",
+  "homeGuestSubtitle": "ワンタップでゲームを始めましょう",
+  "homeContinueTitle": "続きから",
+  "homeContinueSubtitle": "{level} · ゲーム {gameNumber} · {cells}マス入力済み",
+  "@homeContinueSubtitle": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      },
+      "gameNumber": {
+        "type": "int"
+      },
+      "cells": {
+        "type": "int"
+      }
+    }
+  },
+  "homeContinueDescription": "中断したパズルをそのまま続けられます。",
+  "homeContinueSameAsSpotlightSupporting": "今日のパズルを続ける",
+  "homeContinueActionButton": "続ける",
+  "homeProgressPercent": "進捗 {percent}%",
+  "@homeProgressPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "homeTodayChallengeCardDoneBody": "今日のチャレンジを完了しました。ストリークを続けましょう！",
+  "homeTodayChallengeCardPendingBody": "毎日一問、気軽に実力を確かめましょう。",
+  "homeTodayChallengeFooterDoneStreak": "今日のチャレンジ完了 · {days}日連続記録",
+  "@homeTodayChallengeFooterDoneStreak": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "homeTodayChallengeFooterPending": "今日のパズルでストリークを作りましょう。",
+  "homeQuickStartSectionTitle": "クイックスタート",
+  "homeBrowseLevelsTitle": "難易度を選ぶ",
+  "homeStreakTodayDoneLine": "今日のチャレンジも完了しました。",
+  "homeStreakTodayPendingLine": "今日のチャレンジを完了すると記録を続けられます。",
+  "homeBadgeProgressTitle": "バッジの進捗",
+  "homeCatalogPreparingTitle": "パズルカタログ準備中",
+  "homeCatalogProgressDetail": "{generated}/{target}問準備完了 · 残り{remaining}問",
+  "@homeCatalogProgressDetail": {
+    "placeholders": {
+      "generated": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "levelPickDifficultyTitle": "難易度を選択",
+  "levelPickDifficultySubtitle": "難易度を選んでゲームを始めましょう。",
+  "levelPickGameSubtitle": "プレイするパズルを選んでください。",
+  "levelGamesScreenTitle": "{levelName} ゲーム",
+  "@levelGamesScreenTitle": {
+    "placeholders": {
+      "levelName": {
+        "type": "String"
+      }
+    }
+  },
+  "levelLoadingGames": "パズルを読み込み中…",
+  "levelTapToStart": "今すぐ始める",
+  "levelClearedBadge": "クリア",
+  "levelOverviewTitle": "レベル概要",
+  "levelPuzzlesSectionTitle": "パズル一覧",
+  "levelProgressLabel": "進捗率",
+  "levelNoRecordYet": "記録なし",
+  "levelStatusReady": "新しいパズル",
+  "levelStatusCleared": "クリア済みパズル",
+  "levelEmptyCellsLabel": "空きマス {count}個",
+  "@levelEmptyCellsLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "levelPuzzleCountSummary": "全 {count}問",
+  "@levelPuzzleCountSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "levelCatalogPreparingShort": "追加パズル準備中 · {done}/{total}問",
+  "@levelCatalogPreparingShort": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementCollectionAppBarTitle": "バッジコレクション",
+  "achievementLoadError": "バッジ情報を読み込めません。",
+  "achievementViewSettings": "表示設定",
+  "achievementSortLabel": "並び替え",
+  "achievementFilterAll": "全て",
+  "achievementFilterUnlocked": "獲得済み",
+  "achievementFilterLocked": "挑戦中",
+  "achievementSectionAll": "全バッジ",
+  "achievementSectionUnlocked": "獲得したバッジ",
+  "achievementSectionLocked": "挑戦中のバッジ",
+  "achievementEmptyAll": "表示するバッジがありません。",
+  "achievementEmptyUnlocked": "まだ獲得したバッジがありません。",
+  "achievementEmptyLocked": "全てのバッジを獲得しました。",
+  "achievementHeroTitle": "実績コレクション",
+  "achievementHeroProgress": "獲得 {unlocked} / 全 {total}",
+  "@achievementHeroProgress": {
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementHeroAllUnlocked": "全バッジを集めました。素晴らしい！",
+  "achievementHeroKeepGoing": "プレイを続けてバッジを解除しましょう。",
+  "achievementBadgeFirstClearTitle": "初クリア",
+  "achievementBadgeFirstClearDesc": "最初のパズルをクリアして数独の旅を始めましょう。",
+  "achievementBadgeStreakTitle": "3日連続",
+  "achievementBadgeStreakDesc": "3日連続でパズルをクリアしてリズムを作りましょう。",
+  "achievementBadgeWeeklyTitle": "ウィークリーランナー",
+  "achievementBadgeWeeklyDesc": "直近7日間で5問クリアして継続を証明しましょう。",
+  "achievementBadgePerfectTitle": "パーフェクトクリア",
+  "achievementBadgePerfectDesc": "ミスなしで1問クリアすると獲得します。",
+  "achievementBadgeMasterTitle": "マスター初勝利",
+  "achievementBadgeMasterDesc": "マスター難易度を初めてクリアすると解除されます。",
+  "achievementProgressFraction": "{current}/{max}",
+  "@achievementProgressFraction": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementProgressStreak": "{current}/{max}日",
+  "@achievementProgressStreak": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementProgressWeekly": "{current}/{max}回",
+  "@achievementProgressWeekly": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementStatusDone": "完了",
+  "achievementStatusNotMet": "未達成",
+  "achievementStatusTrying": "挑戦中",
+  "achievementTileProgress": "進捗: {label}",
+  "@achievementTileProgress": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementTileRarity": "レアリティ: {label}",
+  "@achievementTileRarity": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementRarityCommon": "コモン",
+  "achievementRarityRare": "レア",
+  "achievementRarityEpic": "エピック",
+  "achievementSortDefault": "デフォルト順",
+  "achievementSortRarity": "レアリティ順",
+  "commonSave": "保存",
+  "settingsDisplaySection": "ディスプレイ",
+  "settingsTheme": "テーマ",
+  "settingsThemeSystem": "システム",
+  "settingsThemeLight": "ライト",
+  "settingsThemeDark": "ダーク",
+  "profileEditorTitle": "プロフィール編集",
+  "profileEditorRemovePhoto": "写真を削除",
+  "profileEditorNameLabel": "名前"
+}

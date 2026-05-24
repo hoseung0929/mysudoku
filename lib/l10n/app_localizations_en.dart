@@ -42,104 +42,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSectionGame => 'Game';
 
   @override
-  String get settingsSectionCloud => 'Account';
-
-  @override
   String get settingsSectionInfo => 'About';
-
-  @override
-  String get settingsCloudAccountTitle => 'Firebase account';
-
-  @override
-  String get settingsCloudUnavailableSubtitle =>
-      'Firebase setup is not available in this build.';
-
-  @override
-  String get settingsCloudAnonymousSubtitle =>
-      'Signed in with a temporary device account. You can connect an email account.';
-
-  @override
-  String get settingsCloudDisconnectedSubtitle =>
-      'Sign in with an email account.';
-
-  @override
-  String settingsCloudConnectedSubtitle(String email) {
-    return 'Signed in as $email.';
-  }
-
-  @override
-  String get settingsCloudConnectSheetTitle => 'Connect account';
-
-  @override
-  String get settingsCloudConnectSheetBody =>
-      'Create a new email account or sign in with an existing one.';
-
-  @override
-  String get settingsCloudManageSheetTitle => 'Account';
-
-  @override
-  String get settingsCloudManageSheetBody =>
-      'Your linked account is ready. You can sign out on this device.';
-
-  @override
-  String get settingsCloudSignInAction => 'Sign in';
-
-  @override
-  String get settingsCloudCreateAccountAction => 'Create account';
-
-  @override
-  String get settingsCloudSignOutAction => 'Sign out';
-
-  @override
-  String get settingsCloudEmailLabel => 'Email';
-
-  @override
-  String get settingsCloudPasswordLabel => 'Password';
-
-  @override
-  String get settingsCloudCreateDialogTitle => 'Create account';
-
-  @override
-  String get settingsCloudSignInDialogTitle => 'Sign in';
-
-  @override
-  String get settingsCloudAuthSuccessSignIn => 'Signed in.';
-
-  @override
-  String get settingsCloudAuthSuccessCreate => 'Account connected.';
-
-  @override
-  String get settingsCloudSignOutSuccess => 'Signed out on this device.';
-
-  @override
-  String get settingsCloudValidationMissingCredentials =>
-      'Enter both an email address and password.';
-
-  @override
-  String get settingsCloudErrorGeneric =>
-      'We couldn\'t complete that account request.';
-
-  @override
-  String get settingsCloudErrorFirebaseUnavailable =>
-      'Firebase is not configured in this build.';
-
-  @override
-  String get settingsCloudErrorInvalidEmail => 'Enter a valid email address.';
-
-  @override
-  String get settingsCloudErrorWrongPassword => 'The password is incorrect.';
-
-  @override
-  String get settingsCloudErrorUserNotFound =>
-      'No account matches that email address.';
-
-  @override
-  String get settingsCloudErrorEmailAlreadyInUse =>
-      'That email address is already in use.';
-
-  @override
-  String get settingsCloudErrorWeakPassword =>
-      'Use a password with at least 6 characters.';
 
   @override
   String get settingsNotificationsTitle => 'Notification settings';
@@ -180,6 +83,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsLanguageKorean => 'Korean';
+
+  @override
+  String get settingsLanguageJapanese => 'Japanese';
 
   @override
   String get settingsLanguagePickerTitle => 'Choose language';
@@ -458,7 +364,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsPrivacyDialogBody =>
-      'This app stores your game progress and records only on this device. We do not collect personal data or require an account. If you uninstall the app, local data may be removed unless your device backs up app data.';
+      'This app stores game progress, records, profile information, and app settings only on this device. We do not require an account or collect personal data on our servers. If you choose a profile image, photo library access is used only to let you select and store that image on your device. Optional notification settings are also stored locally. If you uninstall the app, local data may be removed unless your device backs up app data.';
 
   @override
   String get commonOk => 'OK';
@@ -621,14 +527,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsMetricClears => 'Clears (filtered)';
 
   @override
-  String get recordsMetricClearRate => 'Catalog share';
+  String get recordsMetricClearRate => 'Overall progress';
 
   @override
   String get recordsMetricPerfectRate => 'Perfect rate';
 
   @override
   String get recordsSummaryMetricsFootnote =>
-      'Clear counts follow your period and level filters. Catalog share divides those clears by the puzzle count stored in the catalog for the same scope.';
+      'Clear counts follow your active filters. Overall progress compares cleared puzzles with the total puzzle count in the same scope.';
 
   @override
   String get recordsMetricAvgTime => 'Avg. time';
@@ -666,7 +572,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsRetry => 'Try again';
 
   @override
-  String get recordsStatsPageSubtitle => 'Clears and average time.';
+  String get recordsStatsPageSubtitle => 'Clears and average time at a glance.';
 
   @override
   String get recordsKpiWeeklyClearsLabel => 'Clears';
@@ -1215,4 +1121,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get achievementSortRarity => 'By rarity';
+
+  @override
+  String get commonSave => 'Save';
+
+  @override
+  String get settingsDisplaySection => 'Display';
+
+  @override
+  String get settingsTheme => 'Theme';
+
+  @override
+  String get settingsThemeSystem => 'System';
+
+  @override
+  String get settingsThemeLight => 'Light';
+
+  @override
+  String get settingsThemeDark => 'Dark';
+
+  @override
+  String get profileEditorTitle => 'Edit profile';
+
+  @override
+  String get profileEditorRemovePhoto => 'Remove photo';
+
+  @override
+  String get profileEditorNameLabel => 'Name';
 }

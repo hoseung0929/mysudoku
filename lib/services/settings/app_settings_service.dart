@@ -15,6 +15,8 @@ class AppSettingsService {
       'daily_goal_notification_enabled';
   static const String notificationHourKey = 'notification_hour';
   static const String notificationMinuteKey = 'notification_minute';
+  // int: ThemeMode.index (0=system, 1=light, 2=dark). 키 없으면 system(0) 기본값.
+  static const String themeModeKey = 'theme_mode';
 
   Future<bool> getBool(String key, {required bool defaultValue}) async {
     final prefs = await SharedPreferences.getInstance();

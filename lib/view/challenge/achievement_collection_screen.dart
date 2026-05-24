@@ -97,7 +97,7 @@ class _AchievementCollectionScreenState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: l10n.achievementCollectionAppBarTitle,
         showNotificationIcon: false,
@@ -136,10 +136,10 @@ class _AchievementCollectionScreenState
           children: [
             Text(
               l10n.achievementViewSettings,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2C3E50),
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 12),
@@ -237,6 +237,8 @@ class _CollectionHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
     final unlockedCount = summary.unlockedBadges.length;
     final totalCount = summary.badges.length;
     final progress =
@@ -245,16 +247,17 @@ class _CollectionHero extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFFFFF7E8),
-            Color(0xFFFFFFFF),
-          ],
+        gradient: LinearGradient(
+          colors: isDark
+              ? const [Color(0xFF1C1400), Color(0xFF241B00)]
+              : const [Color(0xFFFFF7E8), Colors.white],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFF0D48A)),
+        border: Border.all(
+          color: isDark ? const Color(0xFF4A3500) : const Color(0xFFF0D48A),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,10 +269,12 @@ class _CollectionHero extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 l10n.achievementHeroTitle,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF6A4C00),
+                  color: isDark
+                      ? const Color(0xFFEED280)
+                      : const Color(0xFF6A4C00),
                 ),
               ),
             ],
@@ -277,10 +282,10 @@ class _CollectionHero extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             l10n.achievementHeroProgress(unlockedCount, totalCount),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF2C3E50),
+              color: cs.onSurface,
             ),
           ),
           const SizedBox(height: 8),
@@ -289,7 +294,9 @@ class _CollectionHero extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 10,
-              backgroundColor: const Color(0xFFF5E8BE),
+              backgroundColor: isDark
+                  ? const Color(0xFF2C1E00)
+                  : const Color(0xFFF5E8BE),
               valueColor:
                   const AlwaysStoppedAnimation<Color>(Color(0xFFDAA520)),
             ),
@@ -299,9 +306,7 @@ class _CollectionHero extends StatelessWidget {
             unlockedCount == totalCount
                 ? l10n.achievementHeroAllUnlocked
                 : l10n.achievementHeroKeepGoing,
-            style: const TextStyle(
-              color: Color(0xFF7A642D),
-            ),
+            style: TextStyle(color: cs.onSurfaceVariant),
           ),
         ],
       ),
@@ -322,6 +327,7 @@ class _BadgeSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -330,19 +336,17 @@ class _BadgeSection extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2C3E50),
+                color: cs.onSurface,
               ),
             ),
             const SizedBox(height: 12),
             if (badges.isEmpty)
               Text(
                 emptyMessage,
-                style: const TextStyle(
-                  color: Color(0xFF7F8C8D),
-                ),
+                style: TextStyle(color: cs.onSurfaceVariant),
               )
             else
               ...badges.map(
@@ -370,16 +374,17 @@ class _CollectionBadgeTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
     final unlocked = badge.unlocked;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: unlocked ? badge.surfaceColor : const Color(0xFFF8F9FA),
+        color: unlocked ? badge.surfaceColor : cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: unlocked
               ? badge.accentColor.withValues(alpha: 0.35)
-              : const Color(0xFFE2E8F0),
+              : cs.outlineVariant,
         ),
       ),
       child: Row(
@@ -387,7 +392,7 @@ class _CollectionBadgeTile extends StatelessWidget {
         children: [
           Icon(
             unlocked ? badge.icon : Icons.workspace_premium_outlined,
-            color: unlocked ? badge.accentColor : const Color(0xFF7F8C8D),
+            color: unlocked ? badge.accentColor : cs.onSurfaceVariant,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -396,24 +401,22 @@ class _CollectionBadgeTile extends StatelessWidget {
               children: [
                 Text(
                   badge.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF2C3E50),
+                    color: cs.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   badge.description,
-                  style: const TextStyle(
-                    color: Color(0xFF6B7780),
-                  ),
+                  style: TextStyle(color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   l10n.achievementTileProgress(badge.progressLabel),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF5C6E7E),
+                    color: cs.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -423,8 +426,7 @@ class _CollectionBadgeTile extends StatelessWidget {
                   ),
                   style: TextStyle(
                     fontSize: 12,
-                    color:
-                        unlocked ? badge.accentColor : const Color(0xFF7F8C8D),
+                    color: unlocked ? badge.accentColor : cs.onSurfaceVariant,
                   ),
                 ),
               ],

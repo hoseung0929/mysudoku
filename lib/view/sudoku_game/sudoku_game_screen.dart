@@ -554,7 +554,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           '${widget.level.localizedName(l10n)} · ${l10n.gameNumberLabel(widget.game.gameNumber)}';
       return AppBar(
         toolbarHeight: 50,
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.colors.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -568,7 +568,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
             style: GoogleFonts.notoSans(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: AppTheme.textColor,
+              color: context.colors.textPrimary,
             ),
           ),
         ),
@@ -590,7 +590,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                   style: GoogleFonts.notoSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.lightTextColor,
+                    color: context.colors.textSecondary,
                   ),
                 ),
               ),
@@ -782,9 +782,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: AppColors.surface,
+                          color: context.colors.surface,
                           borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: AppColors.border),
+                          border: Border.all(color: context.colors.border),
                         ),
                         child: Column(
                           children: [
@@ -863,7 +863,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                 SudokuGameActionButton(
                                   icon: Icons.close_rounded,
                                   label: _resetButtonLabel,
-                                  backgroundColor: AppColors.attentionSurface,
+                                  backgroundColor: context.colors.attentionSurface,
                                   onPressed: _canResetCurrentGame
                                       ? _showResetCurrentGameDialog
                                       : null,
@@ -995,7 +995,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                 _buildMobileActionButton(
                                   icon: Icons.close_rounded,
                                   label: '',
-                                  color: AppColors.attentionSurface,
+                                  color: context.colors.attentionSurface,
                                   onPressed: _canResetCurrentGame
                                       ? _showResetCurrentGameDialog
                                       : null,
@@ -1071,9 +1071,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         vertical: compact ? 8 : 12,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(compact ? 20 : 22),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.colors.border),
       ),
       child: Wrap(
         alignment: WrapAlignment.center,
@@ -1087,23 +1087,23 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                   vertical: compact ? 7 : 9,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceSubtle,
+                  color: context.colors.surfaceSubtle,
                   borderRadius: BorderRadius.circular(compact ? 14 : 16),
-                  border: Border.all(color: AppColors.borderLight),
+                  border: Border.all(color: context.colors.borderLight),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(item.icon,
                         size: compact ? 13 : 16,
-                        color: AppTheme.lightTextColor),
+                        color: context.colors.textSecondary),
                     SizedBox(width: compact ? 5 : 6),
                     Text(
                       '${item.label} ${item.value}',
                       style: GoogleFonts.notoSans(
                         fontSize: compact ? 10.5 : 12,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.textColor,
+                        color: context.colors.textPrimary,
                       ),
                     ),
                   ],
@@ -1175,10 +1175,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     final isSelectedNumber = _selectedInputNumber() == number;
     final isCompletedNumber = remainingCount == 0;
     final effectiveBackgroundColor = isCompletedNumber
-        ? AppColors.surfaceSubtle
+        ? context.colors.surfaceSubtle
         : isSelectedNumber
             ? buttonColor.withValues(alpha: 0.22)
-            : AppColors.surface;
+            : context.colors.surface;
 
     return ProgressiveBlurButton(
       onPressed: isEnabled
@@ -1215,7 +1215,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           Center(
             child: Text(
               number.toString(),
-              style: AppTheme.numberButtonStyle.copyWith(
+              style: GoogleFonts.notoSans(fontSize: 38, fontWeight: FontWeight.w600, color: context.colors.textPrimary).copyWith(
                 fontWeight: isSelectedNumber ? FontWeight.w800 : null,
               ),
             ),
@@ -1228,10 +1228,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
               height: 24,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: AppColors.surfaceSubtle,
+                color: context.colors.surfaceSubtle,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppColors.borderLight,
+                  color: context.colors.borderLight,
                   width: 1,
                 ),
               ),
@@ -1246,7 +1246,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                       style: GoogleFonts.notoSans(
                         fontSize: compact ? 10 : 11,
                         fontWeight: FontWeight.w800,
-                        color: AppTheme.textColor,
+                        color: context.colors.textPrimary,
                       ),
                     ),
             ),

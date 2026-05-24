@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_en.dart';
+import 'app_localizations_ja.dart';
 import 'app_localizations_ko.dart';
 
 // ignore_for_file: type=lint
@@ -95,6 +96,7 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
+    Locale('ja'),
     Locale('ko')
   ];
 
@@ -164,179 +166,11 @@ abstract class AppLocalizations {
   /// **'Game'**
   String get settingsSectionGame;
 
-  /// No description provided for @settingsSectionCloud.
-  ///
-  /// In en, this message translates to:
-  /// **'Account'**
-  String get settingsSectionCloud;
-
   /// No description provided for @settingsSectionInfo.
   ///
   /// In en, this message translates to:
   /// **'About'**
   String get settingsSectionInfo;
-
-  /// No description provided for @settingsCloudAccountTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Firebase account'**
-  String get settingsCloudAccountTitle;
-
-  /// No description provided for @settingsCloudUnavailableSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Firebase setup is not available in this build.'**
-  String get settingsCloudUnavailableSubtitle;
-
-  /// No description provided for @settingsCloudAnonymousSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Signed in with a temporary device account. You can connect an email account.'**
-  String get settingsCloudAnonymousSubtitle;
-
-  /// No description provided for @settingsCloudDisconnectedSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in with an email account.'**
-  String get settingsCloudDisconnectedSubtitle;
-
-  /// No description provided for @settingsCloudConnectedSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Signed in as {email}.'**
-  String settingsCloudConnectedSubtitle(String email);
-
-  /// No description provided for @settingsCloudConnectSheetTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Connect account'**
-  String get settingsCloudConnectSheetTitle;
-
-  /// No description provided for @settingsCloudConnectSheetBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Create a new email account or sign in with an existing one.'**
-  String get settingsCloudConnectSheetBody;
-
-  /// No description provided for @settingsCloudManageSheetTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Account'**
-  String get settingsCloudManageSheetTitle;
-
-  /// No description provided for @settingsCloudManageSheetBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Your linked account is ready. You can sign out on this device.'**
-  String get settingsCloudManageSheetBody;
-
-  /// No description provided for @settingsCloudSignInAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in'**
-  String get settingsCloudSignInAction;
-
-  /// No description provided for @settingsCloudCreateAccountAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Create account'**
-  String get settingsCloudCreateAccountAction;
-
-  /// No description provided for @settingsCloudSignOutAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign out'**
-  String get settingsCloudSignOutAction;
-
-  /// No description provided for @settingsCloudEmailLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Email'**
-  String get settingsCloudEmailLabel;
-
-  /// No description provided for @settingsCloudPasswordLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Password'**
-  String get settingsCloudPasswordLabel;
-
-  /// No description provided for @settingsCloudCreateDialogTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Create account'**
-  String get settingsCloudCreateDialogTitle;
-
-  /// No description provided for @settingsCloudSignInDialogTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in'**
-  String get settingsCloudSignInDialogTitle;
-
-  /// No description provided for @settingsCloudAuthSuccessSignIn.
-  ///
-  /// In en, this message translates to:
-  /// **'Signed in.'**
-  String get settingsCloudAuthSuccessSignIn;
-
-  /// No description provided for @settingsCloudAuthSuccessCreate.
-  ///
-  /// In en, this message translates to:
-  /// **'Account connected.'**
-  String get settingsCloudAuthSuccessCreate;
-
-  /// No description provided for @settingsCloudSignOutSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Signed out on this device.'**
-  String get settingsCloudSignOutSuccess;
-
-  /// No description provided for @settingsCloudValidationMissingCredentials.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter both an email address and password.'**
-  String get settingsCloudValidationMissingCredentials;
-
-  /// No description provided for @settingsCloudErrorGeneric.
-  ///
-  /// In en, this message translates to:
-  /// **'We couldn\'t complete that account request.'**
-  String get settingsCloudErrorGeneric;
-
-  /// No description provided for @settingsCloudErrorFirebaseUnavailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Firebase is not configured in this build.'**
-  String get settingsCloudErrorFirebaseUnavailable;
-
-  /// No description provided for @settingsCloudErrorInvalidEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter a valid email address.'**
-  String get settingsCloudErrorInvalidEmail;
-
-  /// No description provided for @settingsCloudErrorWrongPassword.
-  ///
-  /// In en, this message translates to:
-  /// **'The password is incorrect.'**
-  String get settingsCloudErrorWrongPassword;
-
-  /// No description provided for @settingsCloudErrorUserNotFound.
-  ///
-  /// In en, this message translates to:
-  /// **'No account matches that email address.'**
-  String get settingsCloudErrorUserNotFound;
-
-  /// No description provided for @settingsCloudErrorEmailAlreadyInUse.
-  ///
-  /// In en, this message translates to:
-  /// **'That email address is already in use.'**
-  String get settingsCloudErrorEmailAlreadyInUse;
-
-  /// No description provided for @settingsCloudErrorWeakPassword.
-  ///
-  /// In en, this message translates to:
-  /// **'Use a password with at least 6 characters.'**
-  String get settingsCloudErrorWeakPassword;
 
   /// No description provided for @settingsNotificationsTitle.
   ///
@@ -409,6 +243,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Korean'**
   String get settingsLanguageKorean;
+
+  /// No description provided for @settingsLanguageJapanese.
+  ///
+  /// In en, this message translates to:
+  /// **'Japanese'**
+  String get settingsLanguageJapanese;
 
   /// No description provided for @settingsLanguagePickerTitle.
   ///
@@ -911,7 +751,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsPrivacyDialogBody.
   ///
   /// In en, this message translates to:
-  /// **'This app stores your game progress and records only on this device. We do not collect personal data or require an account. If you uninstall the app, local data may be removed unless your device backs up app data.'**
+  /// **'This app stores game progress, records, profile information, and app settings only on this device. We do not require an account or collect personal data on our servers. If you choose a profile image, photo library access is used only to let you select and store that image on your device. Optional notification settings are also stored locally. If you uninstall the app, local data may be removed unless your device backs up app data.'**
   String get settingsPrivacyDialogBody;
 
   /// No description provided for @commonOk.
@@ -1169,7 +1009,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordsMetricClearRate.
   ///
   /// In en, this message translates to:
-  /// **'Catalog share'**
+  /// **'Overall progress'**
   String get recordsMetricClearRate;
 
   /// No description provided for @recordsMetricPerfectRate.
@@ -1181,7 +1021,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordsSummaryMetricsFootnote.
   ///
   /// In en, this message translates to:
-  /// **'Clear counts follow your period and level filters. Catalog share divides those clears by the puzzle count stored in the catalog for the same scope.'**
+  /// **'Clear counts follow your active filters. Overall progress compares cleared puzzles with the total puzzle count in the same scope.'**
   String get recordsSummaryMetricsFootnote;
 
   /// No description provided for @recordsMetricAvgTime.
@@ -1253,7 +1093,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordsStatsPageSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Clears and average time.'**
+  /// **'Clears and average time at a glance.'**
   String get recordsStatsPageSubtitle;
 
   /// No description provided for @recordsKpiWeeklyClearsLabel.
@@ -2149,6 +1989,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'By rarity'**
   String get achievementSortRarity;
+
+  /// No description provided for @commonSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get commonSave;
+
+  /// No description provided for @settingsDisplaySection.
+  ///
+  /// In en, this message translates to:
+  /// **'Display'**
+  String get settingsDisplaySection;
+
+  /// No description provided for @settingsTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get settingsTheme;
+
+  /// No description provided for @settingsThemeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get settingsThemeSystem;
+
+  /// No description provided for @settingsThemeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get settingsThemeLight;
+
+  /// No description provided for @settingsThemeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get settingsThemeDark;
+
+  /// No description provided for @profileEditorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get profileEditorTitle;
+
+  /// No description provided for @profileEditorRemovePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get profileEditorRemovePhoto;
+
+  /// No description provided for @profileEditorNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get profileEditorNameLabel;
 }
 
 class _AppLocalizationsDelegate
@@ -2162,7 +2056,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'ko'].contains(locale.languageCode);
+      <String>['en', 'ja', 'ko'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -2173,6 +2067,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   switch (locale.languageCode) {
     case 'en':
       return AppLocalizationsEn();
+    case 'ja':
+      return AppLocalizationsJa();
     case 'ko':
       return AppLocalizationsKo();
   }

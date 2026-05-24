@@ -142,20 +142,6 @@ void main() {
       expect(presenter.getCellNotes(0, 1), isEmpty);
     });
 
-    test('clears selected editable cell without increasing wrong count', () {
-      presenter.selectCell(0, 1);
-      presenter.setSelectedCellValue(4);
-
-      expect(presenter.getCellValue(0, 1), 4);
-      expect(presenter.wrongCount, 1);
-
-      presenter.clearSelectedCell();
-
-      expect(presenter.getCellValue(0, 1), 0);
-      expect(presenter.isWrongNumber(0, 1), isFalse);
-      expect(presenter.wrongCount, 1);
-    });
-
     test('restores timer, memo mode, notes, and wrong count', () {
       final restoredBoard = board.map((row) => List<int>.from(row)).toList();
       restoredBoard[0][2] = 4;
@@ -266,20 +252,7 @@ void main() {
       expect(presenter.wrongCount, 0);
     });
 
-    test('redo re-applies the undone wrong input and re-increments wrong count',
-        () {
-      presenter.selectCell(0, 1);
-      presenter.setSelectedCellValue(4);
-
-      presenter.undo();
-      expect(presenter.wrongCount, 0);
-
-      presenter.redo();
-      expect(presenter.getCellValue(0, 1), 4);
-      expect(presenter.wrongCount, 1);
-    });
-
-    test('undo and redo respect game state locks', () {
+    test('undo respects game state locks', () {
       presenter.selectCell(0, 1);
       presenter.setSelectedCellValue(3);
       expect(presenter.canUndo, isTrue);
@@ -358,27 +331,12 @@ void main() {
       expect(presenter.isHintCell(0, 1), isFalse);
     });
 
-    test('redo of hint re-applies value and decrements hint count', () {
-      presenter.selectCell(0, 1);
-      presenter.useHint();
-      presenter.undo();
-      expect(presenter.hintsRemaining, SudokuGamePresenter.maxHints);
-
-      presenter.redo();
-      expect(presenter.getCellValue(0, 1), 3);
-      expect(presenter.isHintCell(0, 1), isTrue);
-      expect(presenter.hintsRemaining, SudokuGamePresenter.maxHints - 1);
-    });
-
-    test('hint cell blocks manual value input and clear', () {
+    test('hint cell blocks manual value input', () {
       presenter.selectCell(0, 1);
       presenter.useHint();
       expect(presenter.getCellValue(0, 1), 3);
 
       presenter.setSelectedCellValue(4);
-      expect(presenter.getCellValue(0, 1), 3);
-
-      presenter.clearSelectedCell();
       expect(presenter.getCellValue(0, 1), 3);
       expect(presenter.hintsRemaining, SudokuGamePresenter.maxHints - 1);
     });

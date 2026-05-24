@@ -3,9 +3,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:sudoku159/l10n/app_locale_scope.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/presenter/settings/settings_controller.dart';
-import 'package:sudoku159/services/firebase/firebase_identity_service.dart';
-import 'package:sudoku159/theme/app_colors.dart';
 import 'package:sudoku159/theme/app_theme.dart';
+import 'package:sudoku159/theme/app_theme_scope.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -17,7 +16,6 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final SettingsController _settingsController = SettingsController();
   SettingsState _state = SettingsState.initial;
-  bool _isCloudActionInProgress = false;
 
   @override
   void initState() {
@@ -51,307 +49,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  Future<void> _showCloudAccountSheet() async {
+  Future<void> _setThemeMode(ThemeMode mode) async {
+    final nextState = await _settingsController.setThemeMode(_state, mode);
+    if (!mounted) return;
+    setState(() => _state = nextState);
+    await AppThemeScope.of(context).setThemeMode(mode);
+  }
+
+  Future<void> _showPrivacyPolicy() async {
     final l10n = AppLocalizations.of(context)!;
-    if (!_state.cloudAccount.isAvailable) {
-      _showSnackBar(l10n.settingsCloudErrorFirebaseUnavailable);
-      return;
-    }
-
-    if (_state.cloudAccount.isCrossDeviceReady) {
-      await showModalBottomSheet<void>(
-        context: context,
-        builder: (sheetContext) {
-          return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    l10n.settingsCloudManageSheetTitle,
-                    style:
-                        Theme.of(sheetContext).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.settingsCloudManageSheetBody,
-                    style: Theme.of(sheetContext).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 20),
-                  FilledButton.icon(
-                    onPressed: () {
-                      Navigator.of(sheetContext).pop();
-                      _signOutCloudAccount();
-                    },
-                    icon: const Icon(Icons.logout),
-                    label: Text(l10n.settingsCloudSignOutAction),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      );
-      return;
-    }
-
-    await showModalBottomSheet<void>(
+    await showDialog<void>(
       context: context,
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  l10n.settingsCloudConnectSheetTitle,
-                  style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.settingsCloudConnectSheetBody,
-                  style: Theme.of(sheetContext).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 20),
-                FilledButton.icon(
-                  onPressed: () {
-                    Navigator.of(sheetContext).pop();
-                    _promptCloudAuth(isCreateAccount: true);
-                  },
-                  icon: const Icon(Icons.person_add_alt_1),
-                  label: Text(l10n.settingsCloudCreateAccountAction),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.of(sheetContext).pop();
-                    _promptCloudAuth(isCreateAccount: false);
-                  },
-                  icon: const Icon(Icons.login),
-                  label: Text(l10n.settingsCloudSignInAction),
-                ),
-              ],
-            ),
+      builder: (ctx) => AlertDialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        title: Text(l10n.settingsPrivacyDialogTitle),
+        contentPadding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
+        content: Text(
+          l10n.settingsPrivacyDialogBody,
+          textAlign: TextAlign.start,
+          strutStyle: const StrutStyle(
+            fontSize: 14,
+            height: 1.65,
+            forceStrutHeight: true,
           ),
-        );
-      },
-    );
-  }
-
-  Future<void> _promptCloudAuth({required bool isCreateAccount}) async {
-    final credentials = await _showCloudAuthDialog(
-      isCreateAccount: isCreateAccount,
-    );
-    if (!mounted || credentials == null) {
-      return;
-    }
-
-    final l10n = AppLocalizations.of(context)!;
-    if (credentials.email.isEmpty || credentials.password.isEmpty) {
-      _showSnackBar(l10n.settingsCloudValidationMissingCredentials);
-      return;
-    }
-
-    await _runCloudAction(
-      action: () => isCreateAccount
-          ? _settingsController.createCloudAccount(
-              _state,
-              email: credentials.email,
-              password: credentials.password,
-            )
-          : _settingsController.signInWithEmail(
-              _state,
-              email: credentials.email,
-              password: credentials.password,
-            ),
-      successMessage: isCreateAccount
-          ? l10n.settingsCloudAuthSuccessCreate
-          : l10n.settingsCloudAuthSuccessSignIn,
-    );
-  }
-
-  Future<_CloudCredentials?> _showCloudAuthDialog({
-    required bool isCreateAccount,
-  }) async {
-    final l10n = AppLocalizations.of(context)!;
-    final emailController = TextEditingController(
-      text: _state.cloudAccount.email ?? '',
-    );
-    final passwordController = TextEditingController();
-
-    final result = await showDialog<_CloudCredentials>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(
-            isCreateAccount
-                ? l10n.settingsCloudCreateDialogTitle
-                : l10n.settingsCloudSignInDialogTitle,
+          style: const TextStyle(fontSize: 14, height: 1.65),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.commonOk),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: emailController,
-                keyboardType: TextInputType.emailAddress,
-                autofillHints: const [AutofillHints.username],
-                decoration: InputDecoration(
-                  labelText: l10n.settingsCloudEmailLabel,
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: passwordController,
-                obscureText: true,
-                autofillHints: const [AutofillHints.password],
-                decoration: InputDecoration(
-                  labelText: l10n.settingsCloudPasswordLabel,
-                ),
-                onSubmitted: (_) {
-                  Navigator.of(dialogContext).pop(
-                    _CloudCredentials(
-                      email: emailController.text.trim(),
-                      password: passwordController.text,
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(l10n.commonCancel),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(
-                  _CloudCredentials(
-                    email: emailController.text.trim(),
-                    password: passwordController.text,
-                  ),
-                );
-              },
-              child: Text(
-                isCreateAccount
-                    ? l10n.settingsCloudCreateAccountAction
-                    : l10n.settingsCloudSignInAction,
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    emailController.dispose();
-    passwordController.dispose();
-    return result;
-  }
-
-  Future<void> _signOutCloudAccount() async {
-    final l10n = AppLocalizations.of(context)!;
-    await _runCloudAction(
-      action: () => _settingsController.signOutCloudAccount(_state),
-      successMessage: l10n.settingsCloudSignOutSuccess,
-    );
-  }
-
-  Future<void> _runCloudAction({
-    required Future<SettingsState> Function() action,
-    required String successMessage,
-  }) async {
-    if (_isCloudActionInProgress) {
-      return;
-    }
-
-    setState(() {
-      _isCloudActionInProgress = true;
-    });
-
-    try {
-      final nextState = await action();
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _state = nextState;
-      });
-      _showSnackBar(successMessage);
-    } on FirebaseIdentityException catch (error) {
-      if (!mounted) {
-        return;
-      }
-      _showSnackBar(_mapCloudErrorMessage(error));
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-      _showSnackBar(AppLocalizations.of(context)!.settingsCloudErrorGeneric);
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isCloudActionInProgress = false;
-        });
-      }
-    }
-  }
-
-  String _mapCloudErrorMessage(FirebaseIdentityException error) {
-    final l10n = AppLocalizations.of(context)!;
-    switch (error.code) {
-      case 'firebase-unavailable':
-        return l10n.settingsCloudErrorFirebaseUnavailable;
-      case 'invalid-email':
-        return l10n.settingsCloudErrorInvalidEmail;
-      case 'wrong-password':
-      case 'invalid-credential':
-        return l10n.settingsCloudErrorWrongPassword;
-      case 'user-not-found':
-        return l10n.settingsCloudErrorUserNotFound;
-      case 'email-already-in-use':
-        return l10n.settingsCloudErrorEmailAlreadyInUse;
-      case 'weak-password':
-        return l10n.settingsCloudErrorWeakPassword;
-      default:
-        return error.message ?? l10n.settingsCloudErrorGeneric;
-    }
-  }
-
-  String _cloudAccountSubtitle(AppLocalizations l10n) {
-    final cloudAccount = _state.cloudAccount;
-    if (!cloudAccount.isAvailable) {
-      return l10n.settingsCloudUnavailableSubtitle;
-    }
-    if (cloudAccount.isCrossDeviceReady) {
-      return l10n.settingsCloudConnectedSubtitle(
-        cloudAccount.identifier ?? 'account',
-      );
-    }
-    if (cloudAccount.isAnonymous) {
-      return l10n.settingsCloudAnonymousSubtitle;
-    }
-    return l10n.settingsCloudDisconnectedSubtitle;
-  }
-
-  void _showSnackBar(String message) {
-    if (!mounted) {
-      return;
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+        ],
+      ),
     );
   }
 
   Future<void> _showLanguagePicker() async {
     final l10n = AppLocalizations.of(context)!;
+    final selectedLanguageCode = Localizations.localeOf(context).languageCode;
     await showModalBottomSheet<void>(
       context: context,
       builder: (ctx) {
@@ -369,26 +104,80 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                 ),
               ),
-              ListTile(
-                title: Text(l10n.settingsLanguageEnglish),
+              _buildLanguageOption(
+                context: ctx,
+                label: l10n.settingsLanguageEnglish,
+                languageCode: 'en',
+                selectedLanguageCode: selectedLanguageCode,
                 onTap: () async {
                   Navigator.pop(ctx);
                   await AppLocaleScope.of(context)
                       .setAppLocale(const Locale('en'));
                 },
               ),
-              ListTile(
-                title: Text(l10n.settingsLanguageKorean),
+              _buildLanguageOption(
+                context: ctx,
+                label: l10n.settingsLanguageKorean,
+                languageCode: 'ko',
+                selectedLanguageCode: selectedLanguageCode,
                 onTap: () async {
                   Navigator.pop(ctx);
                   await AppLocaleScope.of(context)
                       .setAppLocale(const Locale('ko'));
                 },
               ),
+              _buildLanguageOption(
+                context: ctx,
+                label: l10n.settingsLanguageJapanese,
+                languageCode: 'ja',
+                selectedLanguageCode: selectedLanguageCode,
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  await AppLocaleScope.of(context)
+                      .setAppLocale(const Locale('ja'));
+                },
+              ),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildLanguageOption({
+    required BuildContext context,
+    required String label,
+    required String languageCode,
+    required String selectedLanguageCode,
+    required VoidCallback onTap,
+  }) {
+    final isSelected = languageCode == selectedLanguageCode;
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+    return ListTile(
+      minTileHeight: 56,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
+      title: Text(
+        label,
+        strutStyle: const StrutStyle(
+          fontSize: 16,
+          height: 1.3,
+          forceStrutHeight: true,
+        ),
+        style: textTheme.titleMedium?.copyWith(
+          fontSize: 16,
+          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+          height: 1.3,
+          color: colorScheme.onSurface,
+        ),
+      ),
+      trailing: isSelected
+          ? Icon(
+              Icons.check_rounded,
+              color: colorScheme.primary,
+            )
+          : null,
+      onTap: onTap,
     );
   }
 
@@ -443,7 +232,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth > 600;
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         bottom: false,
         child: Align(
@@ -459,6 +248,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               children: [
                 _buildTopHeader(),
+                const SizedBox(height: 20),
+                _buildThemeSection(),
                 const SizedBox(height: 20),
                 _buildSettingsSection(
                   AppLocalizations.of(context)!.settingsSectionLanguage,
@@ -506,24 +297,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ],
                 ),
-                // TODO: 계정 세션 섹션 — 출시 후 활성화 예정
-                // _buildSettingsSection(
-                //   AppLocalizations.of(context)!.settingsSectionCloud,
-                //   [
-                //     _buildSettingsTile(
-                //       icon: _state.cloudAccount.isCrossDeviceReady
-                //           ? Icons.verified_user_outlined
-                //           : Icons.person_outline,
-                //       iconColor: const Color(0xFF4FA89F),
-                //       title: AppLocalizations.of(context)!
-                //           .settingsCloudAccountTitle,
-                //       subtitle: _cloudAccountSubtitle(
-                //         AppLocalizations.of(context)!,
-                //       ),
-                //       onTap: _showCloudAccountSheet,
-                //     ),
-                //   ],
-                // ),
                 _buildSettingsSection(
                   AppLocalizations.of(context)!.settingsSectionInfo,
                   [
@@ -535,6 +308,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           AppLocalizations.of(context)!.settingsAppInfoSubtitle,
                       onTap: _showAppAbout,
                     ),
+                    _buildSettingsTile(
+                      icon: Icons.privacy_tip_outlined,
+                      iconColor: const Color(0xFF9E9E9E),
+                      title: AppLocalizations.of(context)!.settingsPrivacyTitle,
+                      subtitle:
+                          AppLocalizations.of(context)!.settingsPrivacySubtitle,
+                      onTap: _showPrivacyPolicy,
+                    ),
                   ],
                 ),
               ],
@@ -542,6 +323,95 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildThemeSection() {
+    final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+          child: Text(
+            l10n.settingsDisplaySection,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: cs.onSurfaceVariant,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: cs.outlineVariant),
+          ),
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF5B8DD9).withValues(alpha: 0.13),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.brightness_6_rounded,
+                      color: const Color(0xFF5B8DD9).withValues(alpha: 0.85),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Text(
+                    l10n.settingsTheme,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: cs.onSurface,
+                        ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              SegmentedButton<ThemeMode>(
+                selected: {_state.themeMode},
+                onSelectionChanged: (modes) => _setThemeMode(modes.first),
+                showSelectedIcon: false,
+                style: SegmentedButton.styleFrom(
+                  selectedBackgroundColor: cs.primary.withValues(alpha: 0.12),
+                  selectedForegroundColor: cs.primary,
+                  foregroundColor: cs.onSurfaceVariant,
+                  side: BorderSide(color: cs.outlineVariant),
+                ),
+                segments: [
+                  ButtonSegment(
+                    value: ThemeMode.system,
+                    icon: const Icon(Icons.brightness_auto_rounded, size: 18),
+                    label: Text(l10n.settingsThemeSystem),
+                  ),
+                  ButtonSegment(
+                    value: ThemeMode.light,
+                    icon: const Icon(Icons.light_mode_rounded, size: 18),
+                    label: Text(l10n.settingsThemeLight),
+                  ),
+                  ButtonSegment(
+                    value: ThemeMode.dark,
+                    icon: const Icon(Icons.dark_mode_rounded, size: 18),
+                    label: Text(l10n.settingsThemeDark),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -557,7 +427,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             padding: const EdgeInsets.only(right: 8),
             child: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-              color: const Color(0xFF1A1A1A),
+              color: colorScheme.onSurface,
               onPressed: () => Navigator.of(context).pop(),
             ),
           ),
@@ -599,7 +469,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         Container(
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: cs.surface,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: cs.outlineVariant),
           ),
@@ -700,14 +570,4 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-}
-
-class _CloudCredentials {
-  const _CloudCredentials({
-    required this.email,
-    required this.password,
-  });
-
-  final String email;
-  final String password;
 }

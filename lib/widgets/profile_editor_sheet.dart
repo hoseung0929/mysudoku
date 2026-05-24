@@ -48,9 +48,7 @@ Future<void> showProfileEditorSheet({
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    Localizations.localeOf(context).languageCode == 'ko'
-                        ? '프로필 편집'
-                        : 'Edit profile',
+                    l10n.profileEditorTitle,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: colorScheme.onSurface,
@@ -125,12 +123,7 @@ Future<void> showProfileEditorSheet({
                                 draftImagePath = null;
                               });
                             },
-                            child: Text(
-                              Localizations.localeOf(context).languageCode ==
-                                      'ko'
-                                  ? '사진 제거'
-                                  : 'Remove photo',
-                            ),
+                            child: Text(l10n.profileEditorRemovePhoto),
                           ),
                         ] else
                           const SizedBox(height: 16),
@@ -143,10 +136,7 @@ Future<void> showProfileEditorSheet({
                     maxLength: 20,
                     textInputAction: TextInputAction.done,
                     decoration: InputDecoration(
-                      labelText:
-                          Localizations.localeOf(context).languageCode == 'ko'
-                              ? '이름'
-                              : 'Name',
+                      labelText: l10n.profileEditorNameLabel,
                       hintText: l10n.homeGuestTitle,
                       counterText: '',
                     ),
@@ -156,11 +146,7 @@ Future<void> showProfileEditorSheet({
                     children: [
                       TextButton(
                         onPressed: () => Navigator.of(sheetContext).pop(),
-                        child: Text(
-                          Localizations.localeOf(context).languageCode == 'ko'
-                              ? '취소'
-                              : 'Cancel',
-                        ),
+                        child: Text(l10n.commonCancel),
                       ),
                       const Spacer(),
                       FilledButton(
@@ -173,11 +159,7 @@ Future<void> showProfileEditorSheet({
                           if (!sheetContext.mounted) return;
                           Navigator.of(sheetContext).pop();
                         },
-                        child: Text(
-                          Localizations.localeOf(context).languageCode == 'ko'
-                              ? '저장'
-                              : 'Save',
-                        ),
+                        child: Text(l10n.commonSave),
                       ),
                     ],
                   ),

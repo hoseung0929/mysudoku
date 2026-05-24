@@ -21,13 +21,13 @@ class RecordsStatisticsScreen extends StatefulWidget {
 
 class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   /// 상태바 아래 프로필 바 본문 높이(홈 [HomeScreen]과 동일).
-  static const double _kProfileHeaderExtent = 104;
+  static const double _kProfileHeaderExtent = 92;
 
   /// 프로필 헤더와 스크롤 본문 사이 여백.
-  static const double _kBelowProfileHeaderGap = 18;
+  static const double _kBelowProfileHeaderGap = 12;
 
   /// 하단 플로팅 탭바 여유 — [HomeScreen._kHomeScrollBottomPad] 와 동일.
-  static const double _kScrollBottomPad = 80;
+  static const double _kScrollBottomPad = 116;
 
   final RecordsStatisticsService _statisticsService =
       RecordsStatisticsService();
@@ -431,7 +431,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   }) {
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
@@ -443,6 +443,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           const SizedBox(height: 8),
           Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 12,
               color: theme.colorScheme.onSurfaceVariant,
@@ -460,7 +462,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 17,
                 fontWeight: FontWeight.w700,
                 color: theme.colorScheme.onSurface,
                 height: 1.2,
@@ -594,6 +596,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 subtitleOverride: l10n.recordsStatsPageSubtitle,
                 onTapSettings: _openSettings,
                 onTapEditProfile: _openProfileEditor,
+                compact: true,
               ),
             ),
             if (_isLoading)
@@ -635,10 +638,18 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(
+              l10n.recordsMetricClearRate,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Text(
@@ -670,14 +681,16 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              l10n.recordsMetricClearRate,
+              l10n.recordsSummaryMetricsFootnote,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurfaceVariant,
+                height: 1.35,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             _adaptiveMetricRow([
               _summaryMetricTile(
                 icon: Icons.timer_outlined,
@@ -703,7 +716,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   }) {
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color:
             theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.38),
@@ -733,7 +746,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w700,
                     color: theme.colorScheme.onSurface,
                     fontFeatures: const [FontFeature.tabularFigures()],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sudoku159/theme/app_colors.dart';
 
 /// Progressive Blur 스타일의 버튼 위젯
 class ProgressiveBlurButton extends StatelessWidget {
@@ -27,32 +28,18 @@ class ProgressiveBlurButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final isEnabled = onPressed != null;
     final effectiveBlurColor = blurColor ?? backgroundColor;
+    final baseColor = Theme.of(context).colorScheme.surface;
+    final baseBorderColor = context.colors.border;
     final surfaceColor = isActive
-        ? Color.lerp(
-            Colors.white,
-            backgroundColor,
-            0.48,
-          )!
+        ? Color.lerp(baseColor, backgroundColor, 0.48)!
         : isEnabled
-            ? Color.lerp(
-                Colors.white,
-                backgroundColor,
-                0.22,
-              )!
-            : const Color(0xFFFAFAF9);
+            ? Color.lerp(baseColor, backgroundColor, 0.22)!
+            : context.colors.surfaceSubtle;
     final borderColor = isActive
-        ? Color.lerp(
-            const Color(0xFFE5E5E3),
-            effectiveBlurColor,
-            0.86,
-          )!
+        ? Color.lerp(baseBorderColor, effectiveBlurColor, 0.86)!
         : isEnabled
-            ? Color.lerp(
-                const Color(0xFFE5E5E3),
-                effectiveBlurColor,
-                0.28,
-              )!
-            : const Color(0xFFDDDDDA);
+            ? Color.lerp(baseBorderColor, effectiveBlurColor, 0.28)!
+            : context.colors.border;
     final contentOpacity = isEnabled
         ? 1.0
         : isActive

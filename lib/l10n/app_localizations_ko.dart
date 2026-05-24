@@ -42,99 +42,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsSectionGame => '게임';
 
   @override
-  String get settingsSectionCloud => '계정';
-
-  @override
   String get settingsSectionInfo => '정보';
-
-  @override
-  String get settingsCloudAccountTitle => 'Firebase 계정';
-
-  @override
-  String get settingsCloudUnavailableSubtitle =>
-      '이 빌드에는 Firebase 설정이 연결되지 않았어요.';
-
-  @override
-  String get settingsCloudAnonymousSubtitle =>
-      '임시 기기 계정으로 로그인되어 있어요. 이메일 계정을 연결할 수 있어요.';
-
-  @override
-  String get settingsCloudDisconnectedSubtitle => '이메일 계정으로 로그인할 수 있어요.';
-
-  @override
-  String settingsCloudConnectedSubtitle(String email) {
-    return '$email 계정으로 로그인되어 있어요.';
-  }
-
-  @override
-  String get settingsCloudConnectSheetTitle => '계정 연결';
-
-  @override
-  String get settingsCloudConnectSheetBody =>
-      '새 이메일 계정을 만들거나 기존 계정으로 로그인할 수 있어요.';
-
-  @override
-  String get settingsCloudManageSheetTitle => '계정 관리';
-
-  @override
-  String get settingsCloudManageSheetBody =>
-      '연결된 계정이 준비되어 있어요. 이 기기에서 로그아웃할 수 있어요.';
-
-  @override
-  String get settingsCloudSignInAction => '로그인';
-
-  @override
-  String get settingsCloudCreateAccountAction => '계정 만들기';
-
-  @override
-  String get settingsCloudSignOutAction => '로그아웃';
-
-  @override
-  String get settingsCloudEmailLabel => '이메일';
-
-  @override
-  String get settingsCloudPasswordLabel => '비밀번호';
-
-  @override
-  String get settingsCloudCreateDialogTitle => '계정 만들기';
-
-  @override
-  String get settingsCloudSignInDialogTitle => '로그인';
-
-  @override
-  String get settingsCloudAuthSuccessSignIn => '로그인했어요.';
-
-  @override
-  String get settingsCloudAuthSuccessCreate => '계정을 연결했어요.';
-
-  @override
-  String get settingsCloudSignOutSuccess => '이 기기에서 로그아웃했어요.';
-
-  @override
-  String get settingsCloudValidationMissingCredentials =>
-      '이메일과 비밀번호를 모두 입력해 주세요.';
-
-  @override
-  String get settingsCloudErrorGeneric => '계정 작업을 완료하지 못했어요.';
-
-  @override
-  String get settingsCloudErrorFirebaseUnavailable =>
-      '이 빌드에는 Firebase 설정이 아직 없어요.';
-
-  @override
-  String get settingsCloudErrorInvalidEmail => '올바른 이메일 주소를 입력해 주세요.';
-
-  @override
-  String get settingsCloudErrorWrongPassword => '비밀번호가 올바르지 않아요.';
-
-  @override
-  String get settingsCloudErrorUserNotFound => '해당 이메일 계정을 찾지 못했어요.';
-
-  @override
-  String get settingsCloudErrorEmailAlreadyInUse => '이미 사용 중인 이메일이에요.';
-
-  @override
-  String get settingsCloudErrorWeakPassword => '비밀번호는 6자 이상으로 입력해 주세요.';
 
   @override
   String get settingsNotificationsTitle => '알림 설정';
@@ -173,6 +81,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsLanguageKorean => '한국어';
+
+  @override
+  String get settingsLanguageJapanese => '日本語';
 
   @override
   String get settingsLanguagePickerTitle => '언어 선택';
@@ -444,7 +355,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsPrivacyDialogBody =>
-      '게임 진행 및 기록은 이 기기에만 저장됩니다. 계정이나 개인정보 수집은 하지 않습니다. 앱을 삭제하면 기기 백업이 없는 한 로컬 데이터가 함께 삭제될 수 있습니다.';
+      '이 앱은 게임 진행, 기록, 프로필 정보, 앱 설정을 이 기기에만 저장합니다. 계정은 필요하지 않으며, 당사 서버로 개인정보를 수집하지 않습니다. 프로필 이미지를 선택하는 경우 사진 보관함 권한은 기기에서 이미지를 선택하고 저장하는 용도로만 사용됩니다. 알림 설정도 기기에만 저장됩니다. 앱을 삭제하면 기기 백업이 없는 한 로컬 데이터가 함께 삭제될 수 있습니다.';
 
   @override
   String get commonOk => '확인';
@@ -533,7 +444,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsTrendTodayLabel => '오늘';
 
   @override
-  String get recordsPlayInsightsTitle => '이번 주 매일';
+  String get recordsPlayInsightsTitle => '이번 주 기록';
 
   @override
   String get recordsPlayCalendarTitle => '요일별';
@@ -585,14 +496,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsMetricClears => '클리어 (필터)';
 
   @override
-  String get recordsMetricClearRate => '퍼즐 대비 비율';
+  String get recordsMetricClearRate => '전체 완료율';
 
   @override
   String get recordsMetricPerfectRate => '퍼펙트율';
 
   @override
   String get recordsSummaryMetricsFootnote =>
-      '클리어 수는 기간·난이도 필터를 반영합니다. 퍼즐 대비 비율은 같은 범위의 클리어 수를 카탈로그에 있는 퍼즐 수로 나눈 값입니다.';
+      '클리어 수는 기간과 난이도 필터를 반영해요. 전체 완료율은 같은 범위에서 푼 퍼즐 수를 전체 퍼즐 수와 비교한 값이에요.';
 
   @override
   String get recordsMetricAvgTime => '평균 시간';
@@ -629,7 +540,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsRetry => '다시 시도';
 
   @override
-  String get recordsStatsPageSubtitle => '클리어 수와 평균 시간을 볼 수 있어요.';
+  String get recordsStatsPageSubtitle => '클리어와 평균 시간을 한눈에 봐요.';
 
   @override
   String get recordsKpiWeeklyClearsLabel => '클리어';
@@ -1145,4 +1056,31 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get achievementSortRarity => '희귀도순';
+
+  @override
+  String get commonSave => '저장';
+
+  @override
+  String get settingsDisplaySection => '화면';
+
+  @override
+  String get settingsTheme => '테마';
+
+  @override
+  String get settingsThemeSystem => '시스템';
+
+  @override
+  String get settingsThemeLight => '라이트';
+
+  @override
+  String get settingsThemeDark => '다크';
+
+  @override
+  String get profileEditorTitle => '프로필 편집';
+
+  @override
+  String get profileEditorRemovePhoto => '사진 제거';
+
+  @override
+  String get profileEditorNameLabel => '이름';
 }

@@ -222,6 +222,121 @@ class AppTheme {
           color: secondaryTextColor,
         ),
       ),
+      extensions: const [AppColorsExtension.light],
+    );
+  }
+
+  static ThemeData darkTheme() {
+    const dark = AppColorsExtension.dark;
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: const Color(0xFF6B9FE4),
+      brightness: Brightness.dark,
+    ).copyWith(
+      primary: dark.textPrimary,
+      onPrimary: dark.background,
+      primaryContainer: dark.surfaceSubtle,
+      onPrimaryContainer: dark.textPrimary,
+      secondary: AppColors.boardAccent,
+      onSecondary: dark.textPrimary,
+      secondaryContainer: const Color(0xFF2A3330),
+      onSecondaryContainer: dark.textPrimary,
+      tertiary: AppColors.boardAccent2,
+      onTertiary: dark.textPrimary,
+      tertiaryContainer: dark.borderLight,
+      onTertiaryContainer: dark.textPrimary,
+      surface: dark.surface,
+      onSurface: dark.textPrimary,
+      onSurfaceVariant: dark.textSecondary,
+      outline: dark.border,
+      outlineVariant: dark.borderLight,
+      surfaceContainerLowest: dark.background,
+      surfaceContainerLow: dark.surfaceSubtle,
+      surfaceContainer: dark.surfaceSubtle,
+      surfaceContainerHigh: dark.borderLight,
+      surfaceContainerHighest: dark.divider,
+      error: dark.attention,
+      onError: dark.background,
+      errorContainer: dark.attentionSurface,
+      onErrorContainer: dark.textPrimary,
+    );
+
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      scaffoldBackgroundColor: dark.background,
+      canvasColor: dark.background,
+      textTheme: GoogleFonts.notoSansTextTheme(ThemeData.dark().textTheme).copyWith(
+        displayLarge: GoogleFonts.notoSans(fontSize: 32, fontWeight: FontWeight.bold, color: dark.textPrimary),
+        displayMedium: GoogleFonts.notoSans(fontSize: 28, fontWeight: FontWeight.bold, color: dark.textPrimary),
+        displaySmall: GoogleFonts.notoSans(fontSize: 24, fontWeight: FontWeight.bold, color: dark.textPrimary),
+        headlineLarge: GoogleFonts.notoSans(fontSize: 22, fontWeight: FontWeight.w600, color: dark.textPrimary),
+        headlineMedium: GoogleFonts.notoSans(fontSize: 20, fontWeight: FontWeight.w600, color: dark.textPrimary),
+        headlineSmall: GoogleFonts.notoSans(fontSize: 18, fontWeight: FontWeight.w600, color: dark.textPrimary),
+        titleLarge: GoogleFonts.notoSans(fontSize: 16, fontWeight: FontWeight.w600, color: dark.textPrimary),
+        titleMedium: GoogleFonts.notoSans(fontSize: 14, fontWeight: FontWeight.w500, color: dark.textPrimary),
+        titleSmall: GoogleFonts.notoSans(fontSize: 12, fontWeight: FontWeight.w500, color: dark.textSecondary),
+        bodyLarge: GoogleFonts.notoSans(fontSize: 16, fontWeight: FontWeight.normal, color: dark.textPrimary),
+        bodyMedium: GoogleFonts.notoSans(fontSize: 14, fontWeight: FontWeight.normal, color: dark.textPrimary),
+        bodySmall: GoogleFonts.notoSans(fontSize: 12, fontWeight: FontWeight.normal, color: dark.textSecondary),
+        labelLarge: GoogleFonts.notoSans(fontSize: 14, fontWeight: FontWeight.w500, color: dark.textPrimary),
+        labelMedium: GoogleFonts.notoSans(fontSize: 12, fontWeight: FontWeight.w500, color: dark.textSecondary),
+        labelSmall: GoogleFonts.notoSans(fontSize: 10, fontWeight: FontWeight.w500, color: dark.textSecondary),
+      ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: dark.surface,
+        foregroundColor: dark.textPrimary,
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        titleTextStyle: GoogleFonts.notoSans(fontSize: 20, fontWeight: FontWeight.w600, color: dark.textPrimary),
+      ),
+      cardTheme: CardThemeData(
+        color: dark.surface,
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: dark.border),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: dark.textPrimary,
+          foregroundColor: dark.background,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          textStyle: GoogleFonts.notoSans(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(elevation: 0, shadowColor: Colors.transparent),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: dark.textSecondary,
+          textStyle: GoogleFonts.notoSans(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: dark.surfaceSubtle,
+        border: OutlineInputBorder(
+          borderRadius: const BorderRadius.all(Radius.circular(18)),
+          borderSide: BorderSide(color: dark.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: const BorderRadius.all(Radius.circular(18)),
+          borderSide: BorderSide(color: dark.border),
+        ),
+        focusedBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(18)),
+          borderSide: BorderSide(color: AppColors.boardAccent2, width: 2),
+        ),
+        labelStyle: GoogleFonts.notoSans(color: dark.textSecondary),
+      ),
+      extensions: const [AppColorsExtension.dark],
     );
   }
 
