@@ -1,100 +1,97 @@
 # Sudoku159
 
-Flutter로 만든 스도쿠 앱입니다. 단순 퍼즐 플레이를 넘어서 일일 챌린지, 업적, 통계, 저장 게임 복원, 알림, 프로필 커스터마이징까지 포함하는 구조로 개발되어 있습니다.
+Flutter로 만든 스도쿠 앱입니다. 레벨별 퍼즐 플레이, 일일 챌린지, 업적, 기록/통계, 저장 게임 복원, 알림, 프로필 설정을 지원합니다.
+
+- 패키지명: `sudoku159`
+- 앱 버전: `1.1.0+2` (`pubspec.yaml` 기준)
+- 상세 구조: [`ARCHITECTURE.md`](ARCHITECTURE.md)
 
 ## 주요 기능
 
-- 5개 난이도 레벨과 레벨별 퍼즐 카탈로그
+- 5개 난이도 레벨과 레벨별 퍼즐 카탈로그 (일반 레벨 159문제, 마스터 20문제 목표)
 - 진행 중 게임 저장 및 복원
 - 메모 모드, 힌트, 오답 카운트, 게임 오버
-- 일일 챌린지, 연속 플레이, 주간 목표
-- 업적 배지와 기록/통계 화면
-- 공유, 로컬 알림, 프로필 이미지/이름 설정
-- 한국어/영어 로컬라이제이션
+- 홈 화면의 오늘의 챌린지, 연속 플레이, 주간 목표
+- 업적·기록·통계
+- 결과 공유, 로컬 알림, 프로필 이미지/이름
+- 한국어 / 영어 / 일본어 로컬라이제이션
 
 ## 기술 스택
 
-- Flutter
-- Dart
-- `sqflite`
-- `shared_preferences`
-- `flutter_local_notifications`
-- `share_plus`
-- `image_picker`
-- `wakelock_plus`
-- `vibration`
-- `firebase_core`
-- `firebase_auth`
+| 영역 | 패키지 |
+|------|--------|
+| UI | Flutter, `google_fonts` |
+| 로컬 DB | `sqflite` |
+| 설정·세션 | `shared_preferences` |
+| 원격 카탈로그 | `http` (`SUDOKU_API_BASE_URL`, 선택) |
+| 기타 | `flutter_local_notifications`, `share_plus`, `image_picker`, `wakelock_plus`, `vibration` |
 
-## 앱 구조
+계정·클라우드 동기화는 **Firebase를 사용하지 않습니다**. 기기별 익명 `install_id`로 로컬 식별과 기록 백업 페이로드를 구성합니다.
 
-앱 진입점은 [`lib/main.dart`](lib/main.dart)입니다.
+## 앱 구조 (요약)
 
-- 홈 탭 구성
-  - `LevelSelectionMain`: 홈/레벨 선택 허브
-  - `ChallengeScreen`: 일일 챌린지와 업적
-  - `RecordsStatisticsScreen`: 기록과 통계
-- 실제 플레이 화면
-  - `SudokuGameScreen`: 게임 UI 조립
-  - `GameSessionController`: 세션 복원/저장/정리
-  - `GameSettingsController`: 게임 화면 설정 로드
-  - `GameEndFlow`: 완료/실패/공유 흐름
+진입점: [`lib/main.dart`](lib/main.dart)
+
+1. `StartupCatalogPreparingGate` — 퍼즐 카탈로그 준비(최소 1문제/레벨) 후 진입
+2. `MyHomePage` — 하단 탭 2개
+   - **홈** [`HomeScreen`](lib/view/home/home_screen.dart): 레벨 선택, 이어하기, 오늘의 챌린지, 내 페이스
+   - **기록** [`RecordsStatisticsScreen`](lib/view/records/records_statistics_screen.dart): 클리어 기록·통계
+3. 게임 [`SudokuGameScreen`](lib/view/sudoku_game/sudoku_game_screen.dart) — 세션/설정/종료 흐름은 전용 컨트롤러·플로우로 분리
+
+챌린지·업적 전용 UI는 [`lib/view/challenge/`](lib/view/challenge/)에 있으며, 홈에서 오늘의 챌린지 등으로 연결됩니다.
 
 ## 디렉터리 개요
 
 ```text
 lib/
-  constants/     화면/통계 필터 상수
-  database/      SQLite 저장소와 repository 계층
-  l10n/          로컬라이제이션 코드와 헬퍼
-  model/         SudokuLevel, SudokuGame 등 도메인 모델
-  navigation/    탭 이동용 scope
-  presenter/     게임 플레이 로직과 보드 제어
-  services/      홈 대시보드, 업적, 챌린지, 세션, 설정 등 앱 서비스
-  theme/         앱 테마
+  constants/     화면·통계 필터 상수
+  database/      SQLite, repository
+  l10n/          생성된 ARB 로컬라이제이션 + 헬퍼
+  model/         SudokuLevel, SudokuGame 등
+  navigation/    탭 전환 scope
+  presenter/     게임·보드·타이머·설정 컨트롤러
+  services/      홈, 챌린지, 세션, 카탈로그, identity 등
+  theme/         라이트/다크 테마
   utils/         퍼즐 생성기, board codec, logger
-  view/          화면 단위 UI
-  view/sudoku_game/
-                 게임 화면 전용 흐름/컨트롤러/서브 UI
+  view/          화면
+  view/sudoku_game/  게임 화면 전용 컨트롤러·플로우
   widgets/       공용 위젯
+arb/             번역 소스 (ko, en, ja)
+test/            단위·위젯 테스트
+integration_test/  통합 테스트
 ```
 
-## 데이터 저장 전략
+## 데이터 저장
 
-- 공용 퍼즐 카탈로그는 HTTP에서 내려받아 SQLite에 캐시하고, 원격 설정이 없으면 로컬에서 생성합니다.
-  - 관련 진입점: [`lib/database/database_manager.dart`](lib/database/database_manager.dart)
-- 진행 중 세션은 `SharedPreferences`에 저장합니다.
-  - 관련 진입점: [`lib/services/game_state_service.dart`](lib/services/game_state_service.dart)
-- 홈 대시보드는 저장 세션, 퍼즐 엔트리, 업적/챌린지 정보를 조합해서 화면용 데이터로 만듭니다.
-  - 관련 진입점: [`lib/services/home_dashboard_service.dart`](lib/services/home_dashboard_service.dart)
+| 데이터 | 저장소 | 진입점 |
+|--------|--------|--------|
+| 퍼즐·클리어 기록 | SQLite (`sudoku_games.db`) | [`database_manager.dart`](lib/database/database_manager.dart) |
+| 카탈로그 출처 | `app_metadata.catalog_source` (`local` / `remote`) | 동일 |
+| 진행 중 세션 | SharedPreferences | [`game_state_service.dart`](lib/services/game/game_state_service.dart) |
+| 설치 식별자 | SharedPreferences (`install_id`) | [`install_id_service.dart`](lib/services/identity/install_id_service.dart) |
+| 홈 대시보드 | 위 소스 조합 | [`home_dashboard_service.dart`](lib/services/home/home_dashboard_service.dart) |
 
-### Firebase Auth
+### 퍼즐 카탈로그
 
-현재 코드는 Firebase가 초기화되면 익명 로그인을 시도하고, 설정 화면에서 이메일 계정 생성/로그인을 제공합니다. 계정 준비 절차는 [`FIREBASE_SETUP.md`](FIREBASE_SETUP.md)에 정리되어 있습니다.
+- 최초 설치: 번들 [`assets/initial_puzzles.db`](assets/initial_puzzles.db) 복사 후, 부족분은 로컬 생성 또는 원격 동기화
+- `SUDOKU_API_BASE_URL`이 설정되면 HTTP 카탈로그를 SQLite에 캐시 (`remote`)
+- 미설정 시 로컬 생성·보충 (`local`), 레벨당 목표는 일반 159 / 마스터 20
 
-1. Firebase 프로젝트 생성
-2. Auth에서 `Email/Password` 활성화
-3. 필요 시 `Anonymous` 활성화
-4. `flutterfire configure` 실행
+원격 API 실행 예:
+
+```bash
+flutter run --dart-define=SUDOKU_API_BASE_URL=https://your-api.example
+```
 
 ## 게임 화면 책임 분리
 
-`SudokuGameScreen`은 최근 리팩터링으로 책임을 나눠둔 상태입니다.
-
-- 세션 처리: [`lib/view/sudoku_game/game_session_controller.dart`](lib/view/sudoku_game/game_session_controller.dart)
-- 설정 처리: [`lib/view/sudoku_game/game_settings_controller.dart`](lib/view/sudoku_game/game_settings_controller.dart)
-- 종료 흐름: [`lib/view/sudoku_game/game_end_flow.dart`](lib/view/sudoku_game/game_end_flow.dart)
-- 완료 데이터 준비: [`lib/view/sudoku_game/game_completion_coordinator.dart`](lib/view/sudoku_game/game_completion_coordinator.dart)
-
-이 구조 덕분에 화면 파일은 UI 상태와 상호작용 쪽에 더 집중하고, 저장/설정/결과 후처리는 별도 객체가 담당합니다.
-
-## 퍼즐 데이터 생성 방식
-
-- DB가 비어 있으면 레벨별 초기 시드 퍼즐을 생성합니다.
-- 앱 오픈 시 부족한 퍼즐 수를 백그라운드에서 보충합니다.
-- 기본 목표 수량은 레벨별 100개입니다.
-
-관련 구현은 [`lib/database/database_manager.dart`](lib/database/database_manager.dart)에 있습니다.
+| 역할 | 파일 |
+|------|------|
+| UI·입력 | `sudoku_game_screen.dart` |
+| 규칙·타이머 | `presenter/game/sudoku_game_presenter.dart` |
+| 세션 저장/복원 | `game_session_controller.dart` |
+| 게임 설정 | `game_settings_controller.dart` |
+| 완료/실패/공유 | `game_end_flow.dart`, `game_completion_coordinator.dart` |
 
 ## 개발 시작
 
@@ -103,7 +100,7 @@ flutter pub get
 flutter run
 ```
 
-`flutter clean` 뒤에 바로 실행할 때나 macOS `._*` 파일 때문에 툴 상태가 꼬였을 때는 아래 스크립트를 쓰면 정리와 재실행을 한 번에 할 수 있습니다.
+`flutter clean` 이후나 macOS `._*` 파일로 도구가 꼬였을 때:
 
 ```bash
 bash scripts/flutter_refresh_run.sh -d "iPhone 16"
@@ -111,33 +108,35 @@ bash scripts/flutter_refresh_run.sh -d "iPhone 16"
 
 ## 검증
 
-푸시 전에 아래 스크립트 실행을 권장합니다.
+푸시 전 권장:
 
 ```bash
 bash scripts/verify.sh
 ```
 
-이 스크립트는 다음을 수행합니다.
+- AppleDouble(`._*`) 제거
+- `flutter pub get` → `flutter analyze` → `flutter test`
 
-- `._*` AppleDouble 파일 제거
-- `flutter pub get`
-- `flutter analyze`
-- `flutter test`
-
-## 테스트
-
-- 단위/위젯 테스트: `test/`
-- 통합 테스트: `integration_test/`
+개별 실행:
 
 ```bash
 flutter test
 flutter test integration_test
 ```
 
-## 참고
+## macOS 참고
 
-macOS 환경에서는 `._*` 파일이 생기면 Flutter/Dart 테스트가 UTF-8 오류로 실패할 수 있습니다. 필요하면 아래 스크립트로 정리할 수 있습니다.
+`._*` 파일이 생기면 테스트·l10n이 UTF-8 오류를 낼 수 있습니다.
 
 ```bash
 bash tool/clean_apple_double.sh
 ```
+
+## 레거시 파일
+
+루트의 `firebase.json`, `.firebaserc.example`은 과거 Firebase 연동용이며 **현재 앱 빌드·런타임에 사용하지 않습니다**. Firebase Auth는 제거되었고, 관련 설정 가이드(`FIREBASE_SETUP.md`)도 삭제했습니다.
+
+## 관련 문서
+
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — 계층, 시작·게임·카탈로그 흐름, 테스트
+- [`skills/sudoku-design-guide/SKILL.md`](skills/sudoku-design-guide/SKILL.md) — UI 디자인 가이드 (에이전트용)

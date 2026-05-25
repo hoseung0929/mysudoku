@@ -190,7 +190,7 @@ class ProfileGlassHeader extends StatelessWidget {
                       width: settingButtonSize,
                       height: settingButtonSize,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: colorScheme.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(18),
                         border: Border.all(
                           color: colorScheme.outlineVariant

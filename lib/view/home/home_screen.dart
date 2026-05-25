@@ -11,7 +11,6 @@ import 'package:sudoku159/services/records/game_record_notifier.dart';
 import 'package:sudoku159/services/home/home_dashboard_service.dart';
 import 'package:sudoku159/services/home/level_progress_service.dart';
 import 'package:sudoku159/services/home/my_pace_service.dart';
-import 'package:sudoku159/theme/app_theme.dart';
 import 'package:sudoku159/services/profile/profile_state_service.dart';
 import 'package:sudoku159/view/home/level_picker_screen.dart';
 import 'package:sudoku159/view/settings/settings_screen.dart';
@@ -564,7 +563,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: AppTheme.surfaceTint,
+                      color: colorScheme.surfaceContainerLow,
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
@@ -771,8 +770,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: FilledButton(
                   onPressed: _openMyPaceGame,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.homeMyPaceCtaBackground,
-                    foregroundColor: AppTheme.homeMyPaceCtaForeground,
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
                     minimumSize: const Size.fromHeight(54),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 22,
@@ -1046,7 +1045,9 @@ class _LevelCardState extends State<_LevelCard> {
             constraints: const BoxConstraints(minHeight: 72),
             padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
             decoration: BoxDecoration(
-              color: _pressed ? colorScheme.surfaceContainerLow : Colors.white,
+              color: _pressed
+                  ? colorScheme.surfaceContainerLow
+                  : colorScheme.surface,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: colorScheme.outlineVariant,

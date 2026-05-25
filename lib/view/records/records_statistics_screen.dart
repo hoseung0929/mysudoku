@@ -833,21 +833,22 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   }
 
   Widget _buildLoadErrorBanner(AppLocalizations l10n, String message) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceTint,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: AppTheme.lineColor,
+          color: colorScheme.outlineVariant,
         ),
       ),
       child: Row(
         children: [
           Icon(
             Icons.error_outline_rounded,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            color: colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -856,7 +857,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
+                color: colorScheme.onSurface,
                 fontSize: 13,
               ),
             ),

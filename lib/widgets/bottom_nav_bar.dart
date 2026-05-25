@@ -18,6 +18,9 @@ class BottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final navColor = colorScheme.brightness == Brightness.dark
+        ? colorScheme.surfaceContainerLow
+        : colorScheme.surface;
     final items = [
       const _BottomNavItemData(
         icon: Icons.cottage_rounded,
@@ -53,8 +56,8 @@ class BottomNavBar extends StatelessWidget {
                 curve: Curves.easeOut,
                 decoration: BoxDecoration(
                   color: isTop
-                      ? Colors.white
-                      : Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.38),
+                      ? navColor
+                      : navColor.withValues(alpha: 0.72),
                   borderRadius: BorderRadius.circular(46),
                   border: Border.all(
                     color: isTop
