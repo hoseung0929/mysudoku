@@ -389,21 +389,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   selectedForegroundColor: cs.primary,
                   foregroundColor: cs.onSurfaceVariant,
                   side: BorderSide(color: cs.outlineVariant),
+                  textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
                 ),
                 segments: [
                   ButtonSegment(
                     value: ThemeMode.system,
-                    icon: const Icon(Icons.brightness_auto_rounded, size: 18),
+                    icon: const Icon(Icons.brightness_auto_rounded, size: 16),
                     label: Text(l10n.settingsThemeSystem),
                   ),
                   ButtonSegment(
                     value: ThemeMode.light,
-                    icon: const Icon(Icons.light_mode_rounded, size: 18),
+                    icon: const Icon(Icons.light_mode_rounded, size: 16),
                     label: Text(l10n.settingsThemeLight),
                   ),
                   ButtonSegment(
                     value: ThemeMode.dark,
-                    icon: const Icon(Icons.dark_mode_rounded, size: 18),
+                    icon: const Icon(Icons.dark_mode_rounded, size: 16),
                     label: Text(l10n.settingsThemeDark),
                   ),
                 ],

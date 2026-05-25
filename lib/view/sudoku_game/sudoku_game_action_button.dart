@@ -21,7 +21,10 @@ class SudokuGameActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveLabelColor = Theme.of(context).colorScheme.onSurface;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final effectiveLabelColor = (isDark && isActive)
+        ? const Color(0xFF6DCCA0)
+        : Theme.of(context).colorScheme.onSurface;
     return ProgressiveBlurButton(
       onPressed: onPressed,
       width: 92,

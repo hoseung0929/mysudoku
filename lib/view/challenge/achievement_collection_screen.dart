@@ -375,11 +375,16 @@ class _CollectionBadgeTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final unlocked = badge.unlocked;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: unlocked ? badge.surfaceColor : cs.surfaceContainerLow,
+        color: unlocked
+            ? (isDark
+                ? badge.accentColor.withValues(alpha: 0.15)
+                : badge.surfaceColor)
+            : cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: unlocked

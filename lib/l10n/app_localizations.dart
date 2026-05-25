@@ -103,7 +103,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'My Sudoku'**
+  /// **'Sudoku159'**
   String get appTitle;
 
   /// No description provided for @navHome.
@@ -601,13 +601,13 @@ abstract class AppLocalizations {
   /// No description provided for @shareSubject.
   ///
   /// In en, this message translates to:
-  /// **'My Sudoku result'**
+  /// **'Sudoku159 result'**
   String get shareSubject;
 
   /// No description provided for @shareClearHeader.
   ///
   /// In en, this message translates to:
-  /// **'My Sudoku clear'**
+  /// **'Sudoku159 clear'**
   String get shareClearHeader;
 
   /// No description provided for @shareClearLine.
@@ -739,7 +739,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAboutDeveloperNote.
   ///
   /// In en, this message translates to:
-  /// **'Enjoy playing My Sudoku!'**
+  /// **'Enjoy playing Sudoku159!'**
   String get settingsAboutDeveloperNote;
 
   /// No description provided for @settingsPrivacyDialogTitle.
@@ -1543,7 +1543,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeGuestTitle.
   ///
   /// In en, this message translates to:
-  /// **'Guest'**
+  /// **'Traveler'**
   String get homeGuestTitle;
 
   /// No description provided for @homeGuestSubtitle.
@@ -2043,6 +2043,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Name'**
   String get profileEditorNameLabel;
+
+  /// No description provided for @homeTodayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'TODAY'**
+  String get homeTodayLabel;
+
+  /// No description provided for @homeTodayPuzzleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a quiet moment\nwith today\'s puzzle.'**
+  String get homeTodayPuzzleTitle;
+
+  /// No description provided for @homeCatalogFirstTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing your first puzzle set'**
+  String get homeCatalogFirstTitle;
+
+  /// No description provided for @homeCatalogFirstBody.
+  ///
+  /// In en, this message translates to:
+  /// **'On your first launch, Sudoku puzzles are saved on your device. After this, the app opens much faster.'**
+  String get homeCatalogFirstBody;
+
+  /// No description provided for @homeCatalogFirstNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparation continues in the background, so you can keep exploring right away.'**
+  String get homeCatalogFirstNote;
+
+  /// No description provided for @homeCatalogFirstContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to home'**
+  String get homeCatalogFirstContinue;
+
+  /// No description provided for @homeLevelProgressSolved.
+  ///
+  /// In en, this message translates to:
+  /// **'{cleared} / {total} solved'**
+  String homeLevelProgressSolved(int cleared, int total);
+
+  /// No description provided for @levelFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get levelFilterAll;
+
+  /// No description provided for @levelFilterNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get levelFilterNew;
+
+  /// No description provided for @levelFilterInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get levelFilterInProgress;
+
+  /// No description provided for @levelFilterDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get levelFilterDone;
+
+  /// No description provided for @levelProgressCardMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with {levelName} puzzles today'**
+  String levelProgressCardMessage(String levelName);
+
+  /// No description provided for @levelProgressCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'/ {total} completed'**
+  String levelProgressCompleted(int total);
+
+  /// No description provided for @levelContinuePlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue playing'**
+  String get levelContinuePlaying;
+
+  /// No description provided for @levelStatusInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get levelStatusInProgress;
+
+  /// No description provided for @levelNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results.'**
+  String get levelNoResults;
+
+  /// No description provided for @levelReplayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay this puzzle?'**
+  String get levelReplayTitle;
+
+  /// No description provided for @levelReplayBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your completed record is kept, and it updates only if the new result is better.'**
+  String get levelReplayBody;
+
+  /// No description provided for @levelReplayConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay'**
+  String get levelReplayConfirm;
+
+  /// No description provided for @levelTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get levelTryAgain;
 }
 
 class _AppLocalizationsDelegate

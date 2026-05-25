@@ -93,7 +93,7 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
     textDisabled: Color(0xFF4A4A4A),
     boardUserNumber: Color(0xFF6B9FE4),
     attention: Color(0xFFCF8D7E),
-    attentionSurface: Color(0xFF2D1F1C),
+    attentionSurface: Color(0xFF5C2A22),
   );
 
   @override

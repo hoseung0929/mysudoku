@@ -9,7 +9,7 @@ class AppLocalizationsKo extends AppLocalizations {
   AppLocalizationsKo([String locale = 'ko']) : super(locale);
 
   @override
-  String get appTitle => '마이 스도쿠';
+  String get appTitle => 'Sudoku159';
 
   @override
   String get navHome => '홈';
@@ -268,10 +268,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get shareCopySuccess => '결과 문구를 복사했어요.';
 
   @override
-  String get shareSubject => 'My Sudoku 결과';
+  String get shareSubject => 'Sudoku159 결과';
 
   @override
-  String get shareClearHeader => 'My Sudoku 완료';
+  String get shareClearHeader => 'Sudoku159 완료';
 
   @override
   String shareClearLine(String level, int number) {
@@ -348,7 +348,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get settingsAboutDeveloperNote => '마이 스도쿠를 즐겨 주세요!';
+  String get settingsAboutDeveloperNote => 'Sudoku159를 즐겨 주세요!';
 
   @override
   String get settingsPrivacyDialogTitle => '개인정보 안내';
@@ -804,7 +804,7 @@ class AppLocalizationsKo extends AppLocalizations {
       '오늘의 도전이 아직 남아 있어요. 지금 시작하면 스트릭을 이어갈 수 있어요.';
 
   @override
-  String get homeGuestTitle => '게스트1';
+  String get homeGuestTitle => '여행자';
 
   @override
   String get homeGuestSubtitle => '지금 바로 한 판 시작해보세요';
@@ -1083,4 +1083,71 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get profileEditorNameLabel => '이름';
+
+  @override
+  String get homeTodayLabel => '오늘의 퍼즐';
+
+  @override
+  String get homeTodayPuzzleTitle => '오늘의 퍼즐 하나에\n조용히 집중해보세요.';
+
+  @override
+  String get homeCatalogFirstTitle => '첫 퍼즐 세트를 준비하고 있어요';
+
+  @override
+  String get homeCatalogFirstBody =>
+      '처음 실행에서는 스도쿠 문제를 기기에 저장해요. 잠시만 기다리면 이후부터는 훨씬 빠르게 열려요.';
+
+  @override
+  String get homeCatalogFirstNote => '준비는 백그라운드에서도 계속돼요. 지금 바로 둘러봐도 괜찮아요.';
+
+  @override
+  String get homeCatalogFirstContinue => '홈으로 계속';
+
+  @override
+  String homeLevelProgressSolved(int cleared, int total) {
+    return '$cleared / $total 완료';
+  }
+
+  @override
+  String get levelFilterAll => '전체';
+
+  @override
+  String get levelFilterNew => '새 퍼즐';
+
+  @override
+  String get levelFilterInProgress => '진행 중';
+
+  @override
+  String get levelFilterDone => '완료';
+
+  @override
+  String levelProgressCardMessage(String levelName) {
+    return '오늘은 $levelName 퍼즐부터 시작해보세요';
+  }
+
+  @override
+  String levelProgressCompleted(int total) {
+    return '/ $total 완료';
+  }
+
+  @override
+  String get levelContinuePlaying => '최근 플레이';
+
+  @override
+  String get levelStatusInProgress => '진행 중';
+
+  @override
+  String get levelNoResults => '해당 항목이 없습니다.';
+
+  @override
+  String get levelReplayTitle => '완료한 퍼즐을 다시 풀까요?';
+
+  @override
+  String get levelReplayBody => '완료 기록은 유지되고, 더 좋은 결과일 때만 업데이트돼요.';
+
+  @override
+  String get levelReplayConfirm => '다시 풀기';
+
+  @override
+  String get levelTryAgain => '다시 시도';
 }

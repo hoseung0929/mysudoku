@@ -38,7 +38,7 @@ class ProfileGlassHeader extends StatelessWidget {
     final trimmedName = profileName?.trim() ?? '';
     final hasName = trimmedName.isNotEmpty;
     final displayName = titleOverride ?? (hasName ? trimmedName : guestTitle);
-    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
+    final languageCode = Localizations.localeOf(context).languageCode;
     final avatarRadius = compact ? 22.0 : 25.0;
     final avatarIconSize = compact ? 28.0 : 31.0;
     final headerPadding = EdgeInsets.fromLTRB(
@@ -53,7 +53,7 @@ class ProfileGlassHeader extends StatelessWidget {
     final settingButtonSize = compact ? 40.0 : 42.0;
     final subtitleText = subtitleOverride ??
         _buildGreetingMessage(
-          isKorean: isKorean,
+          languageCode: languageCode,
           hour: DateTime.now().hour,
         );
 
@@ -214,25 +214,22 @@ class ProfileGlassHeader extends StatelessWidget {
   }
 
   String _buildGreetingMessage({
-    required bool isKorean,
+    required String languageCode,
     required int hour,
   }) {
     final period = _timePeriod(hour);
     switch (period) {
       case _GreetingTimePeriod.morning:
-        if (isKorean) {
-          return '가볍게 한 판 시작해볼까요?';
-        }
+        if (languageCode == 'ko') return '가볍게 한 판 시작해볼까요?';
+        if (languageCode == 'ja') return 'さあ、一局始めましょう。';
         return 'Start with a light puzzle.';
       case _GreetingTimePeriod.afternoon:
-        if (isKorean) {
-          return '집중 퍼즐 한 판, 딱 좋아요.';
-        }
+        if (languageCode == 'ko') return '집중 퍼즐 한 판, 딱 좋아요.';
+        if (languageCode == 'ja') return '集中して一局、いかがですか。';
         return 'A focused puzzle fits now.';
       case _GreetingTimePeriod.evening:
-        if (isKorean) {
-          return '차분하게 퍼즐로 마무리해요.';
-        }
+        if (languageCode == 'ko') return '차분하게 퍼즐로 마무리해요.';
+        if (languageCode == 'ja') return '静かにパズルで締めくくりましょう。';
         return 'Wind down with a calm puzzle.';
     }
   }

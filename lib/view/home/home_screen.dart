@@ -515,14 +515,12 @@ class _HomeScreenState extends State<HomeScreen> {
   /// 스크롤 콘텐츠가 아래로 지나갈 때 블러로 비치는 상단 프로필 바 (상태바 영역까지 동일 글래스)
   Widget _buildGlassProfileHeader() {
     final l10n = AppLocalizations.of(context)!;
-    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
     return ProfileGlassHeader(
       isTop: _isTop,
       profileName: _profileName,
       guestTitle: l10n.homeGuestTitle,
       profileImagePath: _profileImagePath,
       onTapSettings: _openSettings,
-      sectionLabel: isKorean ? '홈' : 'Home',
       onTapEditProfile: _openProfileEditor,
     );
   }
@@ -548,7 +546,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildCatalogIntroOverlay() {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
     return Positioned.fill(
       child: ColoredBox(
         color: Colors.black.withValues(alpha: 0.28),
@@ -602,9 +599,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             const SizedBox(height: 18),
                             Text(
-                              isKorean
-                                  ? '첫 퍼즐 세트를 준비하고 있어요'
-                                  : 'Preparing your first puzzle set',
+                              l10n.homeCatalogFirstTitle,
                               style: TextStyle(
                                 fontSize: 24,
                                 height: 1.2,
@@ -614,9 +609,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             const SizedBox(height: 10),
                             Text(
-                              isKorean
-                                  ? '처음 실행에서는 스도쿠 문제를 기기에 저장해요. 잠시만 기다리면 이후부터는 훨씬 빠르게 열려요.'
-                                  : 'On your first launch, Sudoku puzzles are saved on your device. After this, the app opens much faster.',
+                              l10n.homeCatalogFirstBody,
                               style: TextStyle(
                                 fontSize: 15,
                                 height: 1.5,
@@ -667,9 +660,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             const SizedBox(height: 14),
                             Text(
-                              isKorean
-                                  ? '준비는 백그라운드에서도 계속돼요. 지금 바로 둘러봐도 괜찮아요.'
-                                  : 'Preparation continues in the background, so you can keep exploring right away.',
+                              l10n.homeCatalogFirstNote,
                               style: TextStyle(
                                 color: colorScheme.onSurfaceVariant,
                                 height: 1.45,
@@ -681,7 +672,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: FilledButton(
                                 onPressed: _dismissCatalogIntro,
                                 child: Text(
-                                  isKorean ? '홈으로 계속' : 'Continue to home',
+                                  l10n.homeCatalogFirstContinue,
                                 ),
                               ),
                             ),
@@ -702,9 +693,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildTodaySpotlightCard(SudokuGame game) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final challengeDone = _challengeProgress?.isTodayChallengeCleared ?? false;
     final myPaceLabel = _myPacePreviewLabel(l10n);
-    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Container(
@@ -728,7 +719,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  isKorean ? '오늘의 퍼즐' : 'TODAY',
+                  l10n.homeTodayLabel,
                   style: TextStyle(
                     color: colorScheme.onSurfaceVariant,
                     fontSize: 11,
@@ -740,9 +731,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              isKorean
-                  ? '오늘의 퍼즐 하나에\n조용히 집중해보세요.'
-                  : 'Take a quiet moment\nwith today\'s puzzle.',
+              l10n.homeTodayPuzzleTitle,
               style: TextStyle(
                 color: colorScheme.onSurface,
                 fontSize: 28,
@@ -770,8 +759,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: FilledButton(
                   onPressed: _openMyPaceGame,
                   style: FilledButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: colorScheme.onPrimary,
+                    backgroundColor: isDark
+                        ? const Color(0xFF2A3540)
+                        : colorScheme.primary,
+                    foregroundColor: isDark
+                        ? const Color(0xFFDDE8F4)
+                        : colorScheme.onPrimary,
                     minimumSize: const Size.fromHeight(54),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 22,
@@ -786,9 +779,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
                       side: BorderSide(
-                        color: colorScheme.outlineVariant.withValues(
-                          alpha: 0.85,
-                        ),
+                        color: isDark
+                            ? const Color(0xFF3A4A5A)
+                            : colorScheme.outlineVariant.withValues(
+                                alpha: 0.85,
+                              ),
                       ),
                     ),
                   ),
@@ -1026,11 +1021,10 @@ class _LevelCardState extends State<_LevelCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final total = widget.completed + widget.remaining;
-    final progressLabel = Localizations.localeOf(context).languageCode == 'ko'
-        ? '${widget.completed} / $total 완료'
-        : '${widget.completed} / $total solved';
+    final progressLabel = l10n.homeLevelProgressSolved(widget.completed, total);
     return IgnorePointer(
       ignoring: !widget.isEnabled,
       child: AnimatedOpacity(
@@ -1071,22 +1065,29 @@ class _LevelCardState extends State<_LevelCard> {
                 ),
                 const SizedBox(width: 24),
                 Expanded(
-                  child: Text(
-                    widget.title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 17,
-                      color: colorScheme.onSurface,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Text(
-                  progressLabel,
-                  style: TextStyle(
-                    color: colorScheme.onSurfaceVariant,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        widget.title,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 17,
+                          color: colorScheme.onSurface,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        progressLabel,
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 16),

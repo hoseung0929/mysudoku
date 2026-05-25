@@ -18,43 +18,34 @@ class SudokuGameFeaturePolicy {
     required this.memoEnabled,
     required this.undoEnabled,
     required this.hintEnabled,
+    required this.maxHints,
+    required this.maxWrongCount,
   });
 
   final SudokuGameFeatureTier tier;
   final bool memoEnabled;
   final bool undoEnabled;
   final bool hintEnabled;
+  final int maxHints;
+  final int maxWrongCount;
 
-  static const beginner = SudokuGameFeaturePolicy(
-    tier: SudokuGameFeatureTier.beginner,
-    memoEnabled: true,
-    undoEnabled: true,
-    hintEnabled: true,
-  );
-
-  static const intermediate = SudokuGameFeaturePolicy(
-    tier: SudokuGameFeatureTier.intermediate,
-    memoEnabled: true,
-    undoEnabled: true,
-    hintEnabled: false,
-  );
-
-  static const advanced = SudokuGameFeaturePolicy(
-    tier: SudokuGameFeatureTier.advanced,
-    memoEnabled: true,
-    undoEnabled: false,
-    hintEnabled: false,
-  );
-
+  // 초급 5/5, 중급 4/4, 고급 3/3, 전문가 2/3, 마스터 1/3
   static SudokuGameFeaturePolicy forLevel(SudokuLevel level) {
-    switch (tierForLevel(level)) {
-      case SudokuGameFeatureTier.beginner:
-        return beginner;
-      case SudokuGameFeatureTier.intermediate:
-        return intermediate;
-      case SudokuGameFeatureTier.advanced:
-        return advanced;
-    }
+    final (maxHints, maxWrongCount) = switch (level.difficulty) {
+      1 => (5, 5),
+      2 => (4, 4),
+      3 => (3, 3),
+      4 => (2, 3),
+      _ => (1, 3),
+    };
+    return SudokuGameFeaturePolicy(
+      tier: tierForLevel(level),
+      memoEnabled: true,
+      undoEnabled: true,
+      hintEnabled: true,
+      maxHints: maxHints,
+      maxWrongCount: maxWrongCount,
+    );
   }
 
   static SudokuGameFeatureTier tierForLevel(SudokuLevel level) {

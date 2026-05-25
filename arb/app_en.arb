@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "My Sudoku",
+  "appTitle": "Sudoku159",
   "navHome": "Home",
   "navChallenge": "Challenge",
   "navRecords": "Records",
@@ -111,8 +111,8 @@
   "gameAnswerPreview": "Answer",
   "challengeCompletedToday": "You completed today’s challenge!",
   "shareCopySuccess": "Result copied to clipboard.",
-  "shareSubject": "My Sudoku result",
-  "shareClearHeader": "My Sudoku clear",
+  "shareSubject": "Sudoku159 result",
+  "shareClearHeader": "Sudoku159 clear",
   "shareClearLine": "{level} · Game {number}",
   "@shareClearLine": {
     "placeholders": {
@@ -178,7 +178,7 @@
       }
     }
   },
-  "settingsAboutDeveloperNote": "Enjoy playing My Sudoku!",
+  "settingsAboutDeveloperNote": "Enjoy playing Sudoku159!",
   "settingsPrivacyDialogTitle": "Privacy",
   "settingsPrivacyDialogBody": "This app stores game progress, records, profile information, and app settings only on this device. We do not require an account or collect personal data on our servers. If you choose a profile image, photo library access is used only to let you select and store that image on your device. Optional notification settings are also stored locally. If you uninstall the app, local data may be removed unless your device backs up app data.",
   "commonOk": "OK",
@@ -493,7 +493,7 @@
   "challengeOpenTodayOnHomeButton": "Open today's puzzle on Home",
   "challengeHeroDoneCaption": "You finished today's challenge. Come back tomorrow to extend your streak.",
   "challengeHeroPendingCaption": "Today's puzzle is still open—start now to keep your streak alive.",
-  "homeGuestTitle": "Guest",
+  "homeGuestTitle": "Traveler",
   "homeGuestSubtitle": "Start a game in one tap",
   "homeContinueTitle": "Resume",
   "homeContinueSubtitle": "{level} · Game {gameNumber} · {cells} cells filled",
@@ -701,5 +701,41 @@
   "settingsThemeDark": "Dark",
   "profileEditorTitle": "Edit profile",
   "profileEditorRemovePhoto": "Remove photo",
-  "profileEditorNameLabel": "Name"
+  "profileEditorNameLabel": "Name",
+  "homeTodayLabel": "TODAY",
+  "homeTodayPuzzleTitle": "Take a quiet moment\nwith today's puzzle.",
+  "homeCatalogFirstTitle": "Preparing your first puzzle set",
+  "homeCatalogFirstBody": "On your first launch, Sudoku puzzles are saved on your device. After this, the app opens much faster.",
+  "homeCatalogFirstNote": "Preparation continues in the background, so you can keep exploring right away.",
+  "homeCatalogFirstContinue": "Continue to home",
+  "homeLevelProgressSolved": "{cleared} / {total} solved",
+  "@homeLevelProgressSolved": {
+    "placeholders": {
+      "cleared": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "levelFilterAll": "All",
+  "levelFilterNew": "New",
+  "levelFilterInProgress": "In progress",
+  "levelFilterDone": "Done",
+  "levelProgressCardMessage": "Start with {levelName} puzzles today",
+  "@levelProgressCardMessage": {
+    "placeholders": {
+      "levelName": {"type": "String"}
+    }
+  },
+  "levelProgressCompleted": "/ {total} completed",
+  "@levelProgressCompleted": {
+    "placeholders": {
+      "total": {"type": "int"}
+    }
+  },
+  "levelContinuePlaying": "Continue playing",
+  "levelStatusInProgress": "In progress",
+  "levelNoResults": "No results.",
+  "levelReplayTitle": "Replay this puzzle?",
+  "levelReplayBody": "Your completed record is kept, and it updates only if the new result is better.",
+  "levelReplayConfirm": "Replay",
+  "levelTryAgain": "Try again"
 }

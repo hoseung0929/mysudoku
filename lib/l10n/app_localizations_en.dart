@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'My Sudoku';
+  String get appTitle => 'Sudoku159';
 
   @override
   String get navHome => 'Home';
@@ -277,10 +277,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareCopySuccess => 'Result copied to clipboard.';
 
   @override
-  String get shareSubject => 'My Sudoku result';
+  String get shareSubject => 'Sudoku159 result';
 
   @override
-  String get shareClearHeader => 'My Sudoku clear';
+  String get shareClearHeader => 'Sudoku159 clear';
 
   @override
   String shareClearLine(String level, int number) {
@@ -357,7 +357,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get settingsAboutDeveloperNote => 'Enjoy playing My Sudoku!';
+  String get settingsAboutDeveloperNote => 'Enjoy playing Sudoku159!';
 
   @override
   String get settingsPrivacyDialogTitle => 'Privacy';
@@ -858,7 +858,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Today\'s puzzle is still open—start now to keep your streak alive.';
 
   @override
-  String get homeGuestTitle => 'Guest';
+  String get homeGuestTitle => 'Traveler';
 
   @override
   String get homeGuestSubtitle => 'Start a game in one tap';
@@ -1148,4 +1148,74 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileEditorNameLabel => 'Name';
+
+  @override
+  String get homeTodayLabel => 'TODAY';
+
+  @override
+  String get homeTodayPuzzleTitle =>
+      'Take a quiet moment\nwith today\'s puzzle.';
+
+  @override
+  String get homeCatalogFirstTitle => 'Preparing your first puzzle set';
+
+  @override
+  String get homeCatalogFirstBody =>
+      'On your first launch, Sudoku puzzles are saved on your device. After this, the app opens much faster.';
+
+  @override
+  String get homeCatalogFirstNote =>
+      'Preparation continues in the background, so you can keep exploring right away.';
+
+  @override
+  String get homeCatalogFirstContinue => 'Continue to home';
+
+  @override
+  String homeLevelProgressSolved(int cleared, int total) {
+    return '$cleared / $total solved';
+  }
+
+  @override
+  String get levelFilterAll => 'All';
+
+  @override
+  String get levelFilterNew => 'New';
+
+  @override
+  String get levelFilterInProgress => 'In progress';
+
+  @override
+  String get levelFilterDone => 'Done';
+
+  @override
+  String levelProgressCardMessage(String levelName) {
+    return 'Start with $levelName puzzles today';
+  }
+
+  @override
+  String levelProgressCompleted(int total) {
+    return '/ $total completed';
+  }
+
+  @override
+  String get levelContinuePlaying => 'Continue playing';
+
+  @override
+  String get levelStatusInProgress => 'In progress';
+
+  @override
+  String get levelNoResults => 'No results.';
+
+  @override
+  String get levelReplayTitle => 'Replay this puzzle?';
+
+  @override
+  String get levelReplayBody =>
+      'Your completed record is kept, and it updates only if the new result is better.';
+
+  @override
+  String get levelReplayConfirm => 'Replay';
+
+  @override
+  String get levelTryAgain => 'Try again';
 }

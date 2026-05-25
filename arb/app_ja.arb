@@ -1,6 +1,6 @@
 {
   "@@locale": "ja",
-  "appTitle": "マイ数独",
+  "appTitle": "Sudoku159",
   "navHome": "ホーム",
   "navChallenge": "チャレンジ",
   "navRecords": "記録",
@@ -111,8 +111,8 @@
   "gameAnswerPreview": "解答",
   "challengeCompletedToday": "今日のチャレンジを完了しました！",
   "shareCopySuccess": "結果をクリップボードにコピーしました。",
-  "shareSubject": "My Sudoku 結果",
-  "shareClearHeader": "My Sudoku クリア",
+  "shareSubject": "Sudoku159 結果",
+  "shareClearHeader": "Sudoku159 クリア",
   "shareClearLine": "{level} · ゲーム {number}",
   "@shareClearLine": {
     "placeholders": {
@@ -178,7 +178,7 @@
       }
     }
   },
-  "settingsAboutDeveloperNote": "マイ数独をお楽しみください！",
+  "settingsAboutDeveloperNote": "Sudoku159をお楽しみください！",
   "settingsPrivacyDialogTitle": "プライバシー",
   "settingsPrivacyDialogBody": "このアプリはゲームの進行、記録、プロフィール情報、アプリ設定をこのデバイスにのみ保存します。アカウントは不要で、サーバーへの個人情報の収集は行いません。プロフィール画像を選択する場合、写真ライブラリへのアクセスはデバイス上での画像の選択と保存にのみ使用されます。通知設定もローカルに保存されます。アプリをアンインストールすると、デバイスのバックアップがない限りローカルデータが削除される場合があります。",
   "commonOk": "OK",
@@ -493,7 +493,7 @@
   "challengeOpenTodayOnHomeButton": "ホームで今日のパズルを開く",
   "challengeHeroDoneCaption": "今日のチャレンジを完了しました。明日も続けて記録を積み上げましょう。",
   "challengeHeroPendingCaption": "今日のチャレンジがまだ残っています。今すぐ始めてストリークを続けましょう。",
-  "homeGuestTitle": "ゲスト",
+  "homeGuestTitle": "旅行者",
   "homeGuestSubtitle": "ワンタップでゲームを始めましょう",
   "homeContinueTitle": "続きから",
   "homeContinueSubtitle": "{level} · ゲーム {gameNumber} · {cells}マス入力済み",
@@ -701,5 +701,41 @@
   "settingsThemeDark": "ダーク",
   "profileEditorTitle": "プロフィール編集",
   "profileEditorRemovePhoto": "写真を削除",
-  "profileEditorNameLabel": "名前"
+  "profileEditorNameLabel": "名前",
+  "homeTodayLabel": "今日",
+  "homeTodayPuzzleTitle": "今日のパズルで\n静かなひとときを。",
+  "homeCatalogFirstTitle": "初めてのパズルセットを準備中です",
+  "homeCatalogFirstBody": "初回起動時にパズルをデバイスに保存します。次回からはずっと速く起動できます。",
+  "homeCatalogFirstNote": "準備はバックグラウンドで続きます。そのまま探索できます。",
+  "homeCatalogFirstContinue": "ホームへ続ける",
+  "homeLevelProgressSolved": "{cleared} / {total} クリア",
+  "@homeLevelProgressSolved": {
+    "placeholders": {
+      "cleared": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "levelFilterAll": "全て",
+  "levelFilterNew": "新規",
+  "levelFilterInProgress": "進行中",
+  "levelFilterDone": "完了",
+  "levelProgressCardMessage": "今日は{levelName}のパズルから始めましょう",
+  "@levelProgressCardMessage": {
+    "placeholders": {
+      "levelName": {"type": "String"}
+    }
+  },
+  "levelProgressCompleted": "/ {total} クリア",
+  "@levelProgressCompleted": {
+    "placeholders": {
+      "total": {"type": "int"}
+    }
+  },
+  "levelContinuePlaying": "続きから",
+  "levelStatusInProgress": "進行中",
+  "levelNoResults": "該当なし",
+  "levelReplayTitle": "このパズルをもう一度解きますか？",
+  "levelReplayBody": "完了記録は保持され、より良い結果の場合のみ更新されます。",
+  "levelReplayConfirm": "再挑戦",
+  "levelTryAgain": "もう一度"
 }

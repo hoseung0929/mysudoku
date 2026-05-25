@@ -206,12 +206,13 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       puzzleBoard: widget.game.board,
       initialBoard: initialBoard,
       solution: widget.game.solution,
+      maxHints: _featurePolicy.maxHints,
+      maxWrongCount: _featurePolicy.maxWrongCount,
       initialElapsedSeconds: activeSession?.elapsedSeconds ?? 0,
       initialWrongCount: activeSession?.wrongCount ?? 0,
       initialMemoMode: activeSession?.isMemoMode ?? false,
       initialNotes: activeSession?.notes,
-      initialHintsRemaining:
-          activeSession?.hintsRemaining ?? SudokuGamePresenter.maxHints,
+      initialHintsRemaining: activeSession?.hintsRemaining,
       initialHintCells: activeSession?.hintCells ?? const {},
       level: widget.level,
       onBoardChanged: (board) {
@@ -538,7 +539,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         unawaited(_popAfterSaving());
       },
       child: Scaffold(
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: _buildAppBar(),
         body: isTablet ? _buildTabletLayout() : _buildMobileLayout(),
       ),
@@ -558,7 +559,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
+        systemOverlayStyle: Theme.of(context).brightness == Brightness.dark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
         centerTitle: true,
         titleSpacing: 0,
         title: GestureDetector(
@@ -590,7 +593,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                   style: GoogleFonts.notoSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: context.colors.textSecondary,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFFB8B8B8)
+                        : context.colors.textSecondary,
                   ),
                 ),
               ),
@@ -756,7 +761,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                           _StatusStripItem(
                             icon: Icons.error_outline,
                             label: l10n.gameWrongShort,
-                            value: '${_presenter.wrongCount}/3',
+                            value: '${_presenter.wrongCount}/${_featurePolicy.maxWrongCount}',
                           ),
                           _StatusStripItem(
                             icon: Icons.emoji_events_outlined,
@@ -861,7 +866,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                       : null,
                                 ),
                                 SudokuGameActionButton(
-                                  icon: Icons.close_rounded,
+                                  icon: Icons.backspace_outlined,
                                   label: _resetButtonLabel,
                                   backgroundColor: context.colors.attentionSurface,
                                   onPressed: _canResetCurrentGame
@@ -993,7 +998,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                 ),
                                 _buildMobileHintButton(metrics),
                                 _buildMobileActionButton(
-                                  icon: Icons.close_rounded,
+                                  icon: Icons.backspace_outlined,
                                   label: '',
                                   color: context.colors.attentionSurface,
                                   onPressed: _canResetCurrentGame
@@ -1174,11 +1179,14 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     final isEnabled = _isNumberInputEnabled(number);
     final isSelectedNumber = _selectedInputNumber() == number;
     final isCompletedNumber = remainingCount == 0;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final effectiveBackgroundColor = isCompletedNumber
-        ? context.colors.surfaceSubtle
+        ? (isDark ? const Color(0xFF232323) : context.colors.surfaceSubtle)
         : isSelectedNumber
-            ? buttonColor.withValues(alpha: 0.22)
-            : context.colors.surface;
+            ? (isDark
+                ? const Color(0xFF2C4055)
+                : buttonColor.withValues(alpha: 0.22))
+            : (isDark ? const Color(0xFF323232) : context.colors.surface);
 
     return ProgressiveBlurButton(
       onPressed: isEnabled
@@ -1228,10 +1236,14 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
               height: 24,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: context.colors.surfaceSubtle,
+                color: isDark
+                    ? const Color(0xFF2E2E2E)
+                    : context.colors.surfaceSubtle,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: context.colors.borderLight,
+                  color: isDark
+                      ? const Color(0xFF3E3E3E)
+                      : context.colors.borderLight,
                   width: 1,
                 ),
               ),
@@ -1239,14 +1251,18 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                   ? Icon(
                       Icons.check_rounded,
                       size: compact ? 16 : 18,
-                      color: AppTheme.lightBlueColor,
+                      color: isDark
+                          ? const Color(0xFF5A8A70)
+                          : AppTheme.lightBlueColor,
                     )
                   : Text(
                       '$remainingCount',
                       style: GoogleFonts.notoSans(
                         fontSize: compact ? 10 : 11,
                         fontWeight: FontWeight.w800,
-                        color: context.colors.textPrimary,
+                        color: isDark
+                            ? context.colors.textSecondary
+                            : context.colors.textPrimary,
                       ),
                     ),
             ),
@@ -1333,27 +1349,31 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         borderRadius: buttonSize / 2,
         backgroundColor: color,
         isActive: isActive,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: Theme.of(context).colorScheme.onSurface,
-              size: iconSize - 1,
-            ),
-            if (hasLabel) ...[
-              SizedBox(height: compact ? 2 : 4),
-              Text(
-                label,
-                style: GoogleFonts.notoSans(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: labelFontSize ??
-                      (compact ? 8 : (_oneHandModeEnabled ? 10 : 11)),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ],
+        child: Builder(
+          builder: (context) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final contentColor = (isActive && isDark)
+                ? const Color(0xFF6DCCA0)
+                : Theme.of(context).colorScheme.onSurface;
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, color: contentColor, size: iconSize - 1),
+                if (hasLabel) ...[
+                  SizedBox(height: compact ? 2 : 4),
+                  Text(
+                    label,
+                    style: GoogleFonts.notoSans(
+                      color: contentColor,
+                      fontSize: labelFontSize ??
+                          (compact ? 8 : (_oneHandModeEnabled ? 10 : 11)),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
+            );
+          },
         ),
       ),
     );
@@ -1393,7 +1413,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                   : const Color(0xFFAAAAAA),
               shape: BoxShape.circle,
               border: Border.all(
-                color: Colors.white,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? context.colors.background
+                    : Colors.white,
                 width: 1.5,
               ),
             ),
@@ -1416,15 +1438,19 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       return SizedBox(height: height);
     }
     final isKorean = Localizations.localeOf(context).languageCode == 'ko';
-    final colorScheme = Theme.of(context).colorScheme;
+    final isDarkAd = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: double.infinity,
       height: height,
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        color: isDarkAd
+            ? const Color(0xFF1E1E1E)
+            : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: colorScheme.outlineVariant,
+          color: isDarkAd
+              ? const Color(0xFF2A2A2A)
+              : Theme.of(context).colorScheme.outlineVariant,
           width: 1,
         ),
       ),
@@ -1432,10 +1458,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            const Icon(
               Icons.campaign_outlined,
               size: 14,
-              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+              color: Color(0xFF5F5F5F),
             ),
             const SizedBox(width: 4),
             Text(
@@ -1443,7 +1469,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
               style: GoogleFonts.notoSans(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                color: const Color(0xFF5F5F5F),
               ),
             ),
           ],

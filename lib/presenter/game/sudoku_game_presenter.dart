@@ -20,15 +20,15 @@ class SudokuGamePresenter {
   final Function(int, int)? onCorrectAnswer;
   final Function(int, int)? onIncorrectAnswer;
 
-  static const int maxHints = 3;
-  static const int maxWrongCount = 3;
+  final int maxHints;
+  final int maxWrongCount;
 
   bool _isPaused = false;
   bool _isGameComplete = false;
   int _wrongCount = 0;
   bool _isGameOver = false;
   bool _isMemoMode = false;
-  int _hintsRemaining = maxHints;
+  late int _hintsRemaining;
   final Set<String> _hintCells = {};
   late final GameTimerController _timerController;
   late final SudokuBoardController _boardController;
@@ -59,11 +59,13 @@ class SudokuGamePresenter {
     required List<List<int>> puzzleBoard,
     required List<List<int>> initialBoard,
     required List<List<int>>? solution,
+    required this.maxHints,
+    required this.maxWrongCount,
     int initialElapsedSeconds = 0,
     int initialWrongCount = 0,
     bool initialMemoMode = false,
     List<List<Set<int>>>? initialNotes,
-    int initialHintsRemaining = maxHints,
+    int? initialHintsRemaining,
     Set<String> initialHintCells = const {},
   }) {
     _timerController = GameTimerController(
@@ -76,12 +78,13 @@ class SudokuGamePresenter {
       puzzleBoard: puzzleBoard,
     );
     _initializeBoard(initialBoard, puzzleBoard);
+    _hintsRemaining = maxHints;
     _restoreSessionState(
       elapsedSeconds: initialElapsedSeconds,
       wrongCount: initialWrongCount,
       isMemoMode: initialMemoMode,
       notes: initialNotes,
-      hintsRemaining: initialHintsRemaining,
+      hintsRemaining: initialHintsRemaining ?? maxHints,
       hintCells: initialHintCells,
     );
     _startTimer();
@@ -267,7 +270,7 @@ class SudokuGamePresenter {
     required int wrongCount,
     required bool isMemoMode,
     List<List<Set<int>>>? notes,
-    int hintsRemaining = maxHints,
+    required int hintsRemaining,
     Set<String> hintCells = const {},
   }) {
     _wrongCount = wrongCount.clamp(0, maxWrongCount);

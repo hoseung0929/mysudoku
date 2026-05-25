@@ -186,29 +186,25 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     );
   }
 
-  bool get _isKorean => Localizations.localeOf(context).languageCode == 'ko';
-
   String _formatDurationNatural(num seconds) {
     final totalSeconds = seconds.round();
     final duration = Duration(seconds: totalSeconds);
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
     final secs = duration.inSeconds.remainder(60);
-    if (_isKorean) {
-      if (hours > 0) {
-        return '$hours시간 $minutes분 $secs초';
-      }
-      if (minutes > 0) {
-        return '$minutes분 $secs초';
-      }
+    final languageCode = Localizations.localeOf(context).languageCode;
+    if (languageCode == 'ko') {
+      if (hours > 0) return '$hours시간 $minutes분 $secs초';
+      if (minutes > 0) return '$minutes분 $secs초';
       return '$secs초';
     }
-    if (hours > 0) {
-      return '${hours}h ${minutes}m ${secs}s';
+    if (languageCode == 'ja') {
+      if (hours > 0) return '$hours時間 $minutes分 $secs秒';
+      if (minutes > 0) return '$minutes分 $secs秒';
+      return '$secs秒';
     }
-    if (minutes > 0) {
-      return '${minutes}m ${secs}s';
-    }
+    if (hours > 0) return '${hours}h ${minutes}m ${secs}s';
+    if (minutes > 0) return '${minutes}m ${secs}s';
     return '${secs}s';
   }
 
@@ -507,6 +503,10 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     final languageCode = Localizations.localeOf(context).languageCode;
     if (languageCode == 'ko') {
       const labels = ['월', '화', '수', '목', '금', '토', '일'];
+      return labels[date.weekday - 1];
+    }
+    if (languageCode == 'ja') {
+      const labels = ['月', '火', '水', '木', '金', '土', '日'];
       return labels[date.weekday - 1];
     }
     const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];

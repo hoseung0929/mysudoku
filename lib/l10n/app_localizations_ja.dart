@@ -9,7 +9,7 @@ class AppLocalizationsJa extends AppLocalizations {
   AppLocalizationsJa([String locale = 'ja']) : super(locale);
 
   @override
-  String get appTitle => 'マイ数独';
+  String get appTitle => 'Sudoku159';
 
   @override
   String get navHome => 'ホーム';
@@ -267,10 +267,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get shareCopySuccess => '結果をクリップボードにコピーしました。';
 
   @override
-  String get shareSubject => 'My Sudoku 結果';
+  String get shareSubject => 'Sudoku159 結果';
 
   @override
-  String get shareClearHeader => 'My Sudoku クリア';
+  String get shareClearHeader => 'Sudoku159 クリア';
 
   @override
   String shareClearLine(String level, int number) {
@@ -347,7 +347,7 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get settingsAboutDeveloperNote => 'マイ数独をお楽しみください！';
+  String get settingsAboutDeveloperNote => 'Sudoku159をお楽しみください！';
 
   @override
   String get settingsPrivacyDialogTitle => 'プライバシー';
@@ -799,7 +799,7 @@ class AppLocalizationsJa extends AppLocalizations {
       '今日のチャレンジがまだ残っています。今すぐ始めてストリークを続けましょう。';
 
   @override
-  String get homeGuestTitle => 'ゲスト';
+  String get homeGuestTitle => '旅行者';
 
   @override
   String get homeGuestSubtitle => 'ワンタップでゲームを始めましょう';
@@ -1077,4 +1077,70 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get profileEditorNameLabel => '名前';
+
+  @override
+  String get homeTodayLabel => '今日';
+
+  @override
+  String get homeTodayPuzzleTitle => '今日のパズルで\n静かなひとときを。';
+
+  @override
+  String get homeCatalogFirstTitle => '初めてのパズルセットを準備中です';
+
+  @override
+  String get homeCatalogFirstBody => '初回起動時にパズルをデバイスに保存します。次回からはずっと速く起動できます。';
+
+  @override
+  String get homeCatalogFirstNote => '準備はバックグラウンドで続きます。そのまま探索できます。';
+
+  @override
+  String get homeCatalogFirstContinue => 'ホームへ続ける';
+
+  @override
+  String homeLevelProgressSolved(int cleared, int total) {
+    return '$cleared / $total クリア';
+  }
+
+  @override
+  String get levelFilterAll => '全て';
+
+  @override
+  String get levelFilterNew => '新規';
+
+  @override
+  String get levelFilterInProgress => '進行中';
+
+  @override
+  String get levelFilterDone => '完了';
+
+  @override
+  String levelProgressCardMessage(String levelName) {
+    return '今日は$levelNameのパズルから始めましょう';
+  }
+
+  @override
+  String levelProgressCompleted(int total) {
+    return '/ $total クリア';
+  }
+
+  @override
+  String get levelContinuePlaying => '続きから';
+
+  @override
+  String get levelStatusInProgress => '進行中';
+
+  @override
+  String get levelNoResults => '該当なし';
+
+  @override
+  String get levelReplayTitle => 'このパズルをもう一度解きますか？';
+
+  @override
+  String get levelReplayBody => '完了記録は保持され、より良い結果の場合のみ更新されます。';
+
+  @override
+  String get levelReplayConfirm => '再挑戦';
+
+  @override
+  String get levelTryAgain => 'もう一度';
 }

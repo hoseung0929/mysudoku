@@ -28,15 +28,16 @@ class ProgressiveBlurButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final isEnabled = onPressed != null;
     final effectiveBlurColor = blurColor ?? backgroundColor;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final baseColor = Theme.of(context).colorScheme.surface;
     final baseBorderColor = context.colors.border;
     final surfaceColor = isActive
-        ? Color.lerp(baseColor, backgroundColor, 0.48)!
+        ? Color.lerp(baseColor, backgroundColor, isDark ? 0.78 : 0.48)!
         : isEnabled
-            ? Color.lerp(baseColor, backgroundColor, 0.22)!
+            ? Color.lerp(baseColor, backgroundColor, isDark ? 0.40 : 0.22)!
             : context.colors.surfaceSubtle;
     final borderColor = isActive
-        ? Color.lerp(baseBorderColor, effectiveBlurColor, 0.86)!
+        ? Color.lerp(baseBorderColor, effectiveBlurColor, isDark ? 1.0 : 0.86)!
         : isEnabled
             ? Color.lerp(baseBorderColor, effectiveBlurColor, 0.28)!
             : context.colors.border;
@@ -60,7 +61,7 @@ class ProgressiveBlurButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(borderRadius),
               border: Border.all(
                 color: borderColor,
-                width: isActive ? 1.8 : 1,
+                width: isActive ? (isDark ? 2.2 : 1.8) : 1,
               ),
             ),
             child: Opacity(

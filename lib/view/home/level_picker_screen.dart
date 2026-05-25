@@ -43,7 +43,6 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
   _PuzzleFilter _selectedFilter = _PuzzleFilter.all;
   bool _isGameTransitioning = false;
 
-  bool get _isKo => Localizations.localeOf(context).languageCode == 'ko';
 
   @override
   void initState() {
@@ -237,21 +236,18 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     return showDialog<bool>(
       context: context,
       builder: (dialogContext) {
+        final l10n = AppLocalizations.of(dialogContext)!;
         return AlertDialog(
-          title: Text(_isKo ? '완료한 퍼즐을 다시 풀까요?' : 'Replay this puzzle?'),
-          content: Text(
-            _isKo
-                ? '기존 완료 기록은 유지되며, 새 기록이 더 좋으면 갱신됩니다.'
-                : 'Your completed record is kept, and it updates only if the new result is better.',
-          ),
+          title: Text(l10n.levelReplayTitle),
+          content: Text(l10n.levelReplayBody),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(_isKo ? '취소' : 'Cancel'),
+              child: Text(l10n.commonCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(_isKo ? '다시 풀기' : 'Replay'),
+              child: Text(l10n.levelReplayConfirm),
             ),
           ],
         );
@@ -339,15 +335,18 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
           return _buildStateMessage(
             l10n.recordsGameLoadError,
             icon: Icons.error_outline_rounded,
-            actionLabel: _isKo ? '다시 시도' : 'Try again',
+            actionLabel: AppLocalizations.of(context)!.levelTryAgain,
             onAction: _retryLoadGames,
           );
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          final lc = Localizations.localeOf(context).languageCode;
           return _buildStateMessage(
-            _isKo
+            lc == 'ko'
                 ? '선택 가능한 게임이 없습니다.'
-                : 'No puzzles are available for this level.',
+                : lc == 'ja'
+                    ? 'このレベルのパズルがありません。'
+                    : 'No puzzles are available for this level.',
             icon: Icons.inbox_outlined,
           );
         }
@@ -374,7 +373,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
               child: filteredGames.isEmpty
                   ? Center(
                       child: Text(
-                        _isKo ? '해당 항목이 없습니다.' : 'No results.',
+                        AppLocalizations.of(context)!.levelNoResults,
                         style: TextStyle(
                           fontSize: 14,
                           color: context.colors.textDisabled,
@@ -394,9 +393,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
   Widget _buildProgressCard({required int totalCount}) {
     final level = _currentLevelInfo();
     final l10n = AppLocalizations.of(context)!;
-    final message = _isKo
-        ? '오늘은 ${level.localizedName(l10n)} 퍼즐부터 시작해보세요'
-        : 'Start with ${level.localizedName(l10n)} puzzles today';
+    final message = l10n.levelProgressCardMessage(level.localizedName(l10n));
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
       decoration: BoxDecoration(
@@ -462,9 +459,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                     ),
                   ),
                   TextSpan(
-                    text: _isKo
-                        ? ' / $totalCount 완료'
-                        : ' / $totalCount completed',
+                    text: ' ${AppLocalizations.of(context)!.levelProgressCompleted(totalCount)}',
                     style: const TextStyle(fontWeight: FontWeight.w500),
                   ),
                 ],
@@ -548,15 +543,16 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
   }
 
   String _filterLabel(_PuzzleFilter filter) {
+    final l10n = AppLocalizations.of(context)!;
     switch (filter) {
       case _PuzzleFilter.all:
-        return _isKo ? '전체' : 'All';
+        return l10n.levelFilterAll;
       case _PuzzleFilter.fresh:
-        return _isKo ? '새 퍼즐' : 'New';
+        return l10n.levelFilterNew;
       case _PuzzleFilter.inProgress:
-        return _isKo ? '진행 중' : 'In progress';
+        return l10n.levelFilterInProgress;
       case _PuzzleFilter.completed:
-        return _isKo ? '완료' : 'Done';
+        return l10n.levelFilterDone;
     }
   }
 
@@ -622,11 +618,16 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     final double borderWidth;
     final accentColor = _levelAccentColor(_currentLevelInfo());
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     if (isCompleted) {
-      bgColor = const Color(0xFFEDF8F2);
+      bgColor = isDark
+          ? accentColor.withValues(alpha: 0.10)
+          : const Color(0xFFEDF8F2);
       textColor = context.colors.textSecondary;
       iconColor = accentColor;
-      borderColor = const Color(0xFFC7E5D4);
+      borderColor = isDark
+          ? accentColor.withValues(alpha: 0.28)
+          : const Color(0xFFC7E5D4);
       borderWidth = 1.0;
     } else if (isInProgress) {
       bgColor = context.colors.surface;
@@ -758,7 +759,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            _isKo ? '최근 플레이' : 'Continue playing',
+            AppLocalizations.of(context)!.levelContinuePlaying,
             style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -827,7 +828,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _isKo ? '진행 중' : 'In progress',
+                            AppLocalizations.of(context)!.levelStatusInProgress,
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -870,10 +871,16 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     final diffMs =
         DateTime.now().millisecondsSinceEpoch - saved.lastPlayedAtMillis;
     final days = (diffMs / 86400000).floor();
-    if (_isKo) {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    if (languageCode == 'ko') {
       if (days == 0) return '오늘';
       if (days == 1) return '어제';
       return '$days일 전';
+    }
+    if (languageCode == 'ja') {
+      if (days == 0) return '今日';
+      if (days == 1) return '昨日';
+      return '$days日前';
     }
     if (days == 0) return 'today';
     if (days == 1) return 'yesterday';

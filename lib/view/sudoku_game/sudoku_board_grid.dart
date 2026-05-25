@@ -31,8 +31,45 @@ class SudokuBoardGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final borderColor = context.colors.border;
-    final relatedFill = context.colors.surfaceSubtle;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // ── 보드 라인 색상 ─────────────────────────────────────────────
+    final borderColor =
+        isDark ? const Color(0xFF2A2A2A) : context.colors.border;
+    final borderColorStrong =
+        isDark ? const Color(0xFF444444) : context.colors.border;
+    final boardOutlineColor =
+        isDark ? const Color(0xFF4A4A4A) : context.colors.border;
+    // ── 셀 하이라이트 색상 (다크/라이트 분기) ──────────────────────
+    final selectedCellColor = isDark
+        ? const Color(0xFF2F3A45)
+        : AppTheme.lightBlueColor.withValues(alpha: 0.22);
+    final sameNumberColor = isDark
+        ? const Color(0xFF304050)
+        : AppTheme.lightBlueColor.withValues(alpha: 0.14);
+    final relatedFill = isDark
+        ? const Color(0xFF242A30)
+        : context.colors.surfaceSubtle;
+    final wrongCellColor = isDark
+        ? const Color(0xFF4A2525)
+        : AppTheme.pinkColor.withValues(alpha: 0.18);
+    final errorActiveCellColor = isDark
+        ? const Color(0xFF5A2828)
+        : AppTheme.pinkColor.withValues(alpha: 0.28);
+    final waveCellColor = isDark
+        ? const Color(0xFF2A3A2E)
+        : AppTheme.mintColor.withValues(alpha: 0.22);
+    final lineCompleteCellColor = isDark
+        ? const Color(0xFF3A3020)
+        : AppTheme.yellowColor.withValues(alpha: 0.26);
+    final hiddenSingleColor = isDark
+        ? const Color(0xFF2B3F50)
+        : AppTheme.lightBlueColor.withValues(alpha: 0.24);
+    final memoHighlightColor = isDark
+        ? const Color(0xFF263040)
+        : AppTheme.lightBlueColor.withValues(alpha: 0.14);
+    final singleCandidateColor = isDark
+        ? const Color(0xFF3A3020)
+        : AppTheme.yellowColor.withValues(alpha: 0.16);
     final digitOnBoard = cs.onSurface;
     final selectedRow = presenter.selectedRow;
     final selectedCol = presenter.selectedCol;
@@ -52,7 +89,7 @@ class SudokuBoardGrid extends StatelessWidget {
         return Container(
           decoration: BoxDecoration(
             color: context.colors.surface,
-            border: Border.all(color: context.colors.border),
+            border: Border.all(color: boardOutlineColor, width: isDark ? 1.2 : 1.0),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF21382A).withValues(alpha: 0.06),
@@ -105,65 +142,56 @@ class SudokuBoardGrid extends StatelessWidget {
                             decoration: BoxDecoration(
                               border: Border(
                                 top: BorderSide(
-                                  color: borderColor,
+                                  color: (row == 0 || row == 3 || row == 6)
+                                      ? borderColorStrong
+                                      : borderColor,
                                   width: (row == 0 || row == 3 || row == 6)
                                       ? 1.2
                                       : 0.35,
                                 ),
                                 left: BorderSide(
-                                  color: borderColor,
+                                  color: (col == 0 || col == 3 || col == 6)
+                                      ? borderColorStrong
+                                      : borderColor,
                                   width: (col == 0 || col == 3 || col == 6)
                                       ? 1.2
                                       : 0.35,
                                 ),
                                 right: BorderSide(
-                                  color: borderColor,
+                                  color: (col == 2 || col == 5 || col == 8)
+                                      ? borderColorStrong
+                                      : borderColor,
                                   width: (col == 2 || col == 5 || col == 8)
                                       ? 1.2
                                       : 0.35,
                                 ),
                                 bottom: BorderSide(
-                                  color: borderColor,
+                                  color: (row == 2 || row == 5 || row == 8)
+                                      ? borderColorStrong
+                                      : borderColor,
                                   width: (row == 2 || row == 5 || row == 8)
                                       ? 1.2
                                       : 0.35,
                                 ),
                               ),
                               color: isErrorActive
-                                  ? AppTheme.pinkColor.withValues(alpha: 0.28)
+                                  ? errorActiveCellColor
                                   : isWave
-                                      ? AppTheme.mintColor
-                                          .withValues(alpha: 0.22)
+                                      ? waveCellColor
                                       : isLineComplete
-                                          ? AppTheme.yellowColor
-                                              .withValues(alpha: 0.26)
+                                          ? lineCompleteCellColor
                                           : isSelected
-                                              ? AppTheme.lightBlueColor
-                                                  .withValues(alpha: 0.22)
+                                              ? selectedCellColor
                                               : isWrong
-                                                  ? AppTheme.pinkColor
-                                                      .withValues(alpha: 0.18)
+                                                  ? wrongCellColor
                                                   : isSameNumber
-                                                      ? AppTheme.lightBlueColor
-                                                          .withValues(
-                                                              alpha: 0.14)
+                                                      ? sameNumberColor
                                                       : isHiddenSingleForHighlightedMemo
-                                                          ? AppTheme
-                                                              .lightBlueColor
-                                                              .withValues(
-                                                                  alpha: 0.24)
+                                                          ? hiddenSingleColor
                                                           : hasHighlightedMemoCandidate
-                                                              ? AppTheme
-                                                                  .lightBlueColor
-                                                                  .withValues(
-                                                                      alpha:
-                                                                          0.14)
+                                                              ? memoHighlightColor
                                                               : isSingleCandidateCell
-                                                                  ? AppTheme
-                                                                      .yellowColor
-                                                                      .withValues(
-                                                                          alpha:
-                                                                              0.16)
+                                                                  ? singleCandidateColor
                                                                   : isRelated
                                                                       ? relatedFill
                                                                       : null,
@@ -195,9 +223,8 @@ class SudokuBoardGrid extends StatelessWidget {
                                                       fontSize: digitFontSize,
                                                       fontWeight:
                                                           FontWeight.w600,
-                                                      color: AppTheme
-                                                          .sudokuNumberStyle
-                                                          .color,
+                                                      color: context.colors
+                                                          .boardUserNumber,
                                                     ),
                                     )
                                   : SudokuMemoNotesGrid(
