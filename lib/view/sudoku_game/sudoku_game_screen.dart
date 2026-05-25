@@ -23,7 +23,6 @@ import 'package:sudoku159/view/sudoku_game/sudoku_game_action_button.dart';
 import 'package:sudoku159/view/home/level_picker_screen.dart';
 import 'package:sudoku159/widgets/custom_app_bar.dart';
 import 'package:sudoku159/widgets/progressive_blur_button.dart';
-import 'package:vibration/vibration.dart';
 
 /// 스도쿠 게임의 메인 화면
 /// MVP 패턴에서 View 역할을 수행하며, 사용자 인터페이스를 담당
@@ -64,6 +63,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   final GameEffectsController _effectsController = GameEffectsController();
   OverlayEntry? _completionFeedbackEntry;
   Timer? _completionFeedbackTimer;
+  final Map<String, Timer> _wrongCellTimers = {};
 
   bool get _hasEditableSelection {
     final row = _presenter.selectedRow;
@@ -88,14 +88,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         !_presenter.isGameOver;
   }
 
-  bool get _canUndo {
-    return _presenterReady &&
-        _featurePolicy.undoEnabled &&
-        !_presenter.isPaused &&
-        !_presenter.isGameComplete &&
-        !_presenter.isGameOver &&
-        _presenter.canUndo;
-  }
 
   bool get _canUseHint {
     if (!_presenterReady ||
@@ -241,6 +233,13 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       },
       onGameCompleteChanged: (isComplete) {
         if (isComplete) {
+          if (_isVibrationEnabled) {
+            HapticFeedback.heavyImpact()
+                .then((_) => Future<void>.delayed(
+                      const Duration(milliseconds: 120),
+                    ))
+                .then((_) => HapticFeedback.heavyImpact());
+          }
           _showGameCompleteDialog();
         }
         setState(() {});
@@ -250,6 +249,17 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         _scheduleSessionSave();
       },
       onGameOver: () {
+        if (_isVibrationEnabled) {
+          HapticFeedback.heavyImpact()
+              .then((_) => Future<void>.delayed(
+                    const Duration(milliseconds: 80),
+                  ))
+              .then((_) => HapticFeedback.heavyImpact())
+              .then((_) => Future<void>.delayed(
+                    const Duration(milliseconds: 80),
+                  ))
+              .then((_) => HapticFeedback.heavyImpact());
+        }
         _showGameOverDialog();
       },
       onCorrectAnswer: (row, col) {
@@ -267,7 +277,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           setState: setState,
           isMounted: () => mounted,
         );
-        _showWrongAnswerFeedback();
+        _scheduleWrongCellAutoClear(row, col);
       },
     );
 
@@ -320,18 +330,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     }
 
     _showTopFeedback(parts.join(' · '));
-  }
-
-  void _showWrongAnswerFeedback() {
-    if (!mounted) {
-      return;
-    }
-
-    final l10n = AppLocalizations.of(context)!;
-    _showTopFeedback(
-      l10n.gameWrongShort,
-      backgroundColor: const Color(0xFF7A342B),
-    );
   }
 
   void _showTopFeedback(
@@ -502,6 +500,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     unawaited(_settingsController.dispose());
     _effectsController.dispose();
     _hideCompletionFeedback();
+    for (final t in _wrongCellTimers.values) {
+      t.cancel();
+    }
+    _wrongCellTimers.clear();
     _timeNotifier.dispose();
     if (_presenterReady) {
       _presenter.dispose();
@@ -621,9 +623,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   }
 
   Widget _buildDeveloperMenuButton() {
-    if (!kDebugMode) {
-      return const SizedBox.shrink();
-    }
     final isKorean = Localizations.localeOf(context).languageCode == 'ko';
     return PopupMenuButton<_DeveloperCheatAction>(
       tooltip: isKorean ? '개발자 도구' : 'Developer tools',
@@ -659,7 +658,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   }
 
   void _handleDeveloperCheatAction(_DeveloperCheatAction action) {
-    if (!kDebugMode) return;
     switch (action) {
       case _DeveloperCheatAction.toggleAnswerPreview:
         _toggleDeveloperAnswerPreview();
@@ -840,18 +838,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                       : null,
                                 ),
                                 SudokuGameActionButton(
-                                  icon: Icons.undo,
-                                  label: l10n.gameUndoShort,
-                                  backgroundColor: AppTheme.lightBlueColor,
-                                  onPressed: _canUndo
-                                      ? () {
-                                          setState(() {
-                                            _presenter.undo();
-                                          });
-                                        }
-                                      : null,
-                                ),
-                                SudokuGameActionButton(
                                   icon: Icons.lightbulb_outline,
                                   label:
                                       '${l10n.gameHintShort} $_visibleHintsRemaining',
@@ -974,21 +960,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                           setState(() {
                                             _memoFocusNumber = null;
                                             _presenter.toggleMemoMode();
-                                          });
-                                        }
-                                      : null,
-                                  compact: true,
-                                  size: metrics.actionButtonSize,
-                                  labelFontSize: metrics.actionLabelFontSize,
-                                ),
-                                _buildMobileActionButton(
-                                  icon: Icons.undo,
-                                  label: '',
-                                  color: AppTheme.lightBlueColor,
-                                  onPressed: _canUndo
-                                      ? () {
-                                          setState(() {
-                                            _presenter.undo();
                                           });
                                         }
                                       : null,
@@ -1195,6 +1166,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                 _memoFocusNumber = _presenter.isMemoMode ? number : null;
               });
               if (!_presenter.isMemoMode) {
+                _cancelWrongCellTimer(
+                  _presenter.selectedRow,
+                  _presenter.selectedCol,
+                );
                 unawaited(_vibrateOnNumberInput(number));
               }
               _presenter.setSelectedCellValue(number);
@@ -1290,10 +1265,29 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     );
   }
 
+  void _scheduleWrongCellAutoClear(int row, int col) {
+    final key = '$row,$col';
+    _wrongCellTimers[key]?.cancel();
+    _wrongCellTimers[key] = Timer(
+      const Duration(milliseconds: 800),
+      () {
+        _wrongCellTimers.remove(key);
+        if (!mounted) return;
+        _presenter.clearCellValue(row, col);
+        setState(() {});
+      },
+    );
+  }
+
+  void _cancelWrongCellTimer(int? row, int? col) {
+    if (row == null || col == null) return;
+    final key = '$row,$col';
+    _wrongCellTimers[key]?.cancel();
+    _wrongCellTimers.remove(key);
+  }
+
   Future<void> _vibrateOnNumberInput(int number) async {
     if (!_isVibrationEnabled || !_presenterReady) return;
-    final hasVibrator = await Vibration.hasVibrator();
-    if (!hasVibrator) return;
 
     final selectedRow = _presenter.selectedRow;
     final selectedCol = _presenter.selectedCol;
@@ -1309,17 +1303,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     final isCorrectInput =
         number == _presenter.getCorrectValue(selectedRow, selectedCol);
     if (isCorrectInput) {
-      await Vibration.vibrate(duration: 35);
-      return;
+      await HapticFeedback.lightImpact();
+    } else {
+      await HapticFeedback.mediumImpact();
     }
-
-    final supportsCustomPattern = await Vibration.hasCustomVibrationsSupport();
-    if (supportsCustomPattern) {
-      await Vibration.vibrate(pattern: [0, 45, 30, 65]);
-      return;
-    }
-
-    await Vibration.vibrate(duration: 120);
   }
 
   Widget _buildMobileActionButton({

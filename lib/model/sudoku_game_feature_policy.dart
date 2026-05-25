@@ -2,7 +2,6 @@ import 'package:sudoku159/model/sudoku_level.dart';
 
 enum SudokuGameFeature {
   memo,
-  undo,
   hint,
 }
 
@@ -16,7 +15,6 @@ class SudokuGameFeaturePolicy {
   const SudokuGameFeaturePolicy({
     required this.tier,
     required this.memoEnabled,
-    required this.undoEnabled,
     required this.hintEnabled,
     required this.maxHints,
     required this.maxWrongCount,
@@ -24,7 +22,6 @@ class SudokuGameFeaturePolicy {
 
   final SudokuGameFeatureTier tier;
   final bool memoEnabled;
-  final bool undoEnabled;
   final bool hintEnabled;
   final int maxHints;
   final int maxWrongCount;
@@ -41,7 +38,6 @@ class SudokuGameFeaturePolicy {
     return SudokuGameFeaturePolicy(
       tier: tierForLevel(level),
       memoEnabled: true,
-      undoEnabled: true,
       hintEnabled: true,
       maxHints: maxHints,
       maxWrongCount: maxWrongCount,
@@ -62,8 +58,6 @@ class SudokuGameFeaturePolicy {
     switch (feature) {
       case SudokuGameFeature.memo:
         return memoEnabled;
-      case SudokuGameFeature.undo:
-        return undoEnabled;
       case SudokuGameFeature.hint:
         return hintEnabled;
     }

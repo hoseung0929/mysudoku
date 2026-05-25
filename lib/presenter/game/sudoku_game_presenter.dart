@@ -253,7 +253,7 @@ class SudokuGamePresenter {
     _hintsRemaining = maxHints;
     _hintCells.clear();
     _boardController.clearSelection();
-    _boardController.clearHistory();
+
 
     _timerController.reset();
     _notifySessionReset();
@@ -284,7 +284,7 @@ class SudokuGamePresenter {
       _boardController.restoreNotes(notes);
     }
     _boardController.recomputeWrongStatus();
-    _boardController.clearHistory();
+
     _timerController.update(elapsedSeconds);
     onWrongCountChanged(_wrongCount);
     onPauseStateChanged(_isPaused);
@@ -328,7 +328,6 @@ class SudokuGamePresenter {
   int get wrongCount => _wrongCount;
   int get hintsRemaining => _hintsRemaining;
   Set<String> get hintCells => Set<String>.unmodifiable(_hintCells);
-  bool get canUndo => _boardController.canUndo;
   int? get selectedRow => _boardController.selectedRow;
   int? get selectedCol => _boardController.selectedCol;
 
@@ -359,22 +358,13 @@ class SudokuGamePresenter {
     _applySelectedCellValue(value);
   }
 
-  void undo() {
+  /// 오답 자동삭제용: 특정 셀 값을 직접 클리어
+  void clearCellValue(int row, int col) {
     if (_isGameComplete || _isGameOver || _isPaused) return;
-    final action = _boardController.undoAction();
-    if (action == null) return;
-
-    if (action is CellValueAction) {
-      if (action.didIncreaseWrongCount && _wrongCount > 0) {
-        _wrongCount--;
-        onWrongCountChanged(_wrongCount);
-      }
-      if (action.isHint) {
-        _hintsRemaining = (_hintsRemaining + 1).clamp(0, maxHints);
-        _hintCells.remove('${action.row},${action.col}');
-      }
-    }
-
+    if (_boardController.isCellFixed(row, col)) return;
+    if (_hintCells.contains('$row,$col')) return;
+    if (_boardController.getCellValue(row, col) == 0) return;
+    _boardController.setCellValue(row, col, 0);
     _boardController.recomputeWrongStatus();
     onBoardChanged(_boardController.board);
     onWrongNumbersChanged(_boardController.wrongNumbers);
@@ -547,10 +537,6 @@ class SudokuGamePresenter {
       isWrongNow: isWrongNow,
     );
     if (shouldIncrease) {
-      final lastAction = _boardController.lastAction;
-      if (lastAction is CellValueAction) {
-        lastAction.didIncreaseWrongCount = true;
-      }
       _wrongCount++;
       onWrongCountChanged(_wrongCount);
 

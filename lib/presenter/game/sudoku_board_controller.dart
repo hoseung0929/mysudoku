@@ -3,44 +3,6 @@ import 'package:sudoku159/utils/app_logger.dart';
 
 import 'package:sudoku159/utils/sudoku_generator.dart';
 
-sealed class BoardAction {
-  const BoardAction();
-}
-
-class CellValueAction extends BoardAction {
-  CellValueAction({
-    required this.row,
-    required this.col,
-    required this.previousValue,
-    required this.newValue,
-    required this.previousCellNotes,
-    required this.clearedRelatedNoteKeys,
-    this.isHint = false,
-  });
-
-  final int row;
-  final int col;
-  final int previousValue;
-  final int newValue;
-  final Set<int> previousCellNotes;
-  final Set<String> clearedRelatedNoteKeys;
-  final bool isHint;
-  bool didIncreaseWrongCount = false;
-}
-
-class NoteToggleAction extends BoardAction {
-  const NoteToggleAction({
-    required this.row,
-    required this.col,
-    required this.noteValue,
-    required this.wasAdded,
-  });
-
-  final int row;
-  final int col;
-  final int noteValue;
-  final bool wasAdded;
-}
 
 class SudokuBoardController {
   SudokuBoardController({
@@ -71,7 +33,6 @@ class SudokuBoardController {
   List<List<Set<int>>> _noteNumbers = [];
   int? _selectedRow;
   int? _selectedCol;
-  final List<BoardAction> _undoStack = [];
 
   List<List<int>> get board => _board;
   List<List<int>> get solution => _solution;
@@ -80,8 +41,6 @@ class SudokuBoardController {
   List<List<int>> get initialBoard => _initialBoard;
   int? get selectedRow => _selectedRow;
   int? get selectedCol => _selectedCol;
-  bool get canUndo => _undoStack.isNotEmpty;
-  BoardAction? get lastAction => _undoStack.isNotEmpty ? _undoStack.last : null;
 
   void initializeBoard(
     List<List<int>> board, {
@@ -100,11 +59,6 @@ class SudokuBoardController {
     );
     _selectedRow = null;
     _selectedCol = null;
-    clearHistory();
-  }
-
-  void clearHistory() {
-    _undoStack.clear();
   }
 
   void initializeGeneratedBoard(
@@ -147,24 +101,6 @@ class SudokuBoardController {
   }
 
   void setCellValue(int row, int col, int value, {bool isHint = false}) {
-    final previousValue = _board[row][col];
-    final previousCellNotes = Set<int>.from(_noteNumbers[row][col]);
-    final clearedKeys = <String>{};
-
-    if (value != 0) {
-      clearedKeys.addAll(_findRelatedNoteKeys(row, col, value));
-    }
-
-    _undoStack.add(CellValueAction(
-      row: row,
-      col: col,
-      previousValue: previousValue,
-      newValue: value,
-      previousCellNotes: previousCellNotes,
-      clearedRelatedNoteKeys: clearedKeys,
-      isHint: isHint,
-    ));
-
     _board[row][col] = value;
     _noteNumbers[row][col].clear();
     if (value != 0) {
@@ -178,72 +114,13 @@ class SudokuBoardController {
     }
 
     final notes = _noteNumbers[row][col];
-    final wasPresent = notes.contains(value);
-
-    _undoStack.add(NoteToggleAction(
-      row: row,
-      col: col,
-      noteValue: value,
-      wasAdded: !wasPresent,
-    ));
-
-    if (wasPresent) {
+    if (notes.contains(value)) {
       notes.remove(value);
     } else {
       notes.add(value);
     }
   }
 
-  BoardAction? undoAction() {
-    if (_undoStack.isEmpty) return null;
-    final action = _undoStack.removeLast();
-    _applyReverse(action);
-    return action;
-  }
-
-  void _applyReverse(BoardAction action) {
-    switch (action) {
-      case CellValueAction():
-        for (final key in action.clearedRelatedNoteKeys) {
-          final parts = key.split(',');
-          _noteNumbers[int.parse(parts[0])][int.parse(parts[1])]
-              .add(action.newValue);
-        }
-        _noteNumbers[action.row][action.col] =
-            Set<int>.from(action.previousCellNotes);
-        _board[action.row][action.col] = action.previousValue;
-      case NoteToggleAction():
-        if (action.wasAdded) {
-          _noteNumbers[action.row][action.col].remove(action.noteValue);
-        } else {
-          _noteNumbers[action.row][action.col].add(action.noteValue);
-        }
-    }
-  }
-
-  Set<String> _findRelatedNoteKeys(int row, int col, int value) {
-    final keys = <String>{};
-    for (int c = 0; c < 9; c++) {
-      if (c != col && _noteNumbers[row][c].contains(value)) {
-        keys.add('$row,$c');
-      }
-    }
-    for (int r = 0; r < 9; r++) {
-      if (r != row && _noteNumbers[r][col].contains(value)) {
-        keys.add('$r,$col');
-      }
-    }
-    final startRow = (row ~/ 3) * 3;
-    final startCol = (col ~/ 3) * 3;
-    for (int r = startRow; r < startRow + 3; r++) {
-      for (int c = startCol; c < startCol + 3; c++) {
-        if ((r != row || c != col) && _noteNumbers[r][c].contains(value)) {
-          keys.add('$r,$c');
-        }
-      }
-    }
-    return keys;
-  }
 
   Set<int> getCellNotes(int row, int col) {
     return Set<int>.from(_noteNumbers[row][col]);
