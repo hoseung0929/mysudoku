@@ -184,11 +184,14 @@
   "commonOk": "OK",
   "commonCancel": "キャンセル",
   "gameOverTitle": "ゲームオーバー",
-  "gameOverMessage": "ミスが3回を超えました。",
-  "gameOverWrongLabel": "ミス: {count}/3",
+  "gameOverMessage": "ミスが上限を超えました。",
+  "gameOverWrongLabel": "ミス: {count}/{maxCount}",
   "@gameOverWrongLabel": {
     "placeholders": {
       "count": {
+        "type": "int"
+      },
+      "maxCount": {
         "type": "int"
       }
     }

@@ -57,6 +57,7 @@ class GameSessionController {
     required SudokuGame game,
     required SudokuLevel level,
     required bool restoreSavedSession,
+    int maxWrongCount = 3,
   }) async {
     final restoredSession = restoreSavedSession
         ? await _gameStateService.loadSession(
@@ -68,6 +69,7 @@ class GameSessionController {
             _shouldDiscardRestoredSession(
               session: restoredSession,
               game: game,
+              maxWrongCount: maxWrongCount,
             )
         ? null
         : restoredSession;
@@ -234,10 +236,11 @@ class GameSessionController {
   bool _shouldDiscardRestoredSession({
     required GameSessionState session,
     required SudokuGame game,
+    required int maxWrongCount,
   }) {
     if (session.isGameComplete ||
         session.isGameOver ||
-        session.wrongCount >= 3) {
+        session.wrongCount >= maxWrongCount) {
       return true;
     }
 

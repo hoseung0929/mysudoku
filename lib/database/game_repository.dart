@@ -8,8 +8,15 @@ import 'package:sudoku159/utils/board_codec.dart';
 class GameRepository {
   final DatabaseManager _dbManager = DatabaseManager();
 
-  List<List<int>> _parseBoardString(String boardStr) {
-    return BoardCodec.decode(boardStr);
+  List<List<int>>? _tryParseBoardString(String boardStr) {
+    try {
+      return BoardCodec.decode(boardStr);
+    } catch (e) {
+      if (kDebugMode) {
+        AppLogger.debug('보드 파싱 실패: $e');
+      }
+      return null;
+    }
   }
 
   /// 특정 레벨의 모든 게임 데이터를 반환합니다.
@@ -22,9 +29,10 @@ class GameRepository {
       orderBy: 'game_number ASC',
     );
 
-    return maps.map((map) {
-      return _parseBoardString(map['board'] as String);
-    }).toList();
+    return maps
+        .map((map) => _tryParseBoardString(map['board'] as String))
+        .whereType<List<List<int>>>()
+        .toList();
   }
 
   /// 특정 레벨의 게임/해답 데이터를 함께 반환합니다.
@@ -39,13 +47,18 @@ class GameRepository {
       orderBy: 'game_number ASC',
     );
 
-    return maps.map((map) {
-      return {
+    final result = <Map<String, dynamic>>[];
+    for (final map in maps) {
+      final board = _tryParseBoardString(map['board'] as String);
+      final solution = _tryParseBoardString(map['solution'] as String);
+      if (board == null || solution == null) continue;
+      result.add({
         'game_number': map['game_number'] as int,
-        'board': _parseBoardString(map['board'] as String),
-        'solution': _parseBoardString(map['solution'] as String),
-      };
-    }).toList();
+        'board': board,
+        'solution': solution,
+      });
+    }
+    return result;
   }
 
   /// 특정 레벨의 특정 게임 데이터를 반환합니다.
@@ -70,10 +83,13 @@ class GameRepository {
     if (maps.isEmpty) return null;
 
     final entry = maps.first;
+    final board = _tryParseBoardString(entry['board'] as String);
+    final solution = _tryParseBoardString(entry['solution'] as String);
+    if (board == null || solution == null) return null;
     return {
       'game_number': entry['game_number'] as int,
-      'board': _parseBoardString(entry['board'] as String),
-      'solution': _parseBoardString(entry['solution'] as String),
+      'board': board,
+      'solution': solution,
     };
   }
 

@@ -6,11 +6,14 @@ class RecordsStatisticsData {
     required this.overall,
     required this.levels,
     required this.recent,
+    required this.events,
   });
 
   final Map<String, dynamic> overall;
   final List<Map<String, dynamic>> levels;
   final List<Map<String, dynamic>> recent;
+  /// 모든 클리어 이벤트 (clear_events 테이블, 누적 활동용)
+  final List<Map<String, dynamic>> events;
 }
 
 class RecordsStatisticsService {
@@ -51,10 +54,13 @@ class RecordsStatisticsService {
       );
     }
 
+    final events = await _databaseHelper.getRecentClearEvents(limit: 3000);
+
     return RecordsStatisticsData(
       overall: overall,
       levels: levels,
       recent: recent,
+      events: events,
     );
   }
 
@@ -329,6 +335,124 @@ class RecordsStatisticsService {
     };
   }
 
+  Map<String, dynamic> buildActivitySummary({
+    required List<Map<String, dynamic>> events,
+    required String selectedLevel,
+  }) {
+    final filtered = filterRecentRecords(
+      recent: events,
+      selectedLevel: selectedLevel,
+    );
+
+    final playedDays = filtered
+        .map((e) => e['clear_date']?.toString())
+        .whereType<String>()
+        .where((d) => d.isNotEmpty)
+        .toSet();
+
+    final today = _dateOnly(DateTime.now());
+
+    // 현재 연속: 오늘 또는 어제부터 역방향으로 연속한 일 수
+    int currentStreakDays = 0;
+    final startOffset = playedDays.contains(_formatDate(today)) ? 0 : 1;
+    while (playedDays.contains(
+      _formatDate(today.subtract(Duration(days: startOffset + currentStreakDays))),
+    )) {
+      currentStreakDays++;
+    }
+    if (startOffset == 0) currentStreakDays += 1; // 오늘 포함
+
+    // 최장 연속
+    final sortedDays = playedDays.toList()..sort();
+    int bestStreakDays = 0;
+    int runningStreak = 0;
+    DateTime? previousDay;
+    for (final dayKey in sortedDays) {
+      final currentDay = DateTime.parse(dayKey);
+      if (previousDay != null &&
+          currentDay.difference(previousDay).inDays == 1) {
+        runningStreak++;
+      } else {
+        runningStreak = 1;
+      }
+      if (runningStreak > bestStreakDays) {
+        bestStreakDays = runningStreak;
+      }
+      previousDay = currentDay;
+    }
+
+    return {
+      'total_clears': filtered.length,
+      'current_streak_days': currentStreakDays,
+      'best_streak_days': bestStreakDays,
+    };
+  }
+
+  Map<String, dynamic> buildActivityHeatmap({
+    required List<Map<String, dynamic>> events,
+    required String selectedLevel,
+    int weeks = 12,
+  }) {
+    final records = filterRecentRecords(
+      recent: events,
+      selectedLevel: selectedLevel,
+    );
+    final today = _dateOnly(DateTime.now());
+    final currentWeekStart = today.subtract(Duration(days: today.weekday - 1));
+    final startWeek =
+        currentWeekStart.subtract(Duration(days: (weeks - 1) * 7));
+    final clearCountsByDate = <String, int>{};
+
+    for (final record in records) {
+      final clearDate = record['clear_date']?.toString();
+      if (clearDate == null || clearDate.isEmpty) {
+        continue;
+      }
+      clearCountsByDate.update(
+        clearDate,
+        (count) => count + 1,
+        ifAbsent: () => 1,
+      );
+    }
+
+    final weekColumns = <List<Map<String, dynamic>>>[];
+    final monthLabels = <Map<String, dynamic>>[];
+    String? previousMonthKey;
+
+    for (int weekIndex = 0; weekIndex < weeks; weekIndex++) {
+      final weekStart = startWeek.add(Duration(days: weekIndex * 7));
+      final monthKey = '${weekStart.year}-${weekStart.month}';
+      if (monthKey != previousMonthKey) {
+        monthLabels.add({
+          'week_index': weekIndex,
+          'date': weekStart,
+        });
+        previousMonthKey = monthKey;
+      }
+
+      final days = <Map<String, dynamic>>[];
+      for (int dayOffset = 0; dayOffset < 7; dayOffset++) {
+        final date = weekStart.add(Duration(days: dayOffset));
+        final dateKey = _formatDate(date);
+        final clears = clearCountsByDate[dateKey] ?? 0;
+        days.add({
+          'date': date,
+          'date_key': dateKey,
+          'clears': clears,
+          'intensity': _activityIntensity(clears),
+          'is_today': dateKey == _formatDate(today),
+          'is_future': date.isAfter(today),
+        });
+      }
+      weekColumns.add(days);
+    }
+
+    return {
+      'weeks': weekColumns,
+      'month_labels': monthLabels,
+    };
+  }
+
   Map<String, dynamic>? buildRecommendedLevelByMistakes({
     required List<Map<String, dynamic>> recent,
     int days = 7,
@@ -416,6 +540,18 @@ class RecordsStatisticsService {
       return value.toInt();
     }
     return int.tryParse(value.toString()) ?? 0;
+  }
+
+  DateTime _dateOnly(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
+  }
+
+  int _activityIntensity(int clears) {
+    if (clears <= 0) return 0;
+    if (clears == 1) return 1;
+    if (clears <= 3) return 2;
+    if (clears <= 6) return 3;
+    return 4;
   }
 
   String _formatDate(DateTime date) {

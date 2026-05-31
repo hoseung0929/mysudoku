@@ -376,11 +376,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gameOverTitle => 'Game over';
 
   @override
-  String get gameOverMessage => 'You made more than 3 mistakes.';
+  String get gameOverMessage => 'You exceeded the mistake limit.';
 
   @override
-  String gameOverWrongLabel(int count) {
-    return 'Mistakes: $count/3';
+  String gameOverWrongLabel(int count, int maxCount) {
+    return 'Mistakes: $count/$maxCount';
   }
 
   @override

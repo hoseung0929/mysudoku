@@ -184,11 +184,14 @@
   "commonOk": "확인",
   "commonCancel": "취소",
   "gameOverTitle": "게임 오버",
-  "gameOverMessage": "오답이 3개를 초과했습니다.",
-  "gameOverWrongLabel": "오답: {count}/3",
+  "gameOverMessage": "오답 한도를 초과했습니다.",
+  "gameOverWrongLabel": "오답: {count}/{maxCount}",
   "@gameOverWrongLabel": {
     "placeholders": {
       "count": {
+        "type": "int"
+      },
+      "maxCount": {
         "type": "int"
       }
     }

@@ -88,7 +88,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         !_presenter.isGameOver;
   }
 
-
   bool get _canUseHint {
     if (!_presenterReady ||
         !_featurePolicy.hintEnabled ||
@@ -184,6 +183,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       game: widget.game,
       level: widget.level,
       restoreSavedSession: widget.restoreSavedSession,
+      maxWrongCount: _featurePolicy.maxWrongCount,
     );
 
     final activeSession = sessionBootstrap.activeSession;
@@ -759,7 +759,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                           _StatusStripItem(
                             icon: Icons.error_outline,
                             label: l10n.gameWrongShort,
-                            value: '${_presenter.wrongCount}/${_featurePolicy.maxWrongCount}',
+                            value:
+                                '${_presenter.wrongCount}/${_featurePolicy.maxWrongCount}',
                           ),
                           _StatusStripItem(
                             icon: Icons.emoji_events_outlined,
@@ -841,8 +842,12 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                   icon: Icons.lightbulb_outline,
                                   label:
                                       '${l10n.gameHintShort} $_visibleHintsRemaining',
-                                  backgroundColor: AppTheme.yellowColor,
-                                  isActive: _canUseHint,
+                                  backgroundColor:
+                                      Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? const Color(0xFF8A6820)
+                                          : AppTheme.yellowColor,
+                                  isActive: false,
                                   onPressed: _canUseHint
                                       ? () {
                                           setState(() {
@@ -854,7 +859,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                 SudokuGameActionButton(
                                   icon: Icons.backspace_outlined,
                                   label: _resetButtonLabel,
-                                  backgroundColor: context.colors.attentionSurface,
+                                  backgroundColor:
+                                      context.colors.attentionSurface,
                                   onPressed: _canResetCurrentGame
                                       ? _showResetCurrentGameDialog
                                       : null,
@@ -1151,6 +1157,13 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     final isSelectedNumber = _selectedInputNumber() == number;
     final isCompletedNumber = remainingCount == 0;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isCompactSmallButton = compact && height != null && height < 56;
+    final digitFontSize =
+        isCompactSmallButton ? (height * 0.58).clamp(28.0, 34.0) : 38.0;
+    final digitAlignment =
+        isCompactSmallButton ? const Alignment(-0.08, -0.06) : Alignment.center;
+    final badgeInset = isCompactSmallButton ? 7.0 : 10.0;
+    final badgeSize = isCompactSmallButton ? 22.0 : 24.0;
     final effectiveBackgroundColor = isCompletedNumber
         ? (isDark ? const Color(0xFF232323) : context.colors.surfaceSubtle)
         : isSelectedNumber
@@ -1195,20 +1208,25 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                 ),
               ),
             ),
-          Center(
+          Align(
+            alignment: digitAlignment,
             child: Text(
               number.toString(),
-              style: GoogleFonts.notoSans(fontSize: 38, fontWeight: FontWeight.w600, color: context.colors.textPrimary).copyWith(
+              style: GoogleFonts.notoSans(
+                      fontSize: digitFontSize,
+                      fontWeight: FontWeight.w600,
+                      color: context.colors.textPrimary)
+                  .copyWith(
                 fontWeight: isSelectedNumber ? FontWeight.w800 : null,
               ),
             ),
           ),
           Positioned(
-            top: 10,
-            right: 10,
+            top: badgeInset,
+            right: badgeInset,
             child: Container(
-              width: 24,
-              height: 24,
+              width: badgeSize,
+              height: badgeSize,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: isDark
@@ -1233,7 +1251,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                   : Text(
                       '$remainingCount',
                       style: GoogleFonts.notoSans(
-                        fontSize: compact ? 10 : 11,
+                        fontSize:
+                            isCompactSmallButton ? 9 : (compact ? 10 : 11),
                         fontWeight: FontWeight.w800,
                         color: isDark
                             ? context.colors.textSecondary
@@ -1374,8 +1393,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         _buildMobileActionButton(
           icon: Icons.lightbulb_outline,
           label: '',
-          color: AppTheme.yellowColor,
-          isActive: _canUseHint,
+          color: Theme.of(context).brightness == Brightness.dark
+              ? const Color(0xFF8A6820)
+              : AppTheme.yellowColor,
+          isActive: false,
           onPressed: _canUseHint
               ? () {
                   setState(() {
@@ -1432,7 +1453,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       decoration: BoxDecoration(
         color: isDarkAd
             ? const Color(0xFF1E1E1E)
-            : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            : Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest
+                .withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: isDarkAd
@@ -1496,6 +1520,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     _gameEndFlow.showGameOver(
       context: context,
       wrongCount: _presenter.wrongCount,
+      maxWrongCount: _featurePolicy.maxWrongCount,
       onRestart: _resetAndRestartCurrentGame,
       onGoToLevelSelection: _exitToLevelSelection,
     );
@@ -1623,27 +1648,39 @@ class _MobileGameLayoutMetrics {
     required double maxHeight,
     required double bottomSafePadding,
   }) {
-    final horizontalPadding = _clamp(maxWidth * 0.032, 8, 16);
+    final isIPhoneSELayout = maxWidth <= 375 && maxHeight <= 620;
+    final horizontalPadding = isIPhoneSELayout
+        ? _clamp(maxWidth * 0.008, 2, 6)
+        : _clamp(maxWidth * 0.032, 8, 16);
     final contentWidth = math.max(maxWidth - (horizontalPadding * 2), 220.0);
 
-    final numberButtonGap = contentWidth < 350 ? 3.0 : 5.0;
+    final numberButtonGap = isIPhoneSELayout
+        ? (contentWidth < 350 ? 2.0 : 3.0)
+        : (contentWidth < 350 ? 3.0 : 5.0);
     final numberButtonWidth = _clamp(
       (contentWidth - (numberButtonGap * 6)) / 3,
       74,
-      112,
+      isIPhoneSELayout ? 128 : 112,
     );
-    final numberButtonHeight = _clamp(numberButtonWidth * 0.66, 48, 68);
-    final numberButtonRadius = _clamp(numberButtonWidth * 0.24, 16, 24);
+    final numberButtonHeight = isIPhoneSELayout
+        ? _clamp(numberButtonWidth * 0.32, 36, 40)
+        : _clamp(numberButtonWidth * 0.66, 48, 68);
+    final numberButtonRadius = isIPhoneSELayout
+        ? _clamp(numberButtonWidth * 0.2, 14, 22)
+        : _clamp(numberButtonWidth * 0.24, 16, 24);
 
     final actionButtonGap = contentWidth < 350 ? 3.0 : 4.0;
     final actionButtonSize = _clamp(
       (contentWidth - (actionButtonGap * 14)) / 6,
-      36,
-      50,
+      isIPhoneSELayout ? 34 : 36,
+      isIPhoneSELayout ? 40 : 50,
     );
     final actionLabelFontSize = actionButtonSize <= 50 ? 7.5 : 8.5;
-    const bannerAdHeight = _SudokuGameScreenState._kReservedBannerAdHeight;
-    const bannerAdGap = _SudokuGameScreenState._kReservedBannerGap;
+    final bannerAdHeight = isIPhoneSELayout
+        ? 48.0
+        : _SudokuGameScreenState._kReservedBannerAdHeight;
+    final bannerAdGap =
+        isIPhoneSELayout ? 8.0 : _SudokuGameScreenState._kReservedBannerGap;
 
     final estimatedNumberPadHeight =
         (numberButtonHeight * 3) + (numberButtonGap * 4);
@@ -1652,18 +1689,20 @@ class _MobileGameLayoutMetrics {
     final fixedChromeHeight = estimatedNumberPadHeight +
         estimatedActionRowHeight +
         bottomSafePadding +
-        12.0;
+        (isIPhoneSELayout ? 0 : 12.0);
 
-    final baseBoardSize = _clamp(contentWidth, 292, 420);
+    final baseBoardSize =
+        _clamp(contentWidth, 292, isIPhoneSELayout ? 520 : 420);
     final estimatedTotalHeight = fixedChromeHeight + baseBoardSize;
     final overflow = math.max(0.0, estimatedTotalHeight - maxHeight);
-    final boardSize = _clamp(baseBoardSize - overflow, 256, 420);
+    final boardSize =
+        _clamp(baseBoardSize - overflow, 256, isIPhoneSELayout ? 520 : 420);
 
     return _MobileGameLayoutMetrics(
       horizontalPadding: horizontalPadding,
       topPadding: 0,
-      sectionGap: maxHeight < 760 ? 4 : 8,
-      compactGap: maxHeight < 760 ? 2 : 4,
+      sectionGap: isIPhoneSELayout ? 3 : (maxHeight < 760 ? 4 : 8),
+      compactGap: isIPhoneSELayout ? 1 : (maxHeight < 760 ? 2 : 4),
       boardSize: boardSize,
       numberButtonWidth: numberButtonWidth,
       numberButtonHeight: numberButtonHeight,
@@ -1673,7 +1712,8 @@ class _MobileGameLayoutMetrics {
       actionLabelFontSize: actionLabelFontSize,
       bannerAdHeight: bannerAdHeight,
       bannerAdGap: bannerAdGap,
-      scrollBottomPadding: bottomSafePadding + 4,
+      scrollBottomPadding:
+          isIPhoneSELayout ? bottomSafePadding : bottomSafePadding + 4,
     );
   }
 

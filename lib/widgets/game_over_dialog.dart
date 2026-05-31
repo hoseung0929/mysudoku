@@ -5,6 +5,7 @@ import 'package:sudoku159/l10n/app_localizations.dart';
 /// 게임 오버 다이얼로그 위젯
 class GameOverDialog extends StatelessWidget {
   final int wrongCount;
+  final int maxWrongCount;
   final VoidCallback onRestart;
   final VoidCallback onGoToLevelSelection;
 
@@ -14,6 +15,7 @@ class GameOverDialog extends StatelessWidget {
   const GameOverDialog({
     super.key,
     required this.wrongCount,
+    required this.maxWrongCount,
     required this.onRestart,
     required this.onGoToLevelSelection,
   });
@@ -73,7 +75,7 @@ class GameOverDialog extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  l10n.gameOverWrongLabel(wrongCount),
+                  l10n.gameOverWrongLabel(wrongCount, maxWrongCount),
                   style: GoogleFonts.notoSans(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,

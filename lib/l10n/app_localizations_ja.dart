@@ -366,11 +366,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gameOverTitle => 'ゲームオーバー';
 
   @override
-  String get gameOverMessage => 'ミスが3回を超えました。';
+  String get gameOverMessage => 'ミスが上限を超えました。';
 
   @override
-  String gameOverWrongLabel(int count) {
-    return 'ミス: $count/3';
+  String gameOverWrongLabel(int count, int maxCount) {
+    return 'ミス: $count/$maxCount';
   }
 
   @override

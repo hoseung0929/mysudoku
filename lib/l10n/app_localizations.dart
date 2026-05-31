@@ -775,14 +775,14 @@ abstract class AppLocalizations {
   /// No description provided for @gameOverMessage.
   ///
   /// In en, this message translates to:
-  /// **'You made more than 3 mistakes.'**
+  /// **'You exceeded the mistake limit.'**
   String get gameOverMessage;
 
   /// No description provided for @gameOverWrongLabel.
   ///
   /// In en, this message translates to:
-  /// **'Mistakes: {count}/3'**
-  String gameOverWrongLabel(int count);
+  /// **'Mistakes: {count}/{maxCount}'**
+  String gameOverWrongLabel(int count, int maxCount);
 
   /// No description provided for @recordsFilterSectionTitle.
   ///

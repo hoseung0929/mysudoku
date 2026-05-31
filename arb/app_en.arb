@@ -184,11 +184,14 @@
   "commonOk": "OK",
   "commonCancel": "Cancel",
   "gameOverTitle": "Game over",
-  "gameOverMessage": "You made more than 3 mistakes.",
-  "gameOverWrongLabel": "Mistakes: {count}/3",
+  "gameOverMessage": "You exceeded the mistake limit.",
+  "gameOverWrongLabel": "Mistakes: {count}/{maxCount}",
   "@gameOverWrongLabel": {
     "placeholders": {
       "count": {
+        "type": "int"
+      },
+      "maxCount": {
         "type": "int"
       }
     }

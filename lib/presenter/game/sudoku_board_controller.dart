@@ -223,6 +223,11 @@ class SudokuBoardController {
       return false;
     }
 
+    // 정답과 다른 경우 오류로 표시
+    if (_solution.isNotEmpty && value != _solution[row][col]) {
+      return true;
+    }
+
     for (int checkCol = 0; checkCol < 9; checkCol++) {
       if (checkCol != col && _board[row][checkCol] == value) {
         return true;

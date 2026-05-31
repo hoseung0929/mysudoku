@@ -7,6 +7,7 @@ class GameOverFlow {
   static void show({
     required BuildContext context,
     required int wrongCount,
+    required int maxWrongCount,
     required Future<void> Function() onRestart,
     required Future<void> Function() onGoToLevelSelection,
   }) {
@@ -16,6 +17,7 @@ class GameOverFlow {
       builder: (dialogContext) {
         return GameOverDialog(
           wrongCount: wrongCount,
+          maxWrongCount: maxWrongCount,
           onRestart: () async {
             Navigator.of(dialogContext).pop();
             await onRestart();

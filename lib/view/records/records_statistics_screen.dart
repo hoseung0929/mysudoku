@@ -33,6 +33,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       RecordsStatisticsService();
   final ProfileStateService _profileStateService = ProfileStateService();
   final ScrollController _scrollController = ScrollController();
+  final ScrollController _heatmapScrollController = ScrollController();
   bool _isLoading = true;
   bool _isTop = true;
   int _loadRequestId = 0;
@@ -42,6 +43,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   Map<String, dynamic> _overall = {};
   List<Map<String, dynamic>> _levels = [];
   List<Map<String, dynamic>> _recent = [];
+  List<Map<String, dynamic>> _events = [];
   String? _profileImagePath;
   String? _profileName;
 
@@ -71,6 +73,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   void dispose() {
     GameRecordNotifier.instance.version.removeListener(_handleRecordsChanged);
     _scrollController.dispose();
+    _heatmapScrollController.dispose();
     super.dispose();
   }
 
@@ -153,6 +156,15 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           _overall = data.overall;
           _levels = data.levels;
           _recent = data.recent;
+          _events = data.events;
+        });
+        // 히트맵을 최신 주(오른쪽 끝)로 자동 스크롤
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_heatmapScrollController.hasClients) {
+            _heatmapScrollController.jumpTo(
+              _heatmapScrollController.position.maxScrollExtent,
+            );
+          }
         });
       }
     } catch (_) {
@@ -513,6 +525,396 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     return labels[date.weekday - 1];
   }
 
+  Widget _buildActivityOverviewCard({
+    required Map<String, dynamic> activitySummary,
+    required Map<String, dynamic> activityHeatmap,
+  }) {
+    final theme = Theme.of(context);
+    final totalClears = activitySummary['total_clears'] as int? ?? 0;
+    final currentStreak = activitySummary['current_streak_days'] as int? ?? 0;
+    final bestStreak = activitySummary['best_streak_days'] as int? ?? 0;
+
+    return Card(
+      color: theme.colorScheme.surface,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _activityOverviewTitle(),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest
+                    .withValues(alpha: 0.32),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: theme.colorScheme.outlineVariant),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _buildActivityKpiItem(
+                      label: _activityTotalClearsLabel(),
+                      value: '$totalClears',
+                    ),
+                  ),
+                  _buildKpiDivider(),
+                  Expanded(
+                    child: _buildActivityKpiItem(
+                      label: _activityCurrentStreakLabel(),
+                      value: _activityDayCountLabel(currentStreak),
+                    ),
+                  ),
+                  _buildKpiDivider(),
+                  Expanded(
+                    child: _buildActivityKpiItem(
+                      label: _activityBestStreakLabel(),
+                      value: _activityDayCountLabel(bestStreak),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              _activityHeatmapTitle(),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildActivityHeatmap(activityHeatmap),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActivityKpiItem({
+    required String label,
+    required String value,
+  }) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: theme.colorScheme.onSurface,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKpiDivider() {
+    return Container(
+      width: 1,
+      height: 44,
+      color:
+          Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.8),
+    );
+  }
+
+  Widget _buildActivityHeatmap(Map<String, dynamic> activityHeatmap) {
+    final weeks =
+        (activityHeatmap['weeks'] as List<dynamic>? ?? const <dynamic>[])
+            .cast<List<Map<String, dynamic>>>();
+    final monthLabels =
+        (activityHeatmap['month_labels'] as List<dynamic>? ?? const <dynamic>[])
+            .cast<Map<String, dynamic>>();
+    const gap = 4.0;
+    const cellSize = 16.0;
+    final totalWidth = weeks.isEmpty
+        ? 0.0
+        : (weeks.length * cellSize) + ((weeks.length - 1) * gap);
+
+    final dayLabels = _heatmapDayLabels(); // 월/수/금 (index 0,2,4)
+
+    // 요일 레이블 컬럼 (스크롤 밖 고정)
+    Widget dayLabelColumn = Padding(
+      padding: const EdgeInsets.only(right: gap),
+      child: Column(
+        children: List.generate(7, (i) {
+          final label = (i == 0 || i == 2 || i == 4) ? dayLabels[i] : '';
+          return Padding(
+            padding: EdgeInsets.only(bottom: i < 6 ? gap : 0),
+            child: SizedBox(
+              width: 14,
+              height: cellSize,
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 9,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurfaceVariant
+                      .withValues(alpha: 0.7),
+                  height: 1,
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 고정 요일 레이블 (스크롤 안 됨)
+            dayLabelColumn,
+            // 스크롤 가능한 히트맵 그리드
+            Expanded(
+              child: SingleChildScrollView(
+                controller: _heatmapScrollController,
+                scrollDirection: Axis.horizontal,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (int weekIndex = 0;
+                            weekIndex < weeks.length;
+                            weekIndex++)
+                          Padding(
+                            padding: EdgeInsets.only(
+                              right:
+                                  weekIndex == weeks.length - 1 ? 0 : gap,
+                            ),
+                            child: Column(
+                              children: [
+                                for (int dayIndex = 0;
+                                    dayIndex < weeks[weekIndex].length;
+                                    dayIndex++) ...[
+                                  _buildHeatmapCell(
+                                    weeks[weekIndex][dayIndex],
+                                    size: cellSize,
+                                  ),
+                                  if (dayIndex !=
+                                      weeks[weekIndex].length - 1)
+                                    SizedBox(height: gap), // ignore: prefer_const_constructors
+                                ],
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: totalWidth,
+                      height: 18,
+                      child: Stack(
+                        children: [
+                          for (final label in monthLabels)
+                            Positioned(
+                              left: (label['week_index'] as int) *
+                                  (cellSize + gap),
+                              child: Text(
+                                _formatHeatmapMonthLabel(
+                                    label['date'] as DateTime),
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Text(
+          _activityHeatmapCaption(),
+          style: TextStyle(
+            fontSize: 11.5,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            height: 1.35,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeatmapCell(
+    Map<String, dynamic> day, {
+    required double size,
+  }) {
+    final theme = Theme.of(context);
+    final clears = day['clears'] as int? ?? 0;
+    final isToday = day['is_today'] == true;
+    return Tooltip(
+      message: '${_formatHeatmapTooltipDate(day['date'] as DateTime)} · '
+          '${_activityClearCountLabel(clears)}',
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: _activityHeatColor(day),
+          borderRadius: BorderRadius.circular(4),
+          border: isToday
+              ? Border.all(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+                  width: 1,
+                )
+              : null,
+        ),
+      ),
+    );
+  }
+
+  Color _activityHeatColor(Map<String, dynamic> day) {
+    final theme = Theme.of(context);
+    if (day['is_future'] == true) {
+      return theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.14);
+    }
+
+    final intensity = day['intensity'] as int? ?? 0;
+    if (day['is_today'] == true) {
+      if (intensity <= 0) {
+        return AppTheme.statisticsAccent.withValues(alpha: 0.20);
+      }
+      return AppTheme.statisticsAccent.withValues(alpha: 0.9);
+    }
+    switch (intensity) {
+      case 1:
+        return AppTheme.statisticsAccent.withValues(alpha: 0.22);
+      case 2:
+        return AppTheme.statisticsAccent.withValues(alpha: 0.42);
+      case 3:
+        return AppTheme.statisticsAccent.withValues(alpha: 0.62);
+      case 4:
+        return AppTheme.statisticsAccent.withValues(alpha: 0.82);
+      default:
+        return theme.colorScheme.surfaceContainerHighest
+            .withValues(alpha: 0.38);
+    }
+  }
+
+  String _activityOverviewTitle() {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    if (languageCode == 'ko') return '누적 활동';
+    if (languageCode == 'ja') return '積み上げた記録';
+    return 'Activity overview';
+  }
+
+  String _activityHeatmapTitle() {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    if (languageCode == 'ko') return '최근 활동 히트맵';
+    if (languageCode == 'ja') return '最近のアクティビティ';
+    return 'Recent activity';
+  }
+
+  String _activityHeatmapCaption() {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    if (languageCode == 'ko') return '칸이 진할수록 그날 더 많이 클리어했어요.';
+    if (languageCode == 'ja') return '色が濃いほど、その日に多くクリアしています。';
+    return 'Darker cells mean more clears on that day.';
+  }
+
+  String _activityTotalClearsLabel() {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    if (languageCode == 'ko') return '누적 클리어';
+    if (languageCode == 'ja') return '累計クリア';
+    return 'Total clears';
+  }
+
+  String _activityCurrentStreakLabel() {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    if (languageCode == 'ko') return '현재 연속';
+    if (languageCode == 'ja') return '現在連続';
+    return 'Current streak';
+  }
+
+  String _activityBestStreakLabel() {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    if (languageCode == 'ko') return '최장 연속';
+    if (languageCode == 'ja') return '最長連続';
+    return 'Best streak';
+  }
+
+  String _activityDayCountLabel(int count) {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    if (languageCode == 'ko') return '$count일';
+    if (languageCode == 'ja') return '$count日';
+    return '$count d';
+  }
+
+  String _activityClearCountLabel(int count) {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    if (languageCode == 'ko') return '$count회 클리어';
+    if (languageCode == 'ja') return '$count回クリア';
+    return '$count clears';
+  }
+
+  /// 히트맵 요일 레이블 (월~일, index 0=월 … 6=일)
+  List<String> _heatmapDayLabels() {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    if (languageCode == 'ko') {
+      return ['월', '화', '수', '목', '금', '토', '일'];
+    }
+    if (languageCode == 'ja') {
+      return ['月', '火', '水', '木', '金', '土', '日'];
+    }
+    return ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  }
+
+  String _formatHeatmapMonthLabel(DateTime date) {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    if (languageCode == 'ko') return '${date.month}월';
+    if (languageCode == 'ja') return '${date.month}月';
+    return DateFormat.MMM(Localizations.localeOf(context).toString())
+        .format(date);
+  }
+
+  String _formatHeatmapTooltipDate(DateTime date) {
+    return DateFormat.yMMMd(Localizations.localeOf(context).toString())
+        .format(date);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -541,6 +943,15 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     final trendSummaryUi = _statisticsService.buildTrendSummary(
       recent: _recent,
       selectedLevel: _selectedLevel,
+    );
+    final activitySummary = _statisticsService.buildActivitySummary(
+      events: _events,
+      selectedLevel: _selectedLevel,
+    );
+    final activityHeatmap = _statisticsService.buildActivityHeatmap(
+      events: _events,
+      selectedLevel: _selectedLevel,
+      weeks: 26,
     );
 
     return DecoratedBox(
@@ -571,13 +982,18 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                     _buildLoadErrorBanner(l10n, _loadErrorMessage!),
                     const SizedBox(height: 12),
                   ],
-                  _buildOverallSummaryCard(l10n),
+                  _buildActivityOverviewCard(
+                    activitySummary: activitySummary,
+                    activityHeatmap: activityHeatmap,
+                  ),
                   const SizedBox(height: 14),
                   _buildWeeklyActivityCard(
                     l10n,
                     trend: dailyTrend,
                     trendSummaryUi: trendSummaryUi,
                   ),
+                  const SizedBox(height: 14),
+                  _buildOverallSummaryCard(l10n),
                   const SizedBox(height: 22),
                   _buildLevelSection(l10n),
                 ],

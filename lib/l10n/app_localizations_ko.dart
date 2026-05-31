@@ -367,11 +367,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gameOverTitle => '게임 오버';
 
   @override
-  String get gameOverMessage => '오답이 3개를 초과했습니다.';
+  String get gameOverMessage => '오답 한도를 초과했습니다.';
 
   @override
-  String gameOverWrongLabel(int count) {
-    return '오답: $count/3';
+  String gameOverWrongLabel(int count, int maxCount) {
+    return '오답: $count/$maxCount';
   }
 
   @override

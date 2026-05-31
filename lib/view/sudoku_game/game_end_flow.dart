@@ -78,12 +78,14 @@ class GameEndFlow {
   void showGameOver({
     required BuildContext context,
     required int wrongCount,
+    required int maxWrongCount,
     required Future<void> Function() onRestart,
     required Future<void> Function() onGoToLevelSelection,
   }) {
     GameOverFlow.show(
       context: context,
       wrongCount: wrongCount,
+      maxWrongCount: maxWrongCount,
       onRestart: onRestart,
       onGoToLevelSelection: onGoToLevelSelection,
     );

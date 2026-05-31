@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'database_manager.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
 
 /// 통계 기능을 담당하는 클래스
 class StatisticsRepository {
@@ -65,7 +66,7 @@ class StatisticsRepository {
 
   /// 모든 레벨의 통계 정보를 반환합니다.
   Future<List<Map<String, dynamic>>> getAllLevelStatistics() async {
-    final levels = ['초급', '중급', '고급', '전문가', '마스터'];
+    final levels = SudokuLevel.levels.map((l) => l.name).toList();
     final statistics = <Map<String, dynamic>>[];
 
     for (final level in levels) {

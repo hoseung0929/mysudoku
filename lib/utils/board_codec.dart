@@ -6,9 +6,16 @@ class BoardCodec {
   }
 
   static List<List<int>> decode(String payload) {
-    return payload
-        .split(';')
-        .map((row) => row.split(',').map((cell) => int.parse(cell)).toList())
-        .toList();
+    final rows = payload.split(';');
+    if (rows.length != 9) {
+      throw FormatException('보드 행 수 오류: ${rows.length} (9 필요)', payload);
+    }
+    return rows.map((row) {
+      final cells = row.split(',').map(int.parse).toList();
+      if (cells.length != 9) {
+        throw FormatException('보드 열 수 오류: ${cells.length} (9 필요)', row);
+      }
+      return cells;
+    }).toList();
   }
 }
