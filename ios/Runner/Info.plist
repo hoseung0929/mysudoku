@@ -10,6 +10,7 @@
 	<array>
 		<string>en</string>
 		<string>ko</string>
+		<string>ja</string>
 	</array>
 	<key>CFBundleDisplayName</key>
 	<string>Sudoku159</string>
@@ -31,8 +32,12 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access is needed to take a profile photo.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Photo library access is needed to select a profile image.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

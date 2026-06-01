@@ -65,3 +65,69 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+---
+
+## Project: Sudoku159
+
+Flutter 스도쿠 퍼즐 게임. iOS/Android 타깃, 무료 앱, 외부 서버 없이 전부 로컬 저장.
+
+### 기술 스택
+
+- **Flutter** 3.2.3+, Dart
+- **DB**: `sqflite` (게임 기록), `shared_preferences` (설정)
+- **알림**: `flutter_local_notifications`
+- **사진**: `image_picker` (프로필 이미지, 갤러리 전용)
+- **공유**: `share_plus`
+- **네트워크**: `http` — `SUDOKU_API_BASE_URL` 환경변수가 비어있으면 비활성화
+
+### 디렉토리 구조 (`lib/`)
+
+```
+model/          데이터 모델 (퍼즐, 게임 기록 등)
+database/       SQLite 스키마 및 DAO
+services/       비즈니스 로직
+  catalog/      퍼즐 목록 로딩 (로컬 에셋 + 원격 옵션)
+  challenge/    일일 챌린지
+  game/         게임 진행 상태
+  records/      통계/기록
+  settings/     앱 설정, 알림
+  profile/      프로필 이미지
+  identity/     설치 ID (로컬)
+presenter/      상태 관리 (게임, 설정)
+view/           화면
+  home/         홈 (퍼즐 선택)
+  sudoku_game/  게임 플레이
+  challenge/    일일 챌린지
+  records/      통계
+  settings/     설정
+widgets/        공용 위젯
+theme/          라이트/다크 테마
+l10n/           로컬라이제이션 (AppLocalizations)
+navigation/     탭 네비게이션
+utils/          AppLogger 등 유틸
+```
+
+### 로컬라이제이션
+
+- ARB 파일 위치: `arb/app_en.arb`, `arb/app_ko.arb`, `arb/app_ja.arb`
+- 지원 언어: 영어(en), 한국어(ko), 일본어(ja)
+- 새 문자열 추가 시 세 파일 모두 수정 필요
+
+### 주요 명령어
+
+```bash
+flutter pub get           # 의존성 설치
+flutter run               # 연결된 디바이스에서 실행
+flutter run -d <id>       # 특정 디바이스 지정
+flutter build ios         # iOS 빌드
+flutter test              # 테스트 실행
+flutter gen-l10n          # 로컬라이제이션 코드 재생성
+```
+
+### iOS 배포 주의사항
+
+- 최소 iOS 버전: 13.0
+- 번들 ID: `com.hoseung.sudoku159`
+- `Info.plist` 권한: `NSPhotoLibraryUsageDescription`, `NSCameraUsageDescription`
+- `ITSAppUsesNonExemptEncryption`: `false` (암호화 미사용 선언됨)

@@ -1,8 +1,10 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:sudoku159/model/today_challenge_target.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 import 'package:sudoku159/utils/board_codec.dart';
 
 class RemotePuzzleEntry {
@@ -84,7 +86,8 @@ class RemotePuzzleService {
         );
       }
       return items;
-    } catch (_) {
+    } catch (e) {
+      if (kDebugMode) AppLogger.debug('fetchCatalogForLevel failed: $e');
       return const [];
     }
   }
@@ -126,7 +129,8 @@ class RemotePuzzleService {
         levelName: levelName,
         gameNumber: gameNumber,
       );
-    } catch (_) {
+    } catch (e) {
+      if (kDebugMode) AppLogger.debug('fetchDailyChallengeTarget failed: $e');
       return null;
     }
   }
