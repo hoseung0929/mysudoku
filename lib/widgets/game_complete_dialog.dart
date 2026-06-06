@@ -41,7 +41,6 @@ class GameCompleteDialog extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final onSurface = cs.onSurface;
     final onVar = cs.onSurfaceVariant;
-    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
     final dialogMaxContentHeight = MediaQuery.of(context).size.height * 0.52;
     final secondaryActionStyle = OutlinedButton.styleFrom(
       minimumSize: const Size.fromHeight(46),
@@ -162,7 +161,7 @@ class GameCompleteDialog extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isKorean ? '다음 행동 추천' : 'Suggested next step',
+                        l10n.dialogSuggestedNextStep,
                         style: GoogleFonts.notoSans(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -179,16 +178,13 @@ class GameCompleteDialog extends StatelessWidget {
                               avatar: const Icon(
                                   Icons.notifications_active_outlined,
                                   size: 16),
-                              label: Text(isKorean
-                                  ? '내일 알림 설정'
-                                  : 'Set tomorrow reminder'),
+                              label: Text(l10n.dialogSetTomorrowReminder),
                               onPressed: onOpenSettings,
                             ),
                           ActionChip(
                             avatar:
                                 const Icon(Icons.explore_outlined, size: 16),
-                            label: Text(
-                                isKorean ? '다른 난이도 보기' : 'Try another level'),
+                            label: Text(l10n.dialogTryAnotherLevel),
                             onPressed: onGoToLevelSelection,
                           ),
                         ],

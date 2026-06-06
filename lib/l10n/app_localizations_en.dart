@@ -581,6 +581,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsKpiAvgSolveTimeLabel => 'Avg. time';
 
   @override
+  String get recordsActivityOverviewTitle => 'Activity overview';
+
+  @override
+  String get recordsActivityHeatmapTitle => 'Recent activity';
+
+  @override
+  String get recordsActivityHeatmapCaption =>
+      'Darker cells mean more clears on that day.';
+
+  @override
+  String get recordsActivityTotalClearsLabel => 'Total clears';
+
+  @override
+  String get recordsActivityCurrentStreakLabel => 'Current streak';
+
+  @override
+  String get recordsActivityBestStreakLabel => 'Best streak';
+
+  @override
+  String recordsActivityDayCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '$count day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recordsActivityClearCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count clears',
+      one: '$count clear',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get recordsSectionBestRecordTitle => 'Best run';
 
   @override
@@ -1218,4 +1259,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get levelTryAgain => 'Try again';
+
+  @override
+  String get gameResetDialogTitle => 'Reset current game';
+
+  @override
+  String get gameResetDialogBody =>
+      'Clear entered numbers, notes, hints, mistakes, and time, then return to the starting board?';
+
+  @override
+  String get gameResetConfirm => 'Reset';
+
+  @override
+  String get gameNumberInputLegend =>
+      'Small numbers show what remains, checks mean completed.';
+
+  @override
+  String get dialogSuggestedNextStep => 'Suggested next step';
+
+  @override
+  String get dialogSetTomorrowReminder => 'Set tomorrow reminder';
+
+  @override
+  String get dialogTryAnotherLevel => 'Try another level';
+
+  @override
+  String get savedGamesSortRecent => 'Recent';
+
+  @override
+  String get savedGamesSortProgress => 'Progress';
+
+  @override
+  String get savedGamesSortPlayTime => 'Play time';
+
+  @override
+  String get savedGamesEmpty => 'No saved games match this filter.';
+
+  @override
+  String get challengeMetricBasisTitle => 'Challenge metric basis';
+
+  @override
+  String get challengeMetricBasisWeekly =>
+      'Weekly progress: based on clear events from the last 7 days.';
+
+  @override
+  String get challengeMetricBasisStreak =>
+      'Streak: based on consecutive dates when the daily challenge was completed.';
 }

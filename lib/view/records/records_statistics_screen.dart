@@ -43,6 +43,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   Map<String, dynamic> _overall = {};
   List<Map<String, dynamic>> _levels = [];
   List<Map<String, dynamic>> _recent = [];
+  Map<String, dynamic> _activitySummary = {};
   List<Map<String, dynamic>> _events = [];
   String? _profileImagePath;
   String? _profileName;
@@ -156,6 +157,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           _overall = data.overall;
           _levels = data.levels;
           _recent = data.recent;
+          _activitySummary = data.activitySummary;
           _events = data.events;
         });
         // 히트맵을 최신 주(오른쪽 끝)로 자동 스크롤
@@ -525,7 +527,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     return labels[date.weekday - 1];
   }
 
-  Widget _buildActivityOverviewCard({
+  Widget _buildActivityOverviewCard(
+    AppLocalizations l10n, {
     required Map<String, dynamic> activitySummary,
     required Map<String, dynamic> activityHeatmap,
   }) {
@@ -547,7 +550,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _activityOverviewTitle(),
+              l10n.recordsActivityOverviewTitle,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: theme.colorScheme.onSurface,
@@ -565,22 +568,22 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 children: [
                   Expanded(
                     child: _buildActivityKpiItem(
-                      label: _activityTotalClearsLabel(),
+                      label: l10n.recordsActivityTotalClearsLabel,
                       value: '$totalClears',
                     ),
                   ),
                   _buildKpiDivider(),
                   Expanded(
                     child: _buildActivityKpiItem(
-                      label: _activityCurrentStreakLabel(),
-                      value: _activityDayCountLabel(currentStreak),
+                      label: l10n.recordsActivityCurrentStreakLabel,
+                      value: l10n.recordsActivityDayCount(currentStreak),
                     ),
                   ),
                   _buildKpiDivider(),
                   Expanded(
                     child: _buildActivityKpiItem(
-                      label: _activityBestStreakLabel(),
-                      value: _activityDayCountLabel(bestStreak),
+                      label: l10n.recordsActivityBestStreakLabel,
+                      value: l10n.recordsActivityDayCount(bestStreak),
                     ),
                   ),
                 ],
@@ -588,14 +591,14 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
             ),
             const SizedBox(height: 18),
             Text(
-              _activityHeatmapTitle(),
+              l10n.recordsActivityHeatmapTitle,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: theme.colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 12),
-            _buildActivityHeatmap(activityHeatmap),
+            _buildActivityHeatmap(l10n, activityHeatmap),
           ],
         ),
       ),
@@ -647,7 +650,10 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     );
   }
 
-  Widget _buildActivityHeatmap(Map<String, dynamic> activityHeatmap) {
+  Widget _buildActivityHeatmap(
+    AppLocalizations l10n,
+    Map<String, dynamic> activityHeatmap,
+  ) {
     final weeks =
         (activityHeatmap['weeks'] as List<dynamic>? ?? const <dynamic>[])
             .cast<List<Map<String, dynamic>>>();
@@ -723,6 +729,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                                     dayIndex < weeks[weekIndex].length;
                                     dayIndex++) ...[
                                   _buildHeatmapCell(
+                                    l10n,
                                     weeks[weekIndex][dayIndex],
                                     size: cellSize,
                                   ),
@@ -768,7 +775,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         ),
         const SizedBox(height: 10),
         Text(
-          _activityHeatmapCaption(),
+          l10n.recordsActivityHeatmapCaption,
           style: TextStyle(
             fontSize: 11.5,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -780,6 +787,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   }
 
   Widget _buildHeatmapCell(
+    AppLocalizations l10n,
     Map<String, dynamic> day, {
     required double size,
   }) {
@@ -788,7 +796,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     final isToday = day['is_today'] == true;
     return Tooltip(
       message: '${_formatHeatmapTooltipDate(day['date'] as DateTime)} · '
-          '${_activityClearCountLabel(clears)}',
+          '${l10n.recordsActivityClearCount(clears)}',
       child: Container(
         width: size,
         height: size,
@@ -832,62 +840,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         return theme.colorScheme.surfaceContainerHighest
             .withValues(alpha: 0.38);
     }
-  }
-
-  String _activityOverviewTitle() {
-    final languageCode = Localizations.localeOf(context).languageCode;
-    if (languageCode == 'ko') return '누적 활동';
-    if (languageCode == 'ja') return '積み上げた記録';
-    return 'Activity overview';
-  }
-
-  String _activityHeatmapTitle() {
-    final languageCode = Localizations.localeOf(context).languageCode;
-    if (languageCode == 'ko') return '최근 활동 히트맵';
-    if (languageCode == 'ja') return '最近のアクティビティ';
-    return 'Recent activity';
-  }
-
-  String _activityHeatmapCaption() {
-    final languageCode = Localizations.localeOf(context).languageCode;
-    if (languageCode == 'ko') return '칸이 진할수록 그날 더 많이 클리어했어요.';
-    if (languageCode == 'ja') return '色が濃いほど、その日に多くクリアしています。';
-    return 'Darker cells mean more clears on that day.';
-  }
-
-  String _activityTotalClearsLabel() {
-    final languageCode = Localizations.localeOf(context).languageCode;
-    if (languageCode == 'ko') return '누적 클리어';
-    if (languageCode == 'ja') return '累計クリア';
-    return 'Total clears';
-  }
-
-  String _activityCurrentStreakLabel() {
-    final languageCode = Localizations.localeOf(context).languageCode;
-    if (languageCode == 'ko') return '현재 연속';
-    if (languageCode == 'ja') return '現在連続';
-    return 'Current streak';
-  }
-
-  String _activityBestStreakLabel() {
-    final languageCode = Localizations.localeOf(context).languageCode;
-    if (languageCode == 'ko') return '최장 연속';
-    if (languageCode == 'ja') return '最長連続';
-    return 'Best streak';
-  }
-
-  String _activityDayCountLabel(int count) {
-    final languageCode = Localizations.localeOf(context).languageCode;
-    if (languageCode == 'ko') return '$count일';
-    if (languageCode == 'ja') return '$count日';
-    return '$count d';
-  }
-
-  String _activityClearCountLabel(int count) {
-    final languageCode = Localizations.localeOf(context).languageCode;
-    if (languageCode == 'ko') return '$count회 클리어';
-    if (languageCode == 'ja') return '$count回クリア';
-    return '$count clears';
   }
 
   /// 히트맵 요일 레이블 (월~일, index 0=월 … 6=일)
@@ -944,10 +896,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       recent: _recent,
       selectedLevel: _selectedLevel,
     );
-    final activitySummary = _statisticsService.buildActivitySummary(
-      events: _events,
-      selectedLevel: _selectedLevel,
-    );
+    final activitySummary = _activitySummary;
     final activityHeatmap = _statisticsService.buildActivityHeatmap(
       events: _events,
       selectedLevel: _selectedLevel,
@@ -983,6 +932,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                     const SizedBox(height: 12),
                   ],
                   _buildActivityOverviewCard(
+                    l10n,
                     activitySummary: activitySummary,
                     activityHeatmap: activityHeatmap,
                   ),

@@ -136,6 +136,7 @@ class GameStateService {
     required String levelName,
     required int gameNumber,
     required List<List<int>> board,
+    required int hintsRemaining,
   }) async {
     await saveSession(
       levelName: levelName,
@@ -146,7 +147,7 @@ class GameStateService {
         (_) => List.generate(9, (_) => <int>{}),
       ),
       elapsedSeconds: 0,
-      hintsRemaining: 3,
+      hintsRemaining: hintsRemaining,
       wrongCount: 0,
       isMemoMode: false,
     );

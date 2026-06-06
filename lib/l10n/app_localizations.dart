@@ -1108,6 +1108,54 @@ abstract class AppLocalizations {
   /// **'Avg. time'**
   String get recordsKpiAvgSolveTimeLabel;
 
+  /// No description provided for @recordsActivityOverviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity overview'**
+  String get recordsActivityOverviewTitle;
+
+  /// No description provided for @recordsActivityHeatmapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent activity'**
+  String get recordsActivityHeatmapTitle;
+
+  /// No description provided for @recordsActivityHeatmapCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Darker cells mean more clears on that day.'**
+  String get recordsActivityHeatmapCaption;
+
+  /// No description provided for @recordsActivityTotalClearsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total clears'**
+  String get recordsActivityTotalClearsLabel;
+
+  /// No description provided for @recordsActivityCurrentStreakLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current streak'**
+  String get recordsActivityCurrentStreakLabel;
+
+  /// No description provided for @recordsActivityBestStreakLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Best streak'**
+  String get recordsActivityBestStreakLabel;
+
+  /// No description provided for @recordsActivityDayCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} day(s)'**
+  String recordsActivityDayCount(int count);
+
+  /// No description provided for @recordsActivityClearCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} clear(s)'**
+  String recordsActivityClearCount(int count);
+
   /// No description provided for @recordsSectionBestRecordTitle.
   ///
   /// In en, this message translates to:
@@ -2163,6 +2211,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try again'**
   String get levelTryAgain;
+
+  /// No description provided for @gameResetDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset current game'**
+  String get gameResetDialogTitle;
+
+  /// No description provided for @gameResetDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear entered numbers, notes, hints, mistakes, and time, then return to the starting board?'**
+  String get gameResetDialogBody;
+
+  /// No description provided for @gameResetConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get gameResetConfirm;
+
+  /// No description provided for @gameNumberInputLegend.
+  ///
+  /// In en, this message translates to:
+  /// **'Small numbers show what remains, checks mean completed.'**
+  String get gameNumberInputLegend;
+
+  /// No description provided for @dialogSuggestedNextStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested next step'**
+  String get dialogSuggestedNextStep;
+
+  /// No description provided for @dialogSetTomorrowReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Set tomorrow reminder'**
+  String get dialogSetTomorrowReminder;
+
+  /// No description provided for @dialogTryAnotherLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another level'**
+  String get dialogTryAnotherLevel;
+
+  /// No description provided for @savedGamesSortRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get savedGamesSortRecent;
+
+  /// No description provided for @savedGamesSortProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get savedGamesSortProgress;
+
+  /// No description provided for @savedGamesSortPlayTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Play time'**
+  String get savedGamesSortPlayTime;
+
+  /// No description provided for @savedGamesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved games match this filter.'**
+  String get savedGamesEmpty;
+
+  /// No description provided for @challengeMetricBasisTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge metric basis'**
+  String get challengeMetricBasisTitle;
+
+  /// No description provided for @challengeMetricBasisWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly progress: based on clear events from the last 7 days.'**
+  String get challengeMetricBasisWeekly;
+
+  /// No description provided for @challengeMetricBasisStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak: based on consecutive dates when the daily challenge was completed.'**
+  String get challengeMetricBasisStreak;
 }
 
 class _AppLocalizationsDelegate

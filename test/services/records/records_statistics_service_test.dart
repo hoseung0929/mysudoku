@@ -326,5 +326,49 @@ void main() {
       expect(recommended?['sample_count'], 2);
       expect(recommended?['average_wrong'], 3.5);
     });
+
+    test('counts current streak including today without double counting', () {
+      final today = DateTime.now();
+      String fmt(DateTime date) =>
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+      final summary = service.buildActivitySummary(
+        events: [
+          {'clear_date': fmt(today), 'level_name': '초급'},
+          {
+            'clear_date': fmt(today.subtract(const Duration(days: 1))),
+            'level_name': '중급',
+          },
+        ],
+        selectedLevel: RecordsLevelFilter.allLevels,
+      );
+
+      expect(summary['current_streak_days'], 2);
+      expect(summary['best_streak_days'], 2);
+      expect(summary['total_clears'], 2);
+    });
+
+    test('counts current streak from yesterday when today has no play', () {
+      final today = DateTime.now();
+      String fmt(DateTime date) =>
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+      final summary = service.buildActivitySummary(
+        events: [
+          {
+            'clear_date': fmt(today.subtract(const Duration(days: 1))),
+            'level_name': '초급',
+          },
+          {
+            'clear_date': fmt(today.subtract(const Duration(days: 2))),
+            'level_name': '초급',
+          },
+        ],
+        selectedLevel: RecordsLevelFilter.allLevels,
+      );
+
+      expect(summary['current_streak_days'], 2);
+      expect(summary['best_streak_days'], 2);
+    });
   });
 }

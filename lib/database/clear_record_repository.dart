@@ -71,6 +71,54 @@ class ClearRecordRepository {
     );
   }
 
+  /// 모든 클리어 이벤트를 반환합니다.
+  Future<List<Map<String, dynamic>>> getAllClearEvents() async {
+    final db = await _dbManager.database;
+    return db.query(
+      'clear_events',
+      orderBy: 'clear_date DESC, id DESC',
+    );
+  }
+
+  /// 특정 기간의 클리어 이벤트를 반환합니다.
+  Future<List<Map<String, dynamic>>> getClearEventsByDateRange({
+    required String startDate,
+    required String endDate,
+  }) async {
+    final db = await _dbManager.database;
+    return db.query(
+      'clear_events',
+      where: 'clear_date BETWEEN ? AND ?',
+      whereArgs: [startDate, endDate],
+      orderBy: 'clear_date DESC, id DESC',
+    );
+  }
+
+  /// 전체 클리어 이벤트 수를 반환합니다.
+  Future<int> getClearEventCount() async {
+    final db = await _dbManager.database;
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM clear_events',
+    );
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
+  /// 플레이한 날짜 목록을 중복 없이 반환합니다.
+  Future<List<String>> getDistinctClearEventDates() async {
+    final db = await _dbManager.database;
+    final rows = await db.query(
+      'clear_events',
+      columns: ['clear_date'],
+      distinct: true,
+      orderBy: 'clear_date DESC',
+    );
+    return rows
+        .map((row) => row['clear_date']?.toString())
+        .whereType<String>()
+        .where((value) => value.isNotEmpty)
+        .toList(growable: false);
+  }
+
   /// 모든 클리어 기록을 반환합니다 (백필·마이그레이션용).
   Future<List<Map<String, dynamic>>> getAllClearRecords() async {
     final db = await _dbManager.database;

@@ -6,13 +6,15 @@ class RecordsStatisticsData {
     required this.overall,
     required this.levels,
     required this.recent,
+    required this.activitySummary,
     required this.events,
   });
 
   final Map<String, dynamic> overall;
   final List<Map<String, dynamic>> levels;
   final List<Map<String, dynamic>> recent;
-  /// 모든 클리어 이벤트 (clear_events 테이블, 누적 활동용)
+  final Map<String, dynamic> activitySummary;
+  /// 히트맵 표시 범위에 해당하는 클리어 이벤트
   final List<Map<String, dynamic>> events;
 }
 
@@ -36,6 +38,8 @@ class RecordsStatisticsService {
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
+    final currentWeekStart = today.subtract(Duration(days: today.weekday - 1));
+    final heatmapStartWeek = currentWeekStart.subtract(const Duration(days: 175));
 
     final List<Map<String, dynamic>> recent;
     if (selectedPeriodDays == 0) {
@@ -54,12 +58,22 @@ class RecordsStatisticsService {
       );
     }
 
-    final events = await _databaseHelper.getRecentClearEvents(limit: 3000);
+    final totalClearEvents = await _databaseHelper.getClearEventCount();
+    final playedDays = await _databaseHelper.getDistinctClearEventDates();
+    final activitySummary = _buildActivitySummaryFromPlayedDays(
+      totalClears: totalClearEvents,
+      playedDays: playedDays.toSet(),
+    );
+    final events = await _databaseHelper.getClearEventsByDateRange(
+      startDate: _formatDate(heatmapStartWeek),
+      endDate: _formatDate(now),
+    );
 
     return RecordsStatisticsData(
       overall: overall,
       levels: levels,
       recent: recent,
+      activitySummary: activitySummary,
       events: events,
     );
   }
@@ -350,42 +364,10 @@ class RecordsStatisticsService {
         .where((d) => d.isNotEmpty)
         .toSet();
 
-    final today = _dateOnly(DateTime.now());
-
-    // 현재 연속: 오늘 또는 어제부터 역방향으로 연속한 일 수
-    int currentStreakDays = 0;
-    final startOffset = playedDays.contains(_formatDate(today)) ? 0 : 1;
-    while (playedDays.contains(
-      _formatDate(today.subtract(Duration(days: startOffset + currentStreakDays))),
-    )) {
-      currentStreakDays++;
-    }
-    if (startOffset == 0) currentStreakDays += 1; // 오늘 포함
-
-    // 최장 연속
-    final sortedDays = playedDays.toList()..sort();
-    int bestStreakDays = 0;
-    int runningStreak = 0;
-    DateTime? previousDay;
-    for (final dayKey in sortedDays) {
-      final currentDay = DateTime.parse(dayKey);
-      if (previousDay != null &&
-          currentDay.difference(previousDay).inDays == 1) {
-        runningStreak++;
-      } else {
-        runningStreak = 1;
-      }
-      if (runningStreak > bestStreakDays) {
-        bestStreakDays = runningStreak;
-      }
-      previousDay = currentDay;
-    }
-
-    return {
-      'total_clears': filtered.length,
-      'current_streak_days': currentStreakDays,
-      'best_streak_days': bestStreakDays,
-    };
+    return _buildActivitySummaryFromPlayedDays(
+      totalClears: filtered.length,
+      playedDays: playedDays,
+    );
   }
 
   Map<String, dynamic> buildActivityHeatmap({
@@ -552,6 +534,45 @@ class RecordsStatisticsService {
     if (clears <= 3) return 2;
     if (clears <= 6) return 3;
     return 4;
+  }
+
+  Map<String, dynamic> _buildActivitySummaryFromPlayedDays({
+    required int totalClears,
+    required Set<String> playedDays,
+  }) {
+    final today = _dateOnly(DateTime.now());
+
+    int currentStreakDays = 0;
+    final startOffset = playedDays.contains(_formatDate(today)) ? 0 : 1;
+    while (playedDays.contains(
+      _formatDate(today.subtract(Duration(days: startOffset + currentStreakDays))),
+    )) {
+      currentStreakDays++;
+    }
+
+    final sortedDays = playedDays.toList()..sort();
+    int bestStreakDays = 0;
+    int runningStreak = 0;
+    DateTime? previousDay;
+    for (final dayKey in sortedDays) {
+      final currentDay = DateTime.parse(dayKey);
+      if (previousDay != null &&
+          currentDay.difference(previousDay).inDays == 1) {
+        runningStreak++;
+      } else {
+        runningStreak = 1;
+      }
+      if (runningStreak > bestStreakDays) {
+        bestStreakDays = runningStreak;
+      }
+      previousDay = currentDay;
+    }
+
+    return {
+      'total_clears': totalClears,
+      'current_streak_days': currentStreakDays,
+      'best_streak_days': bestStreakDays,
+    };
   }
 
   String _formatDate(DateTime date) {

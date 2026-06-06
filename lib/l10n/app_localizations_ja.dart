@@ -546,6 +546,34 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsKpiAvgSolveTimeLabel => '平均タイム';
 
   @override
+  String get recordsActivityOverviewTitle => '積み上げた記録';
+
+  @override
+  String get recordsActivityHeatmapTitle => '最近のアクティビティ';
+
+  @override
+  String get recordsActivityHeatmapCaption => '色が濃いほど、その日に多くクリアしています。';
+
+  @override
+  String get recordsActivityTotalClearsLabel => '累計クリア';
+
+  @override
+  String get recordsActivityCurrentStreakLabel => '現在連続';
+
+  @override
+  String get recordsActivityBestStreakLabel => '最長連続';
+
+  @override
+  String recordsActivityDayCount(int count) {
+    return '$count日';
+  }
+
+  @override
+  String recordsActivityClearCount(int count) {
+    return '$count回クリア';
+  }
+
+  @override
   String get recordsSectionBestRecordTitle => 'ベスト記録';
 
   @override
@@ -1143,4 +1171,48 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get levelTryAgain => 'もう一度';
+
+  @override
+  String get gameResetDialogTitle => '現在のゲームをリセット';
+
+  @override
+  String get gameResetDialogBody =>
+      '入力した数字、メモ、ヒント、ミス回数、時間をすべてリセットして最初の盤面に戻りますか？';
+
+  @override
+  String get gameResetConfirm => 'リセット';
+
+  @override
+  String get gameNumberInputLegend => '小さい数字は残り個数、チェックは完了した数字です。';
+
+  @override
+  String get dialogSuggestedNextStep => '次のステップ';
+
+  @override
+  String get dialogSetTomorrowReminder => '明日のリマインドを設定';
+
+  @override
+  String get dialogTryAnotherLevel => '別の難易度を試す';
+
+  @override
+  String get savedGamesSortRecent => '最近';
+
+  @override
+  String get savedGamesSortProgress => '進捗順';
+
+  @override
+  String get savedGamesSortPlayTime => 'プレイ時間順';
+
+  @override
+  String get savedGamesEmpty => 'この条件に一致する保存済みゲームはありません。';
+
+  @override
+  String get challengeMetricBasisTitle => 'チャレンジ指標の基準';
+
+  @override
+  String get challengeMetricBasisWeekly => '週間進捗：直近7日間のクリアイベント数をもとに計算されます。';
+
+  @override
+  String get challengeMetricBasisStreak =>
+      'ストリーク：デイリーチャレンジを完了した連続日数をもとに計算されます。';
 }

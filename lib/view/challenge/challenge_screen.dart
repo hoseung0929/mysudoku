@@ -126,7 +126,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
   Future<void> _showMetricsBasisSheet() async {
     if (!mounted) return;
     final colorScheme = Theme.of(context).colorScheme;
-    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
+    final l10n = AppLocalizations.of(context)!;
     await showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -139,7 +139,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isKorean ? '챌린지 지표 기준' : 'Challenge metric basis',
+                  l10n.challengeMetricBasisTitle,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -148,17 +148,13 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  isKorean
-                      ? '주간 진행도: 최근 7일의 완료 이벤트 수를 기준으로 계산됩니다.'
-                      : 'Weekly progress: based on clear events from the last 7 days.',
+                  l10n.challengeMetricBasisWeekly,
                   style: TextStyle(
                       color: colorScheme.onSurfaceVariant, height: 1.4),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  isKorean
-                      ? '연속 기록: 오늘의 도전을 완료한 날짜 연속성으로 계산됩니다.'
-                      : 'Streak: based on consecutive dates when the daily challenge was completed.',
+                  l10n.challengeMetricBasisStreak,
                   style: TextStyle(
                       color: colorScheme.onSurfaceVariant, height: 1.4),
                 ),

@@ -212,6 +212,32 @@ class DatabaseHelper {
     return _clearRecordRepository.getRecentClearEvents(limit: limit);
   }
 
+  /// 모든 클리어 이벤트를 반환합니다.
+  Future<List<Map<String, dynamic>>> getAllClearEvents() async {
+    return _clearRecordRepository.getAllClearEvents();
+  }
+
+  /// 특정 기간의 클리어 이벤트를 반환합니다.
+  Future<List<Map<String, dynamic>>> getClearEventsByDateRange({
+    required String startDate,
+    required String endDate,
+  }) async {
+    return _clearRecordRepository.getClearEventsByDateRange(
+      startDate: startDate,
+      endDate: endDate,
+    );
+  }
+
+  /// 전체 클리어 이벤트 수를 반환합니다.
+  Future<int> getClearEventCount() async {
+    return _clearRecordRepository.getClearEventCount();
+  }
+
+  /// 플레이한 날짜 목록을 중복 없이 반환합니다.
+  Future<List<String>> getDistinctClearEventDates() async {
+    return _clearRecordRepository.getDistinctClearEventDates();
+  }
+
   /// 특정 기간의 클리어 기록을 반환합니다.
   Future<List<Map<String, dynamic>>> getClearRecordsByDateRange({
     required String startDate,

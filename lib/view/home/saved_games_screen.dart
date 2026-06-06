@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/services/home/home_dashboard_service.dart';
 
 enum _SavedGameSort { recent, progress, playTime }
@@ -34,7 +35,7 @@ class _SavedGamesScreenState extends State<SavedGamesScreen> {
   _SavedGameSort _selectedSort = _SavedGameSort.recent;
   String? _selectedLevelName;
 
-  bool get _isKorean => Localizations.localeOf(context).languageCode == 'ko';
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   List<ContinueGameSummary> get _visibleGames {
     final filtered = _selectedLevelName == null
@@ -197,22 +198,20 @@ class _SavedGamesScreenState extends State<SavedGamesScreen> {
   String _sortLabel(_SavedGameSort sort) {
     switch (sort) {
       case _SavedGameSort.recent:
-        return _isKorean ? '최근 플레이순' : 'Recent';
+        return _l10n.savedGamesSortRecent;
       case _SavedGameSort.progress:
-        return _isKorean ? '진행률순' : 'Progress';
+        return _l10n.savedGamesSortProgress;
       case _SavedGameSort.playTime:
-        return _isKorean ? '플레이 시간순' : 'Play time';
+        return _l10n.savedGamesSortPlayTime;
     }
   }
 
   String _allLevelsLabel() {
-    return _isKorean ? '전체' : 'All';
+    return _l10n.levelFilterAll;
   }
 
   String _emptyStateLabel() {
-    return _isKorean
-        ? '선택한 조건에 맞는 저장 게임이 없어요.'
-        : 'No saved games match this filter.';
+    return _l10n.savedGamesEmpty;
   }
 }
 

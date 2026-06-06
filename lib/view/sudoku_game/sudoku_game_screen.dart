@@ -435,25 +435,21 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   Future<void> _showResetCurrentGameDialog() async {
     if (!_canResetCurrentGame) return;
 
-    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
+    final l10n = AppLocalizations.of(context)!;
     final shouldReset = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(isKorean ? '현재 게임 초기화' : 'Reset current game'),
-          content: Text(
-            isKorean
-                ? '입력한 숫자, 메모, 힌트, 오답 횟수와 시간을 모두 지우고 처음 상태로 돌아갈까요?'
-                : 'Clear entered numbers, notes, hints, mistakes, and time, then return to the starting board?',
-          ),
+          title: Text(l10n.gameResetDialogTitle),
+          content: Text(l10n.gameResetDialogBody),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(isKorean ? '취소' : 'Cancel'),
+              child: Text(l10n.commonCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(isKorean ? '초기화' : 'Reset'),
+              child: Text(l10n.gameResetConfirm),
             ),
           ],
         );
@@ -1117,11 +1113,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     return _featurePolicy.hintEnabled ? _presenter.hintsRemaining : 0;
   }
 
-  String get _resetButtonLabel {
-    return Localizations.localeOf(context).languageCode == 'ko'
-        ? '초기화'
-        : 'Reset';
-  }
+  String get _resetButtonLabel => AppLocalizations.of(context)!.gameResetConfirm;
 
   bool _isNumberInputEnabled(int number) {
     if (!_hasEditableSelection) {
@@ -1267,13 +1259,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   }
 
   Widget _buildNumberInputLegend() {
-    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(
-        isKorean
-            ? '작은 숫자는 남은 개수, 체크는 완료된 숫자예요.'
-            : 'Small numbers show what remains, checks mean completed.',
+        AppLocalizations.of(context)!.gameNumberInputLegend,
         style: GoogleFonts.notoSans(
           fontSize: 10,
           fontWeight: FontWeight.w600,

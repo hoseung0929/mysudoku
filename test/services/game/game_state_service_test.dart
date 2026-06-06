@@ -26,6 +26,7 @@ void main() {
         levelName: levelName,
         gameNumber: gameNumber,
         board: board,
+        hintsRemaining: 3,
       );
 
       final restored = await service.loadBoard(

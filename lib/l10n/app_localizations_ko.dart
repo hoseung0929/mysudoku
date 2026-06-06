@@ -549,6 +549,34 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsKpiAvgSolveTimeLabel => '평균 시간';
 
   @override
+  String get recordsActivityOverviewTitle => '누적 활동';
+
+  @override
+  String get recordsActivityHeatmapTitle => '최근 활동 히트맵';
+
+  @override
+  String get recordsActivityHeatmapCaption => '칸이 진할수록 그날 더 많이 클리어했어요.';
+
+  @override
+  String get recordsActivityTotalClearsLabel => '누적 클리어';
+
+  @override
+  String get recordsActivityCurrentStreakLabel => '현재 연속';
+
+  @override
+  String get recordsActivityBestStreakLabel => '최장 연속';
+
+  @override
+  String recordsActivityDayCount(int count) {
+    return '$count일';
+  }
+
+  @override
+  String recordsActivityClearCount(int count) {
+    return '$count회 클리어';
+  }
+
+  @override
   String get recordsSectionBestRecordTitle => '최고 기록';
 
   @override
@@ -1150,4 +1178,48 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get levelTryAgain => '다시 시도';
+
+  @override
+  String get gameResetDialogTitle => '현재 게임 초기화';
+
+  @override
+  String get gameResetDialogBody =>
+      '입력한 숫자, 메모, 힌트, 오답 횟수와 시간을 모두 지우고 처음 상태로 돌아갈까요?';
+
+  @override
+  String get gameResetConfirm => '초기화';
+
+  @override
+  String get gameNumberInputLegend => '작은 숫자는 남은 개수, 체크는 완료된 숫자예요.';
+
+  @override
+  String get dialogSuggestedNextStep => '다음 행동 추천';
+
+  @override
+  String get dialogSetTomorrowReminder => '내일 알림 설정';
+
+  @override
+  String get dialogTryAnotherLevel => '다른 난이도 보기';
+
+  @override
+  String get savedGamesSortRecent => '최근 플레이순';
+
+  @override
+  String get savedGamesSortProgress => '진행률순';
+
+  @override
+  String get savedGamesSortPlayTime => '플레이 시간순';
+
+  @override
+  String get savedGamesEmpty => '선택한 조건에 맞는 저장 게임이 없어요.';
+
+  @override
+  String get challengeMetricBasisTitle => '챌린지 지표 기준';
+
+  @override
+  String get challengeMetricBasisWeekly =>
+      '주간 진행도: 최근 7일의 완료 이벤트 수를 기준으로 계산됩니다.';
+
+  @override
+  String get challengeMetricBasisStreak => '연속 기록: 오늘의 도전을 완료한 날짜 연속성으로 계산됩니다.';
 }

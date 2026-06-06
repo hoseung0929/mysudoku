@@ -281,6 +281,28 @@
   "recordsStatsPageSubtitle": "Clears and average time at a glance.",
   "recordsKpiWeeklyClearsLabel": "Clears",
   "recordsKpiAvgSolveTimeLabel": "Avg. time",
+  "recordsActivityOverviewTitle": "Activity overview",
+  "recordsActivityHeatmapTitle": "Recent activity",
+  "recordsActivityHeatmapCaption": "Darker cells mean more clears on that day.",
+  "recordsActivityTotalClearsLabel": "Total clears",
+  "recordsActivityCurrentStreakLabel": "Current streak",
+  "recordsActivityBestStreakLabel": "Best streak",
+  "recordsActivityDayCount": "{count, plural, one{{count} day} other{{count} days}}",
+  "@recordsActivityDayCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsActivityClearCount": "{count, plural, one{{count} clear} other{{count} clears}}",
+  "@recordsActivityClearCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "recordsSectionBestRecordTitle": "Best run",
   "recordsSectionDifficultyTitle": "By difficulty",
   "recordsSectionDetailStatsTitle": "Session details",
@@ -740,5 +762,19 @@
   "levelReplayTitle": "Replay this puzzle?",
   "levelReplayBody": "Your completed record is kept, and it updates only if the new result is better.",
   "levelReplayConfirm": "Replay",
-  "levelTryAgain": "Try again"
+  "levelTryAgain": "Try again",
+  "gameResetDialogTitle": "Reset current game",
+  "gameResetDialogBody": "Clear entered numbers, notes, hints, mistakes, and time, then return to the starting board?",
+  "gameResetConfirm": "Reset",
+  "gameNumberInputLegend": "Small numbers show what remains, checks mean completed.",
+  "dialogSuggestedNextStep": "Suggested next step",
+  "dialogSetTomorrowReminder": "Set tomorrow reminder",
+  "dialogTryAnotherLevel": "Try another level",
+  "savedGamesSortRecent": "Recent",
+  "savedGamesSortProgress": "Progress",
+  "savedGamesSortPlayTime": "Play time",
+  "savedGamesEmpty": "No saved games match this filter.",
+  "challengeMetricBasisTitle": "Challenge metric basis",
+  "challengeMetricBasisWeekly": "Weekly progress: based on clear events from the last 7 days.",
+  "challengeMetricBasisStreak": "Streak: based on consecutive dates when the daily challenge was completed."
 }

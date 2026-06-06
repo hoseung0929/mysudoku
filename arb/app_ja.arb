@@ -281,6 +281,28 @@
   "recordsStatsPageSubtitle": "クリアと平均タイムを一目で確認できます。",
   "recordsKpiWeeklyClearsLabel": "クリア",
   "recordsKpiAvgSolveTimeLabel": "平均タイム",
+  "recordsActivityOverviewTitle": "積み上げた記録",
+  "recordsActivityHeatmapTitle": "最近のアクティビティ",
+  "recordsActivityHeatmapCaption": "色が濃いほど、その日に多くクリアしています。",
+  "recordsActivityTotalClearsLabel": "累計クリア",
+  "recordsActivityCurrentStreakLabel": "現在連続",
+  "recordsActivityBestStreakLabel": "最長連続",
+  "recordsActivityDayCount": "{count}日",
+  "@recordsActivityDayCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsActivityClearCount": "{count}回クリア",
+  "@recordsActivityClearCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "recordsSectionBestRecordTitle": "ベスト記録",
   "recordsSectionDifficultyTitle": "難易度別記録",
   "recordsSectionDetailStatsTitle": "詳細記録",
@@ -740,5 +762,19 @@
   "levelReplayTitle": "このパズルをもう一度解きますか？",
   "levelReplayBody": "完了記録は保持され、より良い結果の場合のみ更新されます。",
   "levelReplayConfirm": "再挑戦",
-  "levelTryAgain": "もう一度"
+  "levelTryAgain": "もう一度",
+  "gameResetDialogTitle": "現在のゲームをリセット",
+  "gameResetDialogBody": "入力した数字、メモ、ヒント、ミス回数、時間をすべてリセットして最初の盤面に戻りますか？",
+  "gameResetConfirm": "リセット",
+  "gameNumberInputLegend": "小さい数字は残り個数、チェックは完了した数字です。",
+  "dialogSuggestedNextStep": "次のステップ",
+  "dialogSetTomorrowReminder": "明日のリマインドを設定",
+  "dialogTryAnotherLevel": "別の難易度を試す",
+  "savedGamesSortRecent": "最近",
+  "savedGamesSortProgress": "進捗順",
+  "savedGamesSortPlayTime": "プレイ時間順",
+  "savedGamesEmpty": "この条件に一致する保存済みゲームはありません。",
+  "challengeMetricBasisTitle": "チャレンジ指標の基準",
+  "challengeMetricBasisWeekly": "週間進捗：直近7日間のクリアイベント数をもとに計算されます。",
+  "challengeMetricBasisStreak": "ストリーク：デイリーチャレンジを完了した連続日数をもとに計算されます。"
 }
