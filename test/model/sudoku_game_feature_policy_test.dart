@@ -24,31 +24,45 @@ void main() {
     });
 
     test('enables gameplay assists by feature tier', () {
-      expect(SudokuGameFeaturePolicy.beginner.memoEnabled, isTrue);
-      expect(SudokuGameFeaturePolicy.beginner.undoEnabled, isTrue);
-      expect(SudokuGameFeaturePolicy.beginner.hintEnabled, isTrue);
+      final beginner = SudokuGameFeaturePolicy.forLevel(SudokuLevel.levels[0]);
+      final intermediate =
+          SudokuGameFeaturePolicy.forLevel(SudokuLevel.levels[1]);
+      final advanced = SudokuGameFeaturePolicy.forLevel(SudokuLevel.levels[2]);
+      final expert = SudokuGameFeaturePolicy.forLevel(SudokuLevel.levels[3]);
+      final master = SudokuGameFeaturePolicy.forLevel(SudokuLevel.levels[4]);
 
-      expect(SudokuGameFeaturePolicy.intermediate.memoEnabled, isTrue);
-      expect(SudokuGameFeaturePolicy.intermediate.undoEnabled, isTrue);
-      expect(SudokuGameFeaturePolicy.intermediate.hintEnabled, isFalse);
+      expect(beginner.memoEnabled, isTrue);
+      expect(beginner.hintEnabled, isTrue);
+      expect(beginner.maxHints, 5);
+      expect(beginner.maxWrongCount, 5);
 
-      expect(SudokuGameFeaturePolicy.advanced.memoEnabled, isTrue);
-      expect(SudokuGameFeaturePolicy.advanced.undoEnabled, isFalse);
-      expect(SudokuGameFeaturePolicy.advanced.hintEnabled, isFalse);
+      expect(intermediate.memoEnabled, isTrue);
+      expect(intermediate.hintEnabled, isTrue);
+      expect(intermediate.maxHints, 4);
+      expect(intermediate.maxWrongCount, 4);
+
+      expect(advanced.memoEnabled, isTrue);
+      expect(advanced.hintEnabled, isTrue);
+      expect(advanced.maxHints, 3);
+      expect(advanced.maxWrongCount, 3);
+
+      expect(expert.maxHints, 2);
+      expect(expert.maxWrongCount, 3);
+
+      expect(master.maxHints, 1);
+      expect(master.maxWrongCount, 3);
     });
 
     test('checks individual feature flags', () {
+      final advanced = SudokuGameFeaturePolicy.forLevel(SudokuLevel.levels[2]);
+
       expect(
-        SudokuGameFeaturePolicy.advanced.isEnabled(SudokuGameFeature.memo),
+        advanced.isEnabled(SudokuGameFeature.memo),
         isTrue,
       );
       expect(
-        SudokuGameFeaturePolicy.advanced.isEnabled(SudokuGameFeature.undo),
-        isFalse,
-      );
-      expect(
-        SudokuGameFeaturePolicy.advanced.isEnabled(SudokuGameFeature.hint),
-        isFalse,
+        advanced.isEnabled(SudokuGameFeature.hint),
+        isTrue,
       );
     });
   });

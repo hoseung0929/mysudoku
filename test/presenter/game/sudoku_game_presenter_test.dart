@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sudoku159/model/sudoku_game_feature_policy.dart';
 import 'package:sudoku159/model/sudoku_level.dart';
 import 'package:sudoku159/presenter/game/sudoku_game_presenter.dart';
 import 'package:sudoku159/utils/app_logger.dart';
@@ -10,6 +11,7 @@ void main() {
     late List<List<int>> board;
     late List<List<int>> solution;
     late SudokuGamePresenter presenter;
+    late SudokuGameFeaturePolicy policy;
     int gameOverCount = 0;
     final incorrectAnswers = <String>[];
 
@@ -40,11 +42,14 @@ void main() {
 
       gameOverCount = 0;
       incorrectAnswers.clear();
+      policy = SudokuGameFeaturePolicy.forLevel(SudokuLevel.levels.first);
       presenter = SudokuGamePresenter(
         level: SudokuLevel.levels.first,
         puzzleBoard: board,
         initialBoard: board,
         solution: solution,
+        maxHints: policy.maxHints,
+        maxWrongCount: policy.maxWrongCount,
         onBoardChanged: (_) {},
         onFixedNumbersChanged: (_) {},
         onWrongNumbersChanged: (_) {},
@@ -71,6 +76,8 @@ void main() {
         puzzleBoard: boardWithThreeEditableCells,
         initialBoard: boardWithThreeEditableCells,
         solution: solution,
+        maxHints: policy.maxHints,
+        maxWrongCount: 3,
         onBoardChanged: (_) {},
         onFixedNumbersChanged: (_) {},
         onWrongNumbersChanged: (_) {},
@@ -152,6 +159,8 @@ void main() {
         puzzleBoard: board,
         initialBoard: restoredBoard,
         solution: solution,
+        maxHints: policy.maxHints,
+        maxWrongCount: policy.maxWrongCount,
         initialElapsedSeconds: 125,
         initialWrongCount: 2,
         initialMemoMode: true,
@@ -194,6 +203,8 @@ void main() {
         puzzleBoard: board,
         initialBoard: restoredBoard,
         solution: solution,
+        maxHints: policy.maxHints,
+        maxWrongCount: policy.maxWrongCount,
         initialWrongCount: 1,
         onBoardChanged: (_) {},
         onFixedNumbersChanged: (_) {},
@@ -219,6 +230,8 @@ void main() {
         puzzleBoard: board,
         initialBoard: board,
         solution: solution,
+        maxHints: policy.maxHints,
+        maxWrongCount: policy.maxWrongCount,
         initialHintCells: const {'0,1', '99,99', 'bad-data'},
         onBoardChanged: (_) {},
         onFixedNumbersChanged: (_) {},
@@ -239,30 +252,30 @@ void main() {
       expect(presenter.getCellValue(0, 1), 3);
     });
 
-    test('undo reverts a wrong input and decrements wrong count', () {
+    test('clearCellValue removes a wrong input without changing wrong count', () {
       presenter.selectCell(0, 1);
       presenter.setSelectedCellValue(4);
 
       expect(presenter.wrongCount, 1);
       expect(presenter.getCellValue(0, 1), 4);
 
-      presenter.undo();
+      presenter.clearCellValue(0, 1);
 
       expect(presenter.getCellValue(0, 1), 0);
-      expect(presenter.wrongCount, 0);
+      expect(presenter.wrongCount, 1);
     });
 
-    test('undo respects game state locks', () {
+    test('clearCellValue respects game state locks', () {
       presenter.selectCell(0, 1);
       presenter.setSelectedCellValue(3);
-      expect(presenter.canUndo, isTrue);
-
-      presenter.togglePause();
-      presenter.undo();
       expect(presenter.getCellValue(0, 1), 3);
 
       presenter.togglePause();
-      presenter.undo();
+      presenter.clearCellValue(0, 1);
+      expect(presenter.getCellValue(0, 1), 3);
+
+      presenter.togglePause();
+      presenter.clearCellValue(0, 1);
       expect(presenter.getCellValue(0, 1), 0);
     });
 
@@ -272,7 +285,7 @@ void main() {
 
       expect(presenter.getCellValue(0, 1), 3);
       expect(presenter.isHintCell(0, 1), isTrue);
-      expect(presenter.hintsRemaining, SudokuGamePresenter.maxHints - 1);
+      expect(presenter.hintsRemaining, policy.maxHints - 1);
     });
 
     test('useHint does nothing when no hints remain', () {
@@ -286,6 +299,8 @@ void main() {
         puzzleBoard: boardWith4Empties,
         initialBoard: boardWith4Empties,
         solution: solution,
+        maxHints: 3,
+        maxWrongCount: policy.maxWrongCount,
         onBoardChanged: (_) {},
         onFixedNumbersChanged: (_) {},
         onWrongNumbersChanged: (_) {},
@@ -319,16 +334,15 @@ void main() {
       expect(presenter.hintsRemaining, hintsBefore);
     });
 
-    test('undo of hint restores hint count', () {
+    test('hint cell blocks clearCellValue as well as manual input', () {
       presenter.selectCell(0, 1);
       presenter.useHint();
-      expect(presenter.hintsRemaining, SudokuGamePresenter.maxHints - 1);
+      expect(presenter.hintsRemaining, policy.maxHints - 1);
       expect(presenter.isHintCell(0, 1), isTrue);
 
-      presenter.undo();
-      expect(presenter.getCellValue(0, 1), 0);
-      expect(presenter.hintsRemaining, SudokuGamePresenter.maxHints);
-      expect(presenter.isHintCell(0, 1), isFalse);
+      presenter.clearCellValue(0, 1);
+      expect(presenter.getCellValue(0, 1), 3);
+      expect(presenter.hintsRemaining, policy.maxHints - 1);
     });
 
     test('hint cell blocks manual value input', () {
@@ -338,7 +352,7 @@ void main() {
 
       presenter.setSelectedCellValue(4);
       expect(presenter.getCellValue(0, 1), 3);
-      expect(presenter.hintsRemaining, SudokuGamePresenter.maxHints - 1);
+      expect(presenter.hintsRemaining, policy.maxHints - 1);
     });
 
     test('clears selection on pause and blocks selection changes while paused',
