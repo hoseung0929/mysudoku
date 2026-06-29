@@ -51,6 +51,7 @@ dependencies:
   flutter_timezone: ^4.1.0
   timezone: ^0.9.4
   http: ^1.2.2
+  flutter_native_splash: ^2.4.0
 
 dev_dependencies:
   flutter_test:
@@ -112,3 +113,7 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_native_splash:
+  color: "#F4F4F3"
+  image: assets/splash_logo.png

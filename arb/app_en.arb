@@ -727,6 +727,13 @@
   "profileEditorTitle": "Edit profile",
   "profileEditorRemovePhoto": "Remove photo",
   "profileEditorNameLabel": "Name",
+  "profileEditorBioLabel": "Bio",
+  "profileEditorBioHint": "Write a short introduction about yourself",
+  "profileEditorBioFooter": "Your bio and profile photo are displayed on your profile.",
+  "profileEditorDefaultProfile": "Default profile",
+  "profileEditorDefaultProfileDesc": "Start with the app's default image",
+  "profileEditorPickFromAlbum": "Choose from album",
+  "profileEditorPickFromAlbumDesc": "Set your own photo as profile",
   "homeTodayLabel": "TODAY",
   "homeTodayPuzzleTitle": "Take a quiet moment\nwith today's puzzle.",
   "homeCatalogFirstTitle": "Preparing your first puzzle set",
@@ -757,6 +764,12 @@
     }
   },
   "levelContinuePlaying": "Continue playing",
+  "levelContinueResumeMessage": "Continue puzzle {gameNumber}",
+  "@levelContinueResumeMessage": {
+    "placeholders": {
+      "gameNumber": { "type": "String" }
+    }
+  },
   "levelStatusInProgress": "In progress",
   "levelNoResults": "No results.",
   "levelReplayTitle": "Replay this puzzle?",

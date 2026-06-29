@@ -1107,6 +1107,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get profileEditorNameLabel => '名前';
 
   @override
+  String get profileEditorBioLabel => '自己紹介';
+
+  @override
+  String get profileEditorBioHint => '一言で自己紹介してください';
+
+  @override
+  String get profileEditorBioFooter => '自己紹介とプロフィール写真はプロフィール画面に表示されます。';
+
+  @override
+  String get profileEditorDefaultProfile => 'デフォルトプロフィール';
+
+  @override
+  String get profileEditorDefaultProfileDesc => 'アプリのデフォルト画像で開始';
+
+  @override
+  String get profileEditorPickFromAlbum => 'アルバムから選択';
+
+  @override
+  String get profileEditorPickFromAlbumDesc => '自分の写真をプロフィールに設定';
+
+  @override
   String get homeTodayLabel => '今日';
 
   @override
@@ -1153,6 +1174,11 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get levelContinuePlaying => '続きから';
+
+  @override
+  String levelContinueResumeMessage(String gameNumber) {
+    return '$gameNumber番の続き';
+  }
 
   @override
   String get levelStatusInProgress => '進行中';

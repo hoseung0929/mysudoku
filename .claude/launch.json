@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Flutter iOS Simulator",
+      "runtimeExecutable": "/Users/hoseunglee/development/flutter/bin/flutter",
+      "runtimeArgs": ["run", "-d", "iPhone 16"],
+      "port": 0
+    },
+    {
+      "name": "Flutter iOS Device (hoseung0929)",
+      "runtimeExecutable": "/Users/hoseunglee/development/flutter/bin/flutter",
+      "runtimeArgs": ["run", "-d", "00008101-000244C90104001E"],
+      "port": 0
+    },
+    {
+      "name": "Flutter Web (Chrome)",
+      "runtimeExecutable": "/Users/hoseunglee/development/flutter/bin/flutter",
+      "runtimeArgs": ["run", "-d", "chrome"],
+      "port": 0
+    }
+  ]
+}

@@ -727,6 +727,13 @@
   "profileEditorTitle": "프로필 편집",
   "profileEditorRemovePhoto": "사진 제거",
   "profileEditorNameLabel": "이름",
+  "profileEditorBioLabel": "자기소개",
+  "profileEditorBioHint": "나를 소개하는 한 줄을 입력해주세요",
+  "profileEditorBioFooter": "자기소개와 프로필 사진은 프로필 화면에 표시됩니다.",
+  "profileEditorDefaultProfile": "기본 프로필",
+  "profileEditorDefaultProfileDesc": "앱에서 제공하는 기본 이미지로 시작",
+  "profileEditorPickFromAlbum": "사진앨범에서 선택",
+  "profileEditorPickFromAlbumDesc": "내 사진으로 프로필을 설정",
   "homeTodayLabel": "오늘의 퍼즐",
   "homeTodayPuzzleTitle": "오늘의 퍼즐 하나에\n조용히 집중해보세요.",
   "homeCatalogFirstTitle": "첫 퍼즐 세트를 준비하고 있어요",
@@ -757,6 +764,12 @@
     }
   },
   "levelContinuePlaying": "최근 플레이",
+  "levelContinueResumeMessage": "{gameNumber}번 이어서 풀기",
+  "@levelContinueResumeMessage": {
+    "placeholders": {
+      "gameNumber": { "type": "String" }
+    }
+  },
   "levelStatusInProgress": "진행 중",
   "levelNoResults": "해당 항목이 없습니다.",
   "levelReplayTitle": "완료한 퍼즐을 다시 풀까요?",

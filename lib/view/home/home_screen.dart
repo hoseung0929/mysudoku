@@ -12,6 +12,7 @@ import 'package:sudoku159/services/home/home_dashboard_service.dart';
 import 'package:sudoku159/services/home/level_progress_service.dart';
 import 'package:sudoku159/services/home/my_pace_service.dart';
 import 'package:sudoku159/services/profile/profile_state_service.dart';
+import 'package:sudoku159/navigation/app_page_route.dart';
 import 'package:sudoku159/view/home/level_picker_screen.dart';
 import 'package:sudoku159/view/settings/settings_screen.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_game_screen.dart';
@@ -48,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _showCatalogIntro = false;
   String? _profileImagePath;
   String? _profileName;
+  String? _profileBio;
   List<SudokuLevel> _levels = List<SudokuLevel>.from(SudokuLevel.levels);
 
   /// 레벨별 전체 게임 수 (DB 기준)
@@ -127,6 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _profileImagePath = snapshot.imagePath;
       _profileName = snapshot.name;
+      _profileBio = snapshot.bio;
     });
   }
 
@@ -134,17 +137,20 @@ class _HomeScreenState extends State<HomeScreen> {
     required String? name,
     required bool removeImage,
     String? pickedImagePath,
+    String? bio,
   }) async {
     final snapshot = await _profileStateService.save(
       name: name,
       removeImage: removeImage,
       currentImagePath: _profileImagePath,
       pickedImagePath: pickedImagePath,
+      bio: bio,
     );
     if (!mounted) return;
     setState(() {
       _profileName = snapshot.name;
       _profileImagePath = snapshot.imagePath;
+      _profileBio = snapshot.bio;
     });
   }
 
@@ -154,15 +160,18 @@ class _HomeScreenState extends State<HomeScreen> {
       profileImageService: _profileStateService.profileImageService,
       initialProfileName: _profileName,
       initialProfileImagePath: _profileImagePath,
+      initialBio: _profileBio,
       onSave: ({
         required String? name,
         required bool removeImage,
         String? pickedImagePath,
+        String? bio,
       }) =>
           _saveProfile(
         name: name,
         removeImage: removeImage,
         pickedImagePath: pickedImagePath,
+        bio: bio,
       ),
     );
   }
@@ -278,28 +287,8 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       await Navigator.push(
         context,
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              LevelPickerScreen(level: level),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            const begin = Offset(0.08, 0.0);
-            const end = Offset.zero;
-            final tween = Tween(begin: begin, end: end).chain(
-              CurveTween(curve: Curves.easeOutCubic),
-            );
-            final fade = CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeOutCubic,
-            );
-            return FadeTransition(
-              opacity: fade,
-              child: SlideTransition(
-                position: animation.drive(tween),
-                child: child,
-              ),
-            );
-          },
-          transitionDuration: const Duration(milliseconds: 170),
+        buildAppPageRoute(
+          builder: (context) => LevelPickerScreen(level: level),
         ),
       );
       // 레벨 화면에서 돌아온 뒤 클리어 수 갱신
@@ -328,7 +317,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
+      buildAppPageRoute(
         builder: (context) => SudokuGameScreen(
           game: game,
           level: level,

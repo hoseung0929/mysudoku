@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -24,7 +25,8 @@ import 'package:sudoku159/utils/app_logger.dart';
 const String _prefsLocaleKey = 'app_locale';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  final binding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: binding);
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
@@ -59,7 +61,15 @@ class _Sudoku159AppState extends State<Sudoku159App> {
   @override
   void initState() {
     super.initState();
-    _loadSavedPreferences();
+    _initAndRemoveSplash();
+  }
+
+  Future<void> _initAndRemoveSplash() async {
+    await Future.wait([
+      _loadSavedPreferences(),
+      Future.delayed(const Duration(seconds: 2)),
+    ]);
+    FlutterNativeSplash.remove();
   }
 
   Future<void> _loadSavedPreferences() async {
@@ -128,6 +138,7 @@ class _Sudoku159AppState extends State<Sudoku159App> {
         appLocale: _localeOverride,
         setAppLocale: _setAppLocale,
         child: MaterialApp(
+          debugShowCheckedModeBanner: false,
           onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
           theme: AppTheme.lightTheme(),
           darkTheme: AppTheme.darkTheme(),

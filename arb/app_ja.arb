@@ -727,6 +727,13 @@
   "profileEditorTitle": "プロフィール編集",
   "profileEditorRemovePhoto": "写真を削除",
   "profileEditorNameLabel": "名前",
+  "profileEditorBioLabel": "自己紹介",
+  "profileEditorBioHint": "一言で自己紹介してください",
+  "profileEditorBioFooter": "自己紹介とプロフィール写真はプロフィール画面に表示されます。",
+  "profileEditorDefaultProfile": "デフォルトプロフィール",
+  "profileEditorDefaultProfileDesc": "アプリのデフォルト画像で開始",
+  "profileEditorPickFromAlbum": "アルバムから選択",
+  "profileEditorPickFromAlbumDesc": "自分の写真をプロフィールに設定",
   "homeTodayLabel": "今日",
   "homeTodayPuzzleTitle": "今日のパズルで\n静かなひとときを。",
   "homeCatalogFirstTitle": "初めてのパズルセットを準備中です",
@@ -757,6 +764,12 @@
     }
   },
   "levelContinuePlaying": "続きから",
+  "levelContinueResumeMessage": "{gameNumber}番の続き",
+  "@levelContinueResumeMessage": {
+    "placeholders": {
+      "gameNumber": { "type": "String" }
+    }
+  },
   "levelStatusInProgress": "進行中",
   "levelNoResults": "該当なし",
   "levelReplayTitle": "このパズルをもう一度解きますか？",

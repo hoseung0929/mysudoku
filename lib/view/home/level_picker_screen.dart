@@ -6,6 +6,7 @@ import 'package:sudoku159/database/database_helper.dart';
 import 'package:sudoku159/database/database_manager.dart';
 import 'package:sudoku159/model/sudoku_game.dart';
 import 'package:sudoku159/model/sudoku_level.dart';
+import 'package:sudoku159/navigation/app_page_route.dart';
 import 'package:sudoku159/services/game/game_state_service.dart';
 import 'package:sudoku159/services/home/level_progress_service.dart';
 import 'package:sudoku159/theme/app_colors.dart';
@@ -188,23 +189,12 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     try {
       await Navigator.push(
         context,
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              SudokuGameScreen(
+        buildAppPageRoute(
+          builder: (context) => SudokuGameScreen(
             game: game,
             level: level,
             restoreSavedSession: _shouldRestoreSavedSession(kind),
           ),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            const begin = Offset(1.0, 0.0);
-            const end = Offset.zero;
-            const curve = Curves.easeInOut;
-            final tween =
-                Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-            return SlideTransition(
-                position: animation.drive(tween), child: child);
-          },
-          transitionDuration: const Duration(milliseconds: 300),
         ),
       );
       await _loadClearedGameNumbers(level.name);
@@ -393,7 +383,16 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
   Widget _buildProgressCard({required int totalCount}) {
     final level = _currentLevelInfo();
     final l10n = AppLocalizations.of(context)!;
-    final message = l10n.levelProgressCardMessage(level.localizedName(l10n));
+    final recentNumber = _recentSavedGameNumber[level.name];
+    final hasRecentInProgress = recentNumber != null &&
+        _savedProgressPercent(recentNumber) > 0 &&
+        _savedProgressPercent(recentNumber) < 100;
+    final message = hasRecentInProgress
+        ? l10n.levelContinueResumeMessage(
+            recentNumber.toString().padLeft(3, '0'))
+        : l10n.levelProgressCardMessage(level.localizedName(l10n));
+    final accentColor = _levelAccentColor(level);
+
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
       decoration: BoxDecoration(
@@ -407,19 +406,42 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(_levelIcon(level), size: 16, color: _levelAccentColor(level)),
-              const SizedBox(width: 7),
-              Expanded(
-                child: Text(
-                  message,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      fontSize: 13, color: context.colors.textSecondary),
+          GestureDetector(
+            onTap: hasRecentInProgress && !_isGameTransitioning
+                ? () => _onGameSelected(recentNumber, widget.level)
+                : null,
+            child: Row(
+              children: [
+                Icon(
+                  hasRecentInProgress
+                      ? Icons.play_circle_rounded
+                      : _levelIcon(level),
+                  size: 16,
+                  color: hasRecentInProgress ? accentColor : accentColor,
                 ),
-              ),
-            ],
+                const SizedBox(width: 7),
+                Expanded(
+                  child: Text(
+                    message,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight:
+                          hasRecentInProgress ? FontWeight.w600 : FontWeight.w400,
+                      color: hasRecentInProgress
+                          ? accentColor
+                          : context.colors.textSecondary,
+                    ),
+                  ),
+                ),
+                if (hasRecentInProgress)
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 12,
+                    color: accentColor.withValues(alpha: 0.6),
+                  ),
+              ],
+            ),
           ),
           const SizedBox(height: 10),
           _buildProgressStrip(totalCount: totalCount),
@@ -630,11 +652,13 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
           : const Color(0xFFC7E5D4);
       borderWidth = 1.0;
     } else if (isInProgress) {
-      bgColor = context.colors.surface;
+      bgColor = isDark
+          ? accentColor.withValues(alpha: 0.08)
+          : accentColor.withValues(alpha: 0.06);
       textColor = accentColor;
       iconColor = accentColor.withValues(alpha: 0.72);
-      borderColor = accentColor.withValues(alpha: 0.55);
-      borderWidth = isRecent ? 1.6 : 1.2;
+      borderColor = accentColor.withValues(alpha: 0.65);
+      borderWidth = isRecent ? 2.0 : 1.6;
     } else {
       bgColor = context.colors.surface;
       textColor = context.colors.textSecondary;

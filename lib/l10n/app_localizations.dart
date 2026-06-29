@@ -1147,13 +1147,13 @@ abstract class AppLocalizations {
   /// No description provided for @recordsActivityDayCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} day(s)'**
+  /// **'{count, plural, one{{count} day} other{{count} days}}'**
   String recordsActivityDayCount(int count);
 
   /// No description provided for @recordsActivityClearCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} clear(s)'**
+  /// **'{count, plural, one{{count} clear} other{{count} clears}}'**
   String recordsActivityClearCount(int count);
 
   /// No description provided for @recordsSectionBestRecordTitle.
@@ -2092,6 +2092,48 @@ abstract class AppLocalizations {
   /// **'Name'**
   String get profileEditorNameLabel;
 
+  /// No description provided for @profileEditorBioLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bio'**
+  String get profileEditorBioLabel;
+
+  /// No description provided for @profileEditorBioHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a short introduction about yourself'**
+  String get profileEditorBioHint;
+
+  /// No description provided for @profileEditorBioFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bio and profile photo are displayed on your profile.'**
+  String get profileEditorBioFooter;
+
+  /// No description provided for @profileEditorDefaultProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Default profile'**
+  String get profileEditorDefaultProfile;
+
+  /// No description provided for @profileEditorDefaultProfileDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with the app\'s default image'**
+  String get profileEditorDefaultProfileDesc;
+
+  /// No description provided for @profileEditorPickFromAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from album'**
+  String get profileEditorPickFromAlbum;
+
+  /// No description provided for @profileEditorPickFromAlbumDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your own photo as profile'**
+  String get profileEditorPickFromAlbumDesc;
+
   /// No description provided for @homeTodayLabel.
   ///
   /// In en, this message translates to:
@@ -2175,6 +2217,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue playing'**
   String get levelContinuePlaying;
+
+  /// No description provided for @levelContinueResumeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue puzzle {gameNumber}'**
+  String levelContinueResumeMessage(String gameNumber);
 
   /// No description provided for @levelStatusInProgress.
   ///

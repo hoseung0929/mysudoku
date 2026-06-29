@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ProfileImageService {
   static const String _profileImagePathKey = 'profile_image_path';
   static const String _profileNameKey = 'profile_name';
+  static const String _profileBioKey = 'profile_bio';
 
   final ImagePicker _imagePicker = ImagePicker();
 
@@ -81,5 +82,27 @@ class ProfileImageService {
       return;
     }
     await prefs.setString(_profileNameKey, trimmed);
+  }
+
+  Future<String?> getProfileBio() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bio = prefs.getString(_profileBioKey);
+    if (bio == null) return null;
+    final trimmed = bio.trim();
+    if (trimmed.isEmpty) {
+      await prefs.remove(_profileBioKey);
+      return null;
+    }
+    return trimmed;
+  }
+
+  Future<void> saveProfileBio(String? bio) async {
+    final prefs = await SharedPreferences.getInstance();
+    final trimmed = bio?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      await prefs.remove(_profileBioKey);
+      return;
+    }
+    await prefs.setString(_profileBioKey, trimmed);
   }
 }

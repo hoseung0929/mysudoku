@@ -1191,6 +1191,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileEditorNameLabel => 'Name';
 
   @override
+  String get profileEditorBioLabel => 'Bio';
+
+  @override
+  String get profileEditorBioHint =>
+      'Write a short introduction about yourself';
+
+  @override
+  String get profileEditorBioFooter =>
+      'Your bio and profile photo are displayed on your profile.';
+
+  @override
+  String get profileEditorDefaultProfile => 'Default profile';
+
+  @override
+  String get profileEditorDefaultProfileDesc =>
+      'Start with the app\'s default image';
+
+  @override
+  String get profileEditorPickFromAlbum => 'Choose from album';
+
+  @override
+  String get profileEditorPickFromAlbumDesc => 'Set your own photo as profile';
+
+  @override
   String get homeTodayLabel => 'TODAY';
 
   @override
@@ -1240,6 +1264,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get levelContinuePlaying => 'Continue playing';
+
+  @override
+  String levelContinueResumeMessage(String gameNumber) {
+    return 'Continue puzzle $gameNumber';
+  }
 
   @override
   String get levelStatusInProgress => 'In progress';

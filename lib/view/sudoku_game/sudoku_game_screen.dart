@@ -580,7 +580,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           onPressed: _popAfterSaving,
         ),
         actions: [
-          _buildDeveloperMenuButton(),
+          if (kDebugMode) _buildDeveloperMenuButton(),
           Padding(
             padding: const EdgeInsets.only(right: 14),
             child: Center(
@@ -614,7 +614,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         icon: const Icon(Icons.arrow_back),
         onPressed: _popAfterSaving,
       ),
-      actions: [_buildDeveloperMenuButton()],
+      actions: [if (kDebugMode) _buildDeveloperMenuButton()],
     );
   }
 

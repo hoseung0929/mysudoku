@@ -1113,6 +1113,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get profileEditorNameLabel => '이름';
 
   @override
+  String get profileEditorBioLabel => '자기소개';
+
+  @override
+  String get profileEditorBioHint => '나를 소개하는 한 줄을 입력해주세요';
+
+  @override
+  String get profileEditorBioFooter => '자기소개와 프로필 사진은 프로필 화면에 표시됩니다.';
+
+  @override
+  String get profileEditorDefaultProfile => '기본 프로필';
+
+  @override
+  String get profileEditorDefaultProfileDesc => '앱에서 제공하는 기본 이미지로 시작';
+
+  @override
+  String get profileEditorPickFromAlbum => '사진앨범에서 선택';
+
+  @override
+  String get profileEditorPickFromAlbumDesc => '내 사진으로 프로필을 설정';
+
+  @override
   String get homeTodayLabel => '오늘의 퍼즐';
 
   @override
@@ -1160,6 +1181,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get levelContinuePlaying => '최근 플레이';
+
+  @override
+  String levelContinueResumeMessage(String gameNumber) {
+    return '$gameNumber번 이어서 풀기';
+  }
 
   @override
   String get levelStatusInProgress => '진행 중';

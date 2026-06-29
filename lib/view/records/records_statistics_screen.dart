@@ -47,6 +47,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   List<Map<String, dynamic>> _events = [];
   String? _profileImagePath;
   String? _profileName;
+  String? _profileBio;
 
   static const String _selectedLevel = RecordsLevelFilter.allLevels;
   static const int _selectedPeriodDays = 0;
@@ -89,6 +90,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     setState(() {
       _profileImagePath = snapshot.imagePath;
       _profileName = snapshot.name;
+      _profileBio = snapshot.bio;
     });
   }
 
@@ -107,17 +109,20 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     required String? name,
     required bool removeImage,
     String? pickedImagePath,
+    String? bio,
   }) async {
     final snapshot = await _profileStateService.save(
       name: name,
       removeImage: removeImage,
       currentImagePath: _profileImagePath,
       pickedImagePath: pickedImagePath,
+      bio: bio,
     );
     if (!mounted) return;
     setState(() {
       _profileName = snapshot.name;
       _profileImagePath = snapshot.imagePath;
+      _profileBio = snapshot.bio;
     });
   }
 
@@ -127,15 +132,18 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       profileImageService: _profileStateService.profileImageService,
       initialProfileName: _profileName,
       initialProfileImagePath: _profileImagePath,
+      initialBio: _profileBio,
       onSave: ({
         required String? name,
         required bool removeImage,
         String? pickedImagePath,
+        String? bio,
       }) =>
           _saveProfile(
         name: name,
         removeImage: removeImage,
         pickedImagePath: pickedImagePath,
+        bio: bio,
       ),
     );
   }
@@ -748,7 +756,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                       height: 18,
                       child: Stack(
                         children: [
-                          for (final label in monthLabels)
+                          for (final label in _spacedMonthLabels(monthLabels))
                             Positioned(
                               left: (label['week_index'] as int) *
                                   (cellSize + gap),
@@ -852,6 +860,21 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       return ['月', '火', '水', '木', '金', '土', '日'];
     }
     return ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  }
+
+  List<Map<String, dynamic>> _spacedMonthLabels(
+      List<Map<String, dynamic>> labels) {
+    if (labels.length <= 1) return labels;
+    const minWeekGap = 4;
+    final result = <Map<String, dynamic>>[labels.last];
+    for (int i = labels.length - 2; i >= 0; i--) {
+      final nextIdx = result.last['week_index'] as int;
+      final curIdx = labels[i]['week_index'] as int;
+      if (nextIdx - curIdx >= minWeekGap) {
+        result.add(labels[i]);
+      }
+    }
+    return result;
   }
 
   String _formatHeatmapMonthLabel(DateTime date) {
@@ -962,7 +985,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 subtitleOverride: l10n.recordsStatsPageSubtitle,
                 onTapSettings: _openSettings,
                 onTapEditProfile: _openProfileEditor,
-                compact: true,
               ),
             ),
             if (_isLoading)
