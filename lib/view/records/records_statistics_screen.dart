@@ -201,11 +201,12 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   }
 
   List<Map<String, dynamic>> get _displayLevelStats {
-    return _statisticsService.buildLevelStats(
+    final stats = _statisticsService.buildLevelStats(
       levels: _levels,
       recent: _recentForDisplayedStats,
       selectedLevel: _selectedLevel,
     );
+    return stats.where((stat) => stat['level_name'] != '마스터').toList();
   }
 
   String _formatDurationNatural(num seconds) {
@@ -1282,6 +1283,21 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     }
   }
 
+  String? _levelImage(String levelNameKey) {
+    switch (levelNameKey) {
+      case '초급':
+        return 'assets/images/level1.png';
+      case '중급':
+        return 'assets/images/level2.png';
+      case '고급':
+        return 'assets/images/level3.png';
+      case '전문가':
+        return 'assets/images/level4.png';
+      default:
+        return null;
+    }
+  }
+
   Color _levelAccent(String levelNameKey) {
     switch (levelNameKey) {
       case '초급':
@@ -1333,11 +1349,17 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                _levelIcon(levelNameKey),
-                size: 20,
-                color: levelAccent,
-              ),
+              _levelImage(levelNameKey) != null
+                  ? Image.asset(
+                      _levelImage(levelNameKey)!,
+                      width: 20,
+                      height: 20,
+                    )
+                  : Icon(
+                      _levelIcon(levelNameKey),
+                      size: 20,
+                      color: levelAccent,
+                    ),
               const SizedBox(width: 9),
               Expanded(
                 child: Column(

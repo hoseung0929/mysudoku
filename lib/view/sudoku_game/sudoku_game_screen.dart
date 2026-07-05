@@ -23,6 +23,7 @@ import 'package:sudoku159/view/sudoku_game/sudoku_game_action_button.dart';
 import 'package:sudoku159/view/home/level_picker_screen.dart';
 import 'package:sudoku159/widgets/custom_app_bar.dart';
 import 'package:sudoku159/widgets/progressive_blur_button.dart';
+import 'package:sudoku159/widgets/waddling_penguin_icon.dart';
 
 /// 스도쿠 게임의 메인 화면
 /// MVP 패턴에서 View 역할을 수행하며, 사용자 인터페이스를 담당
@@ -64,6 +65,73 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   OverlayEntry? _completionFeedbackEntry;
   Timer? _completionFeedbackTimer;
   final Map<String, Timer> _wrongCellTimers = {};
+  Set<int> _completedUnitIds = {};
+  bool _isPenguinActive = false;
+  Timer? _penguinActiveTimer;
+
+  /// 가로줄(0~8) · 세로줄(9~17) · 3x3박스(18~26) 중 현재 완성된 유닛 id 집합.
+  Set<int> _computeCompletedUnitIds() {
+    bool isLineComplete(Iterable<List<int>> cells) {
+      for (final cell in cells) {
+        final row = cell[0];
+        final col = cell[1];
+        if (_presenter.getCellValue(row, col) == 0 ||
+            _presenter.isWrongNumber(row, col)) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    final completed = <int>{};
+    for (int r = 0; r < 9; r++) {
+      if (isLineComplete([for (int c = 0; c < 9; c++) [r, c]])) {
+        completed.add(r);
+      }
+    }
+    for (int c = 0; c < 9; c++) {
+      if (isLineComplete([for (int r = 0; r < 9; r++) [r, c]])) {
+        completed.add(9 + c);
+      }
+    }
+    for (int b = 0; b < 9; b++) {
+      final startRow = (b ~/ 3) * 3;
+      final startCol = (b % 3) * 3;
+      final boxCells = [
+        for (int r = startRow; r < startRow + 3; r++)
+          for (int c = startCol; c < startCol + 3; c++) [r, c],
+      ];
+      if (isLineComplete(boxCells)) {
+        completed.add(18 + b);
+      }
+    }
+    return completed;
+  }
+
+  /// 재개한 게임에서 이미 완성돼 있던 유닛까지 축하 애니메이션이 뜨지 않도록
+  /// 기준선을 조용히 세팅합니다.
+  void _primeCompletedUnitIds() {
+    _completedUnitIds = _computeCompletedUnitIds();
+  }
+
+  /// 새로 완성된 유닛이 있으면 펭귄이 5초간 뒤뚱거리도록 트리거합니다.
+  void _checkForNewlyCompletedUnits() {
+    final completed = _computeCompletedUnitIds();
+    final hasNewCompletion = completed.difference(_completedUnitIds).isNotEmpty;
+    _completedUnitIds = completed;
+    if (hasNewCompletion) {
+      _triggerPenguinBurst();
+    }
+  }
+
+  void _triggerPenguinBurst() {
+    _penguinActiveTimer?.cancel();
+    setState(() => _isPenguinActive = true);
+    _penguinActiveTimer = Timer(const Duration(seconds: 5), () {
+      if (!mounted) return;
+      setState(() => _isPenguinActive = false);
+    });
+  }
 
   bool get _hasEditableSelection {
     final row = _presenter.selectedRow;
@@ -223,6 +291,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       },
       onWrongNumbersChanged: (wrongNumbers) {
         setState(() {});
+        if (_presenterReady) {
+          _checkForNewlyCompletedUnits();
+        }
       },
       onTimeChanged: (time) {
         _timeNotifier.value = _formatCalmTime(time);
@@ -281,6 +352,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       },
     );
 
+    _primeCompletedUnitIds();
     if (mounted) {
       setState(() {
         _presenterReady = true;
@@ -500,6 +572,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       t.cancel();
     }
     _wrongCellTimers.clear();
+    _penguinActiveTimer?.cancel();
     _timeNotifier.dispose();
     if (_presenterReady) {
       _presenter.dispose();
@@ -584,18 +657,25 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           Padding(
             padding: const EdgeInsets.only(right: 14),
             child: Center(
-              child: ValueListenableBuilder<String>(
-                valueListenable: _timeNotifier,
-                builder: (context, time, _) => Text(
-                  time,
-                  style: GoogleFonts.notoSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFFB8B8B8)
-                        : context.colors.textSecondary,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  WaddlingPenguinIcon(size: 22, active: _isPenguinActive),
+                  const SizedBox(width: 6),
+                  ValueListenableBuilder<String>(
+                    valueListenable: _timeNotifier,
+                    builder: (context, time, _) => Text(
+                      time,
+                      style: GoogleFonts.notoSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFFB8B8B8)
+                            : context.colors.textSecondary,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),

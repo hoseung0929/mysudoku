@@ -509,6 +509,7 @@ class _HomeScreenState extends State<HomeScreen> {
       profileName: _profileName,
       guestTitle: l10n.homeGuestTitle,
       profileImagePath: _profileImagePath,
+      subtitleOverride: _profileBio,
       onTapSettings: _openSettings,
       onTapEditProfile: _openProfileEditor,
     );
@@ -802,9 +803,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildLevelExplorer() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: List.generate(5, (index) {
+      children: List.generate(4, (index) {
         return Padding(
-          padding: EdgeInsets.only(bottom: index == 4 ? 0 : 12),
+          padding: EdgeInsets.only(bottom: index == 3 ? 0 : 12),
           child: _buildLevelCard(index),
         );
       }),
@@ -824,7 +825,7 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisSpacing: 16,
             childAspectRatio: 1.45,
           ),
-          itemCount: 5,
+          itemCount: 4,
           itemBuilder: (context, index) => _buildLevelCard(index),
         ),
       ],
@@ -865,12 +866,19 @@ class _HomeScreenState extends State<HomeScreen> {
       Icons.diamond_rounded,
       Icons.emoji_events_rounded,
     ];
-    final badgeSizes = [34.0, 32.0, 32.0, 32.0, 34.0];
+    final badgeSizes = [46.0, 44.0, 44.0, 44.0, 46.0];
+    final levelImages = [
+      'assets/images/level1.png',
+      'assets/images/level2.png',
+      'assets/images/level3.png',
+      'assets/images/level4.png',
+    ];
 
     return _LevelCard(
       color: colors[index],
       badgeColor: badgeColors[index],
       badgeIcon: badges[index],
+      badgeImage: levelImages[index],
       badgeSize: badgeSizes[index],
       title: level.localizedName(l10n),
       completed: completed,
@@ -959,6 +967,7 @@ class _LevelCard extends StatefulWidget {
   final Color color;
   final Color? badgeColor;
   final IconData badgeIcon;
+  final String? badgeImage;
   final double badgeSize;
   final String title;
   final int completed;
@@ -971,6 +980,7 @@ class _LevelCard extends StatefulWidget {
     required this.color,
     required this.badgeColor,
     required this.badgeIcon,
+    this.badgeImage,
     required this.badgeSize,
     required this.title,
     required this.completed,
@@ -1049,6 +1059,7 @@ class _LevelCardState extends State<_LevelCard> {
                 _DifficultyIcon(
                   color: widget.color,
                   badgeIcon: widget.badgeIcon,
+                  badgeImage: widget.badgeImage,
                   badgeColor: widget.badgeColor,
                   badgeSize: widget.badgeSize,
                 ),
@@ -1116,22 +1127,26 @@ class _DifficultyIcon extends StatelessWidget {
   const _DifficultyIcon({
     required this.color,
     required this.badgeIcon,
+    this.badgeImage,
     required this.badgeColor,
     required this.badgeSize,
   });
 
   final Color color;
   final IconData badgeIcon;
+  final String? badgeImage;
   final Color? badgeColor;
   final double badgeSize;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 46,
-      height: 46,
+      width: 56,
+      height: 56,
       child: Center(
-        child: Icon(badgeIcon, size: badgeSize, color: badgeColor ?? color),
+        child: badgeImage != null
+            ? Image.asset(badgeImage!, width: badgeSize, height: badgeSize)
+            : Icon(badgeIcon, size: badgeSize, color: badgeColor ?? color),
       ),
     );
   }

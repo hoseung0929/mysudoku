@@ -296,7 +296,9 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(_levelIcon(level), size: 20, color: _levelIconColor(level)),
+          _levelImage(level) != null
+              ? Image.asset(_levelImage(level)!, width: 20, height: 20)
+              : Icon(_levelIcon(level), size: 20, color: _levelIconColor(level)),
           const SizedBox(width: 8),
           Text(
             level.localizedName(l10n),
@@ -412,13 +414,16 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                 : null,
             child: Row(
               children: [
-                Icon(
-                  hasRecentInProgress
-                      ? Icons.play_circle_rounded
-                      : _levelIcon(level),
-                  size: 16,
-                  color: hasRecentInProgress ? accentColor : accentColor,
-                ),
+                if (!hasRecentInProgress && _levelImage(level) != null)
+                  Image.asset(_levelImage(level)!, width: 16, height: 16)
+                else
+                  Icon(
+                    hasRecentInProgress
+                        ? Icons.play_circle_rounded
+                        : _levelIcon(level),
+                    size: 16,
+                    color: accentColor,
+                  ),
                 const SizedBox(width: 7),
                 Expanded(
                   child: Text(
@@ -956,6 +961,21 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
         return Icons.emoji_events_rounded;
       default:
         return Icons.eco_rounded;
+    }
+  }
+
+  String? _levelImage(SudokuLevel level) {
+    switch (level.difficulty) {
+      case 1:
+        return 'assets/images/level1.png';
+      case 2:
+        return 'assets/images/level2.png';
+      case 3:
+        return 'assets/images/level3.png';
+      case 4:
+        return 'assets/images/level4.png';
+      default:
+        return null;
     }
   }
 

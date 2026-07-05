@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
-import 'package:sudoku159/theme/app_colors.dart';
 
 /// 게임 완료 축하 다이얼로그 위젯
 class GameCompleteDialog extends StatelessWidget {
@@ -42,6 +41,8 @@ class GameCompleteDialog extends StatelessWidget {
     final onSurface = cs.onSurface;
     final onVar = cs.onSurfaceVariant;
     final dialogMaxContentHeight = MediaQuery.of(context).size.height * 0.52;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final themeSuffix = isDarkMode ? 'black' : 'white';
     final secondaryActionStyle = OutlinedButton.styleFrom(
       minimumSize: const Size.fromHeight(46),
       foregroundColor: onVar,
@@ -71,56 +72,20 @@ class GameCompleteDialog extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         side: BorderSide(color: cs.outlineVariant),
       ),
-      title: Column(
-        children: [
-          const Icon(
-            Icons.celebration,
-            color: AppColors.boardAccent2,
-            size: 44,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.dialogCongratulations,
-            style: GoogleFonts.notoSans(
-              color: onSurface,
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
-          ),
-        ],
+      title: Image.asset(
+        isNewBestRecord
+            ? 'assets/images/newbest_$themeSuffix.png'
+            : 'assets/images/clear_$themeSuffix.png',
+        height: 200,
       ),
+      titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+      contentPadding: const EdgeInsets.fromLTRB(24, 1, 24, 24),
       content: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: dialogMaxContentHeight),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (isNewBestRecord)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: context.colors.attention.withValues(alpha: 0.22),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    l10n.dialogNewBest,
-                    style: GoogleFonts.notoSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: context.colors.attention,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-              Text(
-                l10n.dialogSudokuComplete,
-                style: GoogleFonts.notoSans(
-                  fontSize: 16,
-                  color: onVar,
-                ),
-              ),
               if (challengeMessage != null) ...[
                 const SizedBox(height: 10),
                 Container(

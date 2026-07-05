@@ -86,6 +86,8 @@ class _ProfileEditorContentState extends State<_ProfileEditorContent> {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final bioMaxLength = languageCode == 'ko' || languageCode == 'ja' ? 20 : 40;
 
     final hasImage = !_useDefaultProfile &&
         _draftImagePath != null &&
@@ -135,15 +137,11 @@ class _ProfileEditorContentState extends State<_ProfileEditorContent> {
                         CircleAvatar(
                           radius: 48,
                           backgroundColor: colors.borderLight,
-                          backgroundImage:
-                              hasImage ? FileImage(File(_draftImagePath!)) : null,
-                          child: hasImage
-                              ? null
-                              : Icon(
-                                  Icons.person,
-                                  size: 52,
-                                  color: colors.textMuted,
-                                ),
+                          backgroundImage: hasImage
+                              ? FileImage(File(_draftImagePath!))
+                              : const AssetImage(
+                                  'assets/images/character.png',
+                                ) as ImageProvider,
                         ),
                         const SizedBox(height: 10),
                         Text(
@@ -164,6 +162,7 @@ class _ProfileEditorContentState extends State<_ProfileEditorContent> {
                   // Profile image selection
                   _buildOptionTile(
                     icon: Icons.person,
+                    imageAsset: 'assets/images/character.png',
                     iconBgColor: colors.borderLight,
                     title: l10n.profileEditorDefaultProfile,
                     subtitle: l10n.profileEditorDefaultProfileDesc,
@@ -223,7 +222,7 @@ class _ProfileEditorContentState extends State<_ProfileEditorContent> {
                   const SizedBox(height: 8),
                   TextField(
                     controller: _bioController,
-                    maxLength: 80,
+                    maxLength: bioMaxLength,
                     maxLines: 3,
                     textInputAction: TextInputAction.done,
                     decoration: InputDecoration(
@@ -280,6 +279,7 @@ class _ProfileEditorContentState extends State<_ProfileEditorContent> {
     required String subtitle,
     required bool selected,
     required VoidCallback onTap,
+    String? imageAsset,
   }) {
     final colors = context.colors;
     final accentColor = Theme.of(context).colorScheme.primary;
@@ -303,7 +303,11 @@ class _ProfileEditorContentState extends State<_ProfileEditorContent> {
                 color: iconBgColor,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 22, color: colors.textSecondary),
+              child: imageAsset != null
+                  ? ClipOval(
+                      child: Image.asset(imageAsset, fit: BoxFit.cover),
+                    )
+                  : Icon(icon, size: 22, color: colors.textSecondary),
             ),
             const SizedBox(width: 12),
             Expanded(

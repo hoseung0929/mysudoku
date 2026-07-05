@@ -129,5 +129,5 @@ flutter gen-l10n          # 로컬라이제이션 코드 재생성
 
 - 최소 iOS 버전: 13.0
 - 번들 ID: `com.hoseung.sudoku159`
-- `Info.plist` 권한: `NSPhotoLibraryUsageDescription`, `NSCameraUsageDescription`
+- `Info.plist` 권한: `NSPhotoLibraryUsageDescription` (갤러리 전용, 카메라 미사용)
 - `ITSAppUsesNonExemptEncryption`: `false` (암호화 미사용 선언됨)

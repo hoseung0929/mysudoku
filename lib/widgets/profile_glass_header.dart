@@ -40,7 +40,6 @@ class ProfileGlassHeader extends StatelessWidget {
     final displayName = titleOverride ?? (hasName ? trimmedName : guestTitle);
     final languageCode = Localizations.localeOf(context).languageCode;
     final avatarRadius = compact ? 22.0 : 25.0;
-    final avatarIconSize = compact ? 28.0 : 31.0;
     final headerPadding = EdgeInsets.fromLTRB(
       16,
       (compact ? 18 : 22) + topInset,
@@ -85,10 +84,12 @@ class ProfileGlassHeader extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Row(
                       children: [
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Container(
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: onTapEditProfile,
+                            customBorder: const CircleBorder(),
+                            child: Container(
                               padding: const EdgeInsets.all(3),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
@@ -105,46 +106,12 @@ class ProfileGlassHeader extends StatelessWidget {
                                 backgroundColor: colorScheme.primaryContainer,
                                 backgroundImage: hasProfileImage
                                     ? FileImage(File(profileImagePath!))
-                                    : null,
-                                child: hasProfileImage
-                                    ? null
-                                    : Icon(
-                                        Icons.person,
-                                        size: avatarIconSize,
-                                        color: colorScheme.onPrimaryContainer,
-                                      ),
+                                    : const AssetImage(
+                                        'assets/images/character.png',
+                                      ) as ImageProvider,
                               ),
                             ),
-                            if (onTapEditProfile != null)
-                              Positioned(
-                                right: -2,
-                                bottom: -2,
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: onTapEditProfile,
-                                    customBorder: const CircleBorder(),
-                                    child: Container(
-                                      width: 20,
-                                      height: 20,
-                                      decoration: BoxDecoration(
-                                        color: colorScheme.primary,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: colorScheme.surface,
-                                          width: 2,
-                                        ),
-                                      ),
-                                      child: Icon(
-                                        Icons.edit,
-                                        size: 10,
-                                        color: colorScheme.onPrimary,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
+                          ),
                         ),
                         SizedBox(width: profileGap),
                         Expanded(
