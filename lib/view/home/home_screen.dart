@@ -11,7 +11,7 @@ import 'package:sudoku159/services/records/game_record_notifier.dart';
 import 'package:sudoku159/services/home/home_dashboard_service.dart';
 import 'package:sudoku159/services/home/level_progress_service.dart';
 import 'package:sudoku159/services/home/my_pace_service.dart';
-import 'package:sudoku159/services/profile/profile_state_service.dart';
+import 'package:sudoku159/services/profile/profile_state_controller.dart';
 import 'package:sudoku159/navigation/app_page_route.dart';
 import 'package:sudoku159/view/home/level_picker_screen.dart';
 import 'package:sudoku159/view/settings/settings_screen.dart';
@@ -39,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final DatabaseManager _databaseManager = DatabaseManager();
   final LevelProgressService _levelProgressService = LevelProgressService();
   final HomeDashboardService _homeDashboardService = HomeDashboardService();
-  final ProfileStateService _profileStateService = ProfileStateService();
+  final ProfileStateController _profileState = ProfileStateController.instance;
   final MyPaceService _myPaceService = MyPaceService();
   final ScrollController _scrollController = ScrollController();
   bool _isTop = true;
@@ -64,6 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _databaseManager.catalogStatus.addListener(_handleCatalogStatusChanged);
     GameRecordNotifier.instance.version.addListener(_handleRecordsChanged);
+    _profileState.addListener(_handleProfileStateChanged);
     _scrollController.addListener(() {
       if (_scrollController.offset <= 0 && !_isTop) {
         setState(() {
@@ -123,41 +124,23 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _loadProfile() async {
-    final snapshot = await _profileStateService.load();
+  void _handleProfileStateChanged() {
     if (!mounted) return;
     setState(() {
-      _profileImagePath = snapshot.imagePath;
-      _profileName = snapshot.name;
-      _profileBio = snapshot.bio;
+      _profileImagePath = _profileState.imagePath;
+      _profileName = _profileState.name;
+      _profileBio = _profileState.bio;
     });
   }
 
-  Future<void> _saveProfile({
-    required String? name,
-    required bool removeImage,
-    String? pickedImagePath,
-    String? bio,
-  }) async {
-    final snapshot = await _profileStateService.save(
-      name: name,
-      removeImage: removeImage,
-      currentImagePath: _profileImagePath,
-      pickedImagePath: pickedImagePath,
-      bio: bio,
-    );
-    if (!mounted) return;
-    setState(() {
-      _profileName = snapshot.name;
-      _profileImagePath = snapshot.imagePath;
-      _profileBio = snapshot.bio;
-    });
+  Future<void> _loadProfile() async {
+    await _profileState.refresh();
   }
 
   Future<void> _openProfileEditor() async {
     await showProfileEditorSheet(
       context: context,
-      profileImageService: _profileStateService.profileImageService,
+      profileImageService: _profileState.profileImageService,
       initialProfileName: _profileName,
       initialProfileImagePath: _profileImagePath,
       initialBio: _profileBio,
@@ -167,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
         String? pickedImagePath,
         String? bio,
       }) =>
-          _saveProfile(
+          _profileState.save(
         name: name,
         removeImage: removeImage,
         pickedImagePath: pickedImagePath,
@@ -220,6 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _databaseManager.catalogStatus.removeListener(_handleCatalogStatusChanged);
     GameRecordNotifier.instance.version.removeListener(_handleRecordsChanged);
+    _profileState.removeListener(_handleProfileStateChanged);
     _scrollController.dispose();
     super.dispose();
   }
@@ -460,13 +444,12 @@ class _HomeScreenState extends State<HomeScreen> {
       clipBehavior: Clip.none,
       children: [
         Positioned.fill(
-          child: SingleChildScrollView(
-            controller: _scrollController,
+          child: Padding(
             padding: EdgeInsets.fromLTRB(
               16,
               topInset + _kProfileHeaderExtent + _kBelowProfileHeaderGap,
               16,
-              _kHomeScrollBottomPad + bottomInset,
+              0,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -486,7 +469,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 _buildHomeHero(),
                 const SizedBox(height: 16),
-                _buildLevelExplorer(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    padding: EdgeInsets.only(
+                      bottom: _kHomeScrollBottomPad + bottomInset,
+                    ),
+                    child: _buildLevelExplorer(),
+                  ),
+                ),
               ],
             ),
           ),

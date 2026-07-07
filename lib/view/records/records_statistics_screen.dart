@@ -4,7 +4,7 @@ import 'package:sudoku159/constants/records_level_filter.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/l10n/sudoku_level_l10n.dart';
 import 'package:sudoku159/services/records/game_record_notifier.dart';
-import 'package:sudoku159/services/profile/profile_state_service.dart';
+import 'package:sudoku159/services/profile/profile_state_controller.dart';
 import 'package:sudoku159/services/records/records_statistics_service.dart';
 import 'package:sudoku159/theme/app_theme.dart';
 import 'package:sudoku159/view/settings/settings_screen.dart';
@@ -21,17 +21,17 @@ class RecordsStatisticsScreen extends StatefulWidget {
 
 class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   /// 상태바 아래 프로필 바 본문 높이(홈 [HomeScreen]과 동일).
-  static const double _kProfileHeaderExtent = 92;
+  static const double _kProfileHeaderExtent = 104;
 
   /// 프로필 헤더와 스크롤 본문 사이 여백.
-  static const double _kBelowProfileHeaderGap = 12;
+  static const double _kBelowProfileHeaderGap = 18;
 
   /// 하단 플로팅 탭바 여유 — [HomeScreen._kHomeScrollBottomPad] 와 동일.
   static const double _kScrollBottomPad = 116;
 
   final RecordsStatisticsService _statisticsService =
       RecordsStatisticsService();
-  final ProfileStateService _profileStateService = ProfileStateService();
+  final ProfileStateController _profileState = ProfileStateController.instance;
   final ScrollController _scrollController = ScrollController();
   final ScrollController _heatmapScrollController = ScrollController();
   bool _isLoading = true;
@@ -56,6 +56,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   void initState() {
     super.initState();
     _loadStats();
+    _profileState.addListener(_handleProfileStateChanged);
     _loadProfile();
     GameRecordNotifier.instance.version.addListener(_handleRecordsChanged);
     _scrollController.addListener(() {
@@ -74,6 +75,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   @override
   void dispose() {
     GameRecordNotifier.instance.version.removeListener(_handleRecordsChanged);
+    _profileState.removeListener(_handleProfileStateChanged);
     _scrollController.dispose();
     _heatmapScrollController.dispose();
     super.dispose();
@@ -84,14 +86,17 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     _loadStats();
   }
 
-  Future<void> _loadProfile() async {
-    final snapshot = await _profileStateService.load();
+  void _handleProfileStateChanged() {
     if (!mounted) return;
     setState(() {
-      _profileImagePath = snapshot.imagePath;
-      _profileName = snapshot.name;
-      _profileBio = snapshot.bio;
+      _profileImagePath = _profileState.imagePath;
+      _profileName = _profileState.name;
+      _profileBio = _profileState.bio;
     });
+  }
+
+  Future<void> _loadProfile() async {
+    await _profileState.refresh();
   }
 
   Future<void> _openSettings() async {
@@ -105,31 +110,10 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     await _loadProfile();
   }
 
-  Future<void> _saveProfile({
-    required String? name,
-    required bool removeImage,
-    String? pickedImagePath,
-    String? bio,
-  }) async {
-    final snapshot = await _profileStateService.save(
-      name: name,
-      removeImage: removeImage,
-      currentImagePath: _profileImagePath,
-      pickedImagePath: pickedImagePath,
-      bio: bio,
-    );
-    if (!mounted) return;
-    setState(() {
-      _profileName = snapshot.name;
-      _profileImagePath = snapshot.imagePath;
-      _profileBio = snapshot.bio;
-    });
-  }
-
   Future<void> _openProfileEditor() async {
     await showProfileEditorSheet(
       context: context,
-      profileImageService: _profileStateService.profileImageService,
+      profileImageService: _profileState.profileImageService,
       initialProfileName: _profileName,
       initialProfileImagePath: _profileImagePath,
       initialBio: _profileBio,
@@ -139,7 +123,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         String? pickedImagePath,
         String? bio,
       }) =>
-          _saveProfile(
+          _profileState.save(
         name: name,
         removeImage: removeImage,
         pickedImagePath: pickedImagePath,
@@ -983,7 +967,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 guestTitle: l10n.homeGuestTitle,
                 profileImagePath: _profileImagePath,
                 sectionLabel: l10n.navRecords,
-                subtitleOverride: l10n.recordsStatsPageSubtitle,
+                subtitleOverride: _profileBio ?? l10n.recordsStatsPageSubtitle,
                 onTapSettings: _openSettings,
                 onTapEditProfile: _openProfileEditor,
               ),

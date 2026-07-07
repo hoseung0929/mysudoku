@@ -76,10 +76,10 @@ class GameCompleteDialog extends StatelessWidget {
         isNewBestRecord
             ? 'assets/images/newbest_$themeSuffix.png'
             : 'assets/images/clear_$themeSuffix.png',
-        height: 200,
+        height: 150,
       ),
-      titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-      contentPadding: const EdgeInsets.fromLTRB(24, 1, 24, 24),
+      titlePadding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
+      contentPadding: const EdgeInsets.fromLTRB(24, 0.1, 24, 24),
       content: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: dialogMaxContentHeight),
         child: SingleChildScrollView(
@@ -163,9 +163,9 @@ class GameCompleteDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: cs.surfaceContainerLow,
+                  color: cs.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: cs.outlineVariant),
+                  border: Border.all(color: cs.outline),
                 ),
                 child: Column(
                   children: [

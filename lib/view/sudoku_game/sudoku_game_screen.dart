@@ -68,6 +68,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   Set<int> _completedUnitIds = {};
   bool _isPenguinActive = false;
   Timer? _penguinActiveTimer;
+  bool _autoPausedByLifecycle = false;
 
   /// 가로줄(0~8) · 세로줄(9~17) · 3x3박스(18~26) 중 현재 완성된 유닛 id 집합.
   Set<int> _computeCompletedUnitIds() {
@@ -374,9 +375,19 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         return;
       case AppLifecycleState.paused:
       case AppLifecycleState.detached:
+        // 백그라운드에 머무는 동안 타이머가 계속 흐르지 않도록 정지.
+        // (수동 일시정지 중이었다면 건드리지 않음)
+        if (_presenterReady && !_presenter.isPaused) {
+          _presenter.togglePause();
+          _autoPausedByLifecycle = true;
+        }
         unawaited(_flushPendingSessionOnPause());
         return;
       case AppLifecycleState.resumed:
+        if (_presenterReady && _autoPausedByLifecycle) {
+          _presenter.togglePause();
+          _autoPausedByLifecycle = false;
+        }
         return;
     }
   }

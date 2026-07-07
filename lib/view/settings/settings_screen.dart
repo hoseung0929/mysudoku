@@ -421,7 +421,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final canPop = Navigator.of(context).canPop();
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         if (canPop)
           Padding(

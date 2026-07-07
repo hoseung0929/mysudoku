@@ -22,7 +22,7 @@ class MyPaceTarget {
 /// 1. 저장된 이어하기 세션(`ContinueGameSummary`)이 있으면 그 게임을 복원.
 /// 2. 최근 클리어 이벤트에 레벨·게임 번호가 있으면, **그 레벨에서** 방금 깬 번호보다
 ///    큰 미클리어 최소값 → 없으면 그 레벨의 미클리어 최소값 순으로 시도.
-/// 3. 그렇지 않으면 `초급 → 마스터` 순서(직전 클리어 레벨 다음부터 순회)로
+/// 3. 그렇지 않으면 `초급 → 전문가` 순서(직전 클리어 레벨 다음부터 순회)로
 ///    아직 클리어하지 않은 가장 작은 `game_number`를 탐색.
 /// 4. 끝까지 없으면 `null`을 반환하여 호출부에서 "플레이할 게임이 없어요" 안내를
 ///    보여줄 수 있도록 한다.
@@ -61,6 +61,10 @@ class MyPaceService {
   final Future<bool> Function(String levelName, int gameNumber) _isGameCleared;
   final Future<Map<String, dynamic>?> Function(String levelName, int gameNumber)
       _loadGameEntry;
+
+  /// 마스터 레벨은 홈 화면에서 숨겨져 있으므로 이어하기 순회 대상에서 제외한다.
+  static final List<SudokuLevel> _activeLevels =
+      SudokuLevel.levels.where((l) => !l.isMasterLevel).toList();
 
   /// 이어하기 세션과 신규 퍼즐 탐색을 모두 포함한 최종 타깃을 반환한다.
   ///
@@ -106,7 +110,7 @@ class MyPaceService {
       );
     }
 
-    const orderedLevels = SudokuLevel.levels;
+    final orderedLevels = _activeLevels;
     if (orderedLevels.isEmpty) {
       return null;
     }
@@ -128,7 +132,7 @@ class MyPaceService {
     required String levelName,
     required int gameNumber,
   }) async {
-    const orderedLevels = SudokuLevel.levels;
+    final orderedLevels = _activeLevels;
     if (orderedLevels.isEmpty) return null;
 
     final sameLevel = orderedLevels.firstWhere(
@@ -194,7 +198,7 @@ class MyPaceService {
     if (levelName == null) {
       return 0;
     }
-    const orderedLevels = SudokuLevel.levels;
+    final orderedLevels = _activeLevels;
     final currentIndex =
         orderedLevels.indexWhere((item) => item.name == levelName);
     if (currentIndex < 0) {

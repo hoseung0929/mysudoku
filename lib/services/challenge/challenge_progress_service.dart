@@ -222,8 +222,10 @@ class ChallengeProgressService {
         DateTime(calendarDay.year, calendarDay.month, calendarDay.day);
     final epoch = DateTime(2024, 1, 1);
     final daysSinceEpoch = dayOnly.difference(epoch).inDays;
-    final levelIndex = daysSinceEpoch % SudokuLevel.levels.length;
-    final level = SudokuLevel.levels[levelIndex];
+    final activeLevels =
+        SudokuLevel.levels.where((l) => !l.isMasterLevel).toList();
+    final levelIndex = daysSinceEpoch % activeLevels.length;
+    final level = activeLevels[levelIndex];
     final gameNumbers = await _loadGameNumbersForLevel(level.name);
     final safeGameNumbers =
         gameNumbers.where((gameNumber) => gameNumber > 0).toList()..sort();
