@@ -27,8 +27,8 @@ class AppTheme {
   static const Color homeMyPaceCtaBackground = AppColors.primary;
   static const Color homeMyPaceCtaForeground = AppColors.onPrimary;
 
-  /// 기록 통계 차트·배지 포인트 (보드 액센트와 동일 계열)
-  static const Color statisticsAccent = AppColors.boardAccent;
+  /// 기록 통계 차트·배지 포인트
+  static const Color statisticsAccent = AppColors.statsAccent;
 
   static ThemeData lightTheme() {
     final colorScheme = ColorScheme.fromSeed(

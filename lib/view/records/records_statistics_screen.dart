@@ -1285,7 +1285,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   Color _levelAccent(String levelNameKey) {
     switch (levelNameKey) {
       case '초급':
-        return const Color(0xFF4EAD7C);
+        return AppTheme.statisticsAccent;
       case '중급':
         return const Color(0xFF4FA89F);
       case '고급':

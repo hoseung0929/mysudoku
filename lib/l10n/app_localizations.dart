@@ -2143,7 +2143,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeTodayPuzzleTitle.
   ///
   /// In en, this message translates to:
-  /// **'Take a quiet moment\nwith today\'s puzzle.'**
+  /// **'A quiet moment to focus.'**
   String get homeTodayPuzzleTitle;
 
   /// No description provided for @homeCatalogFirstTitle.

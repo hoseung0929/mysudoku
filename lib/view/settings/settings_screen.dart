@@ -89,6 +89,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final selectedLanguageCode = Localizations.localeOf(context).languageCode;
     await showModalBottomSheet<void>(
       context: context,
+      showDragHandle: true,
       builder: (ctx) {
         return SafeArea(
           child: Column(
@@ -154,30 +155,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isSelected = languageCode == selectedLanguageCode;
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
-    return ListTile(
-      minTileHeight: 56,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
-      title: Text(
-        label,
-        strutStyle: const StrutStyle(
-          fontSize: 16,
-          height: 1.3,
-          forceStrutHeight: true,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        tileColor: isSelected ? colorScheme.primary.withValues(alpha: 0.12) : null,
+        minTileHeight: 56,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
+        title: Text(
+          label,
+          strutStyle: const StrutStyle(
+            fontSize: 16,
+            height: 1.3,
+            forceStrutHeight: true,
+          ),
+          style: textTheme.titleMedium?.copyWith(
+            fontSize: 16,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            height: 1.3,
+            color: colorScheme.onSurface,
+          ),
         ),
-        style: textTheme.titleMedium?.copyWith(
-          fontSize: 16,
-          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-          height: 1.3,
-          color: colorScheme.onSurface,
-        ),
+        trailing: isSelected
+            ? Icon(
+                Icons.check_rounded,
+                color: colorScheme.primary,
+              )
+            : null,
+        onTap: onTap,
       ),
-      trailing: isSelected
-          ? Icon(
-              Icons.check_rounded,
-              color: colorScheme.primary,
-            )
-          : null,
-      onTap: onTap,
     );
   }
 

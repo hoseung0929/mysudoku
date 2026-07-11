@@ -1137,7 +1137,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get homeTodayLabel => '오늘의 퍼즐';
 
   @override
-  String get homeTodayPuzzleTitle => '오늘의 퍼즐 하나에\n조용히 집중해보세요.';
+  String get homeTodayPuzzleTitle => '조용히 집중해볼 시간이에요.';
 
   @override
   String get homeCatalogFirstTitle => '첫 퍼즐 세트를 준비하고 있어요';

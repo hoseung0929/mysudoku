@@ -1131,7 +1131,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get homeTodayLabel => '今日';
 
   @override
-  String get homeTodayPuzzleTitle => '今日のパズルで\n静かなひとときを。';
+  String get homeTodayPuzzleTitle => '静かに集中するひとときです。';
 
   @override
   String get homeCatalogFirstTitle => '初めてのパズルセットを準備中です';

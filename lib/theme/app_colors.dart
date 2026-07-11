@@ -20,11 +20,14 @@ abstract final class AppColors {
   static const primary = Color(0xFF1F1F1F);
   static const onPrimary = Color(0xFFFFFFFF);
 
-  /// 스도쿠 보드·히트맵 등 **플레이 구역**만 구분용 낮은 채도 톤
+  /// 스도쿠 보드용 낮은 채도 톤 (게임 화면 전용, 통계 화면과 분리)
   static const boardAccent = Color(0xFF8A9A8C);
   static const boardAccent2 = Color(0xFF7A8B84);
   static const boardSurfaceTint = Color(0xFFE8EDEA);
   static const boardUserNumber = Color(0xFF1D4ED8);
+
+  /// 기록/통계 화면 차트·배지 포인트 (앱 브랜드 보라와 통일)
+  static const statsAccent = Color(0xFF4A3F99);
 
   /// 오답·주의 (과한 원색 지양)
   static const attention = Color(0xFFC27B6B);

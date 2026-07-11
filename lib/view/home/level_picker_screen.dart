@@ -102,6 +102,16 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
         continue;
       }
       savedForLevel[saved.gameNumber] = saved;
+
+      // 실제로 한 칸이라도 채운 퍼즐만 "최근 플레이" 후보로 삼는다.
+      // (열어보기만 하고 아무것도 안 채운 세션이 최근 것을 밀어내지 않도록)
+      final filledCells =
+          saved.board.expand((row) => row).where((cell) => cell != 0).length;
+      final originalFilledCells = 81 - widget.level.emptyCells;
+      final filledByPlayer =
+          (filledCells - originalFilledCells).clamp(0, widget.level.emptyCells);
+      if (filledByPlayer <= 0) continue;
+
       if (saved.lastPlayedAtMillis > latestMillis) {
         latestMillis = saved.lastPlayedAtMillis;
         recentGameNumber = saved.gameNumber;
@@ -297,7 +307,12 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _levelImage(level) != null
-              ? Image.asset(_levelImage(level)!, width: 20, height: 20)
+              ? Image.asset(
+                  _levelImage(level)!,
+                  width: 20,
+                  height: 20,
+                  fit: BoxFit.contain,
+                )
               : Icon(_levelIcon(level), size: 20, color: _levelIconColor(level)),
           const SizedBox(width: 8),
           Text(
@@ -415,7 +430,12 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
             child: Row(
               children: [
                 if (!hasRecentInProgress && _levelImage(level) != null)
-                  Image.asset(_levelImage(level)!, width: 16, height: 16)
+                  Image.asset(
+                    _levelImage(level)!,
+                    width: 16,
+                    height: 16,
+                    fit: BoxFit.contain,
+                  )
                 else
                   Icon(
                     hasRecentInProgress
@@ -649,13 +669,24 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     if (isCompleted) {
       bgColor = isDark
           ? accentColor.withValues(alpha: 0.10)
-          : const Color(0xFFEDF8F2);
+          : const Color(0xFFEDECFB);
       textColor = context.colors.textSecondary;
       iconColor = accentColor;
       borderColor = isDark
           ? accentColor.withValues(alpha: 0.28)
-          : const Color(0xFFC7E5D4);
+          : const Color(0xFFD4CFEF);
       borderWidth = 1.0;
+    } else if (isRecent) {
+      // 상단 "이어서 풀기" 배너와 동일한 파란 팔레트로 통일 (레벨 accent색과 무관하게 고정).
+      const recentColor = Color(0xFF2C6FA8);
+      const recentGlowColor = Color(0xFF4E7FAD);
+      bgColor = isDark
+          ? recentGlowColor.withValues(alpha: 0.14)
+          : recentGlowColor.withValues(alpha: 0.08);
+      textColor = recentColor;
+      iconColor = recentColor.withValues(alpha: 0.72);
+      borderColor = recentGlowColor.withValues(alpha: 0.65);
+      borderWidth = 2.0;
     } else if (isInProgress) {
       bgColor = isDark
           ? accentColor.withValues(alpha: 0.08)
@@ -663,7 +694,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
       textColor = accentColor;
       iconColor = accentColor.withValues(alpha: 0.72);
       borderColor = accentColor.withValues(alpha: 0.65);
-      borderWidth = isRecent ? 2.0 : 1.6;
+      borderWidth = 1.6;
     } else {
       bgColor = context.colors.surface;
       textColor = context.colors.textSecondary;
@@ -673,6 +704,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     }
 
     final progressPct = isInProgress ? _savedProgressPercent(gameNumber) : 0;
+    final clearTimeLabel = isCompleted ? _clearTimeLabel(gameNumber) : null;
 
     const baseShadow = BoxShadow(
       color: Color(0x0D000000),
@@ -688,7 +720,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
             offset: const Offset(0, 1.5)),
       if (isCompleted)
         BoxShadow(
-            color: const Color(0xFF27865A).withValues(alpha: 0.06),
+            color: const Color(0xFF4A3F99).withValues(alpha: 0.06),
             blurRadius: 5,
             offset: const Offset(0, 1)),
     ];
@@ -709,7 +741,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
         child: Stack(
           children: [
             Align(
-              alignment: isInProgress
+              alignment: (isInProgress || clearTimeLabel != null)
                   ? const Alignment(0, -0.15)
                   : const Alignment(0, -0.08),
               child: Column(
@@ -738,6 +770,17 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                         fontWeight: FontWeight.w500,
                         color: textColor.withValues(alpha: 0.65),
                         height: 1.4,
+                      ),
+                    ),
+                  if (clearTimeLabel != null)
+                    Text(
+                      clearTimeLabel,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                        color: textColor.withValues(alpha: 0.65),
+                        height: 1.4,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                 ],
@@ -930,21 +973,9 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     }
   }
 
+  // 마스코트 이미지가 레벨과 무관하게 항상 보라색이라, 화면 전체 accent도 통일.
   Color _levelAccentColor(SudokuLevel level) {
-    switch (level.difficulty) {
-      case 1:
-        return const Color(0xFF4EAD7C);
-      case 2:
-        return const Color(0xFF4EA8AD);
-      case 3:
-        return const Color(0xFFAD904E);
-      case 4:
-        return const Color(0xFFAD4E7C);
-      case 5:
-        return const Color(0xFF4E7FAD);
-      default:
-        return const Color(0xFF4EAD7C);
-    }
+    return const Color(0xFF4A3F99);
   }
 
   IconData _levelIcon(SudokuLevel level) {
@@ -980,20 +1011,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
   }
 
   Color _levelIconColor(SudokuLevel level) {
-    switch (level.difficulty) {
-      case 1:
-        return const Color(0xFF4EAD7C);
-      case 2:
-        return const Color(0xFF4FA89F);
-      case 3:
-        return const Color(0xFFC4A05A);
-      case 4:
-        return const Color(0xFFC07898);
-      case 5:
-        return const Color(0xFFC9A227);
-      default:
-        return const Color(0xFF4EAD7C);
-    }
+    return const Color(0xFF4A3F99);
   }
 
   // ─── Game logic helpers ───────────────────────────────────────────────────
@@ -1044,6 +1062,20 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
         (filledCells - originalFilledCells).clamp(0, widget.level.emptyCells);
     if (widget.level.emptyCells == 0) return 0;
     return ((filledByPlayer / widget.level.emptyCells) * 100).round();
+  }
+
+  String? _clearTimeLabel(int gameNumber) {
+    final clearTime = (_clearRecords[widget.level.name]?[gameNumber]?['clear_time']
+            as num?)
+        ?.toInt();
+    if (clearTime == null) return null;
+    final hours = clearTime ~/ 3600;
+    final minutes = (clearTime % 3600) ~/ 60;
+    final seconds = clearTime % 60;
+    if (hours > 0) {
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -1185,7 +1217,7 @@ class _InteractiveTileState extends State<_InteractiveTile>
                     borderRadius: BorderRadius.circular(13),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF4EAD7C)
+                        color: const Color(0xFF4A3F99)
                             .withValues(alpha: 0.05 + _pulseAnim.value * 0.08),
                         blurRadius: 6 + _pulseAnim.value * 6,
                         spreadRadius: _pulseAnim.value,

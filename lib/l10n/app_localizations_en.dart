@@ -1218,8 +1218,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeTodayLabel => 'TODAY';
 
   @override
-  String get homeTodayPuzzleTitle =>
-      'Take a quiet moment\nwith today\'s puzzle.';
+  String get homeTodayPuzzleTitle => 'A quiet moment to focus.';
 
   @override
   String get homeCatalogFirstTitle => 'Preparing your first puzzle set';

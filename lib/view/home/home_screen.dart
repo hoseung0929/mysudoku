@@ -468,7 +468,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 ),
                 _buildHomeHero(),
-                const SizedBox(height: 16),
                 Expanded(
                   child: SingleChildScrollView(
                     controller: _scrollController,
@@ -673,108 +672,125 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildTodaySpotlightCard(SudokuGame game) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final challengeDone = _challengeProgress?.isTodayChallengeCleared ?? false;
     final myPaceLabel = _myPacePreviewLabel(l10n);
+    final displayLevel = _myPacePreviewTarget?.level ??
+        SudokuLevel.levels.firstWhere(
+          (level) => level.name == game.levelName,
+          orElse: () => SudokuLevel.levels.first,
+        );
+    final levelImagePath = _levelIdentityImage(displayLevel.difficulty);
+    // 레벨과 무관하게 항상 초급(대표) 컬러로 고정.
+    const cardColor = Color(0xFF4A3F99);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        clipBehavior: Clip.hardEdge,
         decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: colorScheme.outlineVariant),
+          color: cardColor,
+          borderRadius: BorderRadius.circular(20),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            Row(
-              children: [
-                Image.asset(
-                  'assets/images/app_logo.png',
-                  width: 18,
-                  height: 18,
-                  fit: BoxFit.contain,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  l10n.homeTodayLabel,
-                  style: TextStyle(
-                    color: colorScheme.onSurfaceVariant,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.3,
+            Positioned(
+              right: -28,
+              top: -4,
+              child: levelImagePath != null
+                  ? Image.asset(
+                      levelImagePath,
+                      width: 210,
+                      height: 210,
+                      fit: BoxFit.contain,
+                    )
+                  : Opacity(
+                      opacity: 0.14,
+                      child: Icon(
+                        _levelIdentityIcon(displayLevel.difficulty),
+                        size: 132,
+                        color: Colors.white,
+                      ),
+                    ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today_rounded,
+                        size: 14,
+                        color: Colors.white.withValues(alpha: 0.75),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.homeTodayLabel,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.75),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              l10n.homeTodayPuzzleTitle,
-              style: TextStyle(
-                color: colorScheme.onSurface,
-                fontSize: 28,
-                height: 1.15,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              myPaceLabel ??
-                  (challengeDone
-                      ? l10n.challengeTodayDoneHint
-                      : '${game.levelName.localizedSudokuLevelName(l10n)} · #${game.gameNumber.toString().padLeft(3, '0')}'),
-              style: TextStyle(
-                color: colorScheme.onSurfaceVariant,
-                fontSize: 14,
-                height: 1.45,
-              ),
-            ),
-            const SizedBox(height: 18),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: FractionallySizedBox(
-                widthFactor: 0.72,
-                child: FilledButton(
-                  onPressed: _openMyPaceGame,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: isDark
-                        ? const Color(0xFF2A3540)
-                        : colorScheme.primary,
-                    foregroundColor: isDark
-                        ? const Color(0xFFDDE8F4)
-                        : colorScheme.onPrimary,
-                    minimumSize: const Size.fromHeight(54),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 22,
-                      vertical: 15,
+                  const SizedBox(height: 12),
+                  Text(
+                    myPaceLabel ??
+                        (challengeDone
+                            ? l10n.challengeTodayDoneHint
+                            : '${game.levelName.localizedSudokuLevelName(l10n)} · #${game.gameNumber.toString().padLeft(3, '0')}'),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 26,
+                      height: 1.15,
+                      fontWeight: FontWeight.w800,
                     ),
-                    textStyle: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    l10n.homeTodayPuzzleTitle,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      fontSize: 14,
+                      height: 1.45,
+                      fontWeight: FontWeight.w500,
                     ),
-                    elevation: 0,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                      side: BorderSide(
-                        color: isDark
-                            ? const Color(0xFF3A4A5A)
-                            : colorScheme.outlineVariant.withValues(
-                                alpha: 0.85,
-                              ),
+                  ),
+                  const SizedBox(height: 18),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: _openMyPaceGame,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.white.withValues(alpha: 0.85),
+                        foregroundColor: cardColor,
+                        minimumSize: const Size.fromHeight(54),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 22,
+                          vertical: 15,
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        elevation: 0,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                      ),
+                      child: Text(
+                        challengeDone
+                            ? l10n.challengeTodayReviewButton
+                            : l10n.challengeTodayStartButton,
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),
-                  child: Text(
-                    challengeDone
-                        ? l10n.challengeTodayReviewButton
-                        : l10n.challengeTodayStartButton,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
+                ],
               ),
             ),
           ],
@@ -789,6 +805,40 @@ class _HomeScreenState extends State<HomeScreen> {
       return null;
     }
     return '${target.level.localizedName(l10n)} · #${target.game.gameNumber.toString().padLeft(3, '0')}';
+  }
+
+  // 레벨 목록/그리드에서 쓰는 것과 동일한 아이콘 세트로 레벨 아이덴티티를 통일.
+  // 레벨 목록/피커 화면과 동일한 이미지 에셋으로 레벨 아이덴티티를 통일 (마스터는 이미지가 없어 아이콘으로 대체).
+  String? _levelIdentityImage(int difficulty) {
+    switch (difficulty) {
+      case 1:
+        return 'assets/images/level1.png';
+      case 2:
+        return 'assets/images/level2.png';
+      case 3:
+        return 'assets/images/level3.png';
+      case 4:
+        return 'assets/images/level4.png';
+      default:
+        return null;
+    }
+  }
+
+  IconData _levelIdentityIcon(int difficulty) {
+    switch (difficulty) {
+      case 1:
+        return Icons.eco_rounded;
+      case 2:
+        return Icons.local_fire_department_rounded;
+      case 3:
+        return Icons.star_rounded;
+      case 4:
+        return Icons.diamond_rounded;
+      case 5:
+        return Icons.emoji_events_rounded;
+      default:
+        return Icons.eco_rounded;
+    }
   }
 
   Widget _buildLevelExplorer() {
@@ -857,7 +907,7 @@ class _HomeScreenState extends State<HomeScreen> {
       Icons.diamond_rounded,
       Icons.emoji_events_rounded,
     ];
-    final badgeSizes = [46.0, 44.0, 44.0, 44.0, 46.0];
+    final badgeSizes = [80.0, 78.0, 78.0, 78.0, 80.0];
     final levelImages = [
       'assets/images/level1.png',
       'assets/images/level2.png',
@@ -1078,6 +1128,18 @@ class _LevelCardState extends State<_LevelCard> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
+                      const SizedBox(height: 6),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(3),
+                        child: LinearProgressIndicator(
+                          value: total > 0 ? widget.completed / total : 0,
+                          minHeight: 5,
+                          backgroundColor: colorScheme.outlineVariant,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            widget.badgeColor ?? const Color(0xFF4A3F99),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -1131,13 +1193,23 @@ class _DifficultyIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 56,
-      height: 56,
-      child: Center(
+    return ClipRect(
+      child: SizedBox(
+        width: 62,
+        height: 62,
         child: badgeImage != null
-            ? Image.asset(badgeImage!, width: badgeSize, height: badgeSize)
-            : Icon(badgeIcon, size: badgeSize, color: badgeColor ?? color),
+            ? Align(
+                alignment: const Alignment(0, -0.6),
+                child: Image.asset(
+                  badgeImage!,
+                  width: badgeSize,
+                  height: badgeSize,
+                  fit: BoxFit.contain,
+                ),
+              )
+            : Center(
+                child: Icon(badgeIcon, size: badgeSize, color: badgeColor ?? color),
+              ),
       ),
     );
   }
