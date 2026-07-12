@@ -2173,7 +2173,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeLevelProgressSolved.
   ///
   /// In en, this message translates to:
-  /// **'{cleared} / {total} solved'**
+  /// **'{cleared} / {total}'**
   String homeLevelProgressSolved(int cleared, int total);
 
   /// No description provided for @levelFilterAll.
@@ -2212,17 +2212,11 @@ abstract class AppLocalizations {
   /// **'/ {total} completed'**
   String levelProgressCompleted(int total);
 
-  /// No description provided for @levelContinuePlaying.
+  /// No description provided for @levelRecentBadge.
   ///
   /// In en, this message translates to:
-  /// **'Continue playing'**
-  String get levelContinuePlaying;
-
-  /// No description provided for @levelContinueResumeMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Continue puzzle {gameNumber}'**
-  String levelContinueResumeMessage(String gameNumber);
+  /// **'Recent'**
+  String get levelRecentBadge;
 
   /// No description provided for @levelStatusInProgress.
   ///
@@ -2253,6 +2247,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Replay'**
   String get levelReplayConfirm;
+
+  /// No description provided for @levelInProgressLimitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re juggling {maxCount} puzzles!'**
+  String levelInProgressLimitTitle(int maxCount);
+
+  /// No description provided for @levelInProgressLimitBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can keep up to {maxCount} puzzles going at once.\nPick one below to continue.'**
+  String levelInProgressLimitBody(int maxCount);
+
+  /// No description provided for @levelInProgressLimitLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get levelInProgressLimitLater;
 
   /// No description provided for @levelTryAgain.
   ///

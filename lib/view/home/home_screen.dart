@@ -893,13 +893,7 @@ class _HomeScreenState extends State<HomeScreen> {
       const Color(0xFFD8A6BE), // 전문가 - 핑크
       const Color(0xFFA8CBE6), // 마스터 - 블루
     ];
-    final badgeColors = [
-      null,
-      const Color(0xFF4FA89F), // 중급 badge - 더 진한 티얼
-      const Color(0xFFC4A05A), // 고급 badge - 더 진한 탄
-      const Color(0xFFC07898), // 전문가 badge - 더 진한 핑크
-      const Color(0xFFC9A227), // 마스터 badge - 골드
-    ];
+    final badgeColors = <Color?>[null, null, null, null, null];
     final badges = <IconData>[
       Icons.eco_rounded,
       Icons.local_fire_department_rounded,
@@ -1110,30 +1104,36 @@ class _LevelCardState extends State<_LevelCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        widget.title,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 17,
-                          color: colorScheme.onSurface,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        progressLabel,
-                        style: TextStyle(
-                          color: colorScheme.onSurfaceVariant,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            widget.title,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 17,
+                              color: colorScheme.onSurface,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            progressLabel,
+                            style: TextStyle(
+                              color: colorScheme.onSurfaceVariant,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 6),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(3),
                         child: LinearProgressIndicator(
                           value: total > 0 ? widget.completed / total : 0,
-                          minHeight: 5,
+                          minHeight: 6,
                           backgroundColor: colorScheme.outlineVariant,
                           valueColor: AlwaysStoppedAnimation<Color>(
                             widget.badgeColor ?? const Color(0xFF4A3F99),
@@ -1208,7 +1208,8 @@ class _DifficultyIcon extends StatelessWidget {
                 ),
               )
             : Center(
-                child: Icon(badgeIcon, size: badgeSize, color: badgeColor ?? color),
+                child: Icon(badgeIcon,
+                    size: badgeSize, color: badgeColor ?? color),
               ),
       ),
     );

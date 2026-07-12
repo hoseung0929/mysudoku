@@ -740,7 +740,7 @@
   "homeCatalogFirstBody": "初回起動時にパズルをデバイスに保存します。次回からはずっと速く起動できます。",
   "homeCatalogFirstNote": "準備はバックグラウンドで続きます。そのまま探索できます。",
   "homeCatalogFirstContinue": "ホームへ続ける",
-  "homeLevelProgressSolved": "{cleared} / {total} クリア",
+  "homeLevelProgressSolved": "{cleared} / {total}",
   "@homeLevelProgressSolved": {
     "placeholders": {
       "cleared": {"type": "int"},
@@ -763,18 +763,25 @@
       "total": {"type": "int"}
     }
   },
-  "levelContinuePlaying": "続きから",
-  "levelContinueResumeMessage": "{gameNumber}番の続き",
-  "@levelContinueResumeMessage": {
-    "placeholders": {
-      "gameNumber": { "type": "String" }
-    }
-  },
+  "levelRecentBadge": "最近",
   "levelStatusInProgress": "進行中",
   "levelNoResults": "該当なし",
   "levelReplayTitle": "このパズルをもう一度解きますか？",
   "levelReplayBody": "完了記録は保持され、より良い結果の場合のみ更新されます。",
   "levelReplayConfirm": "再挑戦",
+  "levelInProgressLimitTitle": "パズルを{maxCount}個も進めていますね！",
+  "@levelInProgressLimitTitle": {
+    "placeholders": {
+      "maxCount": {"type": "int"}
+    }
+  },
+  "levelInProgressLimitBody": "最大{maxCount}個まで一緒に進められます。\n下から1つ選んで続きを解きましょうか？",
+  "@levelInProgressLimitBody": {
+    "placeholders": {
+      "maxCount": {"type": "int"}
+    }
+  },
+  "levelInProgressLimitLater": "後でする",
   "levelTryAgain": "もう一度",
   "gameResetDialogTitle": "現在のゲームをリセット",
   "gameResetDialogBody": "入力した数字、メモ、ヒント、ミス回数、時間をすべてリセットして最初の盤面に戻りますか？",

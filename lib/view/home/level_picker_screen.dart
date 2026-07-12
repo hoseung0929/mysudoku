@@ -9,7 +9,7 @@ import 'package:sudoku159/model/sudoku_level.dart';
 import 'package:sudoku159/navigation/app_page_route.dart';
 import 'package:sudoku159/services/game/game_state_service.dart';
 import 'package:sudoku159/services/home/level_progress_service.dart';
-import 'package:sudoku159/theme/app_colors.dart';
+import 'package:sudoku159/theme/level_status_colors.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_game_screen.dart';
 
 enum _PuzzleFilter { all, fresh, inProgress, completed }
@@ -27,6 +27,7 @@ class LevelPickerScreen extends StatefulWidget {
 
 class _LevelPickerScreenState extends State<LevelPickerScreen> {
   static const int _perfLogThresholdMs = 120;
+  static const int _maxInProgressPuzzles = 5;
   final DatabaseManager _databaseManager = DatabaseManager();
   final LevelProgressService _levelProgressService = LevelProgressService();
   final GameStateService _gameStateService = GameStateService();
@@ -43,7 +44,6 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
   List<SudokuLevel> _levels = List<SudokuLevel>.from(SudokuLevel.levels);
   _PuzzleFilter _selectedFilter = _PuzzleFilter.all;
   bool _isGameTransitioning = false;
-
 
   @override
   void initState() {
@@ -180,6 +180,12 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
       final shouldReplay = await _confirmReplayCompletedPuzzle();
       if (!mounted || shouldReplay != true) return;
     }
+    if (kind == _PuzzleCardKind.fresh &&
+        _inProgressGameNumbers().length >= _maxInProgressPuzzles) {
+      final picked = await _showInProgressLimitDialog();
+      if (!mounted || picked == null) return;
+      return _onGameSelected(picked, level);
+    }
 
     setState(() => _isGameTransitioning = true);
     final game = await _loadGameForPlay(level.name, gameNumber);
@@ -255,6 +261,82 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     );
   }
 
+  Future<int?> _showInProgressLimitDialog() {
+    final inProgressNumbers = _inProgressGameNumbers();
+    return showDialog<int>(
+      context: context,
+      builder: (dialogContext) {
+        final l10n = AppLocalizations.of(dialogContext)!;
+        final mascotImage = _levelImage(_currentLevelInfo());
+        final colors = LevelStatusPalette.of(dialogContext);
+        return AlertDialog(
+          backgroundColor: colors.cardBackground,
+          title: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (mascotImage != null) ...[
+                Image.asset(mascotImage, width: 56, height: 56),
+                const SizedBox(height: 8),
+              ],
+              Text(
+                l10n.levelInProgressLimitTitle(inProgressNumbers.length),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: colors.primaryText,
+                ),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    l10n.levelInProgressLimitBody(_maxInProgressPuzzles),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: colors.secondaryText),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                for (final number in inProgressNumbers) ...[
+                  _buildContinueRow(
+                    number,
+                    onTap: () => Navigator.of(dialogContext).pop(number),
+                  ),
+                  if (number != inProgressNumbers.last)
+                    const SizedBox(height: 8),
+                ],
+              ],
+            ),
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              style: FilledButton.styleFrom(
+                backgroundColor: colors.primaryPurple,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(160, 48),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              child: Text(l10n.levelInProgressLimitLater),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   bool _shouldRestoreSavedSession(_PuzzleCardKind kind) {
     return kind == _PuzzleCardKind.inProgress || kind == _PuzzleCardKind.recent;
   }
@@ -264,7 +346,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.background,
+      backgroundColor: LevelStatusPalette.of(context).screenBackground,
       appBar: _buildAppBar(),
       body: SafeArea(
         child: Column(
@@ -292,38 +374,25 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
   PreferredSizeWidget _buildAppBar() {
     final l10n = AppLocalizations.of(context)!;
     final level = _currentLevelInfo();
+    final colors = LevelStatusPalette.of(context);
     return AppBar(
       toolbarHeight: 52,
-      backgroundColor: context.colors.background,
+      backgroundColor: colors.screenBackground,
       elevation: 0,
       scrolledUnderElevation: 0,
       automaticallyImplyLeading: false,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
         onPressed: () => Navigator.pop(context),
-        color: context.colors.textPrimary,
+        color: colors.primaryText,
       ),
-      title: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _levelImage(level) != null
-              ? Image.asset(
-                  _levelImage(level)!,
-                  width: 20,
-                  height: 20,
-                  fit: BoxFit.contain,
-                )
-              : Icon(_levelIcon(level), size: 20, color: _levelIconColor(level)),
-          const SizedBox(width: 8),
-          Text(
-            level.localizedName(l10n),
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-              color: context.colors.textPrimary,
-            ),
-          ),
-        ],
+      title: Text(
+        level.localizedName(l10n),
+        style: TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w700,
+          color: colors.primaryText,
+        ),
       ),
       centerTitle: false,
     );
@@ -375,7 +444,6 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
               child: _buildFilterChips(),
             ),
             const SizedBox(height: 6),
-            _buildRecentPlayBanner(),
             Expanded(
               child: filteredGames.isEmpty
                   ? Center(
@@ -383,7 +451,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                         AppLocalizations.of(context)!.levelNoResults,
                         style: TextStyle(
                           fontSize: 14,
-                          color: context.colors.textDisabled,
+                          color: LevelStatusPalette.of(context).disabledText,
                         ),
                       ),
                     )
@@ -400,20 +468,15 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
   Widget _buildProgressCard({required int totalCount}) {
     final level = _currentLevelInfo();
     final l10n = AppLocalizations.of(context)!;
-    final recentNumber = _recentSavedGameNumber[level.name];
-    final hasRecentInProgress = recentNumber != null &&
-        _savedProgressPercent(recentNumber) > 0 &&
-        _savedProgressPercent(recentNumber) < 100;
-    final message = hasRecentInProgress
-        ? l10n.levelContinueResumeMessage(
-            recentNumber.toString().padLeft(3, '0'))
-        : l10n.levelProgressCardMessage(level.localizedName(l10n));
+    final message = l10n.levelProgressCardMessage(level.localizedName(l10n));
     final accentColor = _levelAccentColor(level);
+    final inProgressNumbers = _inProgressGameNumbers();
+    final colors = LevelStatusPalette.of(context);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
       decoration: BoxDecoration(
-        color: context.colors.surface,
+        color: colors.cardBackground,
         borderRadius: BorderRadius.circular(14),
         boxShadow: const [
           BoxShadow(
@@ -423,54 +486,112 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GestureDetector(
-            onTap: hasRecentInProgress && !_isGameTransitioning
-                ? () => _onGameSelected(recentNumber, widget.level)
-                : null,
-            child: Row(
-              children: [
-                if (!hasRecentInProgress && _levelImage(level) != null)
-                  Image.asset(
-                    _levelImage(level)!,
-                    width: 16,
-                    height: 16,
-                    fit: BoxFit.contain,
-                  )
-                else
-                  Icon(
-                    hasRecentInProgress
-                        ? Icons.play_circle_rounded
-                        : _levelIcon(level),
-                    size: 16,
-                    color: accentColor,
-                  ),
-                const SizedBox(width: 7),
-                Expanded(
-                  child: Text(
-                    message,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight:
-                          hasRecentInProgress ? FontWeight.w600 : FontWeight.w400,
-                      color: hasRecentInProgress
-                          ? accentColor
-                          : context.colors.textSecondary,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (_levelImage(level) != null)
+                Image.asset(
+                  _levelImage(level)!,
+                  width: 48,
+                  height: 48,
+                  fit: BoxFit.contain,
+                )
+              else
+                Icon(_levelIcon(level), size: 48, color: accentColor),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      message,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        color: colors.secondaryText,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    _buildProgressStrip(totalCount: totalCount),
+                  ],
                 ),
-                if (hasRecentInProgress)
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 12,
-                    color: accentColor.withValues(alpha: 0.6),
-                  ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
-          _buildProgressStrip(totalCount: totalCount),
+          if (inProgressNumbers.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            for (final number in inProgressNumbers) ...[
+              _buildContinueRow(number),
+              if (number != inProgressNumbers.last) const SizedBox(height: 6),
+            ],
+          ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildContinueRow(int recentNumber, {VoidCallback? onTap}) {
+    final colors = LevelStatusPalette.of(context);
+    final inProgressColor = colors.inProgressPrimary;
+    final l10n = AppLocalizations.of(context)!;
+    final progressPct = _savedProgressPercent(recentNumber);
+    final timeLabel = _lastPlayedLabel(recentNumber);
+
+    return _InteractiveTile(
+      onTap: _isGameTransitioning
+          ? null
+          : onTap ?? () => _onGameSelected(recentNumber, widget.level),
+      pulse: false,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: colors.inProgressBackground,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.play_arrow_rounded, size: 16, color: inProgressColor),
+            const SizedBox(width: 7),
+            Text(
+              recentNumber.toString().padLeft(3, '0'),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: inProgressColor,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              l10n.levelStatusInProgress,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: inProgressColor,
+              ),
+            ),
+            const Spacer(),
+            if (timeLabel.isNotEmpty) ...[
+              Text(
+                timeLabel,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: colors.secondaryText,
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
+            Text(
+              '$progressPct%',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: inProgressColor,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -484,6 +605,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     final visibleProgress = progress > 0 ? progress.clamp(0.015, 1.0) : 0.0;
     final progressPercent = (progress * 100).round();
     final barColor = _levelAccentColor(level);
+    final colors = LevelStatusPalette.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -495,18 +617,19 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
               text: TextSpan(
                 style: TextStyle(
                   fontSize: 13,
-                  color: context.colors.textSecondary,
+                  color: colors.secondaryText,
                 ),
                 children: [
                   TextSpan(
                     text: '$cleared',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: context.colors.textPrimary,
+                      color: colors.primaryPurple,
                     ),
                   ),
                   TextSpan(
-                    text: ' ${AppLocalizations.of(context)!.levelProgressCompleted(totalCount)}',
+                    text:
+                        ' ${AppLocalizations.of(context)!.levelProgressCompleted(totalCount)}',
                     style: const TextStyle(fontWeight: FontWeight.w500),
                   ),
                 ],
@@ -518,7 +641,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: context.colors.textMuted,
+                color: colors.primaryPurple,
               ),
             ),
           ],
@@ -529,7 +652,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
           child: LinearProgressIndicator(
             minHeight: 7,
             value: visibleProgress,
-            backgroundColor: context.colors.borderLight,
+            backgroundColor: colors.progressTrack,
             valueColor: AlwaysStoppedAnimation<Color>(barColor),
           ),
         ),
@@ -556,9 +679,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
 
   Widget _buildFilterChip(_PuzzleFilter filter) {
     final isSelected = _selectedFilter == filter;
-    final level = _currentLevelInfo();
-    final selectedFill = _levelAccentColor(level).withValues(alpha: 0.14);
-    final selectedBorder = _levelAccentColor(level).withValues(alpha: 0.28);
+    final colors = LevelStatusPalette.of(context);
     return GestureDetector(
       onTap: () => setState(() => _selectedFilter = filter),
       child: AnimatedContainer(
@@ -566,10 +687,13 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
         height: 34,
         padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
-          color: isSelected ? selectedFill : context.colors.surface,
+          color: isSelected
+              ? colors.filterSelectedBackground
+              : colors.cardBackground,
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: isSelected ? selectedBorder : context.colors.border,
+            color:
+                isSelected ? colors.filterSelectedBorder : colors.defaultBorder,
             width: 1,
           ),
         ),
@@ -580,8 +704,8 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
               color: isSelected
-                  ? _levelAccentColor(level)
-                  : context.colors.textSecondary,
+                  ? colors.primaryPurple
+                  : colors.filterUnselectedText,
             ),
           ),
         ),
@@ -663,43 +787,28 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     final Color iconColor;
     final Color borderColor;
     final double borderWidth;
+    final colors = LevelStatusPalette.of(context);
     final accentColor = _levelAccentColor(_currentLevelInfo());
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     if (isCompleted) {
-      bgColor = isDark
-          ? accentColor.withValues(alpha: 0.10)
-          : const Color(0xFFEDECFB);
-      textColor = context.colors.textSecondary;
+      bgColor = colors.completedBackground;
+      textColor = colors.completedNumberText;
       iconColor = accentColor;
-      borderColor = isDark
-          ? accentColor.withValues(alpha: 0.28)
-          : const Color(0xFFD4CFEF);
+      borderColor = colors.completedBorder;
       borderWidth = 1.0;
-    } else if (isRecent) {
-      // 상단 "이어서 풀기" 배너와 동일한 파란 팔레트로 통일 (레벨 accent색과 무관하게 고정).
-      const recentColor = Color(0xFF2C6FA8);
-      const recentGlowColor = Color(0xFF4E7FAD);
-      bgColor = isDark
-          ? recentGlowColor.withValues(alpha: 0.14)
-          : recentGlowColor.withValues(alpha: 0.08);
-      textColor = recentColor;
-      iconColor = recentColor.withValues(alpha: 0.72);
-      borderColor = recentGlowColor.withValues(alpha: 0.65);
-      borderWidth = 2.0;
     } else if (isInProgress) {
-      bgColor = isDark
-          ? accentColor.withValues(alpha: 0.08)
-          : accentColor.withValues(alpha: 0.06);
-      textColor = accentColor;
-      iconColor = accentColor.withValues(alpha: 0.72);
-      borderColor = accentColor.withValues(alpha: 0.65);
-      borderWidth = 1.6;
+      // 상단 "이어서 풀기" 배너와 동일한 파란 팔레트로 통일 (레벨 accent색과 무관하게 고정).
+      final inProgressColor = colors.inProgressPrimary;
+      bgColor = colors.inProgressBackground;
+      textColor = inProgressColor;
+      iconColor = inProgressColor;
+      borderColor = colors.inProgressBorder;
+      borderWidth = LevelStatusColors.inProgressBorderWidth;
     } else {
-      bgColor = context.colors.surface;
-      textColor = context.colors.textSecondary;
+      bgColor = colors.cardBackground;
+      textColor = colors.primaryText;
       iconColor = textColor.withValues(alpha: 0.55);
-      borderColor = context.colors.border;
+      borderColor = colors.defaultBorder;
       borderWidth = 1.0;
     }
 
@@ -715,12 +824,12 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
       baseShadow,
       if (isRecent)
         BoxShadow(
-            color: const Color(0xFF4E7FAD).withValues(alpha: 0.12),
+            color: colors.inProgressPrimary.withValues(alpha: 0.12),
             blurRadius: 8,
             offset: const Offset(0, 1.5)),
       if (isCompleted)
         BoxShadow(
-            color: const Color(0xFF4A3F99).withValues(alpha: 0.06),
+            color: colors.primaryPurple.withValues(alpha: 0.06),
             blurRadius: 5,
             offset: const Offset(0, 1)),
     ];
@@ -764,11 +873,14 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                   ),
                   if (isInProgress)
                     Text(
-                      '$progressPct%',
+                      isRecent
+                          ? '${AppLocalizations.of(context)!.levelRecentBadge} · $progressPct%'
+                          : '$progressPct%',
                       style: TextStyle(
                         fontSize: 11.5,
-                        fontWeight: FontWeight.w500,
-                        color: textColor.withValues(alpha: 0.65),
+                        fontWeight:
+                            isRecent ? FontWeight.w700 : FontWeight.w500,
+                        color: colors.inProgressPrimary,
                         height: 1.4,
                       ),
                     ),
@@ -778,7 +890,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w500,
-                        color: textColor.withValues(alpha: 0.65),
+                        color: colors.secondaryText,
                         height: 1.4,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
@@ -799,140 +911,18 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                   child: Icon(
                     _statusIcon(kind),
                     key: ValueKey(kind),
-                    size: isCompleted ? 14 : 12,
-                    color: iconColor,
+                    size: isCompleted
+                        ? LevelStatusColors.completedCheckIconSize
+                        : 12,
+                    color: isCompleted
+                        ? iconColor.withValues(
+                            alpha: LevelStatusColors.completedCheckIconOpacity)
+                        : iconColor,
                   ),
                 ),
               ),
           ],
         ),
-      ),
-    );
-  }
-
-  // ─── Recent play banner ───────────────────────────────────────────────────
-
-  Widget _buildRecentPlayBanner() {
-    final levelName = widget.level.name;
-    final recentNumber = _recentSavedGameNumber[levelName];
-    if (recentNumber == null) return const SizedBox.shrink();
-    if (_selectedFilter == _PuzzleFilter.fresh ||
-        _selectedFilter == _PuzzleFilter.completed) {
-      return const SizedBox.shrink();
-    }
-    final progressPct = _savedProgressPercent(recentNumber);
-    if (progressPct <= 0 || progressPct >= 100) return const SizedBox.shrink();
-
-    final timeLabel = _lastPlayedLabel(recentNumber);
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            AppLocalizations.of(context)!.levelContinuePlaying,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF9E9E9E),
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 6),
-          _InteractiveTile(
-            onTap: _isGameTransitioning
-                ? null
-                : () => _onGameSelected(recentNumber, widget.level),
-            pulse: false,
-            child: Container(
-              height: 68,
-              clipBehavior: Clip.hardEdge,
-              decoration: BoxDecoration(
-                color: context.colors.surface,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFF97B9D6), width: 1.2),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF4E7FAD).withValues(alpha: 0.08),
-                    blurRadius: 8,
-                    offset: const Offset(0, 1.5),
-                  ),
-                  const BoxShadow(
-                    color: Color(0x0A000000),
-                    blurRadius: 4,
-                    offset: Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          recentNumber.toString().padLeft(3, '0'),
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF2C6FA8),
-                            letterSpacing: 1.0,
-                            height: 1.0,
-                            fontFeatures: [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 14),
-                    Container(
-                      width: 1,
-                      height: 28,
-                      color: const Color(0xFF4E7FAD).withValues(alpha: 0.15),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AppLocalizations.of(context)!.levelStatusInProgress,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF2C6FA8),
-                            ),
-                          ),
-                          if (timeLabel.isNotEmpty)
-                            Text(
-                              timeLabel,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: Color(0xFF9E9E9E),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      '$progressPct%',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF2C6FA8).withValues(alpha: 0.9),
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -964,10 +954,10 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
   IconData _statusIcon(_PuzzleCardKind kind) {
     switch (kind) {
       case _PuzzleCardKind.completed:
-        return Icons.check_circle_rounded;
+        return Icons.check_rounded;
       case _PuzzleCardKind.recent:
       case _PuzzleCardKind.inProgress:
-        return Icons.play_circle_rounded;
+        return Icons.play_arrow_rounded;
       case _PuzzleCardKind.fresh:
         return Icons.radio_button_unchecked_rounded;
     }
@@ -975,7 +965,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
 
   // 마스코트 이미지가 레벨과 무관하게 항상 보라색이라, 화면 전체 accent도 통일.
   Color _levelAccentColor(SudokuLevel level) {
-    return const Color(0xFF4A3F99);
+    return LevelStatusPalette.of(context).primaryPurple;
   }
 
   IconData _levelIcon(SudokuLevel level) {
@@ -1008,10 +998,6 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
       default:
         return null;
     }
-  }
-
-  Color _levelIconColor(SudokuLevel level) {
-    return const Color(0xFF4A3F99);
   }
 
   // ─── Game logic helpers ───────────────────────────────────────────────────
@@ -1052,6 +1038,18 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     );
   }
 
+  List<int> _inProgressGameNumbers() {
+    final saved = _savedGameStates[widget.level.name];
+    if (saved == null || saved.isEmpty) return const [];
+    final entries = saved.entries.where((entry) {
+      final pct = _savedProgressPercent(entry.key);
+      return pct > 0 && pct < 100;
+    }).toList()
+      ..sort((a, b) =>
+          b.value.lastPlayedAtMillis.compareTo(a.value.lastPlayedAtMillis));
+    return entries.map((entry) => entry.key).toList();
+  }
+
   int _savedProgressPercent(int gameNumber) {
     final saved = _savedGameStates[widget.level.name]?[gameNumber];
     if (saved == null) return 0;
@@ -1065,9 +1063,9 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
   }
 
   String? _clearTimeLabel(int gameNumber) {
-    final clearTime = (_clearRecords[widget.level.name]?[gameNumber]?['clear_time']
-            as num?)
-        ?.toInt();
+    final clearTime =
+        (_clearRecords[widget.level.name]?[gameNumber]?['clear_time'] as num?)
+            ?.toInt();
     if (clearTime == null) return null;
     final hours = clearTime ~/ 3600;
     final minutes = (clearTime % 3600) ~/ 60;
@@ -1217,7 +1215,8 @@ class _InteractiveTileState extends State<_InteractiveTile>
                     borderRadius: BorderRadius.circular(13),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF4A3F99)
+                        color: LevelStatusPalette.of(context)
+                            .inProgressPrimary
                             .withValues(alpha: 0.05 + _pulseAnim.value * 0.08),
                         blurRadius: 6 + _pulseAnim.value * 6,
                         spreadRadius: _pulseAnim.value,
@@ -1269,9 +1268,8 @@ class _CatalogStatusBar extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: isDark
-                    ? const Color(0xFFEED280)
-                    : const Color(0xFF6A4C00),
+                color:
+                    isDark ? const Color(0xFFEED280) : const Color(0xFF6A4C00),
               ),
             ),
           ),

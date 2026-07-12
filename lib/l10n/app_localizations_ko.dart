@@ -1154,7 +1154,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String homeLevelProgressSolved(int cleared, int total) {
-    return '$cleared / $total 완료';
+    return '$cleared / $total';
   }
 
   @override
@@ -1180,12 +1180,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get levelContinuePlaying => '최근 플레이';
-
-  @override
-  String levelContinueResumeMessage(String gameNumber) {
-    return '$gameNumber번 이어서 풀기';
-  }
+  String get levelRecentBadge => '최근';
 
   @override
   String get levelStatusInProgress => '진행 중';
@@ -1201,6 +1196,19 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get levelReplayConfirm => '다시 풀기';
+
+  @override
+  String levelInProgressLimitTitle(int maxCount) {
+    return '퍼즐을 $maxCount개나 진행 중이네요!';
+  }
+
+  @override
+  String levelInProgressLimitBody(int maxCount) {
+    return '최대 $maxCount개까지 함께 진행할 수 있어요.\n하나를 골라 이어서 풀어볼까요?';
+  }
+
+  @override
+  String get levelInProgressLimitLater => '나중에 하기';
 
   @override
   String get levelTryAgain => '다시 시도';

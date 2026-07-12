@@ -713,8 +713,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                             weekIndex++)
                           Padding(
                             padding: EdgeInsets.only(
-                              right:
-                                  weekIndex == weeks.length - 1 ? 0 : gap,
+                              right: weekIndex == weeks.length - 1 ? 0 : gap,
                             ),
                             child: Column(
                               children: [
@@ -726,9 +725,10 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                                     weeks[weekIndex][dayIndex],
                                     size: cellSize,
                                   ),
-                                  if (dayIndex !=
-                                      weeks[weekIndex].length - 1)
-                                    SizedBox(height: gap), // ignore: prefer_const_constructors
+                                  if (dayIndex != weeks[weekIndex].length - 1)
+                                    SizedBox(
+                                        height:
+                                            gap), // ignore: prefer_const_constructors
                                 ],
                               ],
                             ),
@@ -813,22 +813,27 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       return theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.14);
     }
 
+    // 다크 배경에서 저채도 보라(statisticsAccent)를 낮은 알파로 겹치면 카드와
+    // 거의 같은 밝기로 뭉개져 안 보이므로, 다크모드에서는 더 밝은 보라를 쓴다.
+    final isDark = theme.brightness == Brightness.dark;
+    final accent = isDark ? const Color(0xFF9C90E8) : AppTheme.statisticsAccent;
+
     final intensity = day['intensity'] as int? ?? 0;
     if (day['is_today'] == true) {
       if (intensity <= 0) {
-        return AppTheme.statisticsAccent.withValues(alpha: 0.20);
+        return accent.withValues(alpha: isDark ? 0.30 : 0.20);
       }
-      return AppTheme.statisticsAccent.withValues(alpha: 0.9);
+      return accent.withValues(alpha: 0.9);
     }
     switch (intensity) {
       case 1:
-        return AppTheme.statisticsAccent.withValues(alpha: 0.22);
+        return accent.withValues(alpha: isDark ? 0.32 : 0.22);
       case 2:
-        return AppTheme.statisticsAccent.withValues(alpha: 0.42);
+        return accent.withValues(alpha: isDark ? 0.50 : 0.42);
       case 3:
-        return AppTheme.statisticsAccent.withValues(alpha: 0.62);
+        return accent.withValues(alpha: isDark ? 0.68 : 0.62);
       case 4:
-        return AppTheme.statisticsAccent.withValues(alpha: 0.82);
+        return accent.withValues(alpha: isDark ? 0.86 : 0.82);
       default:
         return theme.colorScheme.surfaceContainerHighest
             .withValues(alpha: 0.38);
@@ -1315,6 +1320,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         ? _formatDurationNatural(stat['average_time'] as double)
         : l10n.recordsNoAverageTime;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.fromLTRB(0, 14, 0, 14),
       decoration: isLast
@@ -1322,8 +1328,10 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           : BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                  width: 0.8,
+                  color: isDark
+                      ? const Color(0xFF4A4A4D)
+                      : Theme.of(context).colorScheme.outlineVariant,
+                  width: 1,
                 ),
               ),
             ),

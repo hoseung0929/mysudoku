@@ -740,7 +740,7 @@
   "homeCatalogFirstBody": "On your first launch, Sudoku puzzles are saved on your device. After this, the app opens much faster.",
   "homeCatalogFirstNote": "Preparation continues in the background, so you can keep exploring right away.",
   "homeCatalogFirstContinue": "Continue to home",
-  "homeLevelProgressSolved": "{cleared} / {total} solved",
+  "homeLevelProgressSolved": "{cleared} / {total}",
   "@homeLevelProgressSolved": {
     "placeholders": {
       "cleared": {"type": "int"},
@@ -763,18 +763,25 @@
       "total": {"type": "int"}
     }
   },
-  "levelContinuePlaying": "Continue playing",
-  "levelContinueResumeMessage": "Continue puzzle {gameNumber}",
-  "@levelContinueResumeMessage": {
-    "placeholders": {
-      "gameNumber": { "type": "String" }
-    }
-  },
+  "levelRecentBadge": "Recent",
   "levelStatusInProgress": "In progress",
   "levelNoResults": "No results.",
   "levelReplayTitle": "Replay this puzzle?",
   "levelReplayBody": "Your completed record is kept, and it updates only if the new result is better.",
   "levelReplayConfirm": "Replay",
+  "levelInProgressLimitTitle": "You're juggling {maxCount} puzzles!",
+  "@levelInProgressLimitTitle": {
+    "placeholders": {
+      "maxCount": {"type": "int"}
+    }
+  },
+  "levelInProgressLimitBody": "You can keep up to {maxCount} puzzles going at once.\nPick one below to continue.",
+  "@levelInProgressLimitBody": {
+    "placeholders": {
+      "maxCount": {"type": "int"}
+    }
+  },
+  "levelInProgressLimitLater": "Later",
   "levelTryAgain": "Try again",
   "gameResetDialogTitle": "Reset current game",
   "gameResetDialogBody": "Clear entered numbers, notes, hints, mistakes, and time, then return to the starting board?",

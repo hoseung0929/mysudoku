@@ -1236,7 +1236,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String homeLevelProgressSolved(int cleared, int total) {
-    return '$cleared / $total solved';
+    return '$cleared / $total';
   }
 
   @override
@@ -1262,12 +1262,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get levelContinuePlaying => 'Continue playing';
-
-  @override
-  String levelContinueResumeMessage(String gameNumber) {
-    return 'Continue puzzle $gameNumber';
-  }
+  String get levelRecentBadge => 'Recent';
 
   @override
   String get levelStatusInProgress => 'In progress';
@@ -1284,6 +1279,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get levelReplayConfirm => 'Replay';
+
+  @override
+  String levelInProgressLimitTitle(int maxCount) {
+    return 'You\'re juggling $maxCount puzzles!';
+  }
+
+  @override
+  String levelInProgressLimitBody(int maxCount) {
+    return 'You can keep up to $maxCount puzzles going at once.\nPick one below to continue.';
+  }
+
+  @override
+  String get levelInProgressLimitLater => 'Later';
 
   @override
   String get levelTryAgain => 'Try again';

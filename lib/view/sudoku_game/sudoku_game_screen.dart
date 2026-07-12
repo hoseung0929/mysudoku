@@ -86,12 +86,16 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
 
     final completed = <int>{};
     for (int r = 0; r < 9; r++) {
-      if (isLineComplete([for (int c = 0; c < 9; c++) [r, c]])) {
+      if (isLineComplete([
+        for (int c = 0; c < 9; c++) [r, c]
+      ])) {
         completed.add(r);
       }
     }
     for (int c = 0; c < 9; c++) {
-      if (isLineComplete([for (int r = 0; r < 9; r++) [r, c]])) {
+      if (isLineComplete([
+        for (int r = 0; r < 9; r++) [r, c]
+      ])) {
         completed.add(9 + c);
       }
     }
@@ -1204,7 +1208,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     return _featurePolicy.hintEnabled ? _presenter.hintsRemaining : 0;
   }
 
-  String get _resetButtonLabel => AppLocalizations.of(context)!.gameResetConfirm;
+  String get _resetButtonLabel =>
+      AppLocalizations.of(context)!.gameResetConfirm;
 
   bool _isNumberInputEnabled(int number) {
     if (!_hasEditableSelection) {
@@ -1243,8 +1248,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     final isCompactSmallButton = compact && height != null && height < 56;
     final digitFontSize =
         isCompactSmallButton ? (height * 0.58).clamp(28.0, 34.0) : 38.0;
-    final digitAlignment =
-        isCompactSmallButton ? const Alignment(-0.08, -0.06) : Alignment.center;
+    const digitAlignment = Alignment.center;
     final badgeInset = isCompactSmallButton ? 7.0 : 10.0;
     final badgeSize = isCompactSmallButton ? 22.0 : 24.0;
     final effectiveBackgroundColor = isCompletedNumber
