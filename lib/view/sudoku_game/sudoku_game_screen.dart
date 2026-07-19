@@ -19,9 +19,7 @@ import 'package:sudoku159/view/sudoku_game/game_settings_controller.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_answer_box.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_board_grid.dart';
 import 'package:sudoku159/view/sudoku_game/game_effects_controller.dart';
-import 'package:sudoku159/view/sudoku_game/sudoku_game_action_button.dart';
 import 'package:sudoku159/view/home/level_picker_screen.dart';
-import 'package:sudoku159/widgets/custom_app_bar.dart';
 import 'package:sudoku159/widgets/progressive_blur_button.dart';
 import 'package:sudoku159/widgets/waddling_penguin_icon.dart';
 
@@ -594,8 +592,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = screenWidth > 600;
     final surface = Theme.of(context).colorScheme.surface;
 
     if (!_presenterReady) {
@@ -624,7 +620,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: _buildAppBar(),
-        body: isTablet ? _buildTabletLayout() : _buildMobileLayout(),
+        body: _buildMobileLayout(),
       ),
     );
   }
@@ -632,81 +628,64 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   /// 앱바 위젯
   PreferredSizeWidget _buildAppBar() {
     final l10n = AppLocalizations.of(context)!;
-    final isTablet = MediaQuery.of(context).size.width > 600;
-    if (!isTablet) {
-      final titleText =
-          '${widget.level.localizedName(l10n)} · ${l10n.gameNumberLabel(widget.game.gameNumber)}';
-      return AppBar(
-        toolbarHeight: 50,
-        backgroundColor: context.colors.surface,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        systemOverlayStyle: Theme.of(context).brightness == Brightness.dark
-            ? SystemUiOverlayStyle.light
-            : SystemUiOverlayStyle.dark,
-        centerTitle: true,
-        titleSpacing: 0,
-        title: GestureDetector(
-          onLongPress: kDebugMode ? _toggleDeveloperAnswerPreview : null,
-          child: Text(
-            titleText,
-            style: GoogleFonts.notoSans(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: context.colors.textPrimary,
-            ),
-          ),
-        ),
-        leadingWidth: 52,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          visualDensity: VisualDensity.compact,
-          onPressed: _popAfterSaving,
-        ),
-        actions: [
-          if (kDebugMode) _buildDeveloperMenuButton(),
-          Padding(
-            padding: const EdgeInsets.only(right: 14),
-            child: Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  WaddlingPenguinIcon(size: 22, active: _isPenguinActive),
-                  const SizedBox(width: 6),
-                  ValueListenableBuilder<String>(
-                    valueListenable: _timeNotifier,
-                    builder: (context, time, _) => Text(
-                      time,
-                      style: GoogleFonts.notoSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFFB8B8B8)
-                            : context.colors.textSecondary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-    return CustomAppBar(
-      title: widget.level.localizedName(l10n),
-      showNotificationIcon: false,
-      showLogoutIcon: false,
-      titleWidget: GestureDetector(
+    final titleText =
+        '${widget.level.localizedName(l10n)} · ${l10n.gameNumberLabel(widget.game.gameNumber)}';
+    return AppBar(
+      toolbarHeight: 50,
+      backgroundColor: context.colors.surface,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      systemOverlayStyle: Theme.of(context).brightness == Brightness.dark
+          ? SystemUiOverlayStyle.light
+          : SystemUiOverlayStyle.dark,
+      centerTitle: true,
+      titleSpacing: 0,
+      title: GestureDetector(
         onLongPress: kDebugMode ? _toggleDeveloperAnswerPreview : null,
-        child: Text(widget.level.localizedName(l10n)),
+        child: Text(
+          titleText,
+          style: GoogleFonts.notoSans(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: context.colors.textPrimary,
+          ),
+        ),
       ),
+      leadingWidth: 52,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
+        visualDensity: VisualDensity.compact,
         onPressed: _popAfterSaving,
       ),
-      actions: [if (kDebugMode) _buildDeveloperMenuButton()],
+      actions: [
+        if (kDebugMode) _buildDeveloperMenuButton(),
+        Padding(
+          padding: const EdgeInsets.only(right: 14),
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                WaddlingPenguinIcon(size: 22, active: _isPenguinActive),
+                const SizedBox(width: 6),
+                ValueListenableBuilder<String>(
+                  valueListenable: _timeNotifier,
+                  builder: (context, time, _) => Text(
+                    time,
+                    style: GoogleFonts.notoSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFFB8B8B8)
+                          : context.colors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -792,182 +771,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         content: Text(isKorean ? koMessage : enMessage),
         duration: const Duration(seconds: 2),
       ),
-    );
-  }
-
-  /// 태블릿 레이아웃
-  Widget _buildTabletLayout() {
-    final l10n = AppLocalizations.of(context)!;
-    final cs = Theme.of(context).colorScheme;
-    return Column(
-      children: [
-        // 상단 정보 영역
-        Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.level.localizedName(l10n),
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: cs.onSurface,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                l10n.gameNumberLabel(widget.game.gameNumber),
-                style: TextStyle(
-                  fontSize: 14,
-                  color: cs.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-        // 게임 영역
-        Expanded(
-          child: Row(
-            children: [
-              // 왼쪽: 스도쿠 그리드
-              Expanded(
-                flex: 2,
-                child: Container(
-                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-                  child: Column(
-                    children: [
-                      _buildCalmStatusStrip(
-                        primaryItems: [
-                          _StatusStripItem(
-                            icon: Icons.timer_outlined,
-                            label: l10n.gameTimeShort,
-                            value: _timeNotifier.value,
-                          ),
-                          _StatusStripItem(
-                            icon: Icons.error_outline,
-                            label: l10n.gameWrongShort,
-                            value:
-                                '${_presenter.wrongCount}/${_featurePolicy.maxWrongCount}',
-                          ),
-                          _StatusStripItem(
-                            icon: Icons.emoji_events_outlined,
-                            label: l10n.gameProgressShort,
-                            value: '${(_presenter.progress * 100).toInt()}%',
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      Expanded(child: _buildBoardGrid()),
-                    ],
-                  ),
-                ),
-              ),
-              // 오른쪽: 컨트롤 패널
-              Expanded(
-                flex: 1,
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      // 숫자 입력 패널
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: context.colors.surface,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: context.colors.border),
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              l10n.gameNumberInputTitle,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: cs.onSurface,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            _buildNumberInputLegend(),
-                            // 3x3 숫자 그리드
-                            for (int i = 0; i < 3; i++)
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  for (int j = 1; j <= 3; j++)
-                                    Padding(
-                                      padding: const EdgeInsets.all(2),
-                                      child: _buildNumberButton(i * 3 + j),
-                                    ),
-                                ],
-                              ),
-                            const SizedBox(height: 12),
-                            Wrap(
-                              alignment: WrapAlignment.center,
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: [
-                                SudokuGameActionButton(
-                                  icon: Icons.edit_note,
-                                  label: _presenter.isMemoMode
-                                      ? l10n.gameMemoOnShort
-                                      : l10n.gameMemoShort,
-                                  backgroundColor: _presenter.isMemoMode
-                                      ? AppTheme.mintColor
-                                      : AppTheme.lightBlueColor,
-                                  isActive: _presenter.isMemoMode,
-                                  onPressed: _canToggleMemo
-                                      ? () {
-                                          setState(() {
-                                            _memoFocusNumber = null;
-                                            _presenter.toggleMemoMode();
-                                          });
-                                        }
-                                      : null,
-                                ),
-                                SudokuGameActionButton(
-                                  icon: Icons.lightbulb_outline,
-                                  label:
-                                      '${l10n.gameHintShort} $_visibleHintsRemaining',
-                                  backgroundColor:
-                                      Theme.of(context).brightness ==
-                                              Brightness.dark
-                                          ? const Color(0xFF8A6820)
-                                          : AppTheme.yellowColor,
-                                  isActive: false,
-                                  onPressed: _canUseHint
-                                      ? () {
-                                          setState(() {
-                                            _presenter.useHint();
-                                          });
-                                        }
-                                      : null,
-                                ),
-                                SudokuGameActionButton(
-                                  icon: Icons.backspace_outlined,
-                                  label: _resetButtonLabel,
-                                  backgroundColor:
-                                      context.colors.attentionSurface,
-                                  onPressed: _canResetCurrentGame
-                                      ? _showResetCurrentGameDialog
-                                      : null,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            _buildDeveloperAnswerPreview(l10n),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 
@@ -1099,7 +902,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   Widget _buildBoardGrid() {
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 560, maxHeight: 560),
+        constraints: const BoxConstraints(maxWidth: 680, maxHeight: 680),
         child: SudokuBoardGrid(
           presenter: _presenter,
           waveActive: _effectsController.waveActive,
@@ -1116,61 +919,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
             _presenter.selectCell(row, col);
           },
         ),
-      ),
-    );
-  }
-
-  Widget _buildCalmStatusStrip({
-    required List<_StatusStripItem> primaryItems,
-    bool compact = false,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: compact ? 8 : 14,
-        vertical: compact ? 8 : 12,
-      ),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(compact ? 20 : 22),
-        border: Border.all(color: context.colors.border),
-      ),
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        spacing: compact ? 6 : 8,
-        runSpacing: compact ? 6 : 8,
-        children: primaryItems
-            .map(
-              (item) => Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: compact ? 10 : 12,
-                  vertical: compact ? 7 : 9,
-                ),
-                decoration: BoxDecoration(
-                  color: context.colors.surfaceSubtle,
-                  borderRadius: BorderRadius.circular(compact ? 14 : 16),
-                  border: Border.all(color: context.colors.borderLight),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(item.icon,
-                        size: compact ? 13 : 16,
-                        color: context.colors.textSecondary),
-                    SizedBox(width: compact ? 5 : 6),
-                    Text(
-                      '${item.label} ${item.value}',
-                      style: GoogleFonts.notoSans(
-                        fontSize: compact ? 10.5 : 12,
-                        fontWeight: FontWeight.w700,
-                        color: context.colors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-            .toList(),
       ),
     );
   }
@@ -1194,9 +942,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   int get _visibleHintsRemaining {
     return _featurePolicy.hintEnabled ? _presenter.hintsRemaining : 0;
   }
-
-  String get _resetButtonLabel =>
-      AppLocalizations.of(context)!.gameResetConfirm;
 
   bool _isNumberInputEnabled(int number) {
     if (!_hasEditableSelection) {
@@ -1336,21 +1081,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildNumberInputLegend() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(
-        AppLocalizations.of(context)!.gameNumberInputLegend,
-        style: GoogleFonts.notoSans(
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          color:
-              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.58),
-        ),
       ),
     );
   }
@@ -1615,18 +1345,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   }
 }
 
-class _StatusStripItem {
-  const _StatusStripItem({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-}
-
 enum _DeveloperCheatAction {
   toggleAnswerPreview,
   fillSelected,
@@ -1679,7 +1397,7 @@ class _MobileGameLayoutMetrics {
     final numberButtonWidth = _clamp(
       (contentWidth - (numberButtonGap * 6)) / 3,
       74,
-      isIPhoneSELayout ? 128 : 132,
+      isIPhoneSELayout ? 128 : 180,
     );
     final baseNumberButtonHeight = isIPhoneSELayout
         ? _clamp(numberButtonWidth * 0.32, 36, 40)
@@ -1692,7 +1410,7 @@ class _MobileGameLayoutMetrics {
     final baseActionButtonSize = _clamp(
       (contentWidth - (actionButtonGap * 14)) / 6,
       isIPhoneSELayout ? 34 : 36,
-      isIPhoneSELayout ? 40 : 50,
+      isIPhoneSELayout ? 40 : 70,
     );
 
     final sectionGap = isIPhoneSELayout ? 3.0 : (maxHeight < 760 ? 4.0 : 8.0);
@@ -1707,11 +1425,11 @@ class _MobileGameLayoutMetrics {
         (isIPhoneSELayout ? 0 : 12.0);
 
     final baseBoardSize =
-        _clamp(contentWidth, 292, isIPhoneSELayout ? 520 : 460);
+        _clamp(contentWidth, 292, isIPhoneSELayout ? 520 : 680);
     final estimatedTotalHeight = fixedChromeHeight + baseBoardSize;
     final overflow = math.max(0.0, estimatedTotalHeight - maxHeight);
     final boardSize =
-        _clamp(baseBoardSize - overflow, 256, isIPhoneSELayout ? 520 : 460);
+        _clamp(baseBoardSize - overflow, 256, isIPhoneSELayout ? 520 : 680);
 
     // Only grow the keypad/action buttons with height that's genuinely left
     // over after the (width-bound) board and required chrome are placed —
@@ -1731,11 +1449,16 @@ class _MobileGameLayoutMetrics {
     final extraPerRow = math.min(leftoverHeight / 4, 16.0);
     final numberButtonHeight = isIPhoneSELayout
         ? baseNumberButtonHeight
-        : math.min(baseNumberButtonHeight + extraPerRow, 84.0);
+        : math.min(baseNumberButtonHeight + extraPerRow, 116.0);
     final actionButtonSize = isIPhoneSELayout
         ? baseActionButtonSize
-        : math.min(baseActionButtonSize + extraPerRow, 60.0);
+        : math.min(baseActionButtonSize + extraPerRow, 82.0);
     final actionLabelFontSize = actionButtonSize <= 50 ? 7.5 : 8.5;
+
+    // 숫자 패드 한 줄(3버튼)의 전체 폭이 보드 폭과 같아지도록 정렬.
+    final alignedNumberButtonWidth = isIPhoneSELayout
+        ? numberButtonWidth
+        : math.max((boardSize - numberButtonGap * 3) / 3, numberButtonWidth);
 
     return _MobileGameLayoutMetrics(
       horizontalPadding: horizontalPadding,
@@ -1743,7 +1466,7 @@ class _MobileGameLayoutMetrics {
       sectionGap: sectionGap,
       compactGap: compactGap,
       boardSize: boardSize,
-      numberButtonWidth: numberButtonWidth,
+      numberButtonWidth: alignedNumberButtonWidth,
       numberButtonHeight: numberButtonHeight,
       numberButtonRadius: numberButtonRadius,
       numberButtonGap: numberButtonGap,

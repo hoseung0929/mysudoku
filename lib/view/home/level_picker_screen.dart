@@ -735,43 +735,56 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
   static const int _rowsPerGroup = 3;
 
   Widget _buildPuzzleGrid(List<int> games, double bottomPadding) {
-    final totalRows = (games.length / _gridCols).ceil();
-    final rows = <Widget>[];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final contentWidth = constraints.maxWidth - 32;
+        final cols = _gridColumnsForWidth(contentWidth);
+        final totalRows = (games.length / cols).ceil();
+        final rows = <Widget>[];
 
-    for (int r = 0; r < totalRows; r++) {
-      final start = r * _gridCols;
-      final end = (start + _gridCols).clamp(0, games.length);
-      final rowGames = games.sublist(start, end);
+        for (int r = 0; r < totalRows; r++) {
+          final start = r * cols;
+          final end = (start + cols).clamp(0, games.length);
+          final rowGames = games.sublist(start, end);
 
-      rows.add(Row(
-        children: [
-          for (int c = 0; c < _gridCols; c++) ...[
-            Expanded(
-              child: AspectRatio(
-                aspectRatio: 1.52,
-                child: c < rowGames.length
-                    ? _buildPuzzleCell(rowGames[c])
-                    : const SizedBox(),
-              ),
-            ),
-            if (c < _gridCols - 1) const SizedBox(width: _cellGap),
-          ],
-        ],
-      ));
+          rows.add(Row(
+            children: [
+              for (int c = 0; c < cols; c++) ...[
+                Expanded(
+                  child: AspectRatio(
+                    aspectRatio: 1.52,
+                    child: c < rowGames.length
+                        ? _buildPuzzleCell(rowGames[c])
+                        : const SizedBox(),
+                  ),
+                ),
+                if (c < cols - 1) const SizedBox(width: _cellGap),
+              ],
+            ],
+          ));
 
-      if (r < totalRows - 1) {
-        final isGroupBoundary = (r + 1) % _rowsPerGroup == 0;
-        rows.add(SizedBox(height: isGroupBoundary ? _groupGap : _cellGap));
-      }
-    }
+          if (r < totalRows - 1) {
+            final isGroupBoundary = (r + 1) % _rowsPerGroup == 0;
+            rows.add(SizedBox(height: isGroupBoundary ? _groupGap : _cellGap));
+          }
+        }
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(16, 6, 16, bottomPadding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: rows,
-      ),
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(16, 6, 16, bottomPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: rows,
+          ),
+        );
+      },
     );
+  }
+
+  // 태블릿 폭에서 카드가 헐렁하게 늘어나지 않도록 컬럼 수를 넓힌다.
+  int _gridColumnsForWidth(double contentWidth) {
+    if (contentWidth >= 900) return 8;
+    if (contentWidth >= 600) return 6;
+    return _gridCols;
   }
 
   Widget _buildPuzzleCell(int gameNumber) {

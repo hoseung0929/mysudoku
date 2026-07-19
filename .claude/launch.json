@@ -18,6 +18,12 @@
       "runtimeExecutable": "/Users/hoseunglee/development/flutter/bin/flutter",
       "runtimeArgs": ["run", "-d", "chrome"],
       "port": 0
+    },
+    {
+      "name": "Flutter Web Server",
+      "runtimeExecutable": "/Users/hoseunglee/development/flutter/bin/flutter",
+      "runtimeArgs": ["run", "-d", "web-server", "--web-port", "8765"],
+      "port": 8765
     }
   ]
 }

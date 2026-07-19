@@ -21,12 +21,15 @@ class BottomNavBar extends StatelessWidget {
     final navColor = colorScheme.brightness == Brightness.dark
         ? colorScheme.surfaceContainerLow
         : colorScheme.surface;
+    final isTablet = MediaQuery.of(context).size.width > 600;
     final items = [
-      const _BottomNavItemData(
+      _BottomNavItemData(
         icon: Icons.cottage_rounded,
+        isTablet: isTablet,
       ),
-      const _BottomNavItemData(
+      _BottomNavItemData(
         icon: Icons.bar_chart_rounded,
+        isTablet: isTablet,
       ),
     ];
 
@@ -40,7 +43,10 @@ class BottomNavBar extends StatelessWidget {
           borderRadius: BorderRadius.circular(46),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.04),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -55,9 +61,7 @@ class BottomNavBar extends StatelessWidget {
                 duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOut,
                 decoration: BoxDecoration(
-                  color: isTop
-                      ? navColor
-                      : navColor.withValues(alpha: 0.72),
+                  color: isTop ? navColor : navColor.withValues(alpha: 0.72),
                   borderRadius: BorderRadius.circular(46),
                   border: Border.all(
                     color: isTop
@@ -66,7 +70,7 @@ class BottomNavBar extends StatelessWidget {
                   ),
                 ),
                 child: SizedBox(
-                  height: 62,
+                  height: isTablet ? 76 : 62,
                   child: Row(
                     children: [
                       for (var index = 0; index < items.length; index++)
@@ -94,9 +98,11 @@ class BottomNavBar extends StatelessWidget {
 class _BottomNavItemData {
   const _BottomNavItemData({
     required this.icon,
+    required this.isTablet,
   });
 
   final IconData icon;
+  final bool isTablet;
 }
 
 class _BottomNavButton extends StatelessWidget {
@@ -114,9 +120,16 @@ class _BottomNavButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final iconColor = Theme.of(context).colorScheme.onSurfaceVariant;
     final selectedIconColor = Theme.of(context).colorScheme.onSurface;
+    final isTablet = data.isTablet;
+    final baseIconSize = isTablet ? 26.0 : 21.0;
+    final selectedIconSize = isTablet ? 27.0 : 22.0;
+    final dotSize = isTablet ? 5.0 : 4.0;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: isTablet ? 10 : 8,
+        vertical: isTablet ? 10 : 8,
+      ),
       child: Material(
         color: Colors.transparent,
         child: GestureDetector(
@@ -125,7 +138,10 @@ class _BottomNavButton extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            padding: EdgeInsets.symmetric(
+              horizontal: isTablet ? 20 : 16,
+              vertical: isTablet ? 6 : 4,
+            ),
             decoration: BoxDecoration(
               color: Colors.transparent,
               borderRadius: BorderRadius.circular(22),
@@ -135,14 +151,14 @@ class _BottomNavButton extends StatelessWidget {
               children: [
                 Icon(
                   data.icon,
-                  size: selected ? 22 : 21,
+                  size: selected ? selectedIconSize : baseIconSize,
                   color: selected ? selectedIconColor : iconColor,
                 ),
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   margin: const EdgeInsets.only(top: 1),
-                  width: selected ? 4 : 0,
-                  height: selected ? 4 : 0,
+                  width: selected ? dotSize : 0,
+                  height: selected ? dotSize : 0,
                   decoration: BoxDecoration(
                     color: selectedIconColor,
                     shape: BoxShape.circle,

@@ -254,6 +254,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     required Map<String, dynamic> trendSummaryUi,
   }) {
     final theme = Theme.of(context);
+    final isTablet = MediaQuery.of(context).size.width > 600;
     final totalClears = trendSummaryUi['total_clears'] as int;
     final averageTime = trendSummaryUi['average_time'] as double;
     final selectedDay = _selectedTrendDay(trend);
@@ -273,20 +274,21 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(isTablet ? 26 : 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               l10n.recordsPlayInsightsTitle,
               style: theme.textTheme.titleMedium?.copyWith(
+                fontSize: isTablet ? 19 : null,
                 fontWeight: FontWeight.w700,
                 color: theme.colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: isTablet ? 20 : 16),
             _buildWeekRow(l10n, trend, selectedDate: selectedDate),
-            const SizedBox(height: 14),
+            SizedBox(height: isTablet ? 18 : 14),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 180),
               switchInCurve: Curves.easeOut,
@@ -295,13 +297,13 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 _selectedTrendLabel(l10n, selectedDay),
                 key: ValueKey(selectedDate ?? 'weekly-summary'),
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: isTablet ? 14 : 12,
                   fontWeight: FontWeight.w600,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: isTablet ? 20 : 16),
             Row(
               children: [
                 Expanded(
@@ -333,6 +335,11 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     required String? selectedDate,
   }) {
     const accent = AppTheme.statisticsAccent;
+    final isTablet = MediaQuery.of(context).size.width > 600;
+    final circleBase = isTablet ? 40.0 : 32.0;
+    final circleSelected = isTablet ? 45.0 : 36.0;
+    final circleHeightBase = isTablet ? 50.0 : 40.0;
+    final circleHeightSelected = isTablet ? 53.0 : 42.0;
     return Semantics(
       container: true,
       label: _trendA11ySummary(l10n, trend),
@@ -360,7 +367,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                     Text(
                       dayLetter,
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: isTablet ? 13 : 11,
                         fontWeight:
                             isSelected ? FontWeight.w700 : FontWeight.w600,
                         color: isSelected || isToday
@@ -368,12 +375,13 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                             : Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: isTablet ? 8 : 6),
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 180),
                       curve: Curves.easeOut,
-                      width: isSelected ? 36 : 32,
-                      height: isSelected ? 42 : 40,
+                      width: isSelected ? circleSelected : circleBase,
+                      height:
+                          isSelected ? circleHeightSelected : circleHeightBase,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: isSelected
@@ -404,7 +412,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                       child: Text(
                         dateNum,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: isTablet ? 16 : 14,
                           fontWeight: FontWeight.w700,
                           fontFeatures: const [FontFeature.tabularFigures()],
                           color: isSelected
@@ -433,8 +441,9 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     required String value,
   }) {
     final theme = Theme.of(context);
+    final isTablet = MediaQuery.of(context).size.width > 600;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(isTablet ? 16 : 12),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
@@ -442,19 +451,20 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: AppTheme.statisticsAccent),
-          const SizedBox(height: 8),
+          Icon(icon,
+              size: isTablet ? 24 : 20, color: AppTheme.statisticsAccent),
+          SizedBox(height: isTablet ? 10 : 8),
           Text(
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: isTablet ? 14 : 12,
               color: theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: isTablet ? 6 : 4),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 180),
             switchInCurve: Curves.easeOut,
@@ -465,7 +475,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 17,
+                fontSize: isTablet ? 20 : 17,
                 fontWeight: FontWeight.w700,
                 color: theme.colorScheme.onSurface,
                 height: 1.2,
@@ -526,6 +536,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     required Map<String, dynamic> activityHeatmap,
   }) {
     final theme = Theme.of(context);
+    final isTablet = MediaQuery.of(context).size.width > 600;
     final totalClears = activitySummary['total_clears'] as int? ?? 0;
     final currentStreak = activitySummary['current_streak_days'] as int? ?? 0;
     final bestStreak = activitySummary['best_streak_days'] as int? ?? 0;
@@ -538,18 +549,19 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(isTablet ? 26 : 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               l10n.recordsActivityOverviewTitle,
               style: theme.textTheme.titleMedium?.copyWith(
+                fontSize: isTablet ? 19 : null,
                 fontWeight: FontWeight.w700,
                 color: theme.colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: isTablet ? 18 : 14),
             Container(
               decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceContainerHighest
@@ -582,15 +594,16 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 18),
+            SizedBox(height: isTablet ? 22 : 18),
             Text(
               l10n.recordsActivityHeatmapTitle,
               style: theme.textTheme.titleSmall?.copyWith(
+                fontSize: isTablet ? 17 : null,
                 fontWeight: FontWeight.w700,
                 color: theme.colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: isTablet ? 15 : 12),
             _buildActivityHeatmap(l10n, activityHeatmap),
           ],
         ),
@@ -603,8 +616,12 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     required String value,
   }) {
     final theme = Theme.of(context);
+    final isTablet = MediaQuery.of(context).size.width > 600;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+      padding: EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: isTablet ? 18 : 14,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -613,18 +630,19 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleMedium?.copyWith(
+              fontSize: isTablet ? 20 : null,
               fontWeight: FontWeight.w800,
               color: theme.colorScheme.onSurface,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: isTablet ? 8 : 6),
           Text(
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: isTablet ? 14 : 12,
               fontWeight: FontWeight.w600,
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -635,9 +653,10 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   }
 
   Widget _buildKpiDivider() {
+    final isTablet = MediaQuery.of(context).size.width > 600;
     return Container(
       width: 1,
-      height: 44,
+      height: isTablet ? 54 : 44,
       color:
           Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.8),
     );
@@ -653,8 +672,9 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     final monthLabels =
         (activityHeatmap['month_labels'] as List<dynamic>? ?? const <dynamic>[])
             .cast<Map<String, dynamic>>();
-    const gap = 4.0;
-    const cellSize = 16.0;
+    final isTablet = MediaQuery.of(context).size.width > 600;
+    final gap = isTablet ? 5.0 : 4.0;
+    final cellSize = isTablet ? 20.0 : 16.0;
     final totalWidth = weeks.isEmpty
         ? 0.0
         : (weeks.length * cellSize) + ((weeks.length - 1) * gap);
@@ -663,19 +683,19 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
 
     // 요일 레이블 컬럼 (스크롤 밖 고정)
     Widget dayLabelColumn = Padding(
-      padding: const EdgeInsets.only(right: gap),
+      padding: EdgeInsets.only(right: gap),
       child: Column(
         children: List.generate(7, (i) {
           final label = (i == 0 || i == 2 || i == 4) ? dayLabels[i] : '';
           return Padding(
             padding: EdgeInsets.only(bottom: i < 6 ? gap : 0),
             child: SizedBox(
-              width: 14,
+              width: isTablet ? 17 : 14,
               height: cellSize,
               child: Text(
                 label,
                 style: TextStyle(
-                  fontSize: 9,
+                  fontSize: isTablet ? 11 : 9,
                   color: Theme.of(context)
                       .colorScheme
                       .onSurfaceVariant
@@ -735,10 +755,10 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                           ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: isTablet ? 13 : 10),
                     SizedBox(
                       width: totalWidth,
-                      height: 18,
+                      height: isTablet ? 22 : 18,
                       child: Stack(
                         children: [
                           for (final label in _spacedMonthLabels(monthLabels))
@@ -749,7 +769,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                                 _formatHeatmapMonthLabel(
                                     label['date'] as DateTime),
                                 style: TextStyle(
-                                  fontSize: 11.5,
+                                  fontSize: isTablet ? 13.5 : 11.5,
                                   fontWeight: FontWeight.w600,
                                   color: Theme.of(context)
                                       .colorScheme
@@ -766,11 +786,11 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: isTablet ? 13 : 10),
         Text(
           l10n.recordsActivityHeatmapCaption,
           style: TextStyle(
-            fontSize: 11.5,
+            fontSize: isTablet ? 13.5 : 11.5,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
             height: 1.35,
           ),
@@ -885,6 +905,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final bottomInset = MediaQuery.of(context).padding.bottom;
     final topInset = MediaQuery.paddingOf(context).top;
+    final isTablet = MediaQuery.of(context).size.width > 600;
     if (_isLoading && _overall.isEmpty && _levels.isEmpty && _recent.isEmpty) {
       return DecoratedBox(
         decoration: BoxDecoration(
@@ -949,15 +970,15 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                     activitySummary: activitySummary,
                     activityHeatmap: activityHeatmap,
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: isTablet ? 18 : 14),
                   _buildWeeklyActivityCard(
                     l10n,
                     trend: dailyTrend,
                     trendSummaryUi: trendSummaryUi,
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: isTablet ? 18 : 14),
                   _buildOverallSummaryCard(l10n),
-                  const SizedBox(height: 22),
+                  SizedBox(height: isTablet ? 28 : 22),
                   _buildLevelSection(l10n),
                 ],
               ),
@@ -992,6 +1013,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
 
   Widget _buildOverallSummaryCard(AppLocalizations l10n) {
     final theme = Theme.of(context);
+    final isTablet = MediaQuery.of(context).size.width > 600;
     final totalCleared = (_overall['total_cleared'] as num?)?.toInt() ?? 0;
     final totalGames = (_overall['total_games'] as num?)?.toInt() ?? 0;
     final clearRate = (_overall['total_clear_rate'] as num?)?.toDouble() ?? 0.0;
@@ -1016,23 +1038,25 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding: EdgeInsets.all(isTablet ? 24 : 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               l10n.recordsMetricClearRate,
               style: theme.textTheme.titleMedium?.copyWith(
+                fontSize: isTablet ? 19 : null,
                 fontWeight: FontWeight.w700,
                 color: theme.colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: isTablet ? 16 : 12),
             Row(
               children: [
                 Text(
                   '$totalCleared/$totalGames',
                   style: theme.textTheme.titleLarge?.copyWith(
+                    fontSize: isTablet ? 27 : null,
                     fontWeight: FontWeight.w800,
                     color: theme.colorScheme.onSurface,
                     fontFeatures: const [FontFeature.tabularFigures()],
@@ -1048,8 +1072,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                   ),
                   child: Text(
                     _formatRate(clearRate),
-                    style: const TextStyle(
-                      fontSize: 12.5,
+                    style: TextStyle(
+                      fontSize: isTablet ? 14.5 : 12.5,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.statisticsAccent,
                     ),
@@ -1057,18 +1081,18 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: isTablet ? 8 : 6),
             Text(
               l10n.recordsSummaryMetricsFootnote,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: isTablet ? 14 : 12,
                 color: theme.colorScheme.onSurfaceVariant,
                 height: 1.35,
               ),
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: isTablet ? 18 : 14),
             _adaptiveMetricRow([
               _summaryMetricTile(
                 icon: Icons.timer_outlined,
@@ -1093,8 +1117,9 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     required String value,
   }) {
     final theme = Theme.of(context);
+    final isTablet = MediaQuery.of(context).size.width > 600;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(isTablet ? 16 : 12),
       decoration: BoxDecoration(
         color:
             theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.38),
@@ -1102,7 +1127,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: AppTheme.statisticsAccent),
+          Icon(icon,
+              size: isTablet ? 22 : 18, color: AppTheme.statisticsAccent),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -1113,7 +1139,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 11.5,
+                    fontSize: isTablet ? 13.5 : 11.5,
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -1124,7 +1150,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 13.5,
+                    fontSize: isTablet ? 15.5 : 13.5,
                     fontWeight: FontWeight.w700,
                     color: theme.colorScheme.onSurface,
                     fontFeatures: const [FontFeature.tabularFigures()],
@@ -1141,6 +1167,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   Widget _buildLevelSection(AppLocalizations l10n) {
     final stats = _displayLevelStats;
     final theme = Theme.of(context);
+    final isTablet = MediaQuery.of(context).size.width > 600;
 
     return Card(
       color: theme.colorScheme.surface,
@@ -1150,7 +1177,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(isTablet ? 26 : 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1159,11 +1186,12 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.titleMedium?.copyWith(
+                fontSize: isTablet ? 19 : null,
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: isTablet ? 20 : 16),
             if (stats.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1172,7 +1200,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: isTablet ? 15 : 13,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     height: 1.4,
                   ),
@@ -1321,8 +1349,10 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         : l10n.recordsNoAverageTime;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isTablet = MediaQuery.of(context).size.width > 600;
+    final verticalPad = isTablet ? 18.0 : 14.0;
     return Container(
-      padding: const EdgeInsets.fromLTRB(0, 14, 0, 14),
+      padding: EdgeInsets.fromLTRB(0, verticalPad, 0, verticalPad),
       decoration: isLast
           ? null
           : BoxDecoration(
@@ -1344,12 +1374,12 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               _levelImage(levelNameKey) != null
                   ? Image.asset(
                       _levelImage(levelNameKey)!,
-                      width: 20,
-                      height: 20,
+                      width: isTablet ? 24 : 20,
+                      height: isTablet ? 24 : 20,
                     )
                   : Icon(
                       _levelIcon(levelNameKey),
-                      size: 20,
+                      size: isTablet ? 24 : 20,
                       color: levelAccent,
                     ),
               const SizedBox(width: 9),
@@ -1362,7 +1392,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: isTablet ? 18 : 15,
                         fontWeight: FontWeight.w700,
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
@@ -1385,7 +1415,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: isTablet ? 15 : 13,
                     fontWeight: FontWeight.w700,
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
@@ -1393,7 +1423,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: isTablet ? 16 : 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1402,7 +1432,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 11.5,
+                  fontSize: isTablet ? 13.5 : 11.5,
                   fontWeight: FontWeight.w600,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -1412,24 +1442,24 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 12.5,
+                  fontSize: isTablet ? 14.5 : 12.5,
                   fontWeight: FontWeight.w700,
                   color: levelAccent,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 7),
+          SizedBox(height: isTablet ? 9 : 7),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
             child: LinearProgressIndicator(
-              minHeight: 7,
+              minHeight: isTablet ? 9 : 7,
               value: (clearRate / 100).clamp(0.0, 1.0),
               backgroundColor: levelAccent.withValues(alpha: 0.15),
               valueColor: AlwaysStoppedAnimation<Color>(levelAccent),
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: isTablet ? 16 : 12),
           _adaptiveMetricRow(
             [
               _levelMetricTile(
@@ -1453,6 +1483,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     required String value,
     CrossAxisAlignment alignment = CrossAxisAlignment.start,
   }) {
+    final isTablet = MediaQuery.of(context).size.width > 600;
     return Column(
       crossAxisAlignment: alignment,
       children: [
@@ -1461,7 +1492,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: isTablet ? 14 : 12,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
@@ -1471,7 +1502,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            fontSize: 13.5,
+            fontSize: isTablet ? 15.5 : 13.5,
             fontWeight: FontWeight.w700,
             color: Theme.of(context).colorScheme.onSurface,
           ),

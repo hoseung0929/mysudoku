@@ -420,9 +420,9 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHomeHero(),
+                _buildHomeHero(isTablet: true),
                 const SizedBox(height: 20),
-                _buildLevelGrid(),
+                _buildLevelExplorer(isTablet: true),
               ],
             ),
           ),
@@ -505,7 +505,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHomeHero() {
+  Widget _buildHomeHero({bool isTablet = false}) {
     if (_isLoadingHome) {
       return const Center(
         child: Padding(
@@ -518,7 +518,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_todayChallenge != null) _buildTodaySpotlightCard(_todayChallenge!),
+        if (_todayChallenge != null)
+          _buildTodaySpotlightCard(_todayChallenge!, isTablet: isTablet),
       ],
     );
   }
@@ -670,7 +671,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildTodaySpotlightCard(SudokuGame game) {
+  Widget _buildTodaySpotlightCard(SudokuGame game, {bool isTablet = false}) {
     final l10n = AppLocalizations.of(context)!;
     final challengeDone = _challengeProgress?.isTodayChallengeCleared ?? false;
     final myPaceLabel = _myPacePreviewLabel(l10n);
@@ -682,6 +683,22 @@ class _HomeScreenState extends State<HomeScreen> {
     final levelImagePath = _levelIdentityImage(displayLevel.difficulty);
     // 레벨과 무관하게 항상 초급(대표) 컬러로 고정.
     const cardColor = Color(0xFF4A3F99);
+
+    final mascotOffsetRight = isTablet ? -34.0 : -28.0;
+    final mascotOffsetTop = isTablet ? -6.0 : -4.0;
+    final mascotSize = isTablet ? 260.0 : 210.0;
+    final mascotIconSize = isTablet ? 164.0 : 132.0;
+    final cardPadding = isTablet ? 26.0 : 20.0;
+    final calendarIconSize = isTablet ? 18.0 : 14.0;
+    final todayLabelFontSize = isTablet ? 14.0 : 11.0;
+    final afterLabelGap = isTablet ? 16.0 : 12.0;
+    final titleFontSize = isTablet ? 32.0 : 26.0;
+    final afterTitleGap = isTablet ? 8.0 : 6.0;
+    final subtitleFontSize = isTablet ? 17.0 : 14.0;
+    final beforeButtonGap = isTablet ? 24.0 : 18.0;
+    final buttonHeight = isTablet ? 60.0 : 54.0;
+    final buttonTextFontSize = isTablet ? 19.0 : 16.0;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
@@ -694,26 +711,26 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Stack(
           children: [
             Positioned(
-              right: -28,
-              top: -4,
+              right: mascotOffsetRight,
+              top: mascotOffsetTop,
               child: levelImagePath != null
                   ? Image.asset(
                       levelImagePath,
-                      width: 210,
-                      height: 210,
+                      width: mascotSize,
+                      height: mascotSize,
                       fit: BoxFit.contain,
                     )
                   : Opacity(
                       opacity: 0.14,
                       child: Icon(
                         _levelIdentityIcon(displayLevel.difficulty),
-                        size: 132,
+                        size: mascotIconSize,
                         color: Colors.white,
                       ),
                     ),
             ),
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(cardPadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -721,7 +738,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Icon(
                         Icons.calendar_today_rounded,
-                        size: 14,
+                        size: calendarIconSize,
                         color: Colors.white.withValues(alpha: 0.75),
                       ),
                       const SizedBox(width: 8),
@@ -729,37 +746,37 @@ class _HomeScreenState extends State<HomeScreen> {
                         l10n.homeTodayLabel,
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.75),
-                          fontSize: 11,
+                          fontSize: todayLabelFontSize,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.3,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: afterLabelGap),
                   Text(
                     myPaceLabel ??
                         (challengeDone
                             ? l10n.challengeTodayDoneHint
                             : '${game.levelName.localizedSudokuLevelName(l10n)} · #${game.gameNumber.toString().padLeft(3, '0')}'),
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
-                      fontSize: 26,
+                      fontSize: titleFontSize,
                       height: 1.15,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: afterTitleGap),
                   Text(
                     l10n.homeTodayPuzzleTitle,
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 14,
+                      fontSize: subtitleFontSize,
                       height: 1.45,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: beforeButtonGap),
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
@@ -767,13 +784,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: FilledButton.styleFrom(
                         backgroundColor: Colors.white.withValues(alpha: 0.85),
                         foregroundColor: cardColor,
-                        minimumSize: const Size.fromHeight(54),
+                        minimumSize: Size.fromHeight(buttonHeight),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 22,
                           vertical: 15,
                         ),
-                        textStyle: const TextStyle(
-                          fontSize: 16,
+                        textStyle: TextStyle(
+                          fontSize: buttonTextFontSize,
                           fontWeight: FontWeight.w700,
                         ),
                         elevation: 0,
@@ -841,39 +858,19 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Widget _buildLevelExplorer() {
+  Widget _buildLevelExplorer({bool isTablet = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: List.generate(4, (index) {
         return Padding(
           padding: EdgeInsets.only(bottom: index == 3 ? 0 : 12),
-          child: _buildLevelCard(index),
+          child: _buildLevelCard(index, isTablet: isTablet),
         );
       }),
     );
   }
 
-  Widget _buildLevelGrid() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 1.45,
-          ),
-          itemCount: 4,
-          itemBuilder: (context, index) => _buildLevelCard(index),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLevelCard(int index) {
+  Widget _buildLevelCard(int index, {bool isTablet = false}) {
     final l10n = AppLocalizations.of(context)!;
     final levelTitles = [
       'Beginner',
@@ -901,7 +898,9 @@ class _HomeScreenState extends State<HomeScreen> {
       Icons.diamond_rounded,
       Icons.emoji_events_rounded,
     ];
-    final badgeSizes = [80.0, 78.0, 78.0, 78.0, 80.0];
+    final badgeSizes = isTablet
+        ? [98.0, 96.0, 96.0, 96.0, 98.0]
+        : [80.0, 78.0, 78.0, 78.0, 80.0];
     final levelImages = [
       'assets/images/level1.png',
       'assets/images/level2.png',
@@ -918,6 +917,7 @@ class _HomeScreenState extends State<HomeScreen> {
       title: level.localizedName(l10n),
       completed: completed,
       remaining: remaining,
+      isTablet: isTablet,
       isEnabled: !_isLevelTransitioning,
       isTransitioning:
           _isLevelTransitioning && _transitioningLevelIndex == index,
@@ -1009,6 +1009,7 @@ class _LevelCard extends StatefulWidget {
   final int remaining;
   final bool isEnabled;
   final bool isTransitioning;
+  final bool isTablet;
   final VoidCallback? onTap;
 
   const _LevelCard({
@@ -1022,6 +1023,7 @@ class _LevelCard extends StatefulWidget {
     required this.remaining,
     required this.isEnabled,
     required this.isTransitioning,
+    this.isTablet = false,
     this.onTap,
   });
 
@@ -1059,6 +1061,18 @@ class _LevelCardState extends State<_LevelCard> {
     final colorScheme = Theme.of(context).colorScheme;
     final total = widget.completed + widget.remaining;
     final progressLabel = l10n.homeLevelProgressSolved(widget.completed, total);
+    final isTablet = widget.isTablet;
+    final cardMinHeight = isTablet ? 96.0 : 72.0;
+    final cardVerticalPadding = isTablet ? 24.0 : 16.0;
+    final iconGap = isTablet ? 28.0 : 24.0;
+    final titleFontSize = isTablet ? 20.0 : 17.0;
+    final progressLabelFontSize = isTablet ? 15.0 : 13.0;
+    final afterTitleGap = isTablet ? 8.0 : 6.0;
+    final progressBarHeight = isTablet ? 8.0 : 6.0;
+    final beforeChevronGap = isTablet ? 18.0 : 16.0;
+    final loadingSize = isTablet ? 24.0 : 20.0;
+    final loadingStrokeWidth = isTablet ? 2.4 : 2.1;
+    final chevronSize = isTablet ? 32.0 : 28.0;
     return IgnorePointer(
       ignoring: !widget.isEnabled,
       child: AnimatedOpacity(
@@ -1070,8 +1084,11 @@ class _LevelCardState extends State<_LevelCard> {
           onTapUp: _handleTapUp,
           onTapCancel: _handleTapCancel,
           child: Container(
-            constraints: const BoxConstraints(minHeight: 72),
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+            constraints: BoxConstraints(minHeight: cardMinHeight),
+            padding: EdgeInsets.symmetric(
+              horizontal: 22,
+              vertical: cardVerticalPadding,
+            ),
             decoration: BoxDecoration(
               color: _pressed
                   ? colorScheme.surfaceContainerLow
@@ -1097,8 +1114,9 @@ class _LevelCardState extends State<_LevelCard> {
                   badgeImage: widget.badgeImage,
                   badgeColor: widget.badgeColor,
                   badgeSize: widget.badgeSize,
+                  isTablet: isTablet,
                 ),
-                const SizedBox(width: 24),
+                SizedBox(width: iconGap),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1112,7 +1130,7 @@ class _LevelCardState extends State<_LevelCard> {
                             widget.title,
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
-                              fontSize: 17,
+                              fontSize: titleFontSize,
                               color: colorScheme.onSurface,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -1122,18 +1140,18 @@ class _LevelCardState extends State<_LevelCard> {
                             progressLabel,
                             style: TextStyle(
                               color: colorScheme.onSurfaceVariant,
-                              fontSize: 13,
+                              fontSize: progressLabelFontSize,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: afterTitleGap),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(3),
                         child: LinearProgressIndicator(
                           value: total > 0 ? widget.completed / total : 0,
-                          minHeight: 6,
+                          minHeight: progressBarHeight,
                           backgroundColor: colorScheme.outlineVariant,
                           valueColor: AlwaysStoppedAnimation<Color>(
                             widget.badgeColor ?? const Color(0xFF4A3F99),
@@ -1143,7 +1161,7 @@ class _LevelCardState extends State<_LevelCard> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: beforeChevronGap),
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 160),
                   switchInCurve: Curves.easeOutCubic,
@@ -1151,10 +1169,10 @@ class _LevelCardState extends State<_LevelCard> {
                   child: widget.isTransitioning
                       ? SizedBox(
                           key: const ValueKey('loading'),
-                          width: 20,
-                          height: 20,
+                          width: loadingSize,
+                          height: loadingSize,
                           child: CircularProgressIndicator(
-                            strokeWidth: 2.1,
+                            strokeWidth: loadingStrokeWidth,
                             valueColor: AlwaysStoppedAnimation<Color>(
                               colorScheme.primary,
                             ),
@@ -1163,7 +1181,7 @@ class _LevelCardState extends State<_LevelCard> {
                       : Icon(
                           key: const ValueKey('chevron'),
                           Icons.chevron_right_rounded,
-                          size: 28,
+                          size: chevronSize,
                           color: colorScheme.onSurfaceVariant,
                         ),
                 ),
@@ -1183,6 +1201,7 @@ class _DifficultyIcon extends StatelessWidget {
     this.badgeImage,
     required this.badgeColor,
     required this.badgeSize,
+    this.isTablet = false,
   });
 
   final Color color;
@@ -1190,13 +1209,15 @@ class _DifficultyIcon extends StatelessWidget {
   final String? badgeImage;
   final Color? badgeColor;
   final double badgeSize;
+  final bool isTablet;
 
   @override
   Widget build(BuildContext context) {
+    final boxSize = isTablet ? 76.0 : 62.0;
     return ClipRect(
       child: SizedBox(
-        width: 62,
-        height: 62,
+        width: boxSize,
+        height: boxSize,
         child: badgeImage != null
             ? Align(
                 alignment: const Alignment(0, -0.6),
