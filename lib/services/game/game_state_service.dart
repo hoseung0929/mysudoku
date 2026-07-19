@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:sudoku159/utils/app_logger.dart';
@@ -127,9 +126,6 @@ class GameStateService {
     await prefs.setString(key, payload);
     await prefs.setInt(metaKey, updatedAtMillis);
 
-    if (kDebugMode) {
-      AppLogger.debug('게임 세션 저장 완료: $key');
-    }
   }
 
   Future<void> saveBoard({
@@ -160,15 +156,8 @@ class GameStateService {
     final prefs = await SharedPreferences.getInstance();
     final key = _gameKey(levelName, gameNumber);
 
-    if (kDebugMode) {
-      AppLogger.debug('게임 세션 로딩 시도: $key');
-    }
-
     final payload = prefs.getString(key);
     if (payload == null) {
-      if (kDebugMode) {
-        AppLogger.debug('저장된 게임 세션 없음: $key');
-      }
       return null;
     }
 
@@ -179,10 +168,6 @@ class GameStateService {
         AppLogger.debug('손상된 게임 세션 삭제: $key');
       }
       return null;
-    }
-
-    if (kDebugMode) {
-      AppLogger.debug('게임 세션 복원 완료: $key');
     }
 
     return session;
@@ -210,9 +195,6 @@ class GameStateService {
     await prefs.remove(key);
     await prefs.remove(metaKey);
 
-    if (kDebugMode) {
-      AppLogger.debug('게임 상태 삭제 완료: $key');
-    }
   }
 
   bool isBoardCompatible({
