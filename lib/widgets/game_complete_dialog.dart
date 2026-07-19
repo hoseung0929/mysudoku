@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
+import 'package:sudoku159/theme/level_status_colors.dart';
 
 /// 게임 완료 축하 다이얼로그 위젯
 class GameCompleteDialog extends StatelessWidget {
@@ -40,6 +41,7 @@ class GameCompleteDialog extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final onSurface = cs.onSurface;
     final onVar = cs.onSurfaceVariant;
+    final levelPalette = LevelStatusPalette.of(context);
     final dialogMaxContentHeight = MediaQuery.of(context).size.height * 0.52;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final themeSuffix = isDarkMode ? 'black' : 'white';
@@ -163,9 +165,9 @@ class GameCompleteDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: cs.surfaceContainerHighest,
+                  color: levelPalette.completedBackground,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: cs.outline),
+                  border: Border.all(color: levelPalette.completedBorder),
                 ),
                 child: Column(
                   children: [
@@ -176,7 +178,7 @@ class GameCompleteDialog extends StatelessWidget {
                           children: [
                             Icon(
                               Icons.timer,
-                              color: onSurface,
+                              color: levelPalette.primaryPurple,
                               size: 20,
                             ),
                             const SizedBox(width: 8),
@@ -194,7 +196,7 @@ class GameCompleteDialog extends StatelessWidget {
                           style: GoogleFonts.notoSans(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: onSurface,
+                            color: levelPalette.primaryPurple,
                           ),
                         ),
                       ],
@@ -207,7 +209,7 @@ class GameCompleteDialog extends StatelessWidget {
                           children: [
                             Icon(
                               Icons.error_outline,
-                              color: onSurface,
+                              color: levelPalette.primaryPurple,
                               size: 20,
                             ),
                             const SizedBox(width: 8),
@@ -225,7 +227,7 @@ class GameCompleteDialog extends StatelessWidget {
                           style: GoogleFonts.notoSans(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: onSurface,
+                            color: levelPalette.primaryPurple,
                           ),
                         ),
                       ],

@@ -351,11 +351,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsAboutDeveloperNote => 'Sudoku159를 즐겨 주세요!';
 
   @override
-  String get settingsPrivacyDialogTitle => '개인정보 안내';
-
-  @override
-  String get settingsPrivacyDialogBody =>
-      '이 앱은 게임 진행, 기록, 프로필 정보, 앱 설정을 이 기기에만 저장합니다. 계정은 필요하지 않으며, 당사 서버로 개인정보를 수집하지 않습니다. 프로필 이미지를 선택하는 경우 사진 보관함 권한은 기기에서 이미지를 선택하고 저장하는 용도로만 사용됩니다. 알림 설정도 기기에만 저장됩니다. 앱을 삭제하면 기기 백업이 없는 한 로컬 데이터가 함께 삭제될 수 있습니다.';
+  String get settingsAboutSupportEmail => '· team929.support@gmail.com';
 
   @override
   String get commonOk => '확인';
@@ -832,7 +828,7 @@ class AppLocalizationsKo extends AppLocalizations {
       '오늘의 도전이 아직 남아 있어요. 지금 시작하면 스트릭을 이어갈 수 있어요.';
 
   @override
-  String get homeGuestTitle => '여행자';
+  String get homeGuestTitle => '여행자 159';
 
   @override
   String get homeGuestSubtitle => '지금 바로 한 판 시작해보세요';

@@ -350,11 +350,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsAboutDeveloperNote => 'Sudoku159をお楽しみください！';
 
   @override
-  String get settingsPrivacyDialogTitle => 'プライバシー';
-
-  @override
-  String get settingsPrivacyDialogBody =>
-      'このアプリはゲームの進行、記録、プロフィール情報、アプリ設定をこのデバイスにのみ保存します。アカウントは不要で、サーバーへの個人情報の収集は行いません。プロフィール画像を選択する場合、写真ライブラリへのアクセスはデバイス上での画像の選択と保存にのみ使用されます。通知設定もローカルに保存されます。アプリをアンインストールすると、デバイスのバックアップがない限りローカルデータが削除される場合があります。';
+  String get settingsAboutSupportEmail => '· team929.support@gmail.com';
 
   @override
   String get commonOk => 'OK';

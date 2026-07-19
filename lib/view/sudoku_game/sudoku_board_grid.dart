@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:sudoku159/presenter/game/sudoku_game_presenter.dart';
 import 'package:sudoku159/theme/app_colors.dart';
 import 'package:sudoku159/theme/app_theme.dart';
+import 'package:sudoku159/theme/level_status_colors.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_memo_notes_grid.dart';
 
 /// 9x9 스도쿠 보드 (셀 탭은 부모에서 setState 처리)
@@ -32,6 +33,7 @@ class SudokuBoardGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final levelPalette = LevelStatusPalette.of(context);
     // ── 보드 라인 색상 ─────────────────────────────────────────────
     final borderColor =
         isDark ? const Color(0xFF2A2A2A) : context.colors.border;
@@ -41,8 +43,8 @@ class SudokuBoardGrid extends StatelessWidget {
         isDark ? const Color(0xFF4A4A4A) : context.colors.border;
     // ── 셀 하이라이트 색상 (다크/라이트 분기) ──────────────────────
     final selectedCellColor = isDark
-        ? const Color(0xFF2F3A45)
-        : AppTheme.lightBlueColor.withValues(alpha: 0.22);
+        ? levelPalette.primaryPurple.withValues(alpha: 0.25)
+        : levelPalette.primaryPurple.withValues(alpha: 0.14);
     final sameNumberColor = isDark
         ? const Color(0xFF304050)
         : AppTheme.lightBlueColor.withValues(alpha: 0.14);
@@ -83,7 +85,7 @@ class SudokuBoardGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final cellExtent = constraints.maxWidth / 9;
-        final digitFontSize = (cellExtent * 0.62).clamp(18.0, 28.0);
+        final digitFontSize = (cellExtent * 0.62).clamp(18.0, 34.0);
         final memoCellExtent = (cellExtent * 0.54).clamp(10.0, 16.0);
 
         return Container(

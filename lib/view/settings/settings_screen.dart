@@ -5,6 +5,9 @@ import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/presenter/settings/settings_controller.dart';
 import 'package:sudoku159/theme/app_theme.dart';
 import 'package:sudoku159/theme/app_theme_scope.dart';
+import 'package:sudoku159/theme/level_status_colors.dart';
+import 'package:sudoku159/widgets/waddling_penguin_icon.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -56,31 +59,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await AppThemeScope.of(context).setThemeMode(mode);
   }
 
-  Future<void> _showPrivacyPolicy() async {
-    final l10n = AppLocalizations.of(context)!;
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        title: Text(l10n.settingsPrivacyDialogTitle),
-        contentPadding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
-        content: Text(
-          l10n.settingsPrivacyDialogBody,
-          textAlign: TextAlign.start,
-          strutStyle: const StrutStyle(
-            fontSize: 14,
-            height: 1.65,
-            forceStrutHeight: true,
-          ),
-          style: const TextStyle(fontSize: 14, height: 1.65),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.commonOk),
-          ),
-        ],
-      ),
+  static const _privacyPolicyUrl =
+      'https://team929-support.github.io/sudoku159/privacy-policy';
+
+  Future<void> _openPrivacyPolicy() async {
+    await launchUrl(
+      Uri.parse(_privacyPolicyUrl),
+      mode: LaunchMode.externalApplication,
     );
   }
 
@@ -191,13 +176,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final info = await PackageInfo.fromPlatform();
     if (!mounted) return;
+    final levelPalette = LevelStatusPalette.of(context);
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+        ),
+        contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            const WaddlingPenguinIcon(size: 96),
+            const SizedBox(height: 16),
             Text(
               l10n.appTitle,
               textAlign: TextAlign.center,
@@ -221,11 +212,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 12, color: Color(0xFFAAAAAA)),
             ),
+            const SizedBox(height: 4),
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'Team929',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: levelPalette.primaryPurple,
+                    ),
+                  ),
+                  TextSpan(
+                    text: ' ${l10n.settingsAboutSupportEmail}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFFAAAAAA),
+                    ),
+                  ),
+                ],
+              ),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
+        actionsAlignment: MainAxisAlignment.center,
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(ctx),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: levelPalette.primaryPurple,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
             child: Text(l10n.commonOk),
           ),
         ],
@@ -320,7 +342,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title: AppLocalizations.of(context)!.settingsPrivacyTitle,
                       subtitle:
                           AppLocalizations.of(context)!.settingsPrivacySubtitle,
-                      onTap: _showPrivacyPolicy,
+                      onTap: _openPrivacyPolicy,
                     ),
                   ],
                 ),

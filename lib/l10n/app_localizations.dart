@@ -742,17 +742,11 @@ abstract class AppLocalizations {
   /// **'Enjoy playing Sudoku159!'**
   String get settingsAboutDeveloperNote;
 
-  /// No description provided for @settingsPrivacyDialogTitle.
+  /// No description provided for @settingsAboutSupportEmail.
   ///
   /// In en, this message translates to:
-  /// **'Privacy'**
-  String get settingsPrivacyDialogTitle;
-
-  /// No description provided for @settingsPrivacyDialogBody.
-  ///
-  /// In en, this message translates to:
-  /// **'This app stores game progress, records, profile information, and app settings only on this device. We do not require an account or collect personal data on our servers. If you choose a profile image, photo library access is used only to let you select and store that image on your device. Optional notification settings are also stored locally. If you uninstall the app, local data may be removed unless your device backs up app data.'**
-  String get settingsPrivacyDialogBody;
+  /// **'· team929.support@gmail.com'**
+  String get settingsAboutSupportEmail;
 
   /// No description provided for @commonOk.
   ///

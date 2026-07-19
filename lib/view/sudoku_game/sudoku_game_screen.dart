@@ -45,9 +45,6 @@ class SudokuGameScreen extends StatefulWidget {
 
 class _SudokuGameScreenState extends State<SudokuGameScreen>
     with WidgetsBindingObserver {
-  static const double _kReservedBannerAdHeight = 56;
-  static const double _kReservedBannerGap = 10;
-
   late final GameEndFlow _gameEndFlow = GameEndFlow();
   final GameSessionController _sessionController = GameSessionController();
   final GameSettingsController _settingsController = GameSettingsController();
@@ -959,10 +956,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                               ],
                             ),
                             const SizedBox(height: 12),
-                            _buildReservedBannerAdSlot(
-                              height: _kReservedBannerAdHeight,
-                            ),
-                            const SizedBox(height: 12),
                             _buildDeveloperAnswerPreview(l10n),
                           ],
                         ),
@@ -1078,10 +1071,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                 ),
                               ],
                             ),
-                            SizedBox(height: metrics.bannerAdGap),
-                            _buildReservedBannerAdSlot(
-                              height: metrics.bannerAdHeight,
-                            ),
                           ],
                         ),
                       ),
@@ -1092,8 +1081,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                   Positioned(
                     right: metrics.horizontalPadding,
                     bottom: metrics.scrollBottomPadding +
-                        metrics.bannerAdHeight +
-                        metrics.bannerAdGap +
                         metrics.actionButtonSize +
                         metrics.compactGap +
                         10,
@@ -1525,54 +1512,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     );
   }
 
-  Widget _buildReservedBannerAdSlot({required double height}) {
-    if (!kDebugMode) {
-      return SizedBox(height: height);
-    }
-    final isKorean = Localizations.localeOf(context).languageCode == 'ko';
-    final isDarkAd = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      width: double.infinity,
-      height: height,
-      decoration: BoxDecoration(
-        color: isDarkAd
-            ? const Color(0xFF1E1E1E)
-            : Theme.of(context)
-                .colorScheme
-                .surfaceContainerHighest
-                .withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isDarkAd
-              ? const Color(0xFF2A2A2A)
-              : Theme.of(context).colorScheme.outlineVariant,
-          width: 1,
-        ),
-      ),
-      child: Center(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.campaign_outlined,
-              size: 14,
-              color: Color(0xFF5F5F5F),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              isKorean ? '광고' : 'Ad',
-              style: GoogleFonts.notoSans(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF5F5F5F),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   /// 게임 완료 다이얼로그 표시
   void _showGameCompleteDialog() async {
     if (!mounted) return;
@@ -1707,8 +1646,6 @@ class _MobileGameLayoutMetrics {
     required this.numberButtonGap,
     required this.actionButtonSize,
     required this.actionLabelFontSize,
-    required this.bannerAdHeight,
-    required this.bannerAdGap,
     required this.scrollBottomPadding,
   });
 
@@ -1723,8 +1660,6 @@ class _MobileGameLayoutMetrics {
   final double numberButtonGap;
   final double actionButtonSize;
   final double actionLabelFontSize;
-  final double bannerAdHeight;
-  final double bannerAdGap;
   final double scrollBottomPadding;
 
   factory _MobileGameLayoutMetrics.fromConstraints({
@@ -1735,7 +1670,7 @@ class _MobileGameLayoutMetrics {
     final isIPhoneSELayout = maxWidth <= 375 && maxHeight <= 620;
     final horizontalPadding = isIPhoneSELayout
         ? _clamp(maxWidth * 0.008, 2, 6)
-        : _clamp(maxWidth * 0.032, 8, 16);
+        : _clamp(maxWidth * 0.015, 4, 8);
     final contentWidth = math.max(maxWidth - (horizontalPadding * 2), 220.0);
 
     final numberButtonGap = isIPhoneSELayout
@@ -1744,49 +1679,69 @@ class _MobileGameLayoutMetrics {
     final numberButtonWidth = _clamp(
       (contentWidth - (numberButtonGap * 6)) / 3,
       74,
-      isIPhoneSELayout ? 128 : 112,
+      isIPhoneSELayout ? 128 : 132,
     );
-    final numberButtonHeight = isIPhoneSELayout
+    final baseNumberButtonHeight = isIPhoneSELayout
         ? _clamp(numberButtonWidth * 0.32, 36, 40)
         : _clamp(numberButtonWidth * 0.66, 48, 68);
     final numberButtonRadius = isIPhoneSELayout
         ? _clamp(numberButtonWidth * 0.2, 14, 22)
-        : _clamp(numberButtonWidth * 0.24, 16, 24);
+        : _clamp(numberButtonWidth * 0.24, 16, 28);
 
     final actionButtonGap = contentWidth < 350 ? 3.0 : 4.0;
-    final actionButtonSize = _clamp(
+    final baseActionButtonSize = _clamp(
       (contentWidth - (actionButtonGap * 14)) / 6,
       isIPhoneSELayout ? 34 : 36,
       isIPhoneSELayout ? 40 : 50,
     );
-    final actionLabelFontSize = actionButtonSize <= 50 ? 7.5 : 8.5;
-    final bannerAdHeight = isIPhoneSELayout
-        ? 48.0
-        : _SudokuGameScreenState._kReservedBannerAdHeight;
-    final bannerAdGap =
-        isIPhoneSELayout ? 8.0 : _SudokuGameScreenState._kReservedBannerGap;
+
+    final sectionGap = isIPhoneSELayout ? 3.0 : (maxHeight < 760 ? 4.0 : 8.0);
+    final compactGap = isIPhoneSELayout ? 1.0 : (maxHeight < 760 ? 2.0 : 4.0);
 
     final estimatedNumberPadHeight =
-        (numberButtonHeight * 3) + (numberButtonGap * 4);
-    final estimatedActionRowHeight =
-        actionButtonSize + bannerAdHeight + bannerAdGap + 8.0;
+        (baseNumberButtonHeight * 3) + (numberButtonGap * 4);
+    final estimatedActionRowHeight = baseActionButtonSize + 8.0;
     final fixedChromeHeight = estimatedNumberPadHeight +
         estimatedActionRowHeight +
         bottomSafePadding +
         (isIPhoneSELayout ? 0 : 12.0);
 
     final baseBoardSize =
-        _clamp(contentWidth, 292, isIPhoneSELayout ? 520 : 420);
+        _clamp(contentWidth, 292, isIPhoneSELayout ? 520 : 460);
     final estimatedTotalHeight = fixedChromeHeight + baseBoardSize;
     final overflow = math.max(0.0, estimatedTotalHeight - maxHeight);
     final boardSize =
-        _clamp(baseBoardSize - overflow, 256, isIPhoneSELayout ? 520 : 420);
+        _clamp(baseBoardSize - overflow, 256, isIPhoneSELayout ? 520 : 460);
+
+    // Only grow the keypad/action buttons with height that's genuinely left
+    // over after the (width-bound) board and required chrome are placed —
+    // never at the board's expense, so smaller devices are unaffected.
+    final leftoverHeight = isIPhoneSELayout
+        ? 0.0
+        : math.max(
+            0.0,
+            maxHeight -
+                (boardSize +
+                    sectionGap +
+                    estimatedNumberPadHeight +
+                    compactGap +
+                    estimatedActionRowHeight +
+                    bottomSafePadding),
+          );
+    final extraPerRow = math.min(leftoverHeight / 4, 16.0);
+    final numberButtonHeight = isIPhoneSELayout
+        ? baseNumberButtonHeight
+        : math.min(baseNumberButtonHeight + extraPerRow, 84.0);
+    final actionButtonSize = isIPhoneSELayout
+        ? baseActionButtonSize
+        : math.min(baseActionButtonSize + extraPerRow, 60.0);
+    final actionLabelFontSize = actionButtonSize <= 50 ? 7.5 : 8.5;
 
     return _MobileGameLayoutMetrics(
       horizontalPadding: horizontalPadding,
       topPadding: 0,
-      sectionGap: isIPhoneSELayout ? 3 : (maxHeight < 760 ? 4 : 8),
-      compactGap: isIPhoneSELayout ? 1 : (maxHeight < 760 ? 2 : 4),
+      sectionGap: sectionGap,
+      compactGap: compactGap,
       boardSize: boardSize,
       numberButtonWidth: numberButtonWidth,
       numberButtonHeight: numberButtonHeight,
@@ -1794,8 +1749,6 @@ class _MobileGameLayoutMetrics {
       numberButtonGap: numberButtonGap,
       actionButtonSize: actionButtonSize,
       actionLabelFontSize: actionLabelFontSize,
-      bannerAdHeight: bannerAdHeight,
-      bannerAdGap: bannerAdGap,
       scrollBottomPadding:
           isIPhoneSELayout ? bottomSafePadding : bottomSafePadding + 4,
     );

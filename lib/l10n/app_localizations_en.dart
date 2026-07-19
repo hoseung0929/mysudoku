@@ -360,11 +360,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAboutDeveloperNote => 'Enjoy playing Sudoku159!';
 
   @override
-  String get settingsPrivacyDialogTitle => 'Privacy';
-
-  @override
-  String get settingsPrivacyDialogBody =>
-      'This app stores game progress, records, profile information, and app settings only on this device. We do not require an account or collect personal data on our servers. If you choose a profile image, photo library access is used only to let you select and store that image on your device. Optional notification settings are also stored locally. If you uninstall the app, local data may be removed unless your device backs up app data.';
+  String get settingsAboutSupportEmail => '· team929.support@gmail.com';
 
   @override
   String get commonOk => 'OK';
