@@ -171,6 +171,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final bottomInset = MediaQuery.of(context).padding.bottom;
+    final isTablet = MediaQuery.of(context).size.width > 600;
     if (_isLoading && _data == null) {
       return const DecoratedBox(
         decoration: BoxDecoration(
@@ -229,7 +230,12 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
             RefreshIndicator(
               onRefresh: _load,
               child: ListView(
-                padding: EdgeInsets.fromLTRB(16, 16, 16, 112 + bottomInset),
+                padding: EdgeInsets.fromLTRB(
+                  isTablet ? 22 : 16,
+                  isTablet ? 22 : 16,
+                  isTablet ? 22 : 16,
+                  112 + bottomInset,
+                ),
                 children: [
                   Row(
                     children: [
@@ -237,7 +243,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                         child: Text(
                           l10n.challengeScreenTitle,
                           style: TextStyle(
-                            fontSize: 24,
+                            fontSize: isTablet ? 30 : 24,
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onSurface,
                           ),
@@ -257,8 +263,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                           },
                           borderRadius: BorderRadius.circular(18),
                           child: Container(
-                            width: 42,
-                            height: 42,
+                            width: isTablet ? 50 : 42,
+                            height: isTablet ? 50 : 42,
                             decoration: BoxDecoration(
                               color:
                                   colorScheme.surface.withValues(alpha: 0.86),
@@ -270,7 +276,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                             ),
                             child: Icon(
                               Icons.tune_rounded,
-                              size: 20,
+                              size: isTablet ? 24 : 20,
                               color: colorScheme.onSurfaceVariant,
                             ),
                           ),
@@ -278,7 +284,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: isTablet ? 20 : 16),
                   _ChallengeHeroCard(
                     l10n: l10n,
                     isTodayCleared: challenge.isTodayChallengeCleared,
@@ -289,7 +295,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                     ),
                     onOpenMyPace: _openMyPaceGame,
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: isTablet ? 18 : 14),
                   Row(
                     children: [
                       Expanded(
@@ -325,18 +331,18 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: isTablet ? 26 : 20),
                   _WeeklyGoalCard(l10n: l10n, challenge: challenge),
-                  const SizedBox(height: 8),
+                  SizedBox(height: isTablet ? 10 : 8),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton.icon(
                       onPressed: _showMetricsBasisSheet,
-                      icon: const Icon(Icons.info_outline, size: 18),
+                      icon: Icon(Icons.info_outline, size: isTablet ? 21 : 18),
                       label: Text(_metricsBasisLabel(context)),
                     ),
                   ),
-                  const SizedBox(height: 22),
+                  SizedBox(height: isTablet ? 28 : 22),
                   _AchievementSection(
                     l10n: l10n,
                     summary: data.achievementSummary,
@@ -384,8 +390,9 @@ class _ChallengeMiniStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isTablet = MediaQuery.of(context).size.width > 600;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isTablet ? 20 : 16),
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
@@ -397,24 +404,24 @@ class _ChallengeMiniStatCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 28,
-                height: 28,
+                width: isTablet ? 34 : 28,
+                height: isTablet ? 34 : 28,
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   Icons.insights_rounded,
-                  size: 16,
+                  size: isTablet ? 19 : 16,
                   color: accent,
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: isTablet ? 12 : 10),
               Expanded(
                 child: Text(
                   eyebrow,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: isTablet ? 14 : 12,
                     fontWeight: FontWeight.w600,
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -422,11 +429,11 @@ class _ChallengeMiniStatCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: isTablet ? 15 : 12),
           Text(
             value,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: isTablet ? 24 : 20,
               fontWeight: FontWeight.w700,
               color: colorScheme.onSurface,
             ),
@@ -451,38 +458,39 @@ class _WeeklyGoalCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isTablet = MediaQuery.of(context).size.width > 600;
     final goalSlots = challenge.weeklyGoalTarget.clamp(1, 7);
     final filledSlots = challenge.weeklyClearCount.clamp(0, goalSlots);
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding: EdgeInsets.all(isTablet ? 24 : 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               l10n.challengeWeeklyGoalHeading,
               style: TextStyle(
-                fontSize: 18,
+                fontSize: isTablet ? 22 : 18,
                 fontWeight: FontWeight.bold,
                 color: colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: isTablet ? 10 : 8),
             Text(
               l10n.challengeWeeklyClearsLine(challenge.weeklyGoalTarget),
-              style: const TextStyle(
-                fontSize: 16,
+              style: TextStyle(
+                fontSize: isTablet ? 19 : 16,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: isTablet ? 18 : 14),
             _LeafProgressRow(
               filledCount: filledSlots,
               totalCount: goalSlots,
               isComplete: challenge.isWeeklyGoalAchieved,
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: isTablet ? 18 : 14),
             Row(
               children: [
                 Expanded(
@@ -505,7 +513,7 @@ class _WeeklyGoalCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: isTablet ? 13 : 10),
             Text(
               challenge.isWeeklyGoalAchieved
                   ? l10n.challengeWeeklyCongratsFooter
@@ -535,14 +543,16 @@ class _GoalMetaLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isTablet = MediaQuery.of(context).size.width > 600;
     return Row(
       children: [
-        Icon(icon, size: 16, color: colorScheme.primary),
-        const SizedBox(width: 8),
+        Icon(icon, size: isTablet ? 19 : 16, color: colorScheme.primary),
+        SizedBox(width: isTablet ? 10 : 8),
         Expanded(
           child: Text(
             label,
             style: TextStyle(
+              fontSize: isTablet ? 15 : null,
               fontWeight: FontWeight.w600,
               color: colorScheme.onSurface,
             ),
@@ -567,6 +577,7 @@ class _LeafProgressRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isTablet = MediaQuery.of(context).size.width > 600;
     final filledColor =
         isComplete ? const Color(0xFF7AA874) : const Color(0xFF8EBE99);
     final emptyColor = colorScheme.surfaceContainerHighest;
@@ -578,7 +589,7 @@ class _LeafProgressRow extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.only(right: index == totalCount - 1 ? 0 : 8),
             child: Container(
-              height: 52,
+              height: isTablet ? 64 : 52,
               decoration: BoxDecoration(
                 color:
                     filled ? filledColor.withValues(alpha: 0.16) : emptyColor,
@@ -594,7 +605,7 @@ class _LeafProgressRow extends StatelessWidget {
                   angle: filled ? -0.25 : 0,
                   child: Icon(
                     filled ? Icons.spa_rounded : Icons.eco_outlined,
-                    size: 22,
+                    size: isTablet ? 27 : 22,
                     color: filled ? filledColor : colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -619,8 +630,12 @@ class _ChallengeHeroPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isTablet = MediaQuery.of(context).size.width > 600;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      padding: EdgeInsets.symmetric(
+        horizontal: isTablet ? 13 : 10,
+        vertical: isTablet ? 9 : 7,
+      ),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(999),
@@ -628,11 +643,12 @@ class _ChallengeHeroPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 15, color: colorScheme.primary),
-          const SizedBox(width: 6),
+          Icon(icon, size: isTablet ? 18 : 15, color: colorScheme.primary),
+          SizedBox(width: isTablet ? 8 : 6),
           Text(
             label,
             style: TextStyle(
+              fontSize: isTablet ? 15 : null,
               fontWeight: FontWeight.w600,
               color: colorScheme.onSurfaceVariant,
             ),
@@ -657,8 +673,9 @@ class _NextMilestoneTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isTablet = MediaQuery.of(context).size.width > 600;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(isTablet ? 16 : 12),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
@@ -668,7 +685,7 @@ class _NextMilestoneTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: colorScheme.primary),
-          const SizedBox(width: 10),
+          SizedBox(width: isTablet ? 12 : 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -676,14 +693,16 @@ class _NextMilestoneTile extends StatelessWidget {
                 Text(
                   title,
                   style: TextStyle(
+                    fontSize: isTablet ? 16 : null,
                     fontWeight: FontWeight.w700,
                     color: colorScheme.onSurface,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: isTablet ? 6 : 4),
                 Text(
                   description,
                   style: TextStyle(
+                    fontSize: isTablet ? 14.5 : null,
                     color: colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -710,24 +729,25 @@ class _AchievementSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isTablet = MediaQuery.of(context).size.width > 600;
     final unlocked = summary.unlockedBadges.take(3).toList();
     final upcoming = summary.inProgressBadges.take(2).toList();
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding: EdgeInsets.all(isTablet ? 24 : 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               l10n.challengeAchievementsHeading,
               style: TextStyle(
-                fontSize: 18,
+                fontSize: isTablet ? 22 : 18,
                 fontWeight: FontWeight.bold,
                 color: colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: isTablet ? 10 : 8),
             Row(
               children: [
                 Expanded(
@@ -737,6 +757,7 @@ class _AchievementSection extends StatelessWidget {
                       summary.badges.length,
                     ),
                     style: TextStyle(
+                      fontSize: isTablet ? 15 : null,
                       color: colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -748,15 +769,16 @@ class _AchievementSection extends StatelessWidget {
               ],
             ),
             if (unlocked.isNotEmpty) ...[
-              const SizedBox(height: 14),
+              SizedBox(height: isTablet ? 18 : 14),
               Text(
                 l10n.challengeEarnedBadgesHeading,
                 style: TextStyle(
+                  fontSize: isTablet ? 16 : null,
                   fontWeight: FontWeight.w700,
                   color: colorScheme.onSurface,
                 ),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: isTablet ? 13 : 10),
               Wrap(
                 spacing: 10,
                 runSpacing: 10,
@@ -770,18 +792,19 @@ class _AchievementSection extends StatelessWidget {
               ),
             ],
             if (upcoming.isNotEmpty) ...[
-              const SizedBox(height: 16),
+              SizedBox(height: isTablet ? 20 : 16),
               Text(
                 l10n.challengeNextBadgeTargets,
                 style: TextStyle(
+                  fontSize: isTablet ? 16 : null,
                   fontWeight: FontWeight.w700,
                   color: colorScheme.onSurface,
                 ),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: isTablet ? 13 : 10),
               ...upcoming.map(
                 (badge) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: EdgeInsets.only(bottom: isTablet ? 10 : 8),
                   child: _NextMilestoneTile(
                     title: badge.title,
                     description: l10n.challengeBadgeProgressLine(
@@ -811,9 +834,10 @@ class _AchievementBadgeChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
+    final isTablet = MediaQuery.of(context).size.width > 600;
     return Container(
-      width: 150,
-      padding: const EdgeInsets.all(12),
+      width: isTablet ? 180 : 150,
+      padding: EdgeInsets.all(isTablet ? 16 : 12),
       decoration: BoxDecoration(
         color: badge.unlocked
             ? badge.surfaceColor
@@ -830,22 +854,25 @@ class _AchievementBadgeChip extends StatelessWidget {
         children: [
           Icon(
             badge.unlocked ? badge.icon : Icons.workspace_premium_outlined,
+            size: isTablet ? 27 : null,
             color: badge.unlocked
                 ? badge.accentColor
                 : colorScheme.onSurfaceVariant,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: isTablet ? 10 : 8),
           Text(
             badge.title,
             style: TextStyle(
+              fontSize: isTablet ? 15.5 : null,
               fontWeight: FontWeight.w700,
               color: colorScheme.onSurface,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: isTablet ? 6 : 4),
           Text(
             '${badge.progressLabel} · ${badge.rarity.localizedName(l10n)}',
             style: TextStyle(
+              fontSize: isTablet ? 13.5 : null,
               color: badge.unlocked
                   ? badge.accentColor
                   : colorScheme.onSurfaceVariant,
@@ -873,8 +900,9 @@ class _ChallengeHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isTablet = MediaQuery.of(context).size.width > 600;
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isTablet ? 26 : 20),
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
@@ -889,35 +917,37 @@ class _ChallengeHeroCard extends StatelessWidget {
                 ? '오늘의 흐름'
                 : 'Today',
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: isTablet ? 20 : 16),
           Text(
             l10n.challengeTabHeroHeadline,
             style: TextStyle(
-              fontSize: 28,
+              fontSize: isTablet ? 34 : 28,
               height: 1.15,
               fontWeight: FontWeight.w700,
               color: colorScheme.onSurface,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: isTablet ? 15 : 12),
           Text(
             todayLabel,
             style: TextStyle(
+              fontSize: isTablet ? 17 : null,
               fontWeight: FontWeight.w600,
               color: colorScheme.onSurface,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: isTablet ? 10 : 8),
           Text(
             isTodayCleared
                 ? l10n.challengeHeroDoneDetail
                 : l10n.challengeHeroPendingDetail,
             style: TextStyle(
+              fontSize: isTablet ? 16 : null,
               color: colorScheme.onSurfaceVariant,
               height: 1.45,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: isTablet ? 20 : 16),
           ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 200),
             child: FilledButton(
@@ -925,10 +955,12 @@ class _ChallengeHeroCard extends StatelessWidget {
               style: FilledButton.styleFrom(
                 backgroundColor: colorScheme.surfaceContainerLow,
                 foregroundColor: colorScheme.primary,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-                textStyle: const TextStyle(
-                  fontSize: 15,
+                padding: EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: isTablet ? 17 : 14,
+                ),
+                textStyle: TextStyle(
+                  fontSize: isTablet ? 17 : 15,
                   fontWeight: FontWeight.w700,
                 ),
                 shape: RoundedRectangleBorder(

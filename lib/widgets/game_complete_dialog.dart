@@ -42,11 +42,13 @@ class GameCompleteDialog extends StatelessWidget {
     final onSurface = cs.onSurface;
     final onVar = cs.onSurfaceVariant;
     final levelPalette = LevelStatusPalette.of(context);
+    final isTablet = MediaQuery.of(context).size.width > 600;
     final dialogMaxContentHeight = MediaQuery.of(context).size.height * 0.52;
+    final dialogMaxWidth = isTablet ? 440.0 : double.infinity;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final themeSuffix = isDarkMode ? 'black' : 'white';
     final secondaryActionStyle = OutlinedButton.styleFrom(
-      minimumSize: const Size.fromHeight(46),
+      minimumSize: Size.fromHeight(isTablet ? 52 : 46),
       foregroundColor: onVar,
       backgroundColor: cs.surfaceContainerHighest.withValues(alpha: 0.5),
       side: BorderSide(color: cs.outline.withValues(alpha: 0.4)),
@@ -54,12 +56,12 @@ class GameCompleteDialog extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
       ),
       textStyle: GoogleFonts.notoSans(
-        fontSize: 14,
+        fontSize: isTablet ? 16 : 14,
         fontWeight: FontWeight.w600,
       ),
     );
     final primaryActionStyle = ElevatedButton.styleFrom(
-      minimumSize: const Size.fromHeight(50),
+      minimumSize: Size.fromHeight(isTablet ? 56 : 50),
       backgroundColor: cs.primary,
       foregroundColor: cs.onPrimary,
       elevation: 0,
@@ -78,12 +80,15 @@ class GameCompleteDialog extends StatelessWidget {
         isNewBestRecord
             ? 'assets/images/newbest_$themeSuffix.png'
             : 'assets/images/clear_$themeSuffix.png',
-        height: 150,
+        height: isTablet ? 180 : 150,
       ),
-      titlePadding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
+      titlePadding: EdgeInsets.fromLTRB(24, isTablet ? 32 : 28, 24, 0),
       contentPadding: const EdgeInsets.fromLTRB(24, 0.1, 24, 24),
       content: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: dialogMaxContentHeight),
+        constraints: BoxConstraints(
+          maxHeight: dialogMaxContentHeight,
+          maxWidth: dialogMaxWidth,
+        ),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -91,8 +96,10 @@ class GameCompleteDialog extends StatelessWidget {
               if (challengeMessage != null) ...[
                 const SizedBox(height: 10),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isTablet ? 13 : 10,
+                    vertical: isTablet ? 10 : 8,
+                  ),
                   decoration: BoxDecoration(
                     color: cs.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(14),
@@ -100,13 +107,13 @@ class GameCompleteDialog extends StatelessWidget {
                   child: Row(
                     children: [
                       Icon(Icons.local_fire_department,
-                          size: 18, color: onSurface),
-                      const SizedBox(width: 8),
+                          size: isTablet ? 22 : 18, color: onSurface),
+                      SizedBox(width: isTablet ? 10 : 8),
                       Expanded(
                         child: Text(
                           challengeMessage!,
                           style: GoogleFonts.notoSans(
-                            fontSize: 13,
+                            fontSize: isTablet ? 15 : 13,
                             fontWeight: FontWeight.w600,
                             color: onSurface,
                           ),
@@ -118,7 +125,7 @@ class GameCompleteDialog extends StatelessWidget {
                 const SizedBox(height: 10),
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(isTablet ? 15 : 12),
                   decoration: BoxDecoration(
                     color: cs.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(16),
@@ -130,12 +137,12 @@ class GameCompleteDialog extends StatelessWidget {
                       Text(
                         l10n.dialogSuggestedNextStep,
                         style: GoogleFonts.notoSans(
-                          fontSize: 13,
+                          fontSize: isTablet ? 15 : 13,
                           fontWeight: FontWeight.w700,
                           color: onSurface,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: isTablet ? 10 : 8),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -160,10 +167,10 @@ class GameCompleteDialog extends StatelessWidget {
                   ),
                 ),
               ],
-              const SizedBox(height: 20),
+              SizedBox(height: isTablet ? 24 : 20),
               // 통계 정보
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(isTablet ? 20 : 16),
                 decoration: BoxDecoration(
                   color: levelPalette.completedBackground,
                   borderRadius: BorderRadius.circular(16),
@@ -179,13 +186,13 @@ class GameCompleteDialog extends StatelessWidget {
                             Icon(
                               Icons.timer,
                               color: levelPalette.primaryPurple,
-                              size: 20,
+                              size: isTablet ? 24 : 20,
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: isTablet ? 10 : 8),
                             Text(
                               l10n.dialogElapsedTime,
                               style: GoogleFonts.notoSans(
-                                fontSize: 14,
+                                fontSize: isTablet ? 16 : 14,
                                 color: onVar,
                               ),
                             ),
@@ -194,14 +201,14 @@ class GameCompleteDialog extends StatelessWidget {
                         Text(
                           formattedTime,
                           style: GoogleFonts.notoSans(
-                            fontSize: 16,
+                            fontSize: isTablet ? 19 : 16,
                             fontWeight: FontWeight.bold,
                             color: levelPalette.primaryPurple,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: isTablet ? 10 : 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -210,13 +217,13 @@ class GameCompleteDialog extends StatelessWidget {
                             Icon(
                               Icons.error_outline,
                               color: levelPalette.primaryPurple,
-                              size: 20,
+                              size: isTablet ? 24 : 20,
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: isTablet ? 10 : 8),
                             Text(
                               l10n.dialogWrongCount,
                               style: GoogleFonts.notoSans(
-                                fontSize: 14,
+                                fontSize: isTablet ? 16 : 14,
                                 color: onVar,
                               ),
                             ),
@@ -225,7 +232,7 @@ class GameCompleteDialog extends StatelessWidget {
                         Text(
                           l10n.dialogWrongCountValue(wrongCount),
                           style: GoogleFonts.notoSans(
-                            fontSize: 16,
+                            fontSize: isTablet ? 19 : 16,
                             fontWeight: FontWeight.bold,
                             color: levelPalette.primaryPurple,
                           ),
@@ -243,7 +250,7 @@ class GameCompleteDialog extends StatelessWidget {
       buttonPadding: EdgeInsets.zero,
       actions: [
         SizedBox(
-          width: double.infinity,
+          width: dialogMaxWidth,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -255,7 +262,7 @@ class GameCompleteDialog extends StatelessWidget {
                   child: Text(l10n.dialogBackToLevels),
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: isTablet ? 14 : 12),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -266,7 +273,7 @@ class GameCompleteDialog extends StatelessWidget {
                         ? l10n.dialogNextPuzzle
                         : l10n.dialogPlayAgain,
                     style: GoogleFonts.notoSans(
-                      fontSize: 16,
+                      fontSize: isTablet ? 18 : 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

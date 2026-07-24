@@ -144,7 +144,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: ListTile(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        tileColor: isSelected ? colorScheme.primary.withValues(alpha: 0.12) : null,
+        tileColor:
+            isSelected ? colorScheme.primary.withValues(alpha: 0.12) : null,
         minTileHeight: 56,
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
         title: Text(
@@ -276,9 +277,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               children: [
                 _buildTopHeader(),
-                const SizedBox(height: 20),
+                SizedBox(height: isTablet ? 26 : 20),
                 _buildThemeSection(),
-                const SizedBox(height: 20),
+                SizedBox(height: isTablet ? 26 : 20),
                 _buildSettingsSection(
                   AppLocalizations.of(context)!.settingsSectionLanguage,
                   [
@@ -293,7 +294,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: isTablet ? 26 : 20),
                 _buildSettingsSection(
                   AppLocalizations.of(context)!.settingsSectionGame,
                   [
@@ -357,6 +358,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildThemeSection() {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    final isTablet = MediaQuery.of(context).size.width > 600;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -365,7 +367,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Text(
             l10n.settingsDisplaySection,
             style: TextStyle(
-              fontSize: 12.5,
+              fontSize: isTablet ? 14 : 12.5,
               fontWeight: FontWeight.w600,
               color: cs.onSurfaceVariant,
               letterSpacing: 0.2,
@@ -378,15 +380,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: cs.outlineVariant),
           ),
-          padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+          padding: EdgeInsets.fromLTRB(
+            isTablet ? 22 : 18,
+            isTablet ? 20 : 16,
+            isTablet ? 22 : 18,
+            isTablet ? 20 : 16,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   Container(
-                    width: 40,
-                    height: 40,
+                    width: isTablet ? 48 : 40,
+                    height: isTablet ? 48 : 40,
                     decoration: BoxDecoration(
                       color: const Color(0xFF5B8DD9).withValues(alpha: 0.13),
                       borderRadius: BorderRadius.circular(12),
@@ -394,20 +401,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Icon(
                       Icons.brightness_6_rounded,
                       color: const Color(0xFF5B8DD9).withValues(alpha: 0.85),
-                      size: 20,
+                      size: isTablet ? 24 : 20,
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  SizedBox(width: isTablet ? 18 : 14),
                   Text(
                     l10n.settingsTheme,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontSize: isTablet ? 19 : null,
                           fontWeight: FontWeight.w600,
                           color: cs.onSurface,
                         ),
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: isTablet ? 18 : 14),
               SegmentedButton<ThemeMode>(
                 selected: {_state.themeMode},
                 onSelectionChanged: (modes) => _setThemeMode(modes.first),
@@ -417,22 +425,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   selectedForegroundColor: cs.primary,
                   foregroundColor: cs.onSurfaceVariant,
                   side: BorderSide(color: cs.outlineVariant),
-                  textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                  textStyle: TextStyle(
+                    fontSize: isTablet ? 14 : 12,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 segments: [
                   ButtonSegment(
                     value: ThemeMode.system,
-                    icon: const Icon(Icons.brightness_auto_rounded, size: 16),
+                    icon: Icon(Icons.brightness_auto_rounded,
+                        size: isTablet ? 19 : 16),
                     label: Text(l10n.settingsThemeSystem),
                   ),
                   ButtonSegment(
                     value: ThemeMode.light,
-                    icon: const Icon(Icons.light_mode_rounded, size: 16),
+                    icon: Icon(Icons.light_mode_rounded,
+                        size: isTablet ? 19 : 16),
                     label: Text(l10n.settingsThemeLight),
                   ),
                   ButtonSegment(
                     value: ThemeMode.dark,
-                    icon: const Icon(Icons.dark_mode_rounded, size: 16),
+                    icon:
+                        Icon(Icons.dark_mode_rounded, size: isTablet ? 19 : 16),
                     label: Text(l10n.settingsThemeDark),
                   ),
                 ],
@@ -448,6 +462,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final canPop = Navigator.of(context).canPop();
+    final isTablet = MediaQuery.of(context).size.width > 600;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -455,7 +470,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+              icon: Icon(Icons.arrow_back_ios_new_rounded,
+                  size: isTablet ? 24 : 20),
               color: colorScheme.onSurface,
               onPressed: () => Navigator.of(context).pop(),
             ),
@@ -467,7 +483,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Text(
                 l10n.settingsTitle,
                 style: TextStyle(
-                  fontSize: 26,
+                  fontSize: isTablet ? 30 : 26,
                   fontWeight: FontWeight.w700,
                   color: colorScheme.onSurface,
                 ),
@@ -481,6 +497,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildSettingsSection(String title, List<Widget> children) {
     final cs = Theme.of(context).colorScheme;
+    final isTablet = MediaQuery.of(context).size.width > 600;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -489,7 +506,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Text(
             title,
             style: TextStyle(
-              fontSize: 12.5,
+              fontSize: isTablet ? 14 : 12.5,
               fontWeight: FontWeight.w600,
               color: cs.onSurfaceVariant,
               letterSpacing: 0.2,
@@ -509,7 +526,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 if (i < children.length - 1)
                   Divider(
                     height: 1,
-                    indent: 72,
+                    indent: isTablet ? 88 : 72,
                     endIndent: 0,
                     color: cs.outlineVariant,
                   ),
@@ -523,9 +540,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildSettingIcon(IconData icon, {Color? color}) {
     final c = color ?? AppTheme.mintColor;
+    final isTablet = MediaQuery.of(context).size.width > 600;
     return Container(
-      width: 40,
-      height: 40,
+      width: isTablet ? 48 : 40,
+      height: isTablet ? 48 : 40,
       decoration: BoxDecoration(
         color: c.withValues(alpha: 0.13),
         borderRadius: BorderRadius.circular(12),
@@ -533,7 +551,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Icon(
         icon,
         color: c.withValues(alpha: 0.85),
-        size: 20,
+        size: isTablet ? 24 : 20,
       ),
     );
   }
@@ -546,12 +564,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Color? iconColor,
   }) {
     final cs = Theme.of(context).colorScheme;
+    final isTablet = MediaQuery.of(context).size.width > 600;
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: isTablet ? 22 : 18,
+        vertical: isTablet ? 8 : 4,
+      ),
       leading: _buildSettingIcon(icon, color: iconColor),
       title: Text(
         title,
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontSize: isTablet ? 18 : null,
               fontWeight: FontWeight.w600,
               color: cs.onSurface,
             ),
@@ -559,11 +582,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       subtitle: Text(
         subtitle,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontSize: isTablet ? 14 : null,
               color: cs.onSurfaceVariant,
             ),
       ),
       trailing: Icon(
         Icons.chevron_right,
+        size: isTablet ? 26 : null,
         color: cs.onSurfaceVariant,
       ),
       onTap: onTap,
@@ -579,14 +604,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Color? iconColor,
   }) {
     final cs = Theme.of(context).colorScheme;
+    final isTablet = MediaQuery.of(context).size.width > 600;
     return SwitchListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: isTablet ? 22 : 18,
+        vertical: isTablet ? 8 : 4,
+      ),
       value: value,
       onChanged: onChanged,
       secondary: _buildSettingIcon(icon, color: iconColor),
       title: Text(
         title,
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontSize: isTablet ? 18 : null,
               fontWeight: FontWeight.w600,
               color: cs.onSurface,
             ),
@@ -594,6 +624,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       subtitle: Text(
         subtitle,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontSize: isTablet ? 14 : null,
               color: cs.onSurfaceVariant,
             ),
       ),
