@@ -14,6 +14,7 @@ class GameRecordService {
     required int gameNumber,
     required int clearTime,
     required int wrongCount,
+    required int hintsUsed,
   }) async {
     try {
       final existing =
@@ -29,6 +30,7 @@ class GameRecordService {
           gameNumber: gameNumber,
           clearTime: clearTime,
           wrongCount: wrongCount,
+          hintsUsed: hintsUsed,
         );
         if (kDebugMode) {
           AppLogger.debug('클리어 기록 저장 완료: $levelName 게임 $gameNumber');

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:sudoku159/firebase_options.dart';
 import 'package:sudoku159/l10n/app_locale_scope.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/services/identity/install_id_service.dart';
@@ -16,6 +18,7 @@ import 'package:sudoku159/services/settings/notification_service.dart';
 import 'package:sudoku159/theme/app_theme.dart';
 import 'package:sudoku159/theme/app_theme_scope.dart';
 import 'package:sudoku159/navigation/root_nav_scope.dart';
+import 'package:sudoku159/view/home/force_update_gate.dart';
 import 'package:sudoku159/view/home/home_screen.dart';
 import 'package:sudoku159/view/home/startup_catalog_preparing_gate.dart';
 import 'package:sudoku159/view/records/records_statistics_screen.dart';
@@ -32,6 +35,14 @@ void main() async {
   ]);
 
   unawaited(InstallIdService().getOrCreate());
+
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  } catch (e) {
+    if (kDebugMode) {
+      AppLogger.debug('Firebase 초기화 실패: $e');
+    }
+  }
 
   if (kDebugMode) {
     try {
@@ -158,8 +169,10 @@ class _Sudoku159AppState extends State<Sudoku159App> {
             }
             return supported.first;
           },
-          home: const StartupCatalogPreparingGate(
-            child: MyHomePage(),
+          home: const ForceUpdateGate(
+            child: StartupCatalogPreparingGate(
+              child: MyHomePage(),
+            ),
           ),
         ),
       ),

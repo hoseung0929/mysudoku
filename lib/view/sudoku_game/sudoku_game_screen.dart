@@ -1251,6 +1251,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       game: widget.game,
       clearTimeSeconds: _presenter.seconds,
       wrongCount: _presenter.wrongCount,
+      hintsUsed: _featurePolicy.maxHints - _presenter.hintsRemaining,
       onRestart: _resetAndRestartCurrentGame,
       onGoToLevelSelection: _exitToLevelSelection,
       onNextPuzzle: (nextGame) async {
@@ -1431,28 +1432,27 @@ class _MobileGameLayoutMetrics {
     final boardSize =
         _clamp(baseBoardSize - overflow, 256, isIPhoneSELayout ? 520 : 680);
 
-    // Only grow the keypad/action buttons with height that's genuinely left
-    // over after the (width-bound) board and required chrome are placed —
-    // never at the board's expense, so smaller devices are unaffected.
-    final leftoverHeight = isIPhoneSELayout
-        ? 0.0
-        : math.max(
-            0.0,
-            maxHeight -
-                (boardSize +
-                    sectionGap +
-                    estimatedNumberPadHeight +
-                    compactGap +
-                    estimatedActionRowHeight +
-                    bottomSafePadding),
-          );
+    // Grow the keypad/action buttons with height that's genuinely left over
+    // after the (width-bound) board and required chrome are placed — never
+    // at the board's expense. Applies uniformly across device sizes so
+    // leftover space doesn't sit as dead margin around the board on smaller
+    // phones (e.g. iPhone SE) the way it's absorbed into the keypad on larger
+    // ones.
+    final leftoverHeight = math.max(
+      0.0,
+      maxHeight -
+          (boardSize +
+              sectionGap +
+              estimatedNumberPadHeight +
+              compactGap +
+              estimatedActionRowHeight +
+              bottomSafePadding),
+    );
     final extraPerRow = math.min(leftoverHeight / 4, 16.0);
-    final numberButtonHeight = isIPhoneSELayout
-        ? baseNumberButtonHeight
-        : math.min(baseNumberButtonHeight + extraPerRow, 116.0);
-    final actionButtonSize = isIPhoneSELayout
-        ? baseActionButtonSize
-        : math.min(baseActionButtonSize + extraPerRow, 82.0);
+    final numberButtonHeight =
+        math.min(baseNumberButtonHeight + extraPerRow, 116.0);
+    final actionButtonSize =
+        math.min(baseActionButtonSize + extraPerRow, 82.0);
     final actionLabelFontSize = actionButtonSize <= 50 ? 7.5 : 8.5;
 
     // 숫자 패드 한 줄(3버튼)의 전체 폭이 보드 폭과 같아지도록 정렬.

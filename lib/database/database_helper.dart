@@ -84,12 +84,14 @@ class DatabaseHelper {
     required int gameNumber,
     required int clearTime,
     required int wrongCount,
+    required int hintsUsed,
   }) async {
     await _clearRecordRepository.saveClearRecord(
       levelName: levelName,
       gameNumber: gameNumber,
       clearTime: clearTime,
       wrongCount: wrongCount,
+      hintsUsed: hintsUsed,
     );
   }
 
@@ -99,6 +101,7 @@ class DatabaseHelper {
     required int gameNumber,
     required int clearTime,
     required int wrongCount,
+    required int hintsUsed,
     DateTime? clearedAtLocal,
   }) async {
     await _clearRecordRepository.saveClearEvent(
@@ -106,6 +109,7 @@ class DatabaseHelper {
       gameNumber: gameNumber,
       clearTime: clearTime,
       wrongCount: wrongCount,
+      hintsUsed: hintsUsed,
       clearedAtLocal: clearedAtLocal,
     );
   }

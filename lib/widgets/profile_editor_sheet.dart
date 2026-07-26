@@ -88,186 +88,194 @@ class _ProfileEditorContentState extends State<_ProfileEditorContent> {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final languageCode = Localizations.localeOf(context).languageCode;
     final bioMaxLength = languageCode == 'ko' || languageCode == 'ja' ? 20 : 40;
+    final isTablet = MediaQuery.of(context).size.width > 600;
 
     final hasImage = !_useDefaultProfile &&
         _draftImagePath != null &&
         File(_draftImagePath!).existsSync();
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Drag handle
-          Padding(
-            padding: const EdgeInsets.only(top: 12, bottom: 4),
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: colors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: isTablet ? 480 : double.infinity,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          Flexible(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(20, 8, 20, bottomInset + 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title
-                  Text(
-                    l10n.profileEditorTitle,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textPrimary,
-                    ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag handle
+              Padding(
+                padding: const EdgeInsets.only(top: 12, bottom: 4),
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: colors.border,
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  const SizedBox(height: 24),
-
-                  // Profile preview
-                  Center(
-                    child: Column(
-                      children: [
-                        CircleAvatar(
-                          radius: 48,
-                          backgroundColor: colors.borderLight,
-                          backgroundImage: hasImage
-                              ? FileImage(File(_draftImagePath!))
-                              : const AssetImage(
-                                  'assets/images/character.png',
-                                ) as ImageProvider,
+                ),
+              ),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(20, 8, 20, bottomInset + 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title
+                      Text(
+                        l10n.profileEditorTitle,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
                         ),
-                        const SizedBox(height: 10),
-                        Text(
-                          _nameController.text.isNotEmpty
-                              ? _nameController.text
-                              : l10n.homeGuestTitle,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: colors.textPrimary,
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Profile preview
+                      Center(
+                        child: Column(
+                          children: [
+                            CircleAvatar(
+                              radius: 48,
+                              backgroundColor: colors.borderLight,
+                              backgroundImage: hasImage
+                                  ? FileImage(File(_draftImagePath!))
+                                  : const AssetImage(
+                                      'assets/images/character.png',
+                                    ) as ImageProvider,
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              _nameController.text.isNotEmpty
+                                  ? _nameController.text
+                                  : l10n.homeGuestTitle,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: colors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Profile image selection
+                      _buildOptionTile(
+                        icon: Icons.person,
+                        imageAsset: 'assets/images/character.png',
+                        iconBgColor: colors.borderLight,
+                        title: l10n.profileEditorDefaultProfile,
+                        subtitle: l10n.profileEditorDefaultProfileDesc,
+                        selected: _useDefaultProfile,
+                        onTap: () {
+                          setState(() {
+                            _useDefaultProfile = true;
+                            _draftImagePath = null;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      _buildOptionTile(
+                        icon: Icons.add,
+                        iconBgColor: colors.borderLight,
+                        title: l10n.profileEditorPickFromAlbum,
+                        subtitle: l10n.profileEditorPickFromAlbumDesc,
+                        selected: !_useDefaultProfile,
+                        onTap: () async {
+                          final pickedPath = await widget.profileImageService
+                              .pickAndSaveProfileImage();
+                          if (pickedPath == null) return;
+                          setState(() {
+                            _useDefaultProfile = false;
+                            _draftImagePath = pickedPath;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Name input
+                      TextField(
+                        controller: _nameController,
+                        maxLength: 20,
+                        textInputAction: TextInputAction.next,
+                        onChanged: (_) => setState(() {}),
+                        decoration: InputDecoration(
+                          labelText: l10n.profileEditorNameLabel,
+                          hintText: l10n.homeGuestTitle,
+                          counterText: '',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Profile image selection
-                  _buildOptionTile(
-                    icon: Icons.person,
-                    imageAsset: 'assets/images/character.png',
-                    iconBgColor: colors.borderLight,
-                    title: l10n.profileEditorDefaultProfile,
-                    subtitle: l10n.profileEditorDefaultProfileDesc,
-                    selected: _useDefaultProfile,
-                    onTap: () {
-                      setState(() {
-                        _useDefaultProfile = true;
-                        _draftImagePath = null;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  _buildOptionTile(
-                    icon: Icons.add,
-                    iconBgColor: colors.borderLight,
-                    title: l10n.profileEditorPickFromAlbum,
-                    subtitle: l10n.profileEditorPickFromAlbumDesc,
-                    selected: !_useDefaultProfile,
-                    onTap: () async {
-                      final pickedPath = await widget.profileImageService
-                          .pickAndSaveProfileImage();
-                      if (pickedPath == null) return;
-                      setState(() {
-                        _useDefaultProfile = false;
-                        _draftImagePath = pickedPath;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Name input
-                  TextField(
-                    controller: _nameController,
-                    maxLength: 20,
-                    textInputAction: TextInputAction.next,
-                    onChanged: (_) => setState(() {}),
-                    decoration: InputDecoration(
-                      labelText: l10n.profileEditorNameLabel,
-                      hintText: l10n.homeGuestTitle,
-                      counterText: '',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-                  // Bio input
-                  Text(
-                    l10n.profileEditorBioLabel,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _bioController,
-                    maxLength: bioMaxLength,
-                    maxLines: 3,
-                    textInputAction: TextInputAction.done,
-                    decoration: InputDecoration(
-                      hintText: l10n.profileEditorBioHint,
-                      hintStyle: TextStyle(color: colors.textMuted),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    l10n.profileEditorBioFooter,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colors.textMuted,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Save button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: FilledButton(
-                      onPressed: _isSaving ? null : _save,
-                      style: FilledButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        l10n.commonSave,
-                        style: const TextStyle(
-                          fontSize: 16,
+                      // Bio input
+                      Text(
+                        l10n.profileEditorBioLabel,
+                        style: TextStyle(
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
+                          color: colors.textPrimary,
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _bioController,
+                        maxLength: bioMaxLength,
+                        maxLines: 3,
+                        textInputAction: TextInputAction.done,
+                        decoration: InputDecoration(
+                          hintText: l10n.profileEditorBioHint,
+                          hintStyle: TextStyle(color: colors.textMuted),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.profileEditorBioFooter,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.textMuted,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Save button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: FilledButton(
+                          onPressed: _isSaving ? null : _save,
+                          style: FilledButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            l10n.commonSave,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

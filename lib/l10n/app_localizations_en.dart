@@ -342,6 +342,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dialogNextPuzzle => 'Next puzzle';
 
   @override
+  String get updateRequiredTitle => 'Update required';
+
+  @override
+  String get updateRequiredMessage =>
+      'A new version of this app is available.\nPlease update to continue playing.';
+
+  @override
+  String get updateNowButton => 'Update now';
+
+  @override
   String get settingsNotificationsComingSoonTitle => 'Notifications';
 
   @override

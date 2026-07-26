@@ -332,6 +332,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get dialogNextPuzzle => '次のパズル';
 
   @override
+  String get updateRequiredTitle => 'アップデートが必要です';
+
+  @override
+  String get updateRequiredMessage =>
+      '新しいバージョンが公開されました。\n続けてプレイするにはアップデートしてください。';
+
+  @override
+  String get updateNowButton => '今すぐアップデート';
+
+  @override
   String get settingsNotificationsComingSoonTitle => '通知';
 
   @override

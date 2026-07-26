@@ -11,22 +11,25 @@
 
 어느 방식을 쓰든, **수정 후 아이폰 시뮬레이터에서도 스크린샷으로 확인해서 기존과 동일한지 검증**한다.
 
-## 현재 적용 현황 (2026-07-20 기준)
+## 현재 적용 현황 (2026-07-25 기준)
 
 - **[level_picker_screen.dart](../lib/view/home/level_picker_screen.dart)** — 퍼즐 그리드 컬럼 수를 폭 기반으로 분기 (`_gridColumnsForWidth`): <600 4열(폰 동일) / 600~900 6열 / 900+ 8열.
 - **[home_screen.dart](../lib/view/home/home_screen.dart)** — 명시적 `isTablet` 플래그 방식. `_buildTabletLayout()`이 `isTablet: true`를 `_buildHomeHero()` → `_buildTodaySpotlightCard()`, `_buildLevelExplorer()` → `_buildLevelCard()` → `_LevelCard`/`_DifficultyIcon`까지 전달. 레벨 리스트는 폰과 동일하게 1열 유지, 카드 자체 크기(패딩/폰트/뱃지/진행바 등)만 태블릿에서 확대.
 - **[sudoku_game_screen.dart](../lib/view/sudoku_game/sudoku_game_screen.dart)** — 태블릿 전용 2분할 레이아웃(오버플로우 버그 있었음)은 제거하고 `_buildMobileLayout()` 단일 경로로 통일. 대신 `_MobileGameLayoutMetrics.fromConstraints`의 보드/키패드 크기 상한을 폭 기반으로 완화(예: 보드 460→680)해서 태블릿 폭에서만 커지도록 함. 숫자 키패드 한 줄 폭이 보드 폭과 정렬되도록 `alignedNumberButtonWidth` 계산 추가.
+- **[records_statistics_screen.dart](../lib/view/records/records_statistics_screen.dart)** — `isTablet` 플래그로 통계/차트 치수 분기.
+- **[challenge_screen.dart](../lib/view/challenge/challenge_screen.dart)** — `isTablet` 플래그로 업적 카드 등 분기.
+- **[settings_screen.dart](../lib/view/settings/settings_screen.dart)** — `isTablet` 플래그로 설정 리스트 분기.
+- **[widgets/game_complete_dialog.dart](../lib/widgets/game_complete_dialog.dart)** — `isTablet`일 때 `dialogMaxWidth = 440.0`으로 캡 (이전엔 태블릿에서 화면 끝까지 늘어나던 문제 해결).
+- **[widgets/bottom_nav_bar.dart](../lib/widgets/bottom_nav_bar.dart)** — `isTablet` 플래그로 하단 탭바 치수 분기 (사이드 레일 전환은 아님, 폭만 확대).
+- **[view/home/force_update_gate.dart](../lib/view/home/force_update_gate.dart)** — `startup_catalog_preparing_gate.dart`와 동일하게 `ConstrainedBox(maxWidth: 420)`로 센터 정렬 (별도 `isTablet` 분기 없이도 안전).
 
-## 남은 화면 (아직 iPad 분기 미적용, 조사 시점 기준)
+## 남은 화면 (아직 iPad 분기 미적용)
 
-- `records_statistics_screen.dart` — 통계/차트, 하드코딩된 치수 많음
-- `challenge_screen.dart` — 업적 카드 등
-- `settings_screen.dart` — 설정 리스트
-- `widgets/game_complete_dialog.dart` — 게임 완료 다이얼로그 (폭 제한 없어 태블릿에서 화면 끝까지 늘어남)
 - `widgets/profile_editor_sheet.dart` — 프로필 편집 바텀시트
-- 하단 탭바(`widgets/bottom_nav_bar.dart`, `main.dart`) — 아이패드에서 사이드 레일 전환 여부는 별도 판단 필요
+- 하단 탭바를 사이드 레일로 전환할지 여부 — `bottom_nav_bar.dart`는 치수만 확대했을 뿐 레이아웃 자체(사이드 레일 등)를 바꾸지는 않음. 별도 판단 필요.
 
 ## 참고
 
-- 태블릿 대응 범위(가로 회전 지원 여부 등)는 아직 세로 전용으로 결정된 상태 (`main.dart`에서 `DeviceOrientation.portraitUp` 고정).
-- iOS `TARGETED_DEVICE_FAMILY`는 앱스토어 심사 때문에 `1`(아이폰 전용)로 의도적으로 제한되어 있음. 아이패드 시뮬레이터 테스트 시에만 로컬에서 `1,2`로 임시 변경 후 작업이 끝나면 반드시 `1`로 되돌릴 것.
+- 태블릿 대응 범위는 현재 세로 전용으로 되어 있음 (`main.dart`에서 `DeviceOrientation.portraitUp` 고정, `Info.plist`의 `UISupportedInterfaceOrientations~ipad`도 세로만 선언, 2026-07-25). **아이패드 정식 배포 전에 가로 모드 지원이 필수로 추가되어야 함 (2026-07-26 결정) — 그때 이 세로 고정과 Info.plist 설정을 함께 되돌려야 함.**
+- `Info.plist`에 `UIRequiresFullScreen = true`를 추가해 아이패드 Slide Over/Split View 멀티태스킹을 비활성화함 (2026-07-25) — 좁은 창 폭 레이아웃을 검증하지 않은 상태에서 대응 범위를 좁히기 위한 결정. 추후 멀티태스킹 지원을 결정하면 이 값을 제거하고 좁은 폭에서의 레이아웃을 검증해야 함.
+- iOS `TARGETED_DEVICE_FAMILY`는 다시 `1`(아이폰 전용)로 되돌려져 있음 (2026-07-26). **아이패드 앱스토어 정식 배포는 (1) 애플펜슬 필기 입력, (2) 가로 모드 지원이 모두 구현된 이후로 보류됨.** 아이패드 시뮬레이터로 태블릿 UI를 확인할 때만 로컬에서 `1,2`로 임시 변경하고, 확인이 끝나면 반드시 `1`로 되돌릴 것.

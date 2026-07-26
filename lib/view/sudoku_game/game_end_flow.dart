@@ -21,6 +21,7 @@ class GameEndFlow {
     required SudokuGame game,
     required int clearTimeSeconds,
     required int wrongCount,
+    required int hintsUsed,
     required Future<void> Function() onRestart,
     required Future<void> Function() onGoToLevelSelection,
     required Future<void> Function(SudokuGame nextGame) onNextPuzzle,
@@ -32,6 +33,7 @@ class GameEndFlow {
       game: game,
       clearTimeSeconds: clearTimeSeconds,
       wrongCount: wrongCount,
+      hintsUsed: hintsUsed,
     );
     if (!context.mounted) return;
 

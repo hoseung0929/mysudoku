@@ -333,6 +333,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get dialogNextPuzzle => '다음 퍼즐';
 
   @override
+  String get updateRequiredTitle => '업데이트가 필요합니다';
+
+  @override
+  String get updateRequiredMessage => '새로운 버전이 출시되었습니다.\n계속 플레이하려면 업데이트해 주세요.';
+
+  @override
+  String get updateNowButton => '지금 업데이트';
+
+  @override
   String get settingsNotificationsComingSoonTitle => '알림';
 
   @override

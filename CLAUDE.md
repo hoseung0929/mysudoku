@@ -136,4 +136,4 @@ flutter gen-l10n          # 로컬라이제이션 코드 재생성
 - 번들 ID: `com.hoseung.sudoku159`
 - `Info.plist` 권한: `NSPhotoLibraryUsageDescription` (갤러리 전용, 카메라 미사용)
 - `ITSAppUsesNonExemptEncryption`: `false` (암호화 미사용 선언됨)
-- `TARGETED_DEVICE_FAMILY = 1` (아이폰 전용, 앱스토어 심사 때문에 의도적으로 제한) — 아이패드 시뮬레이터로 태블릿 UI를 확인할 때만 로컬에서 `1,2`로 임시 변경하고, 확인이 끝나면 반드시 `1`로 되돌릴 것. 자세한 내용은 [`docs/tablet-ui-guidelines.md`](docs/tablet-ui-guidelines.md) 참고.
+- `TARGETED_DEVICE_FAMILY = 1` (아이폰 전용, 앱스토어 심사 때문에 의도적으로 제한) — 아이패드 배포는 (1) 애플펜슬 필기 입력, (2) 가로 모드 지원 두 가지가 구현된 이후로 결정하기로 함 (2026-07-26). 그 전까지 아이패드 시뮬레이터로 태블릿 UI를 확인할 때만 로컬에서 `1,2`로 임시 변경하고, 확인이 끝나면 반드시 `1`로 되돌릴 것. 자세한 내용은 [`docs/tablet-ui-guidelines.md`](docs/tablet-ui-guidelines.md) 참고.

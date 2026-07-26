@@ -712,6 +712,24 @@ abstract class AppLocalizations {
   /// **'Next puzzle'**
   String get dialogNextPuzzle;
 
+  /// No description provided for @updateRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update required'**
+  String get updateRequiredTitle;
+
+  /// No description provided for @updateRequiredMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A new version of this app is available.\nPlease update to continue playing.'**
+  String get updateRequiredMessage;
+
+  /// No description provided for @updateNowButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Update now'**
+  String get updateNowButton;
+
   /// No description provided for @settingsNotificationsComingSoonTitle.
   ///
   /// In en, this message translates to:

@@ -135,7 +135,7 @@ class DatabaseManager {
 
     return await openDatabase(
       path,
-      version: 6,
+      version: 7,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onOpen: (db) async {
@@ -178,6 +178,7 @@ class DatabaseManager {
         clear_time INTEGER NOT NULL,
         wrong_count INTEGER NOT NULL,
         clear_date TEXT NOT NULL,
+        hints_used INTEGER NOT NULL DEFAULT 0,
         UNIQUE(level_name, game_number)
       )
     ''');
@@ -195,7 +196,8 @@ class DatabaseManager {
         game_number INTEGER NOT NULL,
         clear_time INTEGER NOT NULL,
         wrong_count INTEGER NOT NULL,
-        clear_date TEXT NOT NULL
+        clear_date TEXT NOT NULL,
+        hints_used INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -256,6 +258,14 @@ class DatabaseManager {
       // 잘못 생성된 마스터 레벨 퍼즐 삭제 (빈 칸 없는 완성 보드로 저장된 데이터)
       // 삭제 후 백그라운드 보충 로직(_missingGameNumbers)이 자동으로 재생성함
       await db.delete('games', where: 'level_name = ?', whereArgs: ['마스터']);
+    }
+    if (oldVersion < 7) {
+      await db.execute(
+        'ALTER TABLE clear_records ADD COLUMN hints_used INTEGER NOT NULL DEFAULT 0',
+      );
+      await db.execute(
+        'ALTER TABLE clear_events ADD COLUMN hints_used INTEGER NOT NULL DEFAULT 0',
+      );
     }
   }
 

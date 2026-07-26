@@ -51,6 +51,7 @@ class GameCompletionCoordinator {
     required SudokuGame game,
     required int clearTimeSeconds,
     required int wrongCount,
+    required int hintsUsed,
   }) async {
     final challengeBefore = await _challengeProgressService.load();
     final beforeAchievements = await _achievementService.load(l10n);
@@ -59,12 +60,14 @@ class GameCompletionCoordinator {
       gameNumber: game.gameNumber,
       clearTime: clearTimeSeconds,
       wrongCount: wrongCount,
+      hintsUsed: hintsUsed,
     );
     final isNewBestRecord = await _gameRecordService.saveClearRecordIfBest(
       levelName: level.name,
       gameNumber: game.gameNumber,
       clearTime: clearTimeSeconds,
       wrongCount: wrongCount,
+      hintsUsed: hintsUsed,
     );
     final isTodayChallenge = await _challengeProgressService.isTodayChallenge(
       levelName: level.name,
