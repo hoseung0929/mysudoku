@@ -33,7 +33,8 @@ class ForceUpdateService {
       await remoteConfig.setConfigSettings(
         RemoteConfigSettings(
           fetchTimeout: const Duration(seconds: 8),
-          minimumFetchInterval: const Duration(hours: 6),
+          minimumFetchInterval:
+              kDebugMode ? Duration.zero : const Duration(hours: 6),
         ),
       );
       await remoteConfig.setDefaults(const {
