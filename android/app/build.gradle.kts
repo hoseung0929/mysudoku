@@ -34,6 +34,19 @@ android {
         versionName = flutter.versionName
     }
 
+    flavorDimensions += "store"
+    productFlavors {
+        create("global") {
+            dimension = "store"
+            // Existing applicationId, unchanged — this is the live app.
+            applicationId = "com.example.sudoku159"
+        }
+        create("japan") {
+            dimension = "store"
+            applicationId = "com.hoseung.nanpre159"
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:sudoku159/constants/app_config.dart';
 import 'package:sudoku159/l10n/app_locale_scope.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/presenter/settings/settings_controller.dart';
@@ -59,12 +60,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await AppThemeScope.of(context).setThemeMode(mode);
   }
 
-  static const _privacyPolicyUrl =
-      'https://team929-support.github.io/sudoku159/privacy-policy';
-
   Future<void> _openPrivacyPolicy() async {
     await launchUrl(
-      Uri.parse(_privacyPolicyUrl),
+      Uri.parse(AppConfig.privacyPolicyUrl),
       mode: LaunchMode.externalApplication,
     );
   }
