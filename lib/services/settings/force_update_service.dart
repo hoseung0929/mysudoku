@@ -4,6 +4,7 @@ import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import 'package:sudoku159/constants/app_config.dart';
 import 'package:sudoku159/utils/app_logger.dart';
 
 class ForceUpdateInfo {
@@ -22,10 +23,18 @@ class ForceUpdateService {
   FirebaseRemoteConfig? _remoteConfig;
   PackageInfo? _packageInfo;
 
-  static const String _minVersionIosKey = 'min_version_ios';
-  static const String _minVersionAndroidKey = 'min_version_android';
-  static const String _updateUrlIosKey = 'update_url_ios';
-  static const String _updateUrlAndroidKey = 'update_url_android';
+  // Firebase 프로젝트를 global/japan이 공유하므로, 강제 업데이트 최소버전이
+  // 서로 덮어쓰지 않도록 japan은 별도 키를 씁니다.
+  static String get _minVersionIosKey =>
+      AppConfig.isJapan ? 'min_version_ios_japan' : 'min_version_ios';
+  static String get _minVersionAndroidKey => AppConfig.isJapan
+      ? 'min_version_android_japan'
+      : 'min_version_android';
+  static String get _updateUrlIosKey =>
+      AppConfig.isJapan ? 'update_url_ios_japan' : 'update_url_ios';
+  static String get _updateUrlAndroidKey => AppConfig.isJapan
+      ? 'update_url_android_japan'
+      : 'update_url_android';
 
   Future<ForceUpdateInfo?> checkForUpdate() async {
     try {
@@ -37,7 +46,7 @@ class ForceUpdateService {
               kDebugMode ? Duration.zero : const Duration(hours: 6),
         ),
       );
-      await remoteConfig.setDefaults(const {
+      await remoteConfig.setDefaults({
         _minVersionIosKey: '',
         _minVersionAndroidKey: '',
         _updateUrlIosKey: '',

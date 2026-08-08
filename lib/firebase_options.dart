@@ -3,6 +3,7 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:sudoku159/constants/app_config.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -24,9 +25,9 @@ class DefaultFirebaseOptions {
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        return android;
+        return AppConfig.isJapan ? androidJapan : android;
       case TargetPlatform.iOS:
-        return ios;
+        return AppConfig.isJapan ? iosJapan : ios;
       case TargetPlatform.macOS:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for macos - '
@@ -64,5 +65,26 @@ class DefaultFirebaseOptions {
     projectId: 'mysudoku-386bc',
     storageBucket: 'mysudoku-386bc.firebasestorage.app',
     iosBundleId: 'com.hoseung.sudoku159',
+  );
+
+  // japan은 랭킹 데이터를 global과 같은 Firebase 프로젝트(mysudoku-386bc)에서
+  // 공유하기로 함 — 그 프로젝트 안에 com.hoseung.nanpre159 앱을 추가 등록한 뒤
+  // 나오는 값으로 채워야 함. (별도 프로젝트였던 "nanpre159"는 사용 안 함.)
+  // TODO: mysudoku-386bc 프로젝트에 android 앱(com.hoseung.nanpre159) 등록 후 값 채우기.
+  static const FirebaseOptions androidJapan = FirebaseOptions(
+    apiKey: 'TODO_ANDROID_JAPAN_API_KEY',
+    appId: 'TODO_ANDROID_JAPAN_APP_ID',
+    messagingSenderId: 'TODO_ANDROID_JAPAN_SENDER_ID',
+    projectId: 'TODO_ANDROID_JAPAN_PROJECT_ID',
+    storageBucket: 'TODO_ANDROID_JAPAN_STORAGE_BUCKET',
+  );
+
+  static const FirebaseOptions iosJapan = FirebaseOptions(
+    apiKey: 'AIzaSyB0BwUg9KVtUaoSvzb7l0ZxJP88oossqfc',
+    appId: '1:638773305398:ios:4356f7068d4f1853aaf897',
+    messagingSenderId: '638773305398',
+    projectId: 'mysudoku-386bc',
+    storageBucket: 'mysudoku-386bc.firebasestorage.app',
+    iosBundleId: 'com.hoseung.nanpre159',
   );
 }
