@@ -7,6 +7,6 @@ abstract final class AppConfig {
   static bool get isJapan => appFlavor == 'japan';
 
   static String get privacyPolicyUrl => isJapan
-      ? 'https://team929-support.github.io/privacy-policy'
+      ? 'https://team929-support.github.io/nanpre159/privacy-policy'
       : 'https://team929-support.github.io/sudoku159/privacy-policy';
 }
