@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io' show Platform;
+import 'dart:math' as math;
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -30,8 +32,19 @@ const String _prefsLocaleKey = 'app_locale';
 void main() async {
   final binding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: binding);
+  // 아이패드(태블릿 크기의 iOS 기기)에서만 가로 모드 허용, 아이폰은 세로 고정 유지.
+  // 다른 화면들의 isTablet 판단 기준(width > 600)과 동일한 임계값을 방향과
+  // 무관한 shortestSide 기준으로 적용.
+  final view = binding.platformDispatcher.views.first;
+  final logicalSize = view.physicalSize / view.devicePixelRatio;
+  final isTabletDevice = math.min(logicalSize.width, logicalSize.height) > 600;
+  final allowLandscape = Platform.isIOS && isTabletDevice;
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
+    if (allowLandscape) ...[
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ],
   ]);
 
   unawaited(InstallIdService().getOrCreate());
