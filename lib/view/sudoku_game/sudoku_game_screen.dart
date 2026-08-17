@@ -620,9 +620,21 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: _buildAppBar(),
-        body: _buildMobileLayout(),
+        body: _buildBody(),
       ),
     );
+  }
+
+  /// 아이패드 가로 모드일 때만 좌우 분할 레이아웃을 쓰고, 그 외(아이폰 전체,
+  /// 아이패드 세로)는 기존 세로 레이아웃을 그대로 사용.
+  Widget _buildBody() {
+    final mediaQuery = MediaQuery.of(context);
+    final isTabletDevice = mediaQuery.size.shortestSide > 600;
+    final isLandscape = mediaQuery.orientation == Orientation.landscape;
+    if (isTabletDevice && isLandscape) {
+      return _buildLandscapeLayout();
+    }
+    return _buildMobileLayout();
   }
 
   /// 앱바 위젯
@@ -860,7 +872,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                   size: metrics.actionButtonSize,
                                   labelFontSize: metrics.actionLabelFontSize,
                                 ),
-                                _buildMobileHintButton(metrics),
+                                _buildMobileHintButton(
+                                  buttonSize: metrics.actionButtonSize,
+                                  labelFontSize: metrics.actionLabelFontSize,
+                                ),
                                 _buildMobileActionButton(
                                   icon: Icons.backspace_outlined,
                                   label: '',
@@ -896,6 +911,118 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           },
         ),
       ],
+    );
+  }
+
+  /// 아이패드 가로 모드 전용 좌우 분할 레이아웃: 왼쪽 보드, 오른쪽 키패드+액션 버튼.
+  Widget _buildLandscapeLayout() {
+    final mediaQuery = MediaQuery.of(context);
+    final safePadding = mediaQuery.padding;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final metrics = _TabletLandscapeGameLayoutMetrics.fromConstraints(
+          maxWidth: constraints.maxWidth,
+          maxHeight: constraints.maxHeight,
+          bottomSafePadding: math.max(safePadding.bottom, 12.0),
+          horizontalSafePadding: math.max(safePadding.left, safePadding.right),
+        );
+
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            metrics.horizontalPadding,
+            metrics.verticalPadding,
+            metrics.horizontalPadding,
+            metrics.verticalPadding + metrics.bottomSafePadding,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Center(
+                  child: SizedBox(
+                    width: metrics.boardSize,
+                    height: metrics.boardSize,
+                    child: _buildBoardGrid(),
+                  ),
+                ),
+              ),
+              SizedBox(width: metrics.sectionGap),
+              SizedBox(
+                width: metrics.keypadColumnWidth,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    for (int i = 0; i < 3; i++)
+                      Padding(
+                        padding: EdgeInsets.only(
+                          bottom: i < 2 ? metrics.numberButtonGap : 0,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            for (int j = 1; j <= 3; j++)
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: metrics.numberButtonGap / 2,
+                                ),
+                                child: _buildNumberButton(
+                                  i * 3 + j,
+                                  compact: true,
+                                  width: metrics.numberButtonWidth,
+                                  height: metrics.numberButtonHeight,
+                                  borderRadius: metrics.numberButtonRadius,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    SizedBox(height: metrics.compactGap),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildMobileActionButton(
+                          icon: Icons.edit_note,
+                          label: '',
+                          color: _presenter.isMemoMode
+                              ? AppTheme.mintColor
+                              : AppTheme.lightBlueColor,
+                          isActive: _presenter.isMemoMode,
+                          onPressed: _canToggleMemo
+                              ? () {
+                                  setState(() {
+                                    _memoFocusNumber = null;
+                                    _presenter.toggleMemoMode();
+                                  });
+                                }
+                              : null,
+                          compact: true,
+                          size: metrics.actionButtonSize,
+                          labelFontSize: metrics.actionLabelFontSize,
+                        ),
+                        _buildMobileHintButton(
+                          buttonSize: metrics.actionButtonSize,
+                          labelFontSize: metrics.actionLabelFontSize,
+                        ),
+                        _buildMobileActionButton(
+                          icon: Icons.backspace_outlined,
+                          label: '',
+                          color: context.colors.attentionSurface,
+                          onPressed: _canResetCurrentGame
+                              ? _showResetCurrentGameDialog
+                              : null,
+                          compact: true,
+                          size: metrics.actionButtonSize,
+                          labelFontSize: metrics.actionLabelFontSize,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -1186,8 +1313,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     );
   }
 
-  Widget _buildMobileHintButton(_MobileGameLayoutMetrics metrics) {
-    final buttonSize = metrics.actionButtonSize;
+  Widget _buildMobileHintButton({
+    required double buttonSize,
+    required double labelFontSize,
+  }) {
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -1207,7 +1336,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
               : null,
           compact: true,
           size: buttonSize,
-          labelFontSize: metrics.actionLabelFontSize,
+          labelFontSize: labelFontSize,
         ),
         Positioned(
           top: -2,
@@ -1474,6 +1603,106 @@ class _MobileGameLayoutMetrics {
       actionLabelFontSize: actionLabelFontSize,
       scrollBottomPadding:
           isIPhoneSELayout ? bottomSafePadding : bottomSafePadding + 4,
+    );
+  }
+
+  static double _clamp(double value, double min, double max) {
+    return math.max(min, math.min(value, max));
+  }
+}
+
+/// 아이패드 가로 모드(좌: 보드 / 우: 키패드) 전용 레이아웃 치수 계산.
+class _TabletLandscapeGameLayoutMetrics {
+  const _TabletLandscapeGameLayoutMetrics({
+    required this.horizontalPadding,
+    required this.verticalPadding,
+    required this.sectionGap,
+    required this.compactGap,
+    required this.boardSize,
+    required this.keypadColumnWidth,
+    required this.numberButtonWidth,
+    required this.numberButtonHeight,
+    required this.numberButtonRadius,
+    required this.numberButtonGap,
+    required this.actionButtonSize,
+    required this.actionLabelFontSize,
+    required this.bottomSafePadding,
+  });
+
+  final double horizontalPadding;
+  final double verticalPadding;
+  final double sectionGap;
+  final double compactGap;
+  final double boardSize;
+  final double keypadColumnWidth;
+  final double numberButtonWidth;
+  final double numberButtonHeight;
+  final double numberButtonRadius;
+  final double numberButtonGap;
+  final double actionButtonSize;
+  final double actionLabelFontSize;
+  final double bottomSafePadding;
+
+  factory _TabletLandscapeGameLayoutMetrics.fromConstraints({
+    required double maxWidth,
+    required double maxHeight,
+    required double bottomSafePadding,
+    required double horizontalSafePadding,
+  }) {
+    final horizontalPadding =
+        _clamp(maxWidth * 0.02, 16, 28) + horizontalSafePadding;
+    final verticalPadding = _clamp(maxHeight * 0.02, 10, 20);
+    final sectionGap = _clamp(maxWidth * 0.02, 16, 32);
+    final contentHeight = math.max(maxHeight - (verticalPadding * 2), 300.0);
+
+    // 키패드 패널 폭: 전체 폭의 일부를 고정 비율로 확보.
+    final keypadColumnWidth = _clamp(maxWidth * 0.30, 240, 340);
+
+    final boardAreaWidth = math.max(
+      maxWidth - keypadColumnWidth - sectionGap - (horizontalPadding * 2),
+      240.0,
+    );
+    final boardSize = _clamp(math.min(boardAreaWidth, contentHeight), 300, 680);
+
+    const numberButtonGap = 8.0;
+    final numberButtonWidth = _clamp(
+      (keypadColumnWidth - numberButtonGap * 2) / 3,
+      64,
+      128,
+    );
+    final numberButtonRadius = _clamp(numberButtonWidth * 0.22, 14, 26);
+    final compactGap = _clamp(maxHeight * 0.015, 8, 18);
+
+    var numberButtonHeight = _clamp(numberButtonWidth * 0.78, 52, 104);
+    var actionButtonSize = _clamp(numberButtonWidth * 0.72, 48, 84);
+
+    // 오버플로우 방지: 숫자 패드 3행 + 액션 버튼 행이 사용 가능한 높이를 넘으면 축소.
+    final estimatedBlockHeight = (numberButtonHeight * 3) +
+        (numberButtonGap * 2) +
+        compactGap +
+        actionButtonSize;
+    if (estimatedBlockHeight > contentHeight) {
+      final scale = contentHeight / estimatedBlockHeight;
+      numberButtonHeight = math.max(numberButtonHeight * scale, 44.0);
+      actionButtonSize = math.max(actionButtonSize * scale, 40.0);
+    }
+
+    final actionLabelFontSize = actionButtonSize <= 56 ? 8.0 : 9.0;
+
+    return _TabletLandscapeGameLayoutMetrics(
+      horizontalPadding: horizontalPadding,
+      verticalPadding: verticalPadding,
+      sectionGap: sectionGap,
+      compactGap: compactGap,
+      boardSize: boardSize,
+      keypadColumnWidth: keypadColumnWidth,
+      numberButtonWidth: numberButtonWidth,
+      numberButtonHeight: numberButtonHeight,
+      numberButtonRadius: numberButtonRadius,
+      numberButtonGap: numberButtonGap,
+      actionButtonSize: actionButtonSize,
+      actionLabelFontSize: actionLabelFontSize,
+      bottomSafePadding: bottomSafePadding,
     );
   }
 

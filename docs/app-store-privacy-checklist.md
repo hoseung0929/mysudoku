@@ -1,6 +1,7 @@
 # App Store Connect 개인정보 라벨(App Privacy) 체크리스트
 
-Sudoku159는 외부 서버 없이 전부 로컬 저장이며, `SUDOKU_API_BASE_URL`이 설정되지 않은 기본 배포 빌드에서는 앱 밖으로 나가는 데이터가 없습니다. App Store Connect > App Privacy 설문에서 아래와 같이 체크하면 실제 동작과 일치합니다.
+Sudoku159는 외부 서버 없이 전부 로컬 저장이며, `SUDOKU_API_BASE_URL`이 설정되지 않은 기본 배포 빌드에서는 앱 밖으로 나가는 데이터가 없습니다. 
+App Store Connect > App Privacy 설문에서 아래와 같이 체크하면 실제 동작과 일치합니다.
 
 ## 1. 데이터 수집 여부
 
