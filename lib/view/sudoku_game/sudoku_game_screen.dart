@@ -1665,8 +1665,11 @@ class _TabletLandscapeGameLayoutMetrics {
     final boardSize = _clamp(math.min(boardAreaWidth, contentHeight), 300, 680);
 
     const numberButtonGap = 8.0;
+    // 각 버튼이 Padding(horizontal: numberButtonGap / 2)을 개별로 두르고 있어
+    // 양 끝 버튼 바깥쪽에도 gap이 생기므로, 실제로 소모되는 간격은 2개가 아니라
+    // 버튼 개수(3)만큼이다. 간격을 2개로 잘못 가정하면 항상 8px 오버플로우한다.
     final numberButtonWidth = _clamp(
-      (keypadColumnWidth - numberButtonGap * 2) / 3,
+      (keypadColumnWidth - numberButtonGap * 3) / 3,
       64,
       128,
     );

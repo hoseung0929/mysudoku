@@ -360,8 +360,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final mediaQuery = MediaQuery.of(context);
+    final screenWidth = mediaQuery.size.width;
     final isTablet = screenWidth > 600;
+    final isLandscape = mediaQuery.orientation == Orientation.landscape;
 
     final topInset = MediaQuery.paddingOf(context).top;
 
@@ -391,7 +393,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 top: false,
                 bottom: false,
                 child: isTablet
-                    ? _buildTabletLayout(topInset)
+                    ? _buildTabletLayout(topInset, isLandscape: isLandscape)
                     : _buildMobileLayout(topInset),
               ),
               if (_showCatalogIntro) _buildCatalogIntroOverlay(),
@@ -403,7 +405,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   /// 태블릿 레이아웃
-  Widget _buildTabletLayout(double topInset) {
+  Widget _buildTabletLayout(double topInset, {bool isLandscape = false}) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
     return Stack(
       clipBehavior: Clip.none,
@@ -422,7 +424,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 _buildHomeHero(isTablet: true),
                 const SizedBox(height: 20),
-                _buildLevelExplorer(isTablet: true),
+                _buildLevelExplorer(isTablet: true, isLandscape: isLandscape),
               ],
             ),
           ),
@@ -858,15 +860,37 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Widget _buildLevelExplorer({bool isTablet = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: List.generate(4, (index) {
-        return Padding(
-          padding: EdgeInsets.only(bottom: index == 3 ? 0 : 12),
-          child: _buildLevelCard(index, isTablet: isTablet),
+  Widget _buildLevelExplorer({bool isTablet = false, bool isLandscape = false}) {
+    if (!isLandscape) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: List.generate(4, (index) {
+          return Padding(
+            padding: EdgeInsets.only(bottom: index == 3 ? 0 : 12),
+            child: _buildLevelCard(index, isTablet: isTablet),
+          );
+        }),
+      );
+    }
+
+    // 아이패드 가로 모드: 카드가 폭 전체로 늘어나 속 빈 느낌이 나던 걸
+    // 2열로 바꿔서 가로 공간을 활용.
+    const columnGap = 16.0;
+    const rowGap = 12.0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardWidth = (constraints.maxWidth - columnGap) / 2;
+        return Wrap(
+          spacing: columnGap,
+          runSpacing: rowGap,
+          children: List.generate(4, (index) {
+            return SizedBox(
+              width: cardWidth,
+              child: _buildLevelCard(index, isTablet: isTablet),
+            );
+          }),
         );
-      }),
+      },
     );
   }
 

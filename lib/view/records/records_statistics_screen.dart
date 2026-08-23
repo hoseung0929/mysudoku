@@ -210,6 +210,16 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       if (minutes > 0) return '$minutes分 $secs秒';
       return '$secs秒';
     }
+    if (languageCode == 'zh') {
+      if (hours > 0) return '$hours小时 $minutes分 $secs秒';
+      if (minutes > 0) return '$minutes分 $secs秒';
+      return '$secs秒';
+    }
+    if (languageCode == 'es') {
+      if (hours > 0) return '${hours}h ${minutes}min ${secs}s';
+      if (minutes > 0) return '${minutes}min ${secs}s';
+      return '${secs}s';
+    }
     if (hours > 0) return '${hours}h ${minutes}m ${secs}s';
     if (minutes > 0) return '${minutes}m ${secs}s';
     return '${secs}s';
@@ -526,6 +536,14 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       const labels = ['月', '火', '水', '木', '金', '土', '日'];
       return labels[date.weekday - 1];
     }
+    if (languageCode == 'zh') {
+      const labels = ['一', '二', '三', '四', '五', '六', '日'];
+      return labels[date.weekday - 1];
+    }
+    if (languageCode == 'es') {
+      const labels = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+      return labels[date.weekday - 1];
+    }
     const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
     return labels[date.weekday - 1];
   }
@@ -673,129 +691,151 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         (activityHeatmap['month_labels'] as List<dynamic>? ?? const <dynamic>[])
             .cast<Map<String, dynamic>>();
     final isTablet = MediaQuery.of(context).size.width > 600;
-    final gap = isTablet ? 5.0 : 4.0;
-    final cellSize = isTablet ? 20.0 : 16.0;
-    final totalWidth = weeks.isEmpty
-        ? 0.0
-        : (weeks.length * cellSize) + ((weeks.length - 1) * gap);
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+    final baseGap = isTablet ? 5.0 : 4.0;
+    final baseCellSize = isTablet ? 20.0 : 16.0;
+    final dayLabelWidth = isTablet ? 17.0 : 14.0;
 
     final dayLabels = _heatmapDayLabels(); // 월/수/금 (index 0,2,4)
 
-    // 요일 레이블 컬럼 (스크롤 밖 고정)
-    Widget dayLabelColumn = Padding(
-      padding: EdgeInsets.only(right: gap),
-      child: Column(
-        children: List.generate(7, (i) {
-          final label = (i == 0 || i == 2 || i == 4) ? dayLabels[i] : '';
-          return Padding(
-            padding: EdgeInsets.only(bottom: i < 6 ? gap : 0),
-            child: SizedBox(
-              width: isTablet ? 17 : 14,
-              height: cellSize,
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: isTablet ? 11 : 9,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurfaceVariant
-                      .withValues(alpha: 0.7),
-                  height: 1,
-                ),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 아이패드 가로 모드에서는 남는 폭만큼 셀을 키워서 히트맵이 꽉 차 보이게 함
+        // (세로/아이폰은 기존 고정 셀 크기 그대로).
+        var gap = baseGap;
+        var cellSize = baseCellSize;
+        if (isLandscape && weeks.isNotEmpty && constraints.maxWidth.isFinite) {
+          final availableWidth =
+              constraints.maxWidth - dayLabelWidth - baseGap;
+          final filledCellSize =
+              (availableWidth - (weeks.length - 1) * gap) / weeks.length;
+          cellSize = filledCellSize.clamp(baseCellSize, 30.0);
+        }
+        final totalWidth = weeks.isEmpty
+            ? 0.0
+            : (weeks.length * cellSize) + ((weeks.length - 1) * gap);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+        // 고정 요일 레이블 (스크롤 밖)
+        final dayLabelColumn = Padding(
+          padding: EdgeInsets.only(right: gap),
+          child: Column(
+            children: List.generate(7, (i) {
+              final label = (i == 0 || i == 2 || i == 4) ? dayLabels[i] : '';
+              return Padding(
+                padding: EdgeInsets.only(bottom: i < 6 ? gap : 0),
+                child: SizedBox(
+                  width: dayLabelWidth,
+                  height: cellSize,
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: isTablet ? 11 : 9,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurfaceVariant
+                          .withValues(alpha: 0.7),
+                      height: 1,
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        );
+
+        return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 고정 요일 레이블 (스크롤 안 됨)
-            dayLabelColumn,
-            // 스크롤 가능한 히트맵 그리드
-            Expanded(
-              child: SingleChildScrollView(
-                controller: _heatmapScrollController,
-                scrollDirection: Axis.horizontal,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 고정 요일 레이블 (스크롤 안 됨)
+                dayLabelColumn,
+                // 스크롤 가능한 히트맵 그리드
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: _heatmapScrollController,
+                    scrollDirection: Axis.horizontal,
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        for (int weekIndex = 0;
-                            weekIndex < weeks.length;
-                            weekIndex++)
-                          Padding(
-                            padding: EdgeInsets.only(
-                              right: weekIndex == weeks.length - 1 ? 0 : gap,
-                            ),
-                            child: Column(
-                              children: [
-                                for (int dayIndex = 0;
-                                    dayIndex < weeks[weekIndex].length;
-                                    dayIndex++) ...[
-                                  _buildHeatmapCell(
-                                    l10n,
-                                    weeks[weekIndex][dayIndex],
-                                    size: cellSize,
-                                  ),
-                                  if (dayIndex != weeks[weekIndex].length - 1)
-                                    SizedBox(
-                                        height:
-                                            gap), // ignore: prefer_const_constructors
-                                ],
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                    SizedBox(height: isTablet ? 13 : 10),
-                    SizedBox(
-                      width: totalWidth,
-                      height: isTablet ? 22 : 18,
-                      child: Stack(
-                        children: [
-                          for (final label in _spacedMonthLabels(monthLabels))
-                            Positioned(
-                              left: (label['week_index'] as int) *
-                                  (cellSize + gap),
-                              child: Text(
-                                _formatHeatmapMonthLabel(
-                                    label['date'] as DateTime),
-                                style: TextStyle(
-                                  fontSize: isTablet ? 13.5 : 11.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            for (int weekIndex = 0;
+                                weekIndex < weeks.length;
+                                weekIndex++)
+                              Padding(
+                                padding: EdgeInsets.only(
+                                  right:
+                                      weekIndex == weeks.length - 1 ? 0 : gap,
+                                ),
+                                child: Column(
+                                  children: [
+                                    for (int dayIndex = 0;
+                                        dayIndex < weeks[weekIndex].length;
+                                        dayIndex++) ...[
+                                      _buildHeatmapCell(
+                                        l10n,
+                                        weeks[weekIndex][dayIndex],
+                                        size: cellSize,
+                                      ),
+                                      if (dayIndex !=
+                                          weeks[weekIndex].length - 1)
+                                        SizedBox(
+                                            height:
+                                                gap), // ignore: prefer_const_constructors
+                                    ],
+                                  ],
                                 ),
                               ),
-                            ),
-                        ],
-                      ),
+                          ],
+                        ),
+                        SizedBox(height: isTablet ? 13 : 10),
+                        SizedBox(
+                          width: totalWidth,
+                          height: isTablet ? 22 : 18,
+                          child: Stack(
+                            children: [
+                              for (final label
+                                  in _spacedMonthLabels(monthLabels))
+                                Positioned(
+                                  left: (label['week_index'] as int) *
+                                      (cellSize + gap),
+                                  child: Text(
+                                    _formatHeatmapMonthLabel(
+                                        label['date'] as DateTime),
+                                    style: TextStyle(
+                                      fontSize: isTablet ? 13.5 : 11.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
+              ],
+            ),
+            SizedBox(height: isTablet ? 13 : 10),
+            Text(
+              l10n.recordsActivityHeatmapCaption,
+              style: TextStyle(
+                fontSize: isTablet ? 13.5 : 11.5,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                height: 1.35,
               ),
             ),
           ],
-        ),
-        SizedBox(height: isTablet ? 13 : 10),
-        Text(
-          l10n.recordsActivityHeatmapCaption,
-          style: TextStyle(
-            fontSize: isTablet ? 13.5 : 11.5,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            height: 1.35,
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -869,6 +909,12 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     if (languageCode == 'ja') {
       return ['月', '火', '水', '木', '金', '土', '日'];
     }
+    if (languageCode == 'zh') {
+      return ['一', '二', '三', '四', '五', '六', '日'];
+    }
+    if (languageCode == 'es') {
+      return ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+    }
     return ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   }
 
@@ -891,6 +937,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     final languageCode = Localizations.localeOf(context).languageCode;
     if (languageCode == 'ko') return '${date.month}월';
     if (languageCode == 'ja') return '${date.month}月';
+    if (languageCode == 'zh') return '${date.month}月';
     return DateFormat.MMM(Localizations.localeOf(context).toString())
         .format(date);
   }
