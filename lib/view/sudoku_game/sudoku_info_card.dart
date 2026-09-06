@@ -19,31 +19,37 @@ class SudokuInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final Color bg =
-        accentColor?.withValues(alpha: 0.18) ?? cs.surfaceContainerHigh;
-    final Color fg = accentColor ?? cs.onSurface;
+    // 배경/라벨은 중립 톤으로 차분하게 두고, 아이콘·값에만 포인트 색을 준다
+    // (카드 여러 개가 나란히 있을 때 퍼즐 보드보다 시각적으로 튀지 않도록).
     final Color ic = accentColor ?? cs.onSurfaceVariant;
+    final Color valueColor = accentColor ?? cs.onSurface;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: bg,
+        color: cs.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: accentColor?.withValues(alpha: 0.28) ?? cs.outlineVariant,
-        ),
+        border: Border.all(color: cs.outlineVariant),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 16, color: ic),
           const SizedBox(width: 6),
           Text(
-            '$label: $value',
+            label,
             style: GoogleFonts.notoSans(
               fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: fg,
+              fontWeight: FontWeight.w500,
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            value,
+            style: GoogleFonts.notoSans(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: valueColor,
             ),
           ),
         ],

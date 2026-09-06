@@ -1031,11 +1031,13 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   /// 가로 모드 키패드 칼럼 상단에 붙는 현재 게임 상태 요약 카드들.
   /// (SudokuInfoCard는 기존에 만들어져 있었지만 실제로는 아무 화면에서도
   /// 안 쓰이고 있던 위젯이라 여기서 처음 활용한다.)
+  ///
+  /// 힌트/완성한 줄 카드는 디자인 검토 후 뺐다: 힌트는 바로 아래 힌트 버튼의
+  /// 뱃지와 정보가 겹치고(공유 컴포넌트인 버튼 쪽은 그대로 둠), 완성한 줄은
+  /// 27이라는 분모가 직관적이지 않고 진행률%와 개념이 겹쳐서 뺐다.
   Widget _buildLandscapeStatsPanel() {
     final maxWrongCount = _featurePolicy.maxWrongCount;
-    final maxHints = _featurePolicy.maxHints;
     final wrongCount = _presenter.wrongCount;
-    final hintsRemaining = _presenter.hintsRemaining;
 
     int filledCount = 0;
     for (int row = 0; row < 9; row++) {
@@ -1049,7 +1051,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     final progressPercent = widget.level.emptyCells == 0
         ? 0
         : ((playerFilledCount / widget.level.emptyCells) * 100).round();
-    final completedUnitCount = _computeCompletedUnitIds().length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1062,26 +1063,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         ),
         const SizedBox(height: 10),
         SudokuInfoCard(
-          '힌트',
-          '$hintsRemaining/$maxHints',
-          Icons.lightbulb_outline,
-          // AppTheme.hintYellowColor는 보드 안 힌트 숫자용 연한 틴트라 카드
-          // 텍스트로 쓰기엔 대비가 너무 약해서, 여기서만 별도 색을 씀.
-          accentColor: Colors.amber.shade800,
-        ),
-        const SizedBox(height: 10),
-        SudokuInfoCard(
           '진행률',
           '$progressPercent%',
           Icons.donut_large_rounded,
           accentColor: AppTheme.statisticsAccent,
-        ),
-        const SizedBox(height: 10),
-        SudokuInfoCard(
-          '완성한 줄',
-          '$completedUnitCount/27',
-          Icons.grid_view_rounded,
-          accentColor: AppTheme.mintColor,
         ),
       ],
     );
