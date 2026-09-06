@@ -224,9 +224,10 @@ class SudokuGamePresenter {
     final hours = totalSeconds ~/ 3600;
     final minutes = (totalSeconds % 3600) ~/ 60;
     final seconds = totalSeconds % 60;
-    return '${hours.toString().padLeft(2, '0')}:'
-        '${minutes.toString().padLeft(2, '0')}:'
-        '${seconds.toString().padLeft(2, '0')}';
+    final mm = minutes.toString().padLeft(2, '0');
+    final ss = seconds.toString().padLeft(2, '0');
+    // 1시간 미만이면 불필요한 "00:" 시간 자리를 표시하지 않는다.
+    return hours > 0 ? '$hours:$mm:$ss' : '$mm:$ss';
   }
 
   /// 게임 재시작 (현재 게임을 다시 시작)

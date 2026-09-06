@@ -223,9 +223,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     final hours = totalSeconds ~/ 3600;
     final minutes = (totalSeconds % 3600) ~/ 60;
     final seconds = totalSeconds % 60;
-    return '${hours.toString().padLeft(2, '0')}:'
-        '${minutes.toString().padLeft(2, '0')}:'
-        '${seconds.toString().padLeft(2, '0')}';
+    final mm = minutes.toString().padLeft(2, '0');
+    final ss = seconds.toString().padLeft(2, '0');
+    // 1시간 미만이면 불필요한 "00:" 시간 자리를 표시하지 않는다.
+    return hours > 0 ? '$hours:$mm:$ss' : '$mm:$ss';
   }
 
   Future<void> _popAfterSaving() async {
@@ -915,6 +916,16 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     );
   }
 
+  // ─── 아이패드 가로 모드 우측 패널 튜닝 상수 ─────────────────────────────
+  // 통계 카드 블록과 키패드 블록 사이 여백을 위(edge)/가운데(mid)/아래(edge)
+  // 세 구간의 Flex 비율로 나눈다. mid : (edge*2+mid) = 6:8 = 75% → 기존
+  // 대비 가운데 gap이 25% 줄고, 위아래에 살짝씩 여백이 생겨 두 블록이
+  // 화면 맨 위/맨 아래에 붙지 않고 세로로 균형 잡혀 보인다.
+  static const int _kLandscapeEdgeSpacerFlex = 1;
+  static const int _kLandscapeMidSpacerFlex = 6;
+  // 숫자패드와 메모/힌트/삭제 버튼 행 사이 간격에 더하는 여유분.
+  static const double _kLandscapeKeypadActionGapBonus = 10.0;
+
   /// 아이패드 가로 모드 전용 좌우 분할 레이아웃: 왼쪽 보드, 오른쪽 키패드+액션 버튼.
   Widget _buildLandscapeLayout() {
     final mediaQuery = MediaQuery.of(context);
@@ -952,8 +963,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                 width: metrics.keypadColumnWidth,
                 child: Column(
                   children: [
+                    const Spacer(flex: _kLandscapeEdgeSpacerFlex),
                     _buildLandscapeStatsPanel(),
-                    const Spacer(),
+                    const Spacer(flex: _kLandscapeMidSpacerFlex),
                     for (int i = 0; i < 3; i++)
                       Padding(
                         padding: EdgeInsets.only(
@@ -973,12 +985,16 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                   width: metrics.numberButtonWidth,
                                   height: metrics.numberButtonHeight,
                                   borderRadius: metrics.numberButtonRadius,
+                                  largeBadge: true,
                                 ),
                               ),
                           ],
                         ),
                       ),
-                    SizedBox(height: metrics.compactGap),
+                    SizedBox(
+                      height:
+                          metrics.compactGap + _kLandscapeKeypadActionGapBonus,
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -989,6 +1005,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                               ? AppTheme.mintColor
                               : AppTheme.lightBlueColor,
                           isActive: _presenter.isMemoMode,
+                          emphasizeActiveIcon: true,
                           onPressed: _canToggleMemo
                               ? () {
                                   setState(() {
@@ -1018,6 +1035,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                         ),
                       ],
                     ),
+                    const Spacer(flex: _kLandscapeEdgeSpacerFlex),
                   ],
                 ),
               ),
@@ -1059,14 +1077,17 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           '오답',
           '$wrongCount/$maxWrongCount',
           Icons.close_rounded,
-          accentColor: AppTheme.pinkColor,
+          // 오답 0개일 때까지 경고색으로 보이지 않도록 accentColor를 안 주고
+          // 중립 톤(위젯 기본값)으로 떨어뜨림. 1개 이상부터만 경고색 적용.
+          accentColor: wrongCount > 0 ? AppTheme.pinkColor : null,
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         SudokuInfoCard(
           '진행률',
           '$progressPercent%',
           Icons.donut_large_rounded,
           accentColor: AppTheme.statisticsAccent,
+          progressValue: progressPercent / 100,
         ),
       ],
     );
@@ -1143,6 +1164,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     double? width,
     double? height,
     double? borderRadius,
+    // 아이패드 가로 모드 전용 옵션(호출부에서만 true로 넘김) — 이 버튼은
+    // 폰 레이아웃과 공유하는 컴포넌트라, 폰 쪽 크기에는 영향이 없도록
+    // 기본값 false로 두고 랜드스케이프 호출부에서만 켠다.
+    bool largeBadge = false,
   }) {
     const buttonColor = AppTheme.lightBlueColor;
     final remainingCount = _remainingCountForNumber(number);
@@ -1154,8 +1179,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     final digitFontSize =
         isCompactSmallButton ? (height * 0.58).clamp(28.0, 34.0) : 38.0;
     const digitAlignment = Alignment.center;
-    final badgeInset = isCompactSmallButton ? 7.0 : 10.0;
-    final badgeSize = isCompactSmallButton ? 22.0 : 24.0;
+    final badgeScale = largeBadge ? 1.25 : 1.0;
+    final badgeInset = (isCompactSmallButton ? 7.0 : 10.0) + (largeBadge ? 2 : 0);
+    final badgeSize = (isCompactSmallButton ? 22.0 : 24.0) * badgeScale;
     final effectiveBackgroundColor = isCompletedNumber
         ? (isDark ? const Color(0xFF232323) : context.colors.surfaceSubtle)
         : isSelectedNumber
@@ -1235,7 +1261,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
               child: isCompletedNumber
                   ? Icon(
                       Icons.check_rounded,
-                      size: compact ? 16 : 18,
+                      size: (compact ? 16 : 18) * badgeScale,
                       color: isDark
                           ? const Color(0xFF5A8A70)
                           : AppTheme.lightBlueColor,
@@ -1244,7 +1270,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                       '$remainingCount',
                       style: GoogleFonts.notoSans(
                         fontSize:
-                            isCompactSmallButton ? 9 : (compact ? 10 : 11),
+                            (isCompactSmallButton ? 9 : (compact ? 10 : 11)) *
+                                badgeScale,
                         fontWeight: FontWeight.w800,
                         color: isDark
                             ? context.colors.textSecondary
@@ -1311,6 +1338,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     bool compact = false,
     double? size,
     double? labelFontSize,
+    // 아이패드 가로 모드 전용 옵션(호출부에서만 true로 넘김) — true면 활성
+    // 상태일 때 아이콘 색도 포인트 컬러(color)로 바꿔서 on/off를 더 뚜렷하게
+    // 보여준다. 폰 레이아웃 호출부는 그대로 둬서 기존 모습이 안 바뀐다.
+    bool emphasizeActiveIcon = false,
   }) {
     final buttonSize =
         size ?? (compact ? 52.0 : (_oneHandModeEnabled ? 62.0 : 70.0));
@@ -1334,7 +1365,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
             final isDark = Theme.of(context).brightness == Brightness.dark;
             final contentColor = (isActive && isDark)
                 ? const Color(0xFF6DCCA0)
-                : Theme.of(context).colorScheme.onSurface;
+                : (isActive && emphasizeActiveIcon)
+                    ? color
+                    : Theme.of(context).colorScheme.onSurface;
             return Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -1711,11 +1744,16 @@ class _TabletLandscapeGameLayoutMetrics {
     final boardSize = _clamp(math.min(boardAreaWidth, contentHeight), 300, 680);
 
     const numberButtonGap = 8.0;
+    // 태블릿 가로 모드에서 숫자패드가 다소 커 보인다는 피드백에 따라
+    // 8% 축소(밀도 개선). 버튼 사이 gap/keypadColumnWidth는 그대로 두고
+    // 버튼 자체만 살짝 줄이므로, 남는 폭은 각 행이 가운데 정렬되며
+    // 자연스러운 여백으로 흡수된다 — 오버플로우 쪽으로는 절대 안 커짐.
+    const numberPadDensityFactor = 0.92;
     // 각 버튼이 Padding(horizontal: numberButtonGap / 2)을 개별로 두르고 있어
     // 양 끝 버튼 바깥쪽에도 gap이 생기므로, 실제로 소모되는 간격은 2개가 아니라
     // 버튼 개수(3)만큼이다. 간격을 2개로 잘못 가정하면 항상 8px 오버플로우한다.
     final numberButtonWidth = _clamp(
-      (keypadColumnWidth - numberButtonGap * 3) / 3,
+      (keypadColumnWidth - numberButtonGap * 3) / 3 * numberPadDensityFactor,
       64,
       128,
     );
