@@ -11,7 +11,8 @@
   - **홈 화면 레벨 카드 2열 배치 구현 완료** (2026-08-24, `home_screen.dart`) — `_buildLevelExplorer`에 `isLandscape` 분기 추가, 가로일 때만 `LayoutBuilder`로 가용폭을 2등분해 `Wrap`으로 2열 배치(세로/아이폰 경로는 코드 그대로 유지). `cardWidth`를 가용폭에서 직접 역산하고 `Wrap`을 쓰기 때문에 구조적으로 오버플로우 불가능(게임 화면 버그처럼 간격 개수를 잘못 가정할 여지가 없음).
   - **통계 화면 활동 히트맵 가로 확장 구현 완료** (2026-08-24, `records_statistics_screen.dart`) — 가로일 때 `cellSize`를 가용폭에서 역산해 히트맵이 폭을 꽉 채우도록 함(세로/아이폰은 기존 고정 셀 크기 그대로). 히트맵 grid 자체가 `SingleChildScrollView`(가로 스크롤) 안에 있어 계산이 어긋나도 오버플로우 에러 없이 스크롤로 흡수됨.
   - **이 세션의 시뮬레이터로는 가로 모드 육안 검증이 신뢰 불가** — 하드웨어 회전 시 화면 전체가 이상하게 회전/축소돼 보이는 문제가 두 iPad 시뮬레이터·재부팅 후에도 반복 재현됨(게임 화면 코드가 없는 홈 화면에서도 재현되어 앱 버그가 아니라 환경 문제로 판단). 홈/통계 화면 변경은 육안 대신 "가용폭에서 직접 역산 + 오버플로우 불가능한 위젯(Wrap/스크롤뷰) 사용"으로 구조적 안전성을 확보하는 방식으로 검증. 다음에 여유 있으면 게임 화면처럼 랜드스케이프 위젯 테스트를 홈/통계 화면에도 추가하는 게 좋음(현재는 서비스 의존성이 많아 테스트 harness 구성에 시간이 더 필요해 보류).
-  - 아이패드 시뮬레이터 검증 시 `TARGETED_DEVICE_FAMILY`를 로컬에서만 `1,2`로 임시 변경 후 반드시 `1`로 복원(완료 확인함). 자세한 원칙은 [tablet-ui-guidelines.md](tablet-ui-guidelines.md) 참고.
+  - **게임 화면 가로 모드 우측 패널 재구성 완료** (2026-09-06, `sudoku_game_screen.dart`) — 보드는 그대로 두고, 숫자패드+액션 버튼을 우측 칼럼 하단으로 내리고 그 위 여백에 현재 게임 상태 요약 카드 4개(오답/힌트/진행률/완성한 줄)를 추가. 기존에 있었지만 실제로는 아무 화면에서도 안 쓰이던 `SudokuInfoCard` 위젯을 여기서 처음 활용. `Row`를 `crossAxisAlignment.stretch`로 바꾸고 키패드 칼럼 내부에 `Spacer()`를 넣어 구현 — 보드 쪽엔 영향 없음. 위젯 테스트 2개(좁은 폭 케이스 + 가장 낮은 태블릿 높이 케이스) 모두 통과, 시각 확인도 완료(힌트 카드가 `AppTheme.hintYellowColor`를 써서 텍스트가 거의 안 보이던 대비 문제 발견 → `Colors.amber.shade800`으로 수정).
+  - **주의**: `TARGETED_DEVICE_FAMILY`를 검증 후 반드시 `1`로 복원해야 하는데, 2026-08-24 세션에서 "완료 확인함"이라고 적어놓고 실제로는 `"1,2"`로 남아있던 걸 2026-09-06 세션 시작 시 뒤늦게 발견함 — 이번엔 복원 확인함(`git diff`로 재검증). 세션 종료 전 매번 직접 `git diff -- ios/Runner.xcodeproj/project.pbxproj`로 재확인할 것. 자세한 원칙은 [tablet-ui-guidelines.md](tablet-ui-guidelines.md) 참고.
   - **남은 화면**: 레벨 선택(`level_picker_screen.dart`, 이미 폭 기반 컬럼 수 분기가 있어 landscape에서도 자연스러울 가능성 높음 — 확인 필요), 챌린지/설정/저장된 게임/업적 화면은 아직 가로 전용 검토 안 됨.
 
 ## 대기 중
@@ -22,7 +23,7 @@
 
 - **알림 하드코딩(설정 UI 없이 내부적으로 항상 ON)** — 2026-08-17에 설정 화면 토글 UI로 한 차례 구현했으나(챌린지 리마인더/스트릭 리마인더 토글 + 시간 선택), 방향을 바꿔 **UI 없이 내부적으로 하드코딩**하기로 결정 → `settings_screen.dart`에 추가했던 UI는 되돌림(원상 복구 완료).
   - **게임 완료 알림 / 주간 목표 달성 알림은 소스 자체를 제거함** — 완료 시점엔 이미 인앱 다이얼로그로 같은 정보를 보여주고 있어 시스템 알림이 중복이라고 판단 (`notification_service.dart`, `app_settings_service.dart`, `settings_controller.dart`, `game_completion_coordinator.dart`에서 관련 코드 전부 삭제).
-  - **챌린지 리마인더 + 스트릭 리마인더는 알림 1개로 통합** — 예전엔 스트릭 있는 사용자에게 두 알림이 1시간 간격으로 중복 발송됐음. 지금은 `syncReminders()`가 스트릭 유무에 따라 문구만 바꿔서 알림 1개만 예약하도록 수정 완료 (`_streakReminderId`/`_shiftedTime` 제거).
+  - **챌린지 리마인더 + 스트릭 리마인더 통합 후, 하루 3회(아침 9시·점심 1시·저녁 8시) 리마인드로 재설계** — 처음엔 "알림 1개로 통합"했었지만, 이후 `_reminderSlots`(아침/점심/저녁 3개 슬롯)로 다시 바꿔서 오늘 퍼즐을 하나도 안 깼으면 하루 세 번 리마인드하도록 최종 확정(2026-08-24). `syncReminders()` 호출 시 오늘 이미 클리어했으면(`lastClearDate == 오늘`) 전부 취소, 아니면 스트릭 유무에 따라 문구만 바꿔 3개 슬롯 전부 재예약 (`_streakReminderId`/`_shiftedTime` 제거, `_morningReminderId`/`_noonReminderId`/`_eveningReminderId`로 대체).
   - **알림 권한 요청 + 자동 재동기화 하드코딩 완료** — 설정 UI 토글을 되돌리면서 권한 요청 호출부(`requestNotificationPermissions()`)도 같이 사라졌던 걸 발견 → `main.dart`의 `_bootstrapNotificationState()`에서 `initialize()` 직후 `requestPermissions()`를 직접 호출하도록 복구. iOS/Android 모두 사용자가 이미 응답한 뒤엔 재호출해도 시스템 프롬프트가 다시 뜨지 않으므로 별도 "최초 1회" 플래그 없이 매 실행마다 호출.
   - **알림 발송 조건도 "오늘의 챌린지 클리어"에서 "오늘 아무 퍼즐이나 1판 클리어"로 변경** — 챌린지 탭의 "시작하기" 버튼이 실제로는 `MyPaceService`(이어하기/진행순서 로직)로 열려서 오늘의 챌린지 타깃과 다른 퍼즐을 여는 경우가 많다는 걸 확인, 알림 조건을 실제 동작에 맞게 단순화. `syncReminders()`도 이제 `isTodayChallenge` 여부와 무관하게 매 클리어마다 재동기화됨 (`notification_service.dart`, `game_completion_coordinator.dart`).
   - 남은 이슈: 챌린지 탭 "시작하기" 버튼이 여전히 화면에 표시된 오늘의 챌린지 타깃과 다른 퍼즐을 열어주는 라벨-동작 불일치는 미해결 (별도 작업 필요). 이번 알림 관련 변경이 출시되는 다음 업데이트의 App Store 심사 노트에 반영할 것.
@@ -54,4 +55,4 @@
 - [ARCHITECTURE.md](../ARCHITECTURE.md) — 아키텍처 문서
 
 ---
-마지막 갱신: 2026-08-23
+마지막 갱신: 2026-09-06

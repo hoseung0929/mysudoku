@@ -18,6 +18,7 @@ import 'package:sudoku159/view/sudoku_game/game_session_controller.dart';
 import 'package:sudoku159/view/sudoku_game/game_settings_controller.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_answer_box.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_board_grid.dart';
+import 'package:sudoku159/view/sudoku_game/sudoku_info_card.dart';
 import 'package:sudoku159/view/sudoku_game/game_effects_controller.dart';
 import 'package:sudoku159/view/home/level_picker_screen.dart';
 import 'package:sudoku159/widgets/progressive_blur_button.dart';
@@ -935,7 +936,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
             metrics.verticalPadding + metrics.bottomSafePadding,
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
                 child: Center(
@@ -950,8 +951,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
               SizedBox(
                 width: metrics.keypadColumnWidth,
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    _buildLandscapeStatsPanel(),
+                    const Spacer(),
                     for (int i = 0; i < 3; i++)
                       Padding(
                         padding: EdgeInsets.only(
@@ -1023,6 +1025,65 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           ),
         );
       },
+    );
+  }
+
+  /// 가로 모드 키패드 칼럼 상단에 붙는 현재 게임 상태 요약 카드들.
+  /// (SudokuInfoCard는 기존에 만들어져 있었지만 실제로는 아무 화면에서도
+  /// 안 쓰이고 있던 위젯이라 여기서 처음 활용한다.)
+  Widget _buildLandscapeStatsPanel() {
+    final maxWrongCount = _featurePolicy.maxWrongCount;
+    final maxHints = _featurePolicy.maxHints;
+    final wrongCount = _presenter.wrongCount;
+    final hintsRemaining = _presenter.hintsRemaining;
+
+    int filledCount = 0;
+    for (int row = 0; row < 9; row++) {
+      for (int col = 0; col < 9; col++) {
+        if (_presenter.getCellValue(row, col) != 0) filledCount++;
+      }
+    }
+    final originalFilledCount = 81 - widget.level.emptyCells;
+    final playerFilledCount =
+        (filledCount - originalFilledCount).clamp(0, widget.level.emptyCells);
+    final progressPercent = widget.level.emptyCells == 0
+        ? 0
+        : ((playerFilledCount / widget.level.emptyCells) * 100).round();
+    final completedUnitCount = _computeCompletedUnitIds().length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SudokuInfoCard(
+          '오답',
+          '$wrongCount/$maxWrongCount',
+          Icons.close_rounded,
+          accentColor: AppTheme.pinkColor,
+        ),
+        const SizedBox(height: 10),
+        SudokuInfoCard(
+          '힌트',
+          '$hintsRemaining/$maxHints',
+          Icons.lightbulb_outline,
+          // AppTheme.hintYellowColor는 보드 안 힌트 숫자용 연한 틴트라 카드
+          // 텍스트로 쓰기엔 대비가 너무 약해서, 여기서만 별도 색을 씀.
+          accentColor: Colors.amber.shade800,
+        ),
+        const SizedBox(height: 10),
+        SudokuInfoCard(
+          '진행률',
+          '$progressPercent%',
+          Icons.donut_large_rounded,
+          accentColor: AppTheme.statisticsAccent,
+        ),
+        const SizedBox(height: 10),
+        SudokuInfoCard(
+          '완성한 줄',
+          '$completedUnitCount/27',
+          Icons.grid_view_rounded,
+          accentColor: AppTheme.mintColor,
+        ),
+      ],
     );
   }
 

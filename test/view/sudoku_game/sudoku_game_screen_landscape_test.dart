@@ -51,44 +51,64 @@ void main() {
     [3, 4, 5, 2, 8, 6, 1, 7, 9],
   ];
 
+  Future<void> pumpLandscapeGameScreen(
+    WidgetTester tester, {
+    required Size size,
+  }) async {
+    SharedPreferences.setMockInitialValues({});
+
+    final originalSize = tester.view.physicalSize;
+    final originalDpr = tester.view.devicePixelRatio;
+    tester.view.physicalSize = size;
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.physicalSize = originalSize;
+      tester.view.devicePixelRatio = originalDpr;
+    });
+
+    final game = SudokuGame(
+      board: puzzleBoard,
+      solution: solution,
+      emptyCells: level.emptyCells,
+      levelName: level.name,
+      gameNumber: 1,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.lightTheme(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: SudokuGameScreen(game: game, level: level),
+      ),
+    );
+    // 게임 화면에 초 단위로 갱신되는 타이머가 있어 pumpAndSettle()은 끝나지
+    // 않는다 — 비동기 초기화(_initializeGame)가 끝날 만큼만 명시적으로 pump.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 500));
+  }
+
   testWidgets(
     'tablet landscape layout does not overflow when keypad column hits its min width clamp',
     (WidgetTester tester) async {
-      SharedPreferences.setMockInitialValues({});
-
       // 아이패드 가로 폭 중, keypadColumnWidth가 최소 clamp(240)에 걸리는 좁은 쪽
       // (maxWidth * 0.30 <= 240 즉 maxWidth <= 800)을 재현 — 실제로 8px 오버플로우가
       // 나던 경계 조건.
-      final originalSize = tester.view.physicalSize;
-      final originalDpr = tester.view.devicePixelRatio;
-      tester.view.physicalSize = const Size(760, 650);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.physicalSize = originalSize;
-        tester.view.devicePixelRatio = originalDpr;
-      });
+      await pumpLandscapeGameScreen(tester, size: const Size(760, 650));
 
-      final game = SudokuGame(
-        board: puzzleBoard,
-        solution: solution,
-        emptyCells: level.emptyCells,
-        levelName: level.name,
-        gameNumber: 1,
-      );
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('OVERFLOWED'), findsNothing);
+    },
+  );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.lightTheme(),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: SudokuGameScreen(game: game, level: level),
-        ),
-      );
-      // 게임 화면에 초 단위로 갱신되는 타이머가 있어 pumpAndSettle()은 끝나지
-      // 않는다 — 비동기 초기화(_initializeGame)가 끝날 만큼만 명시적으로 pump.
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
-      await tester.pump(const Duration(milliseconds: 500));
+  testWidgets(
+    'tablet landscape layout does not vertically overflow at the shortest realistic tablet height',
+    (WidgetTester tester) async {
+      // 태블릿 판정 기준(shortestSide > 600)에 거의 걸리는 낮은 높이 —
+      // 통계 카드 4장 + Spacer + 숫자패드 + 액션 버튼이 세로로 다 들어가는지 확인.
+      await pumpLandscapeGameScreen(tester, size: const Size(1024, 610));
 
       expect(find.byType(CircularProgressIndicator), findsNothing);
       expect(tester.takeException(), isNull);
