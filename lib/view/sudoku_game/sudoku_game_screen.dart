@@ -1190,13 +1190,25 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     final isCompletedNumber = remainingCount == 0;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isCompactSmallButton = compact && height != null && height < 56;
-    final digitFontSize =
-        isCompactSmallButton ? (height * 0.58).clamp(28.0, 34.0) : 38.0;
+    final buttonWidth = width ?? (compact ? 72 : 95);
+    // largeBadge(아이패드 가로 모드) 버튼은 밀도 축소 탓에 폭이 좁아서(~80px대),
+    // 뱃지를 그냥 키우면 정가운데 정렬된 숫자와 우상단 뱃지가 겹친다. 숫자는
+    // 항상 정가운데를 유지하되, 좁은 폭에서는 뱃지를 살짝 줄이고 숫자 폭도
+    // 버튼 폭 기준 상한을 둬서 서로 겹치지 않게 한다. 폰(largeBadge=false,
+    // buttonWidth가 훨씬 넓음)에서는 이 상한에 걸리지 않아 기존과 동일하다.
+    final digitFontSize = isCompactSmallButton
+        ? (height * 0.58).clamp(28.0, 34.0)
+        : math.min(38.0, buttonWidth * 0.42);
     const digitAlignment = Alignment.center;
-    final badgeScale = largeBadge ? 1.25 : 1.0;
-    final badgeInset =
-        (isCompactSmallButton ? 7.0 : 10.0) + (largeBadge ? 2 : 0);
-    final badgeSize = (isCompactSmallButton ? 22.0 : 24.0) * badgeScale;
+    final badgeBaseSize = isCompactSmallButton ? 22.0 : 24.0;
+    final badgeBaseInset = isCompactSmallButton ? 7.0 : 10.0;
+    final badgeSize = largeBadge
+        ? (buttonWidth * 0.23).clamp(18.0, 22.0)
+        : badgeBaseSize;
+    final badgeInset = largeBadge
+        ? (buttonWidth * 0.08).clamp(6.0, 8.0)
+        : badgeBaseInset;
+    final badgeScale = badgeSize / badgeBaseSize;
     final effectiveBackgroundColor = isCompletedNumber
         ? (isDark ? const Color(0xFF232323) : context.colors.surfaceSubtle)
         : isSelectedNumber
