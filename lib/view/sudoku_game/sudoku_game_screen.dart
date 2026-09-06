@@ -918,13 +918,18 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
 
   // ─── 아이패드 가로 모드 우측 패널 튜닝 상수 ─────────────────────────────
   // 통계 카드 블록과 키패드 블록 사이 여백을 위(edge)/가운데(mid)/아래(edge)
-  // 세 구간의 Flex 비율로 나눈다. mid : (edge*2+mid) = 6:8 = 75% → 기존
-  // 대비 가운데 gap이 25% 줄고, 위아래에 살짝씩 여백이 생겨 두 블록이
-  // 화면 맨 위/맨 아래에 붙지 않고 세로로 균형 잡혀 보인다.
+  // 세 구간의 Flex 비율로 나눈다. mid : (edge*2+mid) = 3:5 = 60% → 가운데
+  // gap을 다시 한번 줄이고, 위아래엔 살짝씩만 남겨 두 블록이 화면 맨
+  // 위/맨 아래에 붙지 않도록 균형을 유지한다.
   static const int _kLandscapeEdgeSpacerFlex = 1;
-  static const int _kLandscapeMidSpacerFlex = 6;
+  static const int _kLandscapeMidSpacerFlex = 3;
   // 숫자패드와 메모/힌트/삭제 버튼 행 사이 간격에 더하는 여유분.
   static const double _kLandscapeKeypadActionGapBonus = 10.0;
+  // 통계 카드+키패드+액션 버튼 전체를 하나의 컨트롤 패널처럼 보이도록
+  // 감싸는 테두리의 내부 여백/모서리 반경. 배경은 채우지 않고 테두리만
+  // 둬서(미니멀 유지) 개별 카드 배경과 겹쳐 무거워지지 않게 한다.
+  static const double _kLandscapePanelPadding = 16.0;
+  static const double _kLandscapePanelBorderRadius = 22.0;
 
   /// 아이패드 가로 모드 전용 좌우 분할 레이아웃: 왼쪽 보드, 오른쪽 키패드+액션 버튼.
   Widget _buildLandscapeLayout() {
@@ -937,6 +942,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           maxHeight: constraints.maxHeight,
           bottomSafePadding: math.max(safePadding.bottom, 12.0),
           horizontalSafePadding: math.max(safePadding.left, safePadding.right),
+          panelPadding: _kLandscapePanelPadding,
         );
 
         return Padding(
@@ -961,82 +967,90 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
               SizedBox(width: metrics.sectionGap),
               SizedBox(
                 width: metrics.keypadColumnWidth,
-                child: Column(
-                  children: [
-                    const Spacer(flex: _kLandscapeEdgeSpacerFlex),
-                    _buildLandscapeStatsPanel(),
-                    const Spacer(flex: _kLandscapeMidSpacerFlex),
-                    for (int i = 0; i < 3; i++)
-                      Padding(
-                        padding: EdgeInsets.only(
-                          bottom: i < 2 ? metrics.numberButtonGap : 0,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            for (int j = 1; j <= 3; j++)
-                              Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: metrics.numberButtonGap / 2,
+                child: Container(
+                  padding: const EdgeInsets.all(_kLandscapePanelPadding),
+                  decoration: BoxDecoration(
+                    borderRadius:
+                        BorderRadius.circular(_kLandscapePanelBorderRadius),
+                    border: Border.all(color: context.colors.border),
+                  ),
+                  child: Column(
+                    children: [
+                      const Spacer(flex: _kLandscapeEdgeSpacerFlex),
+                      _buildLandscapeStatsPanel(),
+                      const Spacer(flex: _kLandscapeMidSpacerFlex),
+                      for (int i = 0; i < 3; i++)
+                        Padding(
+                          padding: EdgeInsets.only(
+                            bottom: i < 2 ? metrics.numberButtonGap : 0,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              for (int j = 1; j <= 3; j++)
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: metrics.numberButtonGap / 2,
+                                  ),
+                                  child: _buildNumberButton(
+                                    i * 3 + j,
+                                    compact: true,
+                                    width: metrics.numberButtonWidth,
+                                    height: metrics.numberButtonHeight,
+                                    borderRadius: metrics.numberButtonRadius,
+                                    largeBadge: true,
+                                  ),
                                 ),
-                                child: _buildNumberButton(
-                                  i * 3 + j,
-                                  compact: true,
-                                  width: metrics.numberButtonWidth,
-                                  height: metrics.numberButtonHeight,
-                                  borderRadius: metrics.numberButtonRadius,
-                                  largeBadge: true,
-                                ),
-                              ),
-                          ],
+                            ],
+                          ),
                         ),
+                      SizedBox(
+                        height: metrics.compactGap +
+                            _kLandscapeKeypadActionGapBonus,
                       ),
-                    SizedBox(
-                      height:
-                          metrics.compactGap + _kLandscapeKeypadActionGapBonus,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildMobileActionButton(
-                          icon: Icons.edit_note,
-                          label: '',
-                          color: _presenter.isMemoMode
-                              ? AppTheme.mintColor
-                              : AppTheme.lightBlueColor,
-                          isActive: _presenter.isMemoMode,
-                          emphasizeActiveIcon: true,
-                          onPressed: _canToggleMemo
-                              ? () {
-                                  setState(() {
-                                    _memoFocusNumber = null;
-                                    _presenter.toggleMemoMode();
-                                  });
-                                }
-                              : null,
-                          compact: true,
-                          size: metrics.actionButtonSize,
-                          labelFontSize: metrics.actionLabelFontSize,
-                        ),
-                        _buildMobileHintButton(
-                          buttonSize: metrics.actionButtonSize,
-                          labelFontSize: metrics.actionLabelFontSize,
-                        ),
-                        _buildMobileActionButton(
-                          icon: Icons.backspace_outlined,
-                          label: '',
-                          color: context.colors.attentionSurface,
-                          onPressed: _canResetCurrentGame
-                              ? _showResetCurrentGameDialog
-                              : null,
-                          compact: true,
-                          size: metrics.actionButtonSize,
-                          labelFontSize: metrics.actionLabelFontSize,
-                        ),
-                      ],
-                    ),
-                    const Spacer(flex: _kLandscapeEdgeSpacerFlex),
-                  ],
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _buildMobileActionButton(
+                            icon: Icons.edit_note,
+                            label: '',
+                            color: _presenter.isMemoMode
+                                ? AppTheme.mintColor
+                                : AppTheme.lightBlueColor,
+                            isActive: _presenter.isMemoMode,
+                            emphasizeActiveIcon: true,
+                            onPressed: _canToggleMemo
+                                ? () {
+                                    setState(() {
+                                      _memoFocusNumber = null;
+                                      _presenter.toggleMemoMode();
+                                    });
+                                  }
+                                : null,
+                            compact: true,
+                            size: metrics.actionButtonSize,
+                            labelFontSize: metrics.actionLabelFontSize,
+                          ),
+                          _buildMobileHintButton(
+                            buttonSize: metrics.actionButtonSize,
+                            labelFontSize: metrics.actionLabelFontSize,
+                          ),
+                          _buildMobileActionButton(
+                            icon: Icons.backspace_outlined,
+                            label: '',
+                            color: context.colors.attentionSurface,
+                            onPressed: _canResetCurrentGame
+                                ? _showResetCurrentGameDialog
+                                : null,
+                            compact: true,
+                            size: metrics.actionButtonSize,
+                            labelFontSize: metrics.actionLabelFontSize,
+                          ),
+                        ],
+                      ),
+                      const Spacer(flex: _kLandscapeEdgeSpacerFlex),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -1180,7 +1194,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         isCompactSmallButton ? (height * 0.58).clamp(28.0, 34.0) : 38.0;
     const digitAlignment = Alignment.center;
     final badgeScale = largeBadge ? 1.25 : 1.0;
-    final badgeInset = (isCompactSmallButton ? 7.0 : 10.0) + (largeBadge ? 2 : 0);
+    final badgeInset =
+        (isCompactSmallButton ? 7.0 : 10.0) + (largeBadge ? 2 : 0);
     final badgeSize = (isCompactSmallButton ? 22.0 : 24.0) * badgeScale;
     final effectiveBackgroundColor = isCompletedNumber
         ? (isDark ? const Color(0xFF232323) : context.colors.surfaceSubtle)
@@ -1659,8 +1674,7 @@ class _MobileGameLayoutMetrics {
     final extraPerRow = math.min(leftoverHeight / 4, 16.0);
     final numberButtonHeight =
         math.min(baseNumberButtonHeight + extraPerRow, 116.0);
-    final actionButtonSize =
-        math.min(baseActionButtonSize + extraPerRow, 82.0);
+    final actionButtonSize = math.min(baseActionButtonSize + extraPerRow, 82.0);
     final actionLabelFontSize = actionButtonSize <= 50 ? 7.5 : 8.5;
 
     // 숫자 패드 한 줄(3버튼)의 전체 폭이 보드 폭과 같아지도록 정렬.
@@ -1727,6 +1741,10 @@ class _TabletLandscapeGameLayoutMetrics {
     required double maxHeight,
     required double bottomSafePadding,
     required double horizontalSafePadding,
+    // 키패드 칼럼을 감싸는 컨트롤 패널 테두리의 내부 여백. 이 여백만큼
+    // 숫자패드/액션 버튼이 실제로 쓸 수 있는 폭·높이가 줄어드므로 버튼
+    // 크기 계산에 반영해야 오버플로우가 안 난다.
+    required double panelPadding,
   }) {
     final horizontalPadding =
         _clamp(maxWidth * 0.02, 16, 28) + horizontalSafePadding;
@@ -1743,6 +1761,11 @@ class _TabletLandscapeGameLayoutMetrics {
     );
     final boardSize = _clamp(math.min(boardAreaWidth, contentHeight), 300, 680);
 
+    // 키패드 칼럼을 감싸는 패널 테두리 안쪽에서 실제로 쓸 수 있는 폭/높이.
+    final usableKeypadWidth = keypadColumnWidth - (panelPadding * 2);
+    final keypadContentHeight =
+        math.max(contentHeight - (panelPadding * 2), 200.0);
+
     const numberButtonGap = 8.0;
     // 태블릿 가로 모드에서 숫자패드가 다소 커 보인다는 피드백에 따라
     // 8% 축소(밀도 개선). 버튼 사이 gap/keypadColumnWidth는 그대로 두고
@@ -1752,9 +1775,15 @@ class _TabletLandscapeGameLayoutMetrics {
     // 각 버튼이 Padding(horizontal: numberButtonGap / 2)을 개별로 두르고 있어
     // 양 끝 버튼 바깥쪽에도 gap이 생기므로, 실제로 소모되는 간격은 2개가 아니라
     // 버튼 개수(3)만큼이다. 간격을 2개로 잘못 가정하면 항상 8px 오버플로우한다.
+    final rawNumberButtonWidth =
+        (usableKeypadWidth - numberButtonGap * 3) / 3 * numberPadDensityFactor;
+    // 64를 무조건 하한으로 두면(패널 패딩까지 뺀 뒤라 폭이 이미 빠듯한
+    // 상황에서) 하한이 실제로 들어갈 수 있는 폭보다 커져 오버플로우가 날 수
+    // 있다. rawNumberButtonWidth가 64보다 작을 땐 하한을 그 값 자체로 낮춰서,
+    // "정확히 들어맞는 값" 위로는 절대 안 올라가도록 한다.
     final numberButtonWidth = _clamp(
-      (keypadColumnWidth - numberButtonGap * 3) / 3 * numberPadDensityFactor,
-      64,
+      rawNumberButtonWidth,
+      math.min(64.0, rawNumberButtonWidth),
       128,
     );
     final numberButtonRadius = _clamp(numberButtonWidth * 0.22, 14, 26);
@@ -1768,8 +1797,8 @@ class _TabletLandscapeGameLayoutMetrics {
         (numberButtonGap * 2) +
         compactGap +
         actionButtonSize;
-    if (estimatedBlockHeight > contentHeight) {
-      final scale = contentHeight / estimatedBlockHeight;
+    if (estimatedBlockHeight > keypadContentHeight) {
+      final scale = keypadContentHeight / estimatedBlockHeight;
       numberButtonHeight = math.max(numberButtonHeight * scale, 44.0);
       actionButtonSize = math.max(actionButtonSize * scale, 40.0);
     }
