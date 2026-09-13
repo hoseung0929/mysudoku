@@ -1108,6 +1108,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   }
 
   Widget _buildBoardGrid() {
+    // 아이패드 애플펜슬 필기 입력(전용 "펜슬 모드" 없이 넘패드와 항상 병행) —
+    // 아이폰은 콜백 자체를 안 넘겨 오버레이가 생성되지 않아 기존과 동일.
+    final isTablet = MediaQuery.of(context).size.width > 600;
+
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 680, maxHeight: 680),
@@ -1126,6 +1130,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           onCellTapped: (row, col) {
             _presenter.selectCell(row, col);
           },
+          onPencilDigit: isTablet ? _insertDigit : null,
         ),
       ),
     );
@@ -1156,6 +1161,24 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       return false;
     }
     return _remainingCountForNumber(number) > 0;
+  }
+
+  // 넘패드 탭과 아이패드 애플펜슬 필기 입력이 공유하는 실제 입력 처리.
+  // 두 경로 모두 같은 검증/부수효과(진동, 오답셀 타이머, 메모 하이라이트)를
+  // 거치도록 한곳에 모아둔다.
+  void _insertDigit(int number) {
+    if (!_isNumberInputEnabled(number)) return;
+    setState(() {
+      _memoFocusNumber = _presenter.isMemoMode ? number : null;
+    });
+    if (!_presenter.isMemoMode) {
+      _cancelWrongCellTimer(
+        _presenter.selectedRow,
+        _presenter.selectedCol,
+      );
+      unawaited(_vibrateOnNumberInput(number));
+    }
+    _presenter.setSelectedCellValue(number);
   }
 
   int? _selectedInputNumber() {
@@ -1218,21 +1241,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
             : (isDark ? const Color(0xFF323232) : context.colors.surface);
 
     return ProgressiveBlurButton(
-      onPressed: isEnabled
-          ? () {
-              setState(() {
-                _memoFocusNumber = _presenter.isMemoMode ? number : null;
-              });
-              if (!_presenter.isMemoMode) {
-                _cancelWrongCellTimer(
-                  _presenter.selectedRow,
-                  _presenter.selectedCol,
-                );
-                unawaited(_vibrateOnNumberInput(number));
-              }
-              _presenter.setSelectedCellValue(number);
-            }
-          : null,
+      onPressed: isEnabled ? () => _insertDigit(number) : null,
       backgroundColor: effectiveBackgroundColor,
       width: width ?? (compact ? 72 : 95),
       height: height ?? (compact ? 56 : 70),

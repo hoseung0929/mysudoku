@@ -6,6 +6,7 @@ import 'package:sudoku159/model/sudoku_game.dart';
 import 'package:sudoku159/model/sudoku_level.dart';
 import 'package:sudoku159/theme/app_theme.dart';
 import 'package:sudoku159/utils/app_logger.dart';
+import 'package:sudoku159/view/sudoku_game/sudoku_board_grid.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_game_screen.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:wakelock_plus_platform_interface/wakelock_plus_platform_interface.dart';
@@ -26,6 +27,10 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   AppLogger.setMuted(true);
   wakelockPlusPlatformInstance = _NoopWakelockPlatform();
+  // 펜슬 입력 오버레이의 TextField에 포커스가 가면 커서 깜빡임용 Timer.periodic이
+  // 도는데, 테스트가 끝나도 안 꺼져서 "Timer is still pending" 실패로 이어진다.
+  // 공식 안내대로 결정론적 커서로 바꿔 그 Timer 자체를 없앤다.
+  EditableText.debugDeterministicCursor = true;
 
   final level = SudokuLevel.levels.first;
   final puzzleBoard = [
@@ -113,6 +118,59 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsNothing);
       expect(tester.takeException(), isNull);
       expect(find.textContaining('OVERFLOWED'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'tablet landscape shows a pencil input overlay once a cell is selected, and writing a digit fills it',
+    (WidgetTester tester) async {
+      await pumpLandscapeGameScreen(tester, size: const Size(1024, 768));
+
+      // 애플펜슬 오버레이(TextField)는 셀이 선택되기 전엔 없어야 한다.
+      expect(find.byType(TextField), findsNothing);
+
+      // puzzleBoard[0][1]은 빈 칸(고정 아님) — 보드 그리드 안의 두 번째 셀
+      // (row-major 인덱스 1)을 탭해서 선택.
+      final cellGestures = find.descendant(
+        of: find.byType(SudokuBoardGrid),
+        matching: find.byType(GestureDetector),
+      );
+      expect(cellGestures, findsNWidgets(81));
+      await tester.tap(cellGestures.at(1));
+      await tester.pump();
+
+      expect(find.byType(TextField), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      // 오답을 쓰면 흔들림 효과용, 줄을 완성시키면 축하 효과용 일회성
+      // Timer가 걸린다 — 테스트 종료 전에 다 끝나도록 충분히 pump한다.
+      await tester.enterText(find.byType(TextField), '3');
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 800));
+
+      // 인식 후 필드는 즉시 비워진다.
+      expect(tester.widget<TextField>(find.byType(TextField)).controller!.text, '');
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'phone-sized layout never shows the pencil input overlay even with a cell selected',
+    (WidgetTester tester) async {
+      // 아이패드 전용 기능이라, 폰 폭(isTablet 기준 600 이하)에서는 셀을
+      // 선택해도 오버레이(TextField) 자체가 생기면 안 된다.
+      await pumpLandscapeGameScreen(tester, size: const Size(390, 844));
+
+      final cellGestures = find.descendant(
+        of: find.byType(SudokuBoardGrid),
+        matching: find.byType(GestureDetector),
+      );
+      expect(cellGestures, findsNWidgets(81));
+      await tester.tap(cellGestures.at(1));
+      await tester.pump();
+
+      expect(find.byType(TextField), findsNothing);
+      expect(tester.takeException(), isNull);
     },
   );
 }

@@ -5,6 +5,7 @@ import 'package:sudoku159/theme/app_colors.dart';
 import 'package:sudoku159/theme/app_theme.dart';
 import 'package:sudoku159/theme/level_status_colors.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_memo_notes_grid.dart';
+import 'package:sudoku159/view/sudoku_game/sudoku_pencil_input_overlay.dart';
 
 /// 9x9 스도쿠 보드 (셀 탭은 부모에서 setState 처리)
 class SudokuBoardGrid extends StatelessWidget {
@@ -18,6 +19,7 @@ class SudokuBoardGrid extends StatelessWidget {
     this.enableMemoHighlights = true,
     this.highlightedMemoNumber,
     required this.onCellTapped,
+    this.onPencilDigit,
   });
 
   final SudokuGamePresenter presenter;
@@ -28,6 +30,9 @@ class SudokuBoardGrid extends StatelessWidget {
   final bool enableMemoHighlights;
   final int? highlightedMemoNumber;
   final void Function(int row, int col) onCellTapped;
+  // 아이패드 애플펜슬 필기 입력 콜백 (선택 사항). null이면(기본값, 아이폰
+  // 호출부) 오버레이 자체를 만들지 않아 기존 동작과 완전히 동일하다.
+  final void Function(int digit)? onPencilDigit;
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +93,7 @@ class SudokuBoardGrid extends StatelessWidget {
         final digitFontSize = (cellExtent * 0.62).clamp(18.0, 34.0);
         final memoCellExtent = (cellExtent * 0.54).clamp(10.0, 16.0);
 
-        return Container(
+        final board = Container(
           decoration: BoxDecoration(
             color: context.colors.surface,
             border: Border.all(color: boardOutlineColor, width: isDark ? 1.2 : 1.0),
@@ -247,6 +252,19 @@ class SudokuBoardGrid extends StatelessWidget {
               );
             }),
           ),
+        );
+
+        return Stack(
+          children: [
+            board,
+            if (onPencilDigit != null)
+              SudokuPencilInputOverlay(
+                selectedRow: selectedRow,
+                selectedCol: selectedCol,
+                cellExtent: cellExtent,
+                onDigitEntered: onPencilDigit!,
+              ),
+          ],
         );
       },
     );
