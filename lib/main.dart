@@ -126,7 +126,11 @@ class _Sudoku159AppState extends State<Sudoku159App> {
   Future<void> _bootstrapNotificationState() async {
     try {
       await _notificationService.initialize();
-      await _notificationService.resyncFromStoredSettings();
+      // 권한 UI 토글이 없으므로(하드코딩 ON) 여기서 직접 요청한다. iOS/Android 모두
+      // 사용자가 이미 응답한 뒤엔 재호출해도 시스템 프롬프트가 다시 뜨지 않고
+      // 현재 상태만 반환하므로, 매 실행마다 불러도 안전하다.
+      await _notificationService.requestPermissions();
+      await _notificationService.syncReminders();
     } catch (e) {
       if (kDebugMode) {
         AppLogger.debug('알림 초기화 실패: $e');

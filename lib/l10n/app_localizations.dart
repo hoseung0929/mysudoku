@@ -6,8 +6,10 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
 import 'app_localizations_ja.dart';
 import 'app_localizations_ko.dart';
+import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
 
@@ -96,8 +98,10 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
+    Locale('es'),
     Locale('ja'),
-    Locale('ko')
+    Locale('ko'),
+    Locale('zh')
   ];
 
   /// No description provided for @appTitle.
@@ -249,6 +253,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Japanese'**
   String get settingsLanguageJapanese;
+
+  /// No description provided for @settingsLanguageChinese.
+  ///
+  /// In en, this message translates to:
+  /// **'中文'**
+  String get settingsLanguageChinese;
+
+  /// No description provided for @settingsLanguageSpanish.
+  ///
+  /// In en, this message translates to:
+  /// **'Español'**
+  String get settingsLanguageSpanish;
 
   /// No description provided for @settingsLanguagePickerTitle.
   ///
@@ -478,6 +494,54 @@ abstract class AppLocalizations {
   /// **'Memo'**
   String get gameMemoShort;
 
+  /// No description provided for @gameCellLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Row {row}, column {col}: {content}'**
+  String gameCellLabel(int row, int col, String content);
+
+  /// No description provided for @gameCellEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'empty'**
+  String get gameCellEmpty;
+
+  /// No description provided for @gameCellNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'notes {notes}'**
+  String gameCellNotes(String notes);
+
+  /// No description provided for @gameCellGiven.
+  ///
+  /// In en, this message translates to:
+  /// **'given'**
+  String get gameCellGiven;
+
+  /// No description provided for @gameCellHint.
+  ///
+  /// In en, this message translates to:
+  /// **'hint'**
+  String get gameCellHint;
+
+  /// No description provided for @gameCellWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'incorrect'**
+  String get gameCellWrong;
+
+  /// No description provided for @gameEraseShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase'**
+  String get gameEraseShort;
+
+  /// No description provided for @gameMoreOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get gameMoreOptions;
+
   /// No description provided for @gameMemoOnShort.
   ///
   /// In en, this message translates to:
@@ -697,14 +761,38 @@ abstract class AppLocalizations {
   /// No description provided for @dialogBackToLevels.
   ///
   /// In en, this message translates to:
-  /// **'Level list'**
+  /// **'Puzzle list'**
   String get dialogBackToLevels;
 
   /// No description provided for @dialogPlayAgain.
   ///
   /// In en, this message translates to:
-  /// **'Play again'**
+  /// **'Solve again'**
   String get dialogPlayAgain;
+
+  /// No description provided for @dialogPuzzleCompleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Puzzle complete'**
+  String get dialogPuzzleCompleteTitle;
+
+  /// No description provided for @dialogNewBestMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'New best record!'**
+  String get dialogNewBestMessage;
+
+  /// No description provided for @dialogHintsUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Hints used: {count}'**
+  String dialogHintsUsed(int count);
+
+  /// No description provided for @dialogSolveSameAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Solve this puzzle again'**
+  String get dialogSolveSameAgain;
 
   /// No description provided for @dialogNextPuzzle.
   ///
@@ -781,19 +869,19 @@ abstract class AppLocalizations {
   /// No description provided for @gameOverTitle.
   ///
   /// In en, this message translates to:
-  /// **'Game over'**
+  /// **'You reached the mistake limit'**
   String get gameOverTitle;
 
   /// No description provided for @gameOverMessage.
   ///
   /// In en, this message translates to:
-  /// **'You exceeded the mistake limit.'**
+  /// **'You can start this puzzle over or choose another one.'**
   String get gameOverMessage;
 
   /// No description provided for @gameOverWrongLabel.
   ///
   /// In en, this message translates to:
-  /// **'Mistakes: {count}/{maxCount}'**
+  /// **'This game: {count} mistakes / limit {maxCount}'**
   String gameOverWrongLabel(int count, int maxCount);
 
   /// No description provided for @recordsFilterSectionTitle.
@@ -1021,37 +1109,37 @@ abstract class AppLocalizations {
   /// No description provided for @recordsMetricClearRate.
   ///
   /// In en, this message translates to:
-  /// **'Overall progress'**
+  /// **'Puzzle completion'**
   String get recordsMetricClearRate;
 
   /// No description provided for @recordsMetricPerfectRate.
   ///
   /// In en, this message translates to:
-  /// **'Perfect rate'**
+  /// **'Mistake-free share'**
   String get recordsMetricPerfectRate;
 
   /// No description provided for @recordsSummaryMetricsFootnote.
   ///
   /// In en, this message translates to:
-  /// **'Clear counts follow your active filters. Overall progress compares cleared puzzles with the total puzzle count in the same scope.'**
+  /// **'Each puzzle counts once, using its best record, and follows your active filters. Completion compares those puzzles with the total number of puzzles in the same scope.'**
   String get recordsSummaryMetricsFootnote;
 
   /// No description provided for @recordsMetricAvgTime.
   ///
   /// In en, this message translates to:
-  /// **'Avg. time'**
+  /// **'Avg. best time'**
   String get recordsMetricAvgTime;
 
   /// No description provided for @recordsMetricAvgWrong.
   ///
   /// In en, this message translates to:
-  /// **'Avg. mistakes'**
+  /// **'Avg. mistakes (best runs)'**
   String get recordsMetricAvgWrong;
 
   /// No description provided for @recordsByLevelTitle.
   ///
   /// In en, this message translates to:
-  /// **'By level'**
+  /// **'Records by level'**
   String get recordsByLevelTitle;
 
   /// No description provided for @recordsByLevelEmpty.
@@ -1069,7 +1157,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordsLevelInfographicClearRate.
   ///
   /// In en, this message translates to:
-  /// **'Clear rate'**
+  /// **'Puzzle completion'**
   String get recordsLevelInfographicClearRate;
 
   /// No description provided for @recordsLevelMiniBest.
@@ -1102,6 +1190,84 @@ abstract class AppLocalizations {
   /// **'Try again'**
   String get recordsRetry;
 
+  /// No description provided for @recordsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your records will build up once you finish your first puzzle.'**
+  String get recordsEmptyTitle;
+
+  /// No description provided for @recordsEmptyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a puzzle'**
+  String get recordsEmptyAction;
+
+  /// No description provided for @recordsLevelEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed puzzles at this level yet.'**
+  String get recordsLevelEmpty;
+
+  /// No description provided for @recordsRowBestTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Best time'**
+  String get recordsRowBestTime;
+
+  /// No description provided for @recordsAverageBasisNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Averages use each puzzle\'s best record, not every play.'**
+  String get recordsAverageBasisNote;
+
+  /// No description provided for @recordsCalendarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity calendar'**
+  String get recordsCalendarTitle;
+
+  /// No description provided for @recordsCalendarPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Last {weeks} weeks'**
+  String recordsCalendarPeriod(int weeks);
+
+  /// No description provided for @recordsViewAchievements.
+  ///
+  /// In en, this message translates to:
+  /// **'View achievements'**
+  String get recordsViewAchievements;
+
+  /// No description provided for @recordsOverallNote.
+  ///
+  /// In en, this message translates to:
+  /// **'{cleared} of {total} puzzles completed across all levels.'**
+  String recordsOverallNote(int cleared, int total);
+
+  /// No description provided for @recordsWeekActiveDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Active days: {count}'**
+  String recordsWeekActiveDays(int count);
+
+  /// No description provided for @recordsWeekCompletions.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed: {count}'**
+  String recordsWeekCompletions(int count);
+
+  /// No description provided for @recordsWeekDayDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{day}: {count} completed'**
+  String recordsWeekDayDone(String day, int count);
+
+  /// No description provided for @recordsWeekDayNone.
+  ///
+  /// In en, this message translates to:
+  /// **'{day}: no completions'**
+  String recordsWeekDayNone(String day);
+
   /// No description provided for @recordsStatsPageSubtitle.
   ///
   /// In en, this message translates to:
@@ -1111,13 +1277,13 @@ abstract class AppLocalizations {
   /// No description provided for @recordsKpiWeeklyClearsLabel.
   ///
   /// In en, this message translates to:
-  /// **'Clears'**
+  /// **'Puzzles cleared'**
   String get recordsKpiWeeklyClearsLabel;
 
   /// No description provided for @recordsKpiAvgSolveTimeLabel.
   ///
   /// In en, this message translates to:
-  /// **'Avg. time'**
+  /// **'Avg. best time'**
   String get recordsKpiAvgSolveTimeLabel;
 
   /// No description provided for @recordsActivityOverviewTitle.
@@ -1135,25 +1301,25 @@ abstract class AppLocalizations {
   /// No description provided for @recordsActivityHeatmapCaption.
   ///
   /// In en, this message translates to:
-  /// **'Darker cells mean more clears on that day.'**
+  /// **'Darker cells mean more completions on that day.'**
   String get recordsActivityHeatmapCaption;
 
   /// No description provided for @recordsActivityTotalClearsLabel.
   ///
   /// In en, this message translates to:
-  /// **'Total clears'**
+  /// **'Total completions'**
   String get recordsActivityTotalClearsLabel;
 
   /// No description provided for @recordsActivityCurrentStreakLabel.
   ///
   /// In en, this message translates to:
-  /// **'Current streak'**
+  /// **'Current daily streak'**
   String get recordsActivityCurrentStreakLabel;
 
   /// No description provided for @recordsActivityBestStreakLabel.
   ///
   /// In en, this message translates to:
-  /// **'Best streak'**
+  /// **'Best daily streak'**
   String get recordsActivityBestStreakLabel;
 
   /// No description provided for @recordsActivityDayCount.
@@ -2104,24 +2270,6 @@ abstract class AppLocalizations {
   /// **'Name'**
   String get profileEditorNameLabel;
 
-  /// No description provided for @profileEditorBioLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Bio'**
-  String get profileEditorBioLabel;
-
-  /// No description provided for @profileEditorBioHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Write a short introduction about yourself'**
-  String get profileEditorBioHint;
-
-  /// No description provided for @profileEditorBioFooter.
-  ///
-  /// In en, this message translates to:
-  /// **'Your bio and profile photo are displayed on your profile.'**
-  String get profileEditorBioFooter;
-
   /// No description provided for @profileEditorDefaultProfile.
   ///
   /// In en, this message translates to:
@@ -2157,6 +2305,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A quiet moment to focus.'**
   String get homeTodayPuzzleTitle;
+
+  /// No description provided for @homeTodayChallengeStartButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Start today\'s challenge'**
+  String get homeTodayChallengeStartButton;
+
+  /// No description provided for @homeTodayChallengeResumeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume today\'s challenge'**
+  String get homeTodayChallengeResumeButton;
+
+  /// No description provided for @homeTodayChallengeReviewButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Play today\'s puzzle again'**
+  String get homeTodayChallengeReviewButton;
+
+  /// No description provided for @homeTodayChallengeLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load today\'s puzzle.'**
+  String get homeTodayChallengeLoadError;
+
+  /// No description provided for @homeTodayChallengeDateChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'A new day started. Today\'s challenge was refreshed.'**
+  String get homeTodayChallengeDateChanged;
+
+  /// No description provided for @homeFirstStartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start your first puzzle'**
+  String get homeFirstStartTitle;
+
+  /// No description provided for @homeNewPuzzleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a new puzzle'**
+  String get homeNewPuzzleTitle;
+
+  /// No description provided for @homeChooseLevelBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a level. Your progress is saved automatically.'**
+  String get homeChooseLevelBody;
+
+  /// No description provided for @homeChooseLevelButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a level'**
+  String get homeChooseLevelButton;
+
+  /// No description provided for @homeViewAllInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'View all in-progress games ({count})'**
+  String homeViewAllInProgress(int count);
+
+  /// No description provided for @homeNewGameSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New game · choose a level'**
+  String get homeNewGameSectionTitle;
+
+  /// No description provided for @homeLevelBlankCells.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} blanks'**
+  String homeLevelBlankCells(int count);
+
+  /// No description provided for @homeSavedGamesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'In-progress games'**
+  String get homeSavedGamesTitle;
+
+  /// No description provided for @homeSavedGamesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick one to resume. Deleting removes only the saved progress, not your records.'**
+  String get homeSavedGamesDescription;
+
+  /// No description provided for @homeSavedGameDeleteTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete saved progress'**
+  String get homeSavedGameDeleteTooltip;
+
+  /// No description provided for @homeSavedGameDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete saved progress?'**
+  String get homeSavedGameDeleteTitle;
+
+  /// No description provided for @homeSavedGameDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your entries and notes for this puzzle will be removed. Completion records are kept.'**
+  String get homeSavedGameDeleteBody;
+
+  /// No description provided for @homeSavedGameDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get homeSavedGameDeleteConfirm;
+
+  /// No description provided for @homeLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your games.'**
+  String get homeLoadError;
 
   /// No description provided for @homeCatalogFirstTitle.
   ///
@@ -2263,7 +2525,7 @@ abstract class AppLocalizations {
   /// No description provided for @levelInProgressLimitTitle.
   ///
   /// In en, this message translates to:
-  /// **'You\'re juggling {maxCount} puzzles!'**
+  /// **'{maxCount} puzzles in progress'**
   String levelInProgressLimitTitle(int maxCount);
 
   /// No description provided for @levelInProgressLimitBody.
@@ -2284,22 +2546,100 @@ abstract class AppLocalizations {
   /// **'Try again'**
   String get levelTryAgain;
 
+  /// No description provided for @levelContinueButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get levelContinueButton;
+
+  /// No description provided for @levelStartNextNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Start new puzzle · {number}'**
+  String levelStartNextNew(String number);
+
+  /// No description provided for @levelViewInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'View {count} in progress'**
+  String levelViewInProgress(int count);
+
+  /// No description provided for @levelNotesInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Writing notes'**
+  String get levelNotesInProgress;
+
+  /// No description provided for @levelEmptyInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'No puzzles to continue.'**
+  String get levelEmptyInProgress;
+
+  /// No description provided for @levelEmptyCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Make your first completion record.'**
+  String get levelEmptyCompleted;
+
+  /// No description provided for @levelEmptyFresh.
+  ///
+  /// In en, this message translates to:
+  /// **'No new puzzles to start.'**
+  String get levelEmptyFresh;
+
+  /// No description provided for @levelAllCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve completed every puzzle at this level.'**
+  String get levelAllCompleted;
+
+  /// No description provided for @levelActionShowNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Show new puzzles'**
+  String get levelActionShowNew;
+
+  /// No description provided for @levelActionShowInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Show in progress'**
+  String get levelActionShowInProgress;
+
+  /// No description provided for @levelActionShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all'**
+  String get levelActionShowAll;
+
+  /// No description provided for @levelBestTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Best time {time}'**
+  String levelBestTime(String time);
+
+  /// No description provided for @levelCellSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Puzzle {number}, {status}'**
+  String levelCellSemantics(String number, String status);
+
   /// No description provided for @gameResetDialogTitle.
   ///
   /// In en, this message translates to:
-  /// **'Reset current game'**
+  /// **'Restart from the beginning'**
   String get gameResetDialogTitle;
 
   /// No description provided for @gameResetDialogBody.
   ///
   /// In en, this message translates to:
-  /// **'Clear entered numbers, notes, hints, mistakes, and time, then return to the starting board?'**
+  /// **'Clear entered numbers, notes, hints, mistakes, and time, then return to the starting board? Your past clear records are kept.'**
   String get gameResetDialogBody;
 
   /// No description provided for @gameResetConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Reset'**
+  /// **'Restart'**
   String get gameResetConfirm;
 
   /// No description provided for @gameNumberInputLegend.
@@ -2380,7 +2720,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'ja', 'ko'].contains(locale.languageCode);
+      <String>['en', 'es', 'ja', 'ko', 'zh'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -2391,10 +2731,14 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   switch (locale.languageCode) {
     case 'en':
       return AppLocalizationsEn();
+    case 'es':
+      return AppLocalizationsEs();
     case 'ja':
       return AppLocalizationsJa();
     case 'ko':
       return AppLocalizationsKo();
+    case 'zh':
+      return AppLocalizationsZh();
   }
 
   throw FlutterError(

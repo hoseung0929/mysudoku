@@ -92,19 +92,38 @@ void main() {
       expect(summaries, isEmpty);
     });
 
-    test('falls back to first playable challenge entry when target is missing',
+    test('continue list keeps notes-only, drops opened-only and terminal',
+        () async {
+      final challengeFake = _FakeChallengeProgressService();
+      final service = HomeDashboardService(
+        gameStateService: _FilteringGameStateService(),
+        challengeProgressService: challengeFake,
+        achievementService: AchievementService(
+          challengeProgressService: challengeFake,
+          loadOverallStatistics: () async => const <String, dynamic>{},
+          loadRecentRecords: () async => const [],
+        ),
+        loadGameEntry: (levelName, gameNumber) async => {
+          'game_number': gameNumber,
+          'board': _filterBoard,
+          'solution': _filterBoard
+              .map((r) => r.map((v) => v == 0 ? 1 : v).toList())
+              .toList(),
+        },
+      );
+
+      final summaries = await service.loadContinueGames();
+
+      // 2: 메모만(진행률 0%), 1: 숫자 입력. 3: 열어보기만, 4: 게임오버는 제외.
+      expect(summaries.map((s) => s.game.gameNumber), [2, 1]);
+      expect(summaries.first.progress, 0);
+      expect(summaries.first.noteCount, 2);
+    });
+
+    test('does not substitute another puzzle when the target cannot be loaded',
         () async {
       final challengeFake = _FakeChallengeProgressService(
         target: const TodayChallengeTarget(levelName: '초급', gameNumber: 99),
-      );
-      final fallbackBoard = List.generate(
-        9,
-        (row) =>
-            List.generate(9, (col) => row == col ? 0 : ((row + col) % 9) + 1),
-      );
-      final fallbackSolution = List.generate(
-        9,
-        (row) => List.generate(9, (col) => ((row * 3) + col) % 9 + 1),
       );
       final service = HomeDashboardService(
         gameStateService: _FakeGameStateService(),
@@ -115,22 +134,46 @@ void main() {
           loadRecentRecords: () async => const [],
         ),
         loadGameEntry: (levelName, gameNumber) async => null,
-        loadGameEntriesForLevel: (levelName) async {
-          return [
-            {
-              'game_number': 3,
-              'board': fallbackBoard,
-              'solution': fallbackSolution,
-            },
-          ];
-        },
       );
 
       final data = await service.load(AppLocalizationsEn());
 
-      expect(data.todayChallenge.gameNumber, 3);
-      expect(data.todayChallenge.board, fallbackBoard);
-      expect(data.todayChallenge.solution, fallbackSolution);
+      expect(data.todayChallenge, isNull);
+      expect(data.todayChallengeHasSession, isFalse);
+    });
+
+    test('reports a resumable session only for the challenge puzzle itself',
+        () async {
+      Future<HomeDashboardData> loadFor(int gameNumber) {
+        final challengeFake = _FakeChallengeProgressService(
+          target: TodayChallengeTarget(levelName: '초급', gameNumber: gameNumber),
+        );
+        return HomeDashboardService(
+          gameStateService: _FilteringGameStateService(),
+          challengeProgressService: challengeFake,
+          achievementService: AchievementService(
+            challengeProgressService: challengeFake,
+            loadOverallStatistics: () async => const <String, dynamic>{},
+            loadRecentRecords: () async => const [],
+          ),
+          loadGameEntry: (levelName, gameNumber) async => {
+            'game_number': gameNumber,
+            'board': _filterBoard,
+            'solution': _filterBoard
+                .map((r) => r.map((v) => v == 0 ? 1 : v).toList())
+                .toList(),
+          },
+        ).load(AppLocalizationsEn());
+      }
+
+      // 저장 세션이 있는 문제(1, 2)만 이어하기. 열어보기만 한 3은 새 시작.
+      expect((await loadFor(1)).todayChallengeHasSession, isTrue);
+      expect((await loadFor(2)).todayChallengeHasSession, isTrue);
+      expect((await loadFor(3)).todayChallengeHasSession, isFalse);
+      // 다른 저장 게임이 있어도 오늘의 도전 타깃은 표시된 문제 그대로.
+      final data = await loadFor(3);
+      expect(data.todayChallenge!.gameNumber, 3);
+      expect(data.continueGame!.game.gameNumber, 2);
     });
   });
 }
@@ -476,4 +519,44 @@ class _InvalidSavedBoardGameStateService extends GameStateService {
       ),
     ];
   }
+}
+
+final _filterBoard = [
+  [0, 0, 3, 4, 5, 6, 7, 8, 9],
+  ...List.generate(8, (_) => List.filled(9, 1)),
+];
+
+class _FilteringGameStateService extends GameStateService {
+  SavedGameState _saved(int number, int millis,
+      {int fill = 0, bool notes = false, bool over = false}) {
+    final board = _filterBoard.map((r) => List<int>.from(r)).toList();
+    if (fill > 0) board[0][0] = 1;
+    final noteGrid = List.generate(9, (_) => List.generate(9, (_) => <int>{}));
+    if (notes) noteGrid[0][1] = {2, 5};
+    return SavedGameState(
+      levelName: '초급',
+      gameNumber: number,
+      board: board,
+      lastPlayedAtMillis: millis,
+      session: GameSessionState(
+        board: board,
+        notes: noteGrid,
+        elapsedSeconds: 300,
+        hintsRemaining: 3,
+        wrongCount: 0,
+        isMemoMode: notes,
+        hintCells: const {},
+        isGameComplete: false,
+        isGameOver: over,
+      ),
+    );
+  }
+
+  @override
+  Future<List<SavedGameState>> getSavedGames() async => [
+        _saved(3, 40), // 열어보기만 (가장 최근)
+        _saved(4, 30, fill: 1, over: true),
+        _saved(2, 20, notes: true),
+        _saved(1, 10, fill: 1),
+      ];
 }

@@ -33,6 +33,7 @@ class GameSessionState {
     required this.hintCells,
     required this.isGameComplete,
     required this.isGameOver,
+    this.challengeDate,
   });
 
   final List<List<int>> board;
@@ -44,6 +45,34 @@ class GameSessionState {
   final Set<String> hintCells;
   final bool isGameComplete;
   final bool isGameOver;
+
+  /// 오늘의 도전으로 시작한 게임이면 그 도전의 날짜(YYYY-MM-DD). 이어하기로
+  /// 다시 열어도 완료가 시작한 날짜에 귀속되도록 세션과 함께 보존한다.
+  /// 이 필드가 없는 기존 저장 데이터는 null(일반 게임)로 읽는다.
+  final String? challengeDate;
+}
+
+extension GameSessionResumability on GameSessionState {
+  bool get hasNotes => notes.any((row) => row.any((cell) => cell.isNotEmpty));
+
+  /// 이어하기 대상 판정의 단일 기준. 숫자 진행률과 별개로 판단한다.
+  ///
+  /// - 완료/게임오버/실수 한도 도달 세션은 제외한다.
+  /// - 플레이어가 채운 칸이 전부라면(완료 직전 잔여물) 제외한다.
+  /// - 플레이어 흔적(채운 숫자, 후보 메모, 실수 기록)이 하나라도 있어야 한다.
+  ///   타이머 경과나 열어보기만 한 세션, 입력 후 모두 지워 초기 상태로 돌아온
+  ///   세션은 "새 퍼즐"로 본다.
+  bool isResumable({
+    required int userFilledCells,
+    required int emptyCells,
+    int maxWrongCount = 3,
+  }) {
+    if (isGameComplete || isGameOver || wrongCount >= maxWrongCount) {
+      return false;
+    }
+    if (emptyCells > 0 && userFilledCells >= emptyCells) return false;
+    return userFilledCells > 0 || hasNotes || wrongCount > 0;
+  }
 }
 
 class GameStateService {
@@ -72,6 +101,7 @@ class GameStateService {
     Set<String> hintCells = const <String>{},
     bool isGameComplete = false,
     bool isGameOver = false,
+    String? challengeDate,
   }) async {
     final updatedAtMillis = DateTime.now().millisecondsSinceEpoch;
     await _persistLocalSession(
@@ -86,6 +116,7 @@ class GameStateService {
       hintCells: hintCells,
       isGameComplete: isGameComplete,
       isGameOver: isGameOver,
+      challengeDate: challengeDate,
       updatedAtMillis: updatedAtMillis,
     );
   }
@@ -102,6 +133,7 @@ class GameStateService {
     required Set<String> hintCells,
     required bool isGameComplete,
     required bool isGameOver,
+    required String? challengeDate,
     required int updatedAtMillis,
   }) async {
     final prefs = await SharedPreferences.getInstance();
@@ -122,11 +154,11 @@ class GameStateService {
       'hintCells': hintCells.toList()..sort(),
       'isGameComplete': isGameComplete,
       'isGameOver': isGameOver,
+      if (challengeDate != null) 'challengeDate': challengeDate,
     });
 
     await prefs.setString(key, payload);
     await prefs.setInt(metaKey, updatedAtMillis);
-
   }
 
   Future<void> saveBoard({
@@ -195,7 +227,6 @@ class GameStateService {
 
     await prefs.remove(key);
     await prefs.remove(metaKey);
-
   }
 
   bool isBoardCompatible({
@@ -309,6 +340,7 @@ class GameStateService {
       hintCells: rawHintCells.map((cell) => cell as String).toSet(),
       isGameComplete: json['isGameComplete'] as bool? ?? false,
       isGameOver: json['isGameOver'] as bool? ?? false,
+      challengeDate: json['challengeDate'] as String?,
     );
   }
 

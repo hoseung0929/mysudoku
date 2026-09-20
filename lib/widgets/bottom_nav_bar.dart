@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
 
 /// 하단 네비게이션 바 위젯
 class BottomNavBar extends StatelessWidget {
@@ -22,13 +23,16 @@ class BottomNavBar extends StatelessWidget {
         ? colorScheme.surfaceContainerLow
         : colorScheme.surface;
     final isTablet = MediaQuery.of(context).size.width > 600;
+    final l10n = AppLocalizations.of(context)!;
     final items = [
       _BottomNavItemData(
         icon: Icons.cottage_rounded,
+        label: l10n.navHome,
         isTablet: isTablet,
       ),
       _BottomNavItemData(
         icon: Icons.bar_chart_rounded,
+        label: l10n.navRecords,
         isTablet: isTablet,
       ),
     ];
@@ -69,8 +73,9 @@ class BottomNavBar extends StatelessWidget {
                         : colorScheme.outlineVariant.withValues(alpha: 0.28),
                   ),
                 ),
-                child: SizedBox(
-                  height: isTablet ? 76 : 62,
+                // 큰 글씨에서도 라벨이 잘리지 않도록 고정 높이 대신 최소 높이만 둔다.
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: isTablet ? 76 : 64),
                   child: Row(
                     children: [
                       for (var index = 0; index < items.length; index++)
@@ -98,10 +103,12 @@ class BottomNavBar extends StatelessWidget {
 class _BottomNavItemData {
   const _BottomNavItemData({
     required this.icon,
+    required this.label,
     required this.isTablet,
   });
 
   final IconData icon;
+  final String label;
   final bool isTablet;
 }
 
@@ -121,50 +128,63 @@ class _BottomNavButton extends StatelessWidget {
     final iconColor = Theme.of(context).colorScheme.onSurfaceVariant;
     final selectedIconColor = Theme.of(context).colorScheme.onSurface;
     final isTablet = data.isTablet;
-    final baseIconSize = isTablet ? 26.0 : 21.0;
-    final selectedIconSize = isTablet ? 27.0 : 22.0;
-    final dotSize = isTablet ? 5.0 : 4.0;
+    final iconSize = isTablet ? 26.0 : 22.0;
+    final contentColor = selected ? selectedIconColor : iconColor;
 
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: isTablet ? 10 : 8,
-        vertical: isTablet ? 10 : 8,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: GestureDetector(
-          onTap: onTap,
-          behavior: HitTestBehavior.opaque,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOutCubic,
-            padding: EdgeInsets.symmetric(
-              horizontal: isTablet ? 20 : 16,
-              vertical: isTablet ? 6 : 4,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(22),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  data.icon,
-                  size: selected ? selectedIconSize : baseIconSize,
-                  color: selected ? selectedIconColor : iconColor,
+    // 선택 상태는 색뿐 아니라 배경 알약과 굵은 라벨로도 전달한다.
+    return Semantics(
+      container: true,
+      button: true,
+      selected: selected,
+      label: data.label,
+      onTap: onTap,
+      excludeSemantics: true,
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: isTablet ? 10 : 8,
+          vertical: isTablet ? 8 : 6,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: GestureDetector(
+            onTap: onTap,
+            behavior: HitTestBehavior.opaque,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              padding: EdgeInsets.symmetric(
+                horizontal: isTablet ? 20 : 12,
+                vertical: isTablet ? 6 : 5,
+              ),
+              decoration: BoxDecoration(
+                color: selected
+                    ? selectedIconColor.withValues(alpha: 0.08)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: MediaQuery.withClampedTextScaling(
+                maxScaleFactor: 1.3,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(data.icon, size: iconSize, color: contentColor),
+                    const SizedBox(height: 2),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        data.label,
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontSize: isTablet ? 13 : 11,
+                          fontWeight:
+                              selected ? FontWeight.w700 : FontWeight.w500,
+                          color: contentColor,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  margin: const EdgeInsets.only(top: 1),
-                  width: selected ? dotSize : 0,
-                  height: selected ? dotSize : 0,
-                  decoration: BoxDecoration(
-                    color: selectedIconColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),

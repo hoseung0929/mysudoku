@@ -1,11 +1,11 @@
 import 'package:sudoku159/database/database_helper.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/model/sudoku_game.dart';
+import 'package:sudoku159/model/sudoku_game_feature_policy.dart';
 import 'package:sudoku159/model/sudoku_level.dart';
 import 'package:sudoku159/services/challenge/achievement_service.dart';
 import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
 import 'package:sudoku159/services/game/game_state_service.dart';
-import 'package:sudoku159/utils/sudoku_generator.dart';
 
 class ContinueGameSummary {
   const ContinueGameSummary({
@@ -35,7 +35,9 @@ class HomeDashboardData {
   const HomeDashboardData({
     required this.continueGame,
     required this.continueGames,
+    required this.totalContinueCount,
     required this.todayChallenge,
+    required this.todayChallengeHasSession,
     required this.challengeProgress,
     required this.achievementSummary,
     required this.averageClearTimeSeconds,
@@ -43,7 +45,15 @@ class HomeDashboardData {
 
   final ContinueGameSummary? continueGame;
   final List<ContinueGameSummary> continueGames;
-  final SudokuGame todayChallenge;
+
+  /// 이어할 수 있는 게임의 전체 개수([continueGames]는 상위 몇 개만 담는다).
+  final int totalContinueCount;
+
+  /// 오늘의 도전 타깃 문제. 지정된 문제를 열 수 없으면 null (다른 문제로 대체하지 않음).
+  final SudokuGame? todayChallenge;
+
+  /// 오늘의 도전 문제에 이어할 수 있는 저장 세션이 있는지.
+  final bool todayChallengeHasSession;
   final ChallengeProgressSummary challengeProgress;
   final AchievementSummary achievementSummary;
   final int averageClearTimeSeconds;
@@ -59,8 +69,6 @@ class HomeDashboardService {
     AchievementService? achievementService,
     Future<Map<String, dynamic>?> Function(String levelName, int gameNumber)?
         loadGameEntry,
-    Future<List<Map<String, dynamic>>> Function(String levelName)?
-        loadGameEntriesForLevel,
     Future<Map<String, dynamic>> Function()? loadOverallStatistics,
     Future<List<Map<String, dynamic>>> Function()? loadRecentRecords,
   })  : _gameStateService = gameStateService ?? GameStateService(),
@@ -70,8 +78,6 @@ class HomeDashboardService {
             AchievementService(databaseHelper: databaseHelper),
         _loadGameEntry =
             loadGameEntry ?? (databaseHelper ?? DatabaseHelper()).getGameEntry,
-        _loadGameEntriesForLevel = loadGameEntriesForLevel ??
-            (databaseHelper ?? DatabaseHelper()).getGameEntriesForLevel,
         _loadOverallStatistics = loadOverallStatistics ??
             (achievementService != null && databaseHelper == null
                 ? (() async => const <String, dynamic>{})
@@ -87,8 +93,6 @@ class HomeDashboardService {
   final AchievementService _achievementService;
   final Future<Map<String, dynamic>?> Function(String levelName, int gameNumber)
       _loadGameEntry;
-  final Future<List<Map<String, dynamic>>> Function(String levelName)
-      _loadGameEntriesForLevel;
   final Future<Map<String, dynamic>> Function() _loadOverallStatistics;
   final Future<List<Map<String, dynamic>>> Function() _loadRecentRecords;
 
@@ -96,11 +100,14 @@ class HomeDashboardService {
     AppLocalizations l10n, {
     int continueGamesLimit = defaultContinueGamesLimit,
   }) async {
-    final continueGamesFuture = loadContinueGames(limit: continueGamesLimit);
+    final continueGamesFuture = loadContinueGames();
     final overallStatisticsFuture = _loadOverallStatistics();
     final recentRecordsFuture = _loadRecentRecords();
 
-    final continueGames = await continueGamesFuture;
+    final allContinueGames = await continueGamesFuture;
+    final continueGames = continueGamesLimit > 0
+        ? allContinueGames.take(continueGamesLimit).toList()
+        : allContinueGames;
     final continueGame = continueGames.isEmpty ? null : continueGames.first;
     final overallStatistics = await overallStatisticsFuture;
     final recentRecords = await recentRecordsFuture;
@@ -123,7 +130,11 @@ class HomeDashboardService {
     return HomeDashboardData(
       continueGame: continueGame,
       continueGames: continueGames,
+      totalContinueCount: allContinueGames.length,
       todayChallenge: todayChallenge,
+      todayChallengeHasSession: allContinueGames.any((g) =>
+          g.game.levelName == challengeProgress.todayChallengeLevelName &&
+          g.game.gameNumber == challengeProgress.todayChallengeGameNumber),
       challengeProgress: challengeProgress,
       achievementSummary: achievementSummary,
       averageClearTimeSeconds: averageClearTimeSeconds,
@@ -157,6 +168,18 @@ class HomeDashboardService {
       if (!_isPlayableBoard(session.board)) {
         continue;
       }
+      final userFilledCells = _countUserFilledCells(
+        originalBoard: board,
+        savedBoard: session.board,
+      );
+      // 레벨 목록과 동일한 이어하기 기준: 입력·메모 흔적이 있는 미완료 세션만.
+      if (!session.isResumable(
+        userFilledCells: userFilledCells,
+        emptyCells: 81 - board.expand((row) => row).where((v) => v != 0).length,
+        maxWrongCount: SudokuGameFeaturePolicy.forLevel(level).maxWrongCount,
+      )) {
+        continue;
+      }
 
       final game = SudokuGame(
         board: board,
@@ -173,10 +196,7 @@ class HomeDashboardService {
           originalBoard: board,
           savedBoard: session.board,
         ),
-        elapsedFilledCells: _countUserFilledCells(
-          originalBoard: board,
-          savedBoard: session.board,
-        ),
+        elapsedFilledCells: userFilledCells,
         lastPlayedAtMillis: saved.lastPlayedAtMillis,
         elapsedSeconds: session.elapsedSeconds,
         wrongCount: session.wrongCount,
@@ -192,7 +212,7 @@ class HomeDashboardService {
     return summaries;
   }
 
-  Future<SudokuGame> _loadTodayChallenge({
+  Future<SudokuGame?> _loadTodayChallenge({
     required String levelName,
     required int gameNumber,
   }) async {
@@ -200,40 +220,13 @@ class HomeDashboardService {
       (l) => l.name == levelName,
       orElse: () => SudokuLevel.levels.first,
     );
-    final directMatch = await _loadPlayableEntry(levelName, gameNumber);
-    if (directMatch != null) {
-      return _gameFromEntry(
-        level: level,
-        levelName: levelName,
-        gameNumber: gameNumber,
-        entry: directMatch,
-      );
-    }
-
-    final sameLevelEntries = await _loadGameEntriesForLevel(levelName);
-    final fallbackEntry = _firstPlayableEntry(sameLevelEntries);
-    if (fallbackEntry != null) {
-      final fallbackGameNumber =
-          fallbackEntry['game_number'] as int? ?? gameNumber;
-      return _gameFromEntry(
-        level: level,
-        levelName: levelName,
-        gameNumber: fallbackGameNumber,
-        entry: fallbackEntry,
-      );
-    }
-
-    List<List<int>>? emergencyBoard;
-    while (emergencyBoard == null) {
-      emergencyBoard = SudokuGenerator.tryGenerateSudoku(level.emptyCells);
-    }
-    final emergencySolution = SudokuGenerator.getSolution(emergencyBoard);
-    return SudokuGame(
-      board: emergencyBoard,
-      solution: emergencySolution,
-      emptyCells: level.emptyCells,
+    final entry = await _loadPlayableEntry(levelName, gameNumber);
+    if (entry == null) return null;
+    return _gameFromEntry(
+      level: level,
       levelName: levelName,
       gameNumber: gameNumber,
+      entry: entry,
     );
   }
 
@@ -298,21 +291,6 @@ class HomeDashboardService {
     }
 
     return entry;
-  }
-
-  Map<String, dynamic>? _firstPlayableEntry(
-      List<Map<String, dynamic>> entries) {
-    for (final entry in entries) {
-      final board = entry['board'] as List<List<int>>?;
-      final solution = entry['solution'] as List<List<int>>?;
-      if (board == null || solution == null) {
-        continue;
-      }
-      if (_isPlayableBoard(board) && _isPlayableBoard(solution)) {
-        return entry;
-      }
-    }
-    return null;
   }
 
   SudokuGame _gameFromEntry({

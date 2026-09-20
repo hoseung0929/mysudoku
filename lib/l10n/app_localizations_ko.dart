@@ -86,6 +86,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsLanguageJapanese => '日本語';
 
   @override
+  String get settingsLanguageChinese => '中文';
+
+  @override
+  String get settingsLanguageSpanish => 'Español';
+
+  @override
   String get settingsLanguagePickerTitle => '언어 선택';
 
   @override
@@ -200,6 +206,34 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get gameMemoShort => '메모';
+
+  @override
+  String gameCellLabel(int row, int col, String content) {
+    return '$row행 $col열: $content';
+  }
+
+  @override
+  String get gameCellEmpty => '비어 있음';
+
+  @override
+  String gameCellNotes(String notes) {
+    return '메모 $notes';
+  }
+
+  @override
+  String get gameCellGiven => '고정 숫자';
+
+  @override
+  String get gameCellHint => '힌트';
+
+  @override
+  String get gameCellWrong => '오답';
+
+  @override
+  String get gameEraseShort => '지우기';
+
+  @override
+  String get gameMoreOptions => '더보기';
 
   @override
   String get gameMemoOnShort => '메모 ON';
@@ -324,10 +358,24 @@ class AppLocalizationsKo extends AppLocalizations {
   String get dialogShare => '공유하기';
 
   @override
-  String get dialogBackToLevels => '레벨 선택으로';
+  String get dialogBackToLevels => '퍼즐 목록으로';
 
   @override
-  String get dialogPlayAgain => '다시 시작';
+  String get dialogPlayAgain => '다시 풀기';
+
+  @override
+  String get dialogPuzzleCompleteTitle => '퍼즐 완료';
+
+  @override
+  String get dialogNewBestMessage => '새로운 최고 기록이에요';
+
+  @override
+  String dialogHintsUsed(int count) {
+    return '힌트 $count회 사용';
+  }
+
+  @override
+  String get dialogSolveSameAgain => '같은 퍼즐 다시 풀기';
 
   @override
   String get dialogNextPuzzle => '다음 퍼즐';
@@ -369,14 +417,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get commonCancel => '취소';
 
   @override
-  String get gameOverTitle => '게임 오버';
+  String get gameOverTitle => '실수 한도에 도달했어요';
 
   @override
-  String get gameOverMessage => '오답 한도를 초과했습니다.';
+  String get gameOverMessage => '처음부터 다시 풀거나 다른 퍼즐을 선택할 수 있어요.';
 
   @override
   String gameOverWrongLabel(int count, int maxCount) {
-    return '오답: $count/$maxCount';
+    return '이번 게임: 실수 $count회 / 한도 $maxCount회';
   }
 
   @override
@@ -501,23 +549,23 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsMetricClears => '클리어 (필터)';
 
   @override
-  String get recordsMetricClearRate => '전체 완료율';
+  String get recordsMetricClearRate => '퍼즐 완료 현황';
 
   @override
-  String get recordsMetricPerfectRate => '퍼펙트율';
+  String get recordsMetricPerfectRate => '무오답 완료 비율';
 
   @override
   String get recordsSummaryMetricsFootnote =>
-      '클리어 수는 기간과 난이도 필터를 반영해요. 전체 완료율은 같은 범위에서 푼 퍼즐 수를 전체 퍼즐 수와 비교한 값이에요.';
+      '퍼즐마다 최고 기록 한 건만 세고, 기간·난이도 필터를 반영해요. 완료 현황은 같은 범위의 전체 퍼즐 수와 비교한 값이에요.';
 
   @override
-  String get recordsMetricAvgTime => '평균 시간';
+  String get recordsMetricAvgTime => '최고 기록 평균';
 
   @override
-  String get recordsMetricAvgWrong => '평균 오답';
+  String get recordsMetricAvgWrong => '최고 기록의 평균 오답';
 
   @override
-  String get recordsByLevelTitle => '레벨별 통계';
+  String get recordsByLevelTitle => '난이도별 기록';
 
   @override
   String get recordsByLevelEmpty => '표시할 레벨 통계가 없습니다.';
@@ -527,7 +575,7 @@ class AppLocalizationsKo extends AppLocalizations {
       '난이도별로 어느 구간에서 가장 편안해졌는지 볼 수 있어요.';
 
   @override
-  String get recordsLevelInfographicClearRate => '완료율';
+  String get recordsLevelInfographicClearRate => '퍼즐 완료 현황';
 
   @override
   String get recordsLevelMiniBest => '베스트';
@@ -545,13 +593,64 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsRetry => '다시 시도';
 
   @override
+  String get recordsEmptyTitle => '첫 퍼즐을 완성하면 기록이 쌓여요.';
+
+  @override
+  String get recordsEmptyAction => '퍼즐 시작하기';
+
+  @override
+  String get recordsLevelEmpty => '아직 완료한 기록이 없어요.';
+
+  @override
+  String get recordsRowBestTime => '최고 기록';
+
+  @override
+  String get recordsAverageBasisNote => '평균은 모든 플레이가 아니라 퍼즐별 최고 기록을 기준으로 해요.';
+
+  @override
+  String get recordsCalendarTitle => '활동 달력';
+
+  @override
+  String recordsCalendarPeriod(int weeks) {
+    return '최근 $weeks주';
+  }
+
+  @override
+  String get recordsViewAchievements => '업적 보기';
+
+  @override
+  String recordsOverallNote(int cleared, int total) {
+    return '전체 난이도에서 $total개 중 $cleared개를 완료했어요.';
+  }
+
+  @override
+  String recordsWeekActiveDays(int count) {
+    return '활동 $count일';
+  }
+
+  @override
+  String recordsWeekCompletions(int count) {
+    return '완료 $count판';
+  }
+
+  @override
+  String recordsWeekDayDone(String day, int count) {
+    return '$day: $count판 완료';
+  }
+
+  @override
+  String recordsWeekDayNone(String day) {
+    return '$day: 완료 없음';
+  }
+
+  @override
   String get recordsStatsPageSubtitle => '클리어와 평균 시간을 한눈에 봐요.';
 
   @override
-  String get recordsKpiWeeklyClearsLabel => '클리어';
+  String get recordsKpiWeeklyClearsLabel => '완료한 퍼즐';
 
   @override
-  String get recordsKpiAvgSolveTimeLabel => '평균 시간';
+  String get recordsKpiAvgSolveTimeLabel => '최고 기록 평균';
 
   @override
   String get recordsActivityOverviewTitle => '누적 활동';
@@ -560,16 +659,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsActivityHeatmapTitle => '최근 활동 히트맵';
 
   @override
-  String get recordsActivityHeatmapCaption => '칸이 진할수록 그날 더 많이 클리어했어요.';
+  String get recordsActivityHeatmapCaption => '칸이 진할수록 그날 더 많이 완료했어요.';
 
   @override
-  String get recordsActivityTotalClearsLabel => '누적 클리어';
+  String get recordsActivityTotalClearsLabel => '누적 완료 횟수';
 
   @override
-  String get recordsActivityCurrentStreakLabel => '현재 연속';
+  String get recordsActivityCurrentStreakLabel => '현재 연속 완료 일수';
 
   @override
-  String get recordsActivityBestStreakLabel => '최장 연속';
+  String get recordsActivityBestStreakLabel => '최장 연속 완료 일수';
 
   @override
   String recordsActivityDayCount(int count) {
@@ -1118,15 +1217,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get profileEditorNameLabel => '이름';
 
   @override
-  String get profileEditorBioLabel => '자기소개';
-
-  @override
-  String get profileEditorBioHint => '나를 소개하는 한 줄을 입력해주세요';
-
-  @override
-  String get profileEditorBioFooter => '자기소개와 프로필 사진은 프로필 화면에 표시됩니다.';
-
-  @override
   String get profileEditorDefaultProfile => '기본 프로필';
 
   @override
@@ -1143,6 +1233,68 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get homeTodayPuzzleTitle => '조용히 집중해볼 시간이에요.';
+
+  @override
+  String get homeTodayChallengeStartButton => '오늘의 도전 시작';
+
+  @override
+  String get homeTodayChallengeResumeButton => '오늘의 도전 이어하기';
+
+  @override
+  String get homeTodayChallengeReviewButton => '오늘의 퍼즐 다시 풀기';
+
+  @override
+  String get homeTodayChallengeLoadError => '오늘의 퍼즐을 불러오지 못했어요.';
+
+  @override
+  String get homeTodayChallengeDateChanged => '날짜가 바뀌어 오늘의 도전을 새로 불러왔어요.';
+
+  @override
+  String get homeFirstStartTitle => '첫 퍼즐을 시작해보세요';
+
+  @override
+  String get homeNewPuzzleTitle => '새 퍼즐을 시작해보세요';
+
+  @override
+  String get homeChooseLevelBody => '난이도를 선택하세요. 진행 상황은 자동 저장됩니다.';
+
+  @override
+  String get homeChooseLevelButton => '난이도 선택';
+
+  @override
+  String homeViewAllInProgress(int count) {
+    return '진행 중인 게임 모두 보기 ($count)';
+  }
+
+  @override
+  String get homeNewGameSectionTitle => '새 게임 · 난이도 선택';
+
+  @override
+  String homeLevelBlankCells(int count) {
+    return '빈칸 $count개';
+  }
+
+  @override
+  String get homeSavedGamesTitle => '진행 중인 게임';
+
+  @override
+  String get homeSavedGamesDescription =>
+      '이어서 풀 게임을 고르세요. 삭제해도 저장된 풀이만 지워지고 완료 기록은 남아요.';
+
+  @override
+  String get homeSavedGameDeleteTooltip => '저장된 풀이 삭제';
+
+  @override
+  String get homeSavedGameDeleteTitle => '저장된 풀이를 삭제할까요?';
+
+  @override
+  String get homeSavedGameDeleteBody => '이 퍼즐의 입력과 메모가 삭제돼요. 완료 기록은 유지돼요.';
+
+  @override
+  String get homeSavedGameDeleteConfirm => '삭제';
+
+  @override
+  String get homeLoadError => '게임 정보를 불러오지 못했어요.';
 
   @override
   String get homeCatalogFirstTitle => '첫 퍼즐 세트를 준비하고 있어요';
@@ -1204,7 +1356,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String levelInProgressLimitTitle(int maxCount) {
-    return '퍼즐을 $maxCount개나 진행 중이네요!';
+    return '진행 중인 퍼즐이 $maxCount개예요';
   }
 
   @override
@@ -1219,14 +1371,61 @@ class AppLocalizationsKo extends AppLocalizations {
   String get levelTryAgain => '다시 시도';
 
   @override
-  String get gameResetDialogTitle => '현재 게임 초기화';
+  String get levelContinueButton => '이어서 풀기';
+
+  @override
+  String levelStartNextNew(String number) {
+    return '다음 새 퍼즐 시작 · $number';
+  }
+
+  @override
+  String levelViewInProgress(int count) {
+    return '진행 중 $count개 보기';
+  }
+
+  @override
+  String get levelNotesInProgress => '메모 작성 중';
+
+  @override
+  String get levelEmptyInProgress => '이어 풀 퍼즐이 없어요.';
+
+  @override
+  String get levelEmptyCompleted => '첫 완료 기록을 만들어보세요.';
+
+  @override
+  String get levelEmptyFresh => '새로 시작할 퍼즐이 없어요.';
+
+  @override
+  String get levelAllCompleted => '이 난이도의 모든 퍼즐을 완료했어요.';
+
+  @override
+  String get levelActionShowNew => '새 퍼즐 보기';
+
+  @override
+  String get levelActionShowInProgress => '진행 중 보기';
+
+  @override
+  String get levelActionShowAll => '전체 보기';
+
+  @override
+  String levelBestTime(String time) {
+    return '최고 기록 $time';
+  }
+
+  @override
+  String levelCellSemantics(String number, String status) {
+    return '$number번 퍼즐, $status';
+  }
+
+  @override
+  String get gameResetDialogTitle => '처음부터 다시 풀기';
 
   @override
   String get gameResetDialogBody =>
-      '입력한 숫자, 메모, 힌트, 오답 횟수와 시간을 모두 지우고 처음 상태로 돌아갈까요?';
+      '입력한 숫자, 메모, 힌트, 오답 횟수와 시간을 모두 지우고 처음 상태로 돌아갈까요? 이전 완료 기록은 유지돼요.';
 
   @override
-  String get gameResetConfirm => '초기화';
+  String get gameResetConfirm => '다시 풀기';
 
   @override
   String get gameNumberInputLegend => '작은 숫자는 남은 개수, 체크는 완료된 숫자예요.';

@@ -22,7 +22,7 @@ void main() {
 
       expect(text, contains('NEW BEST'));
       expect(text, contains('중급 · 게임 12'));
-      expect(text, contains('00:03:05'));
+      expect(text, contains('03:05'));
       expect(text, contains('오답 1회'));
     });
 
@@ -33,7 +33,7 @@ void main() {
         wrongCount: 2,
       );
 
-      expect(summary, '00:02:05 · 오답 2회');
+      expect(summary, '02:05 · 오답 2회');
     });
   });
 }

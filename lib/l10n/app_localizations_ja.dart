@@ -85,6 +85,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsLanguageJapanese => '日本語';
 
   @override
+  String get settingsLanguageChinese => '中文';
+
+  @override
+  String get settingsLanguageSpanish => 'Español';
+
+  @override
   String get settingsLanguagePickerTitle => '言語を選択';
 
   @override
@@ -199,6 +205,34 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get gameMemoShort => 'メモ';
+
+  @override
+  String gameCellLabel(int row, int col, String content) {
+    return '$row行$col列: $content';
+  }
+
+  @override
+  String get gameCellEmpty => '空欄';
+
+  @override
+  String gameCellNotes(String notes) {
+    return 'メモ $notes';
+  }
+
+  @override
+  String get gameCellGiven => '固定';
+
+  @override
+  String get gameCellHint => 'ヒント';
+
+  @override
+  String get gameCellWrong => '不正解';
+
+  @override
+  String get gameEraseShort => '消す';
+
+  @override
+  String get gameMoreOptions => 'その他';
 
   @override
   String get gameMemoOnShort => 'メモ ON';
@@ -323,10 +357,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get dialogShare => 'シェア';
 
   @override
-  String get dialogBackToLevels => 'レベル一覧';
+  String get dialogBackToLevels => 'パズル一覧へ';
 
   @override
-  String get dialogPlayAgain => 'もう一度';
+  String get dialogPlayAgain => 'もう一度解く';
+
+  @override
+  String get dialogPuzzleCompleteTitle => 'パズル完了';
+
+  @override
+  String get dialogNewBestMessage => 'ベスト記録を更新しました';
+
+  @override
+  String dialogHintsUsed(int count) {
+    return 'ヒント $count回使用';
+  }
+
+  @override
+  String get dialogSolveSameAgain => '同じパズルをもう一度解く';
 
   @override
   String get dialogNextPuzzle => '次のパズル';
@@ -369,14 +417,14 @@ class AppLocalizationsJa extends AppLocalizations {
   String get commonCancel => 'キャンセル';
 
   @override
-  String get gameOverTitle => 'ゲームオーバー';
+  String get gameOverTitle => 'ミスの上限に達しました';
 
   @override
-  String get gameOverMessage => 'ミスが上限を超えました。';
+  String get gameOverMessage => '最初からやり直すか、別のパズルを選べます。';
 
   @override
   String gameOverWrongLabel(int count, int maxCount) {
-    return 'ミス: $count/$maxCount';
+    return '今回: ミス $count回 / 上限 $maxCount回';
   }
 
   @override
@@ -500,23 +548,23 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsMetricClears => 'クリア（フィルター）';
 
   @override
-  String get recordsMetricClearRate => '全体進捗率';
+  String get recordsMetricClearRate => 'パズル完了状況';
 
   @override
-  String get recordsMetricPerfectRate => 'パーフェクト率';
+  String get recordsMetricPerfectRate => 'ミスなし完了の割合';
 
   @override
   String get recordsSummaryMetricsFootnote =>
-      'クリア数はフィルターを反映しています。全体進捗率は同じ範囲で解いたパズル数を全パズル数と比較した値です。';
+      'パズルごとにベスト記録1件だけを数え、期間・レベルのフィルターを反映します。完了状況は同じ範囲の全パズル数との比較です。';
 
   @override
-  String get recordsMetricAvgTime => '平均タイム';
+  String get recordsMetricAvgTime => 'ベスト記録の平均';
 
   @override
-  String get recordsMetricAvgWrong => '平均ミス';
+  String get recordsMetricAvgWrong => 'ベスト記録の平均ミス';
 
   @override
-  String get recordsByLevelTitle => 'レベル別統計';
+  String get recordsByLevelTitle => 'レベル別の記録';
 
   @override
   String get recordsByLevelEmpty => '表示するレベル統計がありません。';
@@ -525,7 +573,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsByLevelSectionSubtitle => '難易度別にどのレベルで成長を感じているか確認できます。';
 
   @override
-  String get recordsLevelInfographicClearRate => 'クリア率';
+  String get recordsLevelInfographicClearRate => 'パズル完了状況';
 
   @override
   String get recordsLevelMiniBest => 'ベスト';
@@ -543,13 +591,64 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsRetry => '再試行';
 
   @override
+  String get recordsEmptyTitle => '最初のパズルを完成させると記録がたまります。';
+
+  @override
+  String get recordsEmptyAction => 'パズルを始める';
+
+  @override
+  String get recordsLevelEmpty => 'このレベルの完了記録はまだありません。';
+
+  @override
+  String get recordsRowBestTime => 'ベスト記録';
+
+  @override
+  String get recordsAverageBasisNote => '平均はすべてのプレイではなく、パズルごとのベスト記録を基にしています。';
+
+  @override
+  String get recordsCalendarTitle => '活動カレンダー';
+
+  @override
+  String recordsCalendarPeriod(int weeks) {
+    return '直近$weeks週';
+  }
+
+  @override
+  String get recordsViewAchievements => '実績を見る';
+
+  @override
+  String recordsOverallNote(int cleared, int total) {
+    return '全レベルで$total問中$cleared問を完了しました。';
+  }
+
+  @override
+  String recordsWeekActiveDays(int count) {
+    return '活動 $count日';
+  }
+
+  @override
+  String recordsWeekCompletions(int count) {
+    return '完了 $count回';
+  }
+
+  @override
+  String recordsWeekDayDone(String day, int count) {
+    return '$day: $count回完了';
+  }
+
+  @override
+  String recordsWeekDayNone(String day) {
+    return '$day: 完了なし';
+  }
+
+  @override
   String get recordsStatsPageSubtitle => 'クリアと平均タイムを一目で確認できます。';
 
   @override
-  String get recordsKpiWeeklyClearsLabel => 'クリア';
+  String get recordsKpiWeeklyClearsLabel => 'クリアしたパズル';
 
   @override
-  String get recordsKpiAvgSolveTimeLabel => '平均タイム';
+  String get recordsKpiAvgSolveTimeLabel => 'ベスト記録の平均';
 
   @override
   String get recordsActivityOverviewTitle => '積み上げた記録';
@@ -558,16 +657,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsActivityHeatmapTitle => '最近のアクティビティ';
 
   @override
-  String get recordsActivityHeatmapCaption => '色が濃いほど、その日に多くクリアしています。';
+  String get recordsActivityHeatmapCaption => '色が濃いほどその日の完了回数が多いです。';
 
   @override
-  String get recordsActivityTotalClearsLabel => '累計クリア';
+  String get recordsActivityTotalClearsLabel => '累計クリア回数';
 
   @override
-  String get recordsActivityCurrentStreakLabel => '現在連続';
+  String get recordsActivityCurrentStreakLabel => '現在の連続日数';
 
   @override
-  String get recordsActivityBestStreakLabel => '最長連続';
+  String get recordsActivityBestStreakLabel => '最長の連続日数';
 
   @override
   String recordsActivityDayCount(int count) {
@@ -1113,15 +1212,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get profileEditorNameLabel => '名前';
 
   @override
-  String get profileEditorBioLabel => '自己紹介';
-
-  @override
-  String get profileEditorBioHint => '一言で自己紹介してください';
-
-  @override
-  String get profileEditorBioFooter => '自己紹介とプロフィール写真はプロフィール画面に表示されます。';
-
-  @override
   String get profileEditorDefaultProfile => 'デフォルトプロフィール';
 
   @override
@@ -1138,6 +1228,68 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get homeTodayPuzzleTitle => '静かに集中するひとときです。';
+
+  @override
+  String get homeTodayChallengeStartButton => '今日のチャレンジを始める';
+
+  @override
+  String get homeTodayChallengeResumeButton => '今日のチャレンジを続ける';
+
+  @override
+  String get homeTodayChallengeReviewButton => '今日のパズルをもう一度';
+
+  @override
+  String get homeTodayChallengeLoadError => '今日のパズルを読み込めませんでした。';
+
+  @override
+  String get homeTodayChallengeDateChanged => '日付が変わったため、今日のチャレンジを更新しました。';
+
+  @override
+  String get homeFirstStartTitle => '最初のパズルを始めましょう';
+
+  @override
+  String get homeNewPuzzleTitle => '新しいパズルを始めましょう';
+
+  @override
+  String get homeChooseLevelBody => 'レベルを選んでください。進行状況は自動で保存されます。';
+
+  @override
+  String get homeChooseLevelButton => 'レベルを選ぶ';
+
+  @override
+  String homeViewAllInProgress(int count) {
+    return '進行中のゲームをすべて見る ($count)';
+  }
+
+  @override
+  String get homeNewGameSectionTitle => '新しいゲーム · レベルを選択';
+
+  @override
+  String homeLevelBlankCells(int count) {
+    return '空きマス $count個';
+  }
+
+  @override
+  String get homeSavedGamesTitle => '進行中のゲーム';
+
+  @override
+  String get homeSavedGamesDescription =>
+      '続きから解くゲームを選びます。削除してもクリア記録は残り、保存した途中経過のみ消えます。';
+
+  @override
+  String get homeSavedGameDeleteTooltip => '保存した途中経過を削除';
+
+  @override
+  String get homeSavedGameDeleteTitle => '保存した途中経過を削除しますか？';
+
+  @override
+  String get homeSavedGameDeleteBody => 'このパズルの入力とメモが削除されます。クリア記録は残ります。';
+
+  @override
+  String get homeSavedGameDeleteConfirm => '削除';
+
+  @override
+  String get homeLoadError => 'ゲーム情報を読み込めませんでした。';
 
   @override
   String get homeCatalogFirstTitle => '初めてのパズルセットを準備中です';
@@ -1198,7 +1350,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String levelInProgressLimitTitle(int maxCount) {
-    return 'パズルを$maxCount個も進めていますね！';
+    return '進行中のパズルが$maxCount件あります';
   }
 
   @override
@@ -1213,14 +1365,61 @@ class AppLocalizationsJa extends AppLocalizations {
   String get levelTryAgain => 'もう一度';
 
   @override
-  String get gameResetDialogTitle => '現在のゲームをリセット';
+  String get levelContinueButton => '続きから解く';
+
+  @override
+  String levelStartNextNew(String number) {
+    return '次の新しいパズルを始める · $number';
+  }
+
+  @override
+  String levelViewInProgress(int count) {
+    return '進行中 $count件を見る';
+  }
+
+  @override
+  String get levelNotesInProgress => 'メモ作成中';
+
+  @override
+  String get levelEmptyInProgress => '続きから解くパズルはありません。';
+
+  @override
+  String get levelEmptyCompleted => '最初のクリア記録を作りましょう。';
+
+  @override
+  String get levelEmptyFresh => '新しく始められるパズルはありません。';
+
+  @override
+  String get levelAllCompleted => 'このレベルのパズルをすべてクリアしました。';
+
+  @override
+  String get levelActionShowNew => '新しいパズルを見る';
+
+  @override
+  String get levelActionShowInProgress => '進行中を見る';
+
+  @override
+  String get levelActionShowAll => 'すべて見る';
+
+  @override
+  String levelBestTime(String time) {
+    return 'ベスト $time';
+  }
+
+  @override
+  String levelCellSemantics(String number, String status) {
+    return 'パズル $number、$status';
+  }
+
+  @override
+  String get gameResetDialogTitle => '最初からやり直す';
 
   @override
   String get gameResetDialogBody =>
-      '入力した数字、メモ、ヒント、ミス回数、時間をすべてリセットして最初の盤面に戻りますか？';
+      '入力した数字、メモ、ヒント、ミス回数、時間をすべて消して最初の状態に戻しますか？これまでのクリア記録は残ります。';
 
   @override
-  String get gameResetConfirm => 'リセット';
+  String get gameResetConfirm => 'やり直す';
 
   @override
   String get gameNumberInputLegend => '小さい数字は残り個数、チェックは完了した数字です。';

@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
+import 'package:sudoku159/widgets/game_result_dialog_frame.dart';
 
-/// 게임 오버 다이얼로그 위젯
-class GameOverDialog extends StatelessWidget {
+/// 게임 오버 다이얼로그. 완료 다이얼로그와 같은 너비·여백·버튼 규칙을 쓴다.
+/// 실패를 평가하거나 강한 색으로 강조하지 않고, 실제 횟수와 한도만 알린다.
+class GameOverDialog extends StatefulWidget {
   final int wrongCount;
   final int maxWrongCount;
   final VoidCallback onRestart;
   final VoidCallback onGoToLevelSelection;
-
-  static const Color mintColor = Color(0xFFB8E6B8);
-  static const Color pinkColor = Color(0xFFE6B8C8);
 
   const GameOverDialog({
     super.key,
@@ -21,102 +19,51 @@ class GameOverDialog extends StatelessWidget {
   });
 
   @override
+  State<GameOverDialog> createState() => _GameOverDialogState();
+}
+
+class _GameOverDialogState extends State<GameOverDialog> {
+  bool _handled = false;
+
+  VoidCallback _once(VoidCallback action) => () {
+        if (_handled) return;
+        _handled = true;
+        action();
+      };
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final onSurface = Theme.of(context).colorScheme.onSurface;
-    final onVar = Theme.of(context).colorScheme.onSurfaceVariant;
-    return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      title: Row(
-        children: [
-          Icon(
-            Icons.sentiment_dissatisfied,
-            color: Colors.red.shade600,
-            size: 32,
-          ),
-          const SizedBox(width: 12),
-          Text(
-            l10n.gameOverTitle,
-            style: GoogleFonts.notoSans(
-              color: onSurface,
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
-          ),
-        ],
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            l10n.gameOverMessage,
-            style: GoogleFonts.notoSans(
-              fontSize: 16,
-              color: onVar,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: pinkColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: pinkColor.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  color: Colors.red.shade600,
-                  size: 24,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  l10n.gameOverWrongLabel(wrongCount, maxWrongCount),
-                  style: GoogleFonts.notoSans(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red.shade600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: onGoToLevelSelection,
-          child: Text(
-            l10n.dialogBackToLevels,
-            style: GoogleFonts.notoSans(
-              color: onVar,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
+    final cs = Theme.of(context).colorScheme;
+    return GameResultDialogFrame(
+      body: [
+        Text(
+          l10n.gameOverTitle,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          l10n.gameOverWrongLabel(widget.wrongCount, widget.maxWrongCount),
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            fontFeatures: [FontFeature.tabularFigures()],
           ),
         ),
-        ElevatedButton(
-          onPressed: onRestart,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: mintColor,
-            foregroundColor: const Color(0xFF1A2E24),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          child: Text(
-            l10n.dialogPlayAgain,
-            style: GoogleFonts.notoSans(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+        const SizedBox(height: 8),
+        Text(
+          l10n.gameOverMessage,
+          textAlign: TextAlign.center,
+          style:
+              TextStyle(fontSize: 14, height: 1.4, color: cs.onSurfaceVariant),
         ),
       ],
+      primaryLabel: l10n.gameResetDialogTitle,
+      onPrimary: _once(widget.onRestart),
+      secondaryLabel: l10n.dialogBackToLevels,
+      onSecondary: _once(widget.onGoToLevelSelection),
     );
   }
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:sudoku159/services/settings/app_settings_service.dart';
 import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -9,29 +8,25 @@ import 'package:timezone/timezone.dart' as tz;
 class NotificationService {
   NotificationService({
     FlutterLocalNotificationsPlugin? plugin,
-    AppSettingsService? settingsService,
     ChallengeProgressService? challengeProgressService,
   })  : _plugin = plugin ?? FlutterLocalNotificationsPlugin(),
-        _settingsService = settingsService ?? AppSettingsService(),
         _challengeProgressService =
             challengeProgressService ?? ChallengeProgressService();
 
-  static const int defaultReminderHour = 20;
-  static const int defaultReminderMinute = 0;
-
-  static const int _dailyChallengeReminderId = 1001;
-  static const int _streakReminderId = 1002;
-  static const int _gameCompleteNotificationId = 1003;
-  static const int _dailyGoalNotificationId = 1004;
+  static const int _morningReminderId = 1001;
+  static const int _noonReminderId = 1002;
+  static const int _eveningReminderId = 1003;
   static const String _dailyChallengeChannelId = 'daily_challenge_reminders';
   static const String _dailyChallengeChannelName = 'Daily challenge reminders';
-  static const String _gameCompleteChannelId = 'game_complete_notifications';
-  static const String _gameCompleteChannelName = 'Game complete notifications';
-  static const String _goalChannelId = 'goal_notifications';
-  static const String _goalChannelName = 'Goal notifications';
+
+  /// (알림 ID, 시, 분) — 하루 세 번(아침/점심/저녁) 오늘의 챌린지를 리마인드한다.
+  static const List<(int, int, int)> _reminderSlots = [
+    (_morningReminderId, 9, 0),
+    (_noonReminderId, 13, 0),
+    (_eveningReminderId, 20, 0),
+  ];
 
   final FlutterLocalNotificationsPlugin _plugin;
-  final AppSettingsService _settingsService;
   final ChallengeProgressService _challengeProgressService;
 
   bool _initialized = false;
@@ -82,53 +77,41 @@ class NotificationService {
     return androidGranted ?? iosGranted ?? macGranted ?? true;
   }
 
-  Future<void> resyncFromStoredSettings() async {
-    final enabled = await _settingsService.getBool(
-      AppSettingsService.notificationsEnabledKey,
-      defaultValue: false,
-    );
-    final streakReminderEnabled = await _settingsService.getBool(
-      AppSettingsService.streakReminderEnabledKey,
-      defaultValue: false,
-    );
-    final hour = await _settingsService.getInt(
-      AppSettingsService.notificationHourKey,
-      defaultValue: defaultReminderHour,
-    );
-    final minute = await _settingsService.getInt(
-      AppSettingsService.notificationMinuteKey,
-      defaultValue: defaultReminderMinute,
-    );
-
-    await syncReminders(
-      challengeReminderEnabled: enabled,
-      streakReminderEnabled: streakReminderEnabled,
-      hour: hour,
-      minute: minute,
-    );
-  }
-
-  Future<void> syncReminders({
-    required bool challengeReminderEnabled,
-    required bool streakReminderEnabled,
-    required int hour,
-    required int minute,
-  }) async {
+  /// 오늘 퍼즐을 한 판도 안 깼으면 아침/점심/저녁 세 번 리마인드를 예약한다.
+  /// 이미 지난 시간대는 자동으로 다음 날로 넘어가서 예약된다. 스트릭이 있으면
+  /// 스트릭 문구를, 없으면 일반 챌린지 문구를 쓴다.
+  ///
+  /// 앱을 열 때, 그리고 게임을 클리어한 직후에 호출해서 항상 최신 상태로
+  /// 다시 맞춘다 — 로컬 알림은 발송 순간에 조건을 재확인할 수 없어서, 오늘
+  /// 이미 한 판 깼다면 이 호출 시점에 남은 시간대 알림을 미리 취소해야 한다.
+  Future<void> syncReminders() async {
     await initialize();
-    await _plugin.cancel(_dailyChallengeReminderId);
-    await _plugin.cancel(_streakReminderId);
+    for (final slot in _reminderSlots) {
+      await _plugin.cancel(slot.$1);
+    }
 
     final challengeSummary = await _challengeProgressService.load();
-    if (challengeSummary.isTodayChallengeCleared) {
+    final todayStr = ChallengeProgressService.formatLocalDate(DateTime.now());
+    final hasPlayedToday = challengeSummary.lastClearDate == todayStr;
+    if (hasPlayedToday) {
       return;
     }
 
-    if (challengeReminderEnabled) {
+    final locale = WidgetsBinding.instance.platformDispatcher.locale;
+    final useStreakCopy = challengeSummary.streakDays > 0;
+    final title = useStreakCopy
+        ? _streakTitleForLocale(locale, challengeSummary.streakDays)
+        : _titleForLocale(locale);
+    final body = useStreakCopy
+        ? _streakBodyForLocale(locale, challengeSummary.streakDays)
+        : _bodyForLocale(locale);
+
+    for (final slot in _reminderSlots) {
       await _plugin.zonedSchedule(
-        _dailyChallengeReminderId,
-        _titleForLocale(WidgetsBinding.instance.platformDispatcher.locale),
-        _bodyForLocale(WidgetsBinding.instance.platformDispatcher.locale),
-        _nextInstance(hour: hour, minute: minute),
+        slot.$1,
+        title,
+        body,
+        _nextInstance(hour: slot.$2, minute: slot.$3),
         const NotificationDetails(
           android: AndroidNotificationDetails(
             _dailyChallengeChannelId,
@@ -143,111 +126,8 @@ class NotificationService {
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time,
       );
     }
-
-    if (streakReminderEnabled && challengeSummary.streakDays > 0) {
-      final streakTime = _shiftedTime(hour: hour, minute: minute, hours: 1);
-      await _plugin.zonedSchedule(
-        _streakReminderId,
-        _streakTitleForLocale(
-          WidgetsBinding.instance.platformDispatcher.locale,
-          challengeSummary.streakDays,
-        ),
-        _streakBodyForLocale(
-          WidgetsBinding.instance.platformDispatcher.locale,
-          challengeSummary.streakDays,
-        ),
-        _nextInstance(hour: streakTime.$1, minute: streakTime.$2),
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            _dailyChallengeChannelId,
-            _dailyChallengeChannelName,
-            channelDescription: 'Reminds you to keep your Sudoku streak going.',
-            importance: Importance.defaultImportance,
-            priority: Priority.defaultPriority,
-          ),
-          iOS: DarwinNotificationDetails(),
-        ),
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time,
-      );
-    }
-  }
-
-  Future<void> showGameCompleteNotification({
-    required String levelName,
-    required int gameNumber,
-    required bool isNewBestRecord,
-  }) async {
-    await initialize();
-    final enabled = await _settingsService.getBool(
-      AppSettingsService.gameCompleteNotificationEnabledKey,
-      defaultValue: false,
-    );
-    if (!enabled) {
-      return;
-    }
-
-    final locale = WidgetsBinding.instance.platformDispatcher.locale;
-    await _plugin.show(
-      _gameCompleteNotificationId,
-      _gameCompleteTitleForLocale(locale),
-      _gameCompleteBodyForLocale(
-        locale,
-        levelName: levelName,
-        gameNumber: gameNumber,
-        isNewBestRecord: isNewBestRecord,
-      ),
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          _gameCompleteChannelId,
-          _gameCompleteChannelName,
-          channelDescription: 'Celebrates when you finish a Sudoku puzzle.',
-          importance: Importance.defaultImportance,
-          priority: Priority.defaultPriority,
-        ),
-        iOS: DarwinNotificationDetails(),
-      ),
-    );
-  }
-
-  Future<void> showDailyGoalAchievedNotification({
-    required int weeklyClearCount,
-    required int weeklyGoalTarget,
-  }) async {
-    await initialize();
-    final enabled = await _settingsService.getBool(
-      AppSettingsService.dailyGoalNotificationEnabledKey,
-      defaultValue: false,
-    );
-    if (!enabled) {
-      return;
-    }
-
-    final locale = WidgetsBinding.instance.platformDispatcher.locale;
-    await _plugin.show(
-      _dailyGoalNotificationId,
-      _goalTitleForLocale(locale),
-      _goalBodyForLocale(
-        locale,
-        weeklyClearCount: weeklyClearCount,
-        weeklyGoalTarget: weeklyGoalTarget,
-      ),
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          _goalChannelId,
-          _goalChannelName,
-          channelDescription: 'Celebrates when you reach your weekly goal.',
-          importance: Importance.defaultImportance,
-          priority: Priority.defaultPriority,
-        ),
-        iOS: DarwinNotificationDetails(),
-      ),
-    );
   }
 
   String _titleForLocale(Locale locale) {
@@ -278,45 +158,6 @@ class NotificationService {
     return 'Finish one puzzle today to protect your $streakDays-day streak.';
   }
 
-  String _gameCompleteTitleForLocale(Locale locale) {
-    if (locale.languageCode == 'ko') {
-      return '스도쿠를 완료했어요';
-    }
-    return 'Puzzle completed';
-  }
-
-  String _gameCompleteBodyForLocale(
-    Locale locale, {
-    required String levelName,
-    required int gameNumber,
-    required bool isNewBestRecord,
-  }) {
-    if (locale.languageCode == 'ko') {
-      final suffix = isNewBestRecord ? ' 새로운 최고 기록도 달성했어요.' : '';
-      return '$levelName · 게임 $gameNumber 클리어.$suffix';
-    }
-    final suffix = isNewBestRecord ? ' You also set a new best record.' : '';
-    return '$levelName · Game $gameNumber cleared.$suffix';
-  }
-
-  String _goalTitleForLocale(Locale locale) {
-    if (locale.languageCode == 'ko') {
-      return '주간 목표를 달성했어요';
-    }
-    return 'Weekly goal achieved';
-  }
-
-  String _goalBodyForLocale(
-    Locale locale, {
-    required int weeklyClearCount,
-    required int weeklyGoalTarget,
-  }) {
-    if (locale.languageCode == 'ko') {
-      return '최근 7일 동안 $weeklyClearCount판을 완료해 목표 $weeklyGoalTarget판을 채웠어요.';
-    }
-    return 'You cleared $weeklyClearCount puzzles in the last 7 days and reached your goal of $weeklyGoalTarget.';
-  }
-
   tz.TZDateTime _nextInstance({required int hour, required int minute}) {
     final now = tz.TZDateTime.now(tz.local);
     var scheduled = tz.TZDateTime(
@@ -333,15 +174,5 @@ class NotificationService {
     }
 
     return scheduled;
-  }
-
-  (int, int) _shiftedTime({
-    required int hour,
-    required int minute,
-    required int hours,
-  }) {
-    final totalMinutes = (hour * 60) + minute + (hours * 60);
-    final normalizedMinutes = totalMinutes % (24 * 60);
-    return (normalizedMinutes ~/ 60, normalizedMinutes % 60);
   }
 }

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
 
 class ProfileGlassHeader extends StatelessWidget {
   const ProfileGlassHeader({
@@ -16,6 +17,7 @@ class ProfileGlassHeader extends StatelessWidget {
     this.subtitleOverride,
     this.onTapEditProfile,
     this.compact = false,
+    this.showSubtitle = false,
   });
 
   final bool isTop;
@@ -29,6 +31,11 @@ class ProfileGlassHeader extends StatelessWidget {
   final VoidCallback? onTapEditProfile;
   final bool compact;
 
+  /// 이름 아래 인사말/소개를 보여줄지. 홈 헤더는 시작 행동보다 튀지 않도록
+  /// 기본적으로 한 줄(아바타 · 이름 · 설정)만 보여준다. 소개 데이터와 편집
+  /// 기능은 그대로이며 여기서만 생략한다.
+  final bool showSubtitle;
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -39,23 +46,16 @@ class ProfileGlassHeader extends StatelessWidget {
     final hasName = trimmedName.isNotEmpty;
     final displayName = titleOverride ?? (hasName ? trimmedName : guestTitle);
     final languageCode = Localizations.localeOf(context).languageCode;
-    final avatarRadius = compact ? 22.0 : 25.0;
-    final headerPadding = EdgeInsets.fromLTRB(
-      16,
-      (compact ? 18 : 22) + topInset,
-      16,
-      compact ? 14 : 18,
-    );
-    final profileGap = compact ? 14.0 : 18.0;
-    final titleFontSize = compact ? 18.0 : 20.0;
-    final subtitleFontSize = compact ? 11.0 : 11.5;
-    final settingButtonSize = compact ? 40.0 : 42.0;
-    final subtitleText = subtitleOverride ??
-        _buildGreetingMessage(
-          languageCode: languageCode,
-          hour: DateTime.now().hour,
-        );
+    final subtitleText = showSubtitle
+        ? (subtitleOverride ??
+            _buildGreetingMessage(
+              languageCode: languageCode,
+              hour: DateTime.now().hour,
+            ))
+        : null;
 
+    // 상태바 영역(topInset) 아래로 기본 64: 위아래 여백 8 + 조작 영역 48.
+    // 고정 높이가 아니라 최소 높이라서 큰 글씨·긴 이름이면 늘어난다.
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 32, sigmaY: 32),
@@ -76,33 +76,31 @@ class ProfileGlassHeader extends StatelessWidget {
             ),
           ),
           child: Padding(
-            padding: headerPadding,
+            padding: EdgeInsets.fromLTRB(16, topInset + 8, 12, 8),
             child: Row(
               children: [
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      children: [
-                        Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: onTapEditProfile,
-                            customBorder: const CircleBorder(),
-                            child: Container(
-                              padding: const EdgeInsets.all(3),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: onTapEditProfile,
+                      borderRadius: BorderRadius.circular(14),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 48),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(2),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: colorScheme.surface,
                                 border: Border.all(
-                                  color: colorScheme.outlineVariant.withValues(
-                                    alpha: 0.9,
-                                  ),
-                                  width: 2.5,
+                                  color: colorScheme.outlineVariant
+                                      .withValues(alpha: 0.9),
+                                  width: 1.5,
                                 ),
                               ),
                               child: CircleAvatar(
-                                radius: avatarRadius,
+                                radius: 19,
                                 backgroundColor: colorScheme.primaryContainer,
                                 backgroundImage: hasProfileImage
                                     ? FileImage(File(profileImagePath!))
@@ -111,63 +109,64 @@ class ProfileGlassHeader extends StatelessWidget {
                                       ) as ImageProvider,
                               ),
                             ),
-                          ),
-                        ),
-                        SizedBox(width: profileGap),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                displayName,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: titleFontSize,
-                                  color: colorScheme.onSurface,
-                                ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // 이름은 최대 두 줄. 줄이지 않고 높이가 늘어난다.
+                                  Text(
+                                    displayName,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 17,
+                                      height: 1.2,
+                                      color: colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  if (subtitleText != null) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      subtitleText,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: colorScheme.onSurfaceVariant
+                                            .withValues(alpha: 0.9),
+                                        fontSize: 11.5,
+                                        height: 1.15,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
-                              const SizedBox(height: 3),
-                              Text(
-                                subtitleText,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: colorScheme.onSurfaceVariant
-                                      .withValues(alpha: 0.9),
-                                  fontSize: subtitleFontSize,
-                                  height: 1.15,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: onTapSettings,
-                    borderRadius: BorderRadius.circular(18),
-                    child: Container(
-                      width: settingButtonSize,
-                      height: settingButtonSize,
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: colorScheme.outlineVariant
-                              .withValues(alpha: 0.55),
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: AppLocalizations.of(context)!.settingsTitle,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: onTapSettings,
+                      customBorder: const CircleBorder(),
+                      child: SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: Icon(
+                          Icons.tune_rounded,
+                          size: 22,
+                          color: colorScheme.onSurfaceVariant,
                         ),
-                      ),
-                      child: Icon(
-                        Icons.tune_rounded,
-                        size: 20,
-                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -189,14 +188,20 @@ class ProfileGlassHeader extends StatelessWidget {
       case _GreetingTimePeriod.morning:
         if (languageCode == 'ko') return '가볍게 한 판 시작해볼까요?';
         if (languageCode == 'ja') return 'さあ、一局始めましょう。';
+        if (languageCode == 'zh') return '从一局轻松的谜题开始吧。';
+        if (languageCode == 'es') return 'Empieza con un puzle ligero.';
         return 'Start with a light puzzle.';
       case _GreetingTimePeriod.afternoon:
         if (languageCode == 'ko') return '집중 퍼즐 한 판, 딱 좋아요.';
         if (languageCode == 'ja') return '集中して一局、いかがですか。';
+        if (languageCode == 'zh') return '现在适合专注解一局。';
+        if (languageCode == 'es') return 'Un puzle de concentración te sienta bien ahora.';
         return 'A focused puzzle fits now.';
       case _GreetingTimePeriod.evening:
         if (languageCode == 'ko') return '차분하게 퍼즐로 마무리해요.';
         if (languageCode == 'ja') return '静かにパズルで締めくくりましょう。';
+        if (languageCode == 'zh') return '静下心来，用一局谜题收尾吧。';
+        if (languageCode == 'es') return 'Relájate con un puzle tranquilo.';
         return 'Wind down with a calm puzzle.';
     }
   }

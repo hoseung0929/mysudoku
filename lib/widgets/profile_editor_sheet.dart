@@ -18,7 +18,6 @@ Future<void> showProfileEditorSheet({
   required String? initialProfileName,
   required String? initialProfileImagePath,
   required ProfileSaveCallback onSave,
-  String? initialBio,
 }) async {
   await showModalBottomSheet<void>(
     context: context,
@@ -30,7 +29,6 @@ Future<void> showProfileEditorSheet({
         profileImageService: profileImageService,
         initialProfileName: initialProfileName,
         initialProfileImagePath: initialProfileImagePath,
-        initialBio: initialBio,
         onSave: onSave,
       );
     },
@@ -41,14 +39,12 @@ class _ProfileEditorContent extends StatefulWidget {
   final ProfileImageService profileImageService;
   final String? initialProfileName;
   final String? initialProfileImagePath;
-  final String? initialBio;
   final ProfileSaveCallback onSave;
 
   const _ProfileEditorContent({
     required this.profileImageService,
     required this.initialProfileName,
     required this.initialProfileImagePath,
-    required this.initialBio,
     required this.onSave,
   });
 
@@ -58,7 +54,6 @@ class _ProfileEditorContent extends StatefulWidget {
 
 class _ProfileEditorContentState extends State<_ProfileEditorContent> {
   late final TextEditingController _nameController;
-  late final TextEditingController _bioController;
   String? _draftImagePath;
   bool _useDefaultProfile = true;
   bool _isSaving = false;
@@ -68,7 +63,6 @@ class _ProfileEditorContentState extends State<_ProfileEditorContent> {
     super.initState();
     _nameController =
         TextEditingController(text: widget.initialProfileName ?? '');
-    _bioController = TextEditingController(text: widget.initialBio ?? '');
     _draftImagePath = widget.initialProfileImagePath;
     _useDefaultProfile = widget.initialProfileImagePath == null ||
         !File(widget.initialProfileImagePath!).existsSync();
@@ -77,7 +71,6 @@ class _ProfileEditorContentState extends State<_ProfileEditorContent> {
   @override
   void dispose() {
     _nameController.dispose();
-    _bioController.dispose();
     super.dispose();
   }
 
@@ -86,8 +79,6 @@ class _ProfileEditorContentState extends State<_ProfileEditorContent> {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    final languageCode = Localizations.localeOf(context).languageCode;
-    final bioMaxLength = languageCode == 'ko' || languageCode == 'ja' ? 20 : 40;
     final isTablet = MediaQuery.of(context).size.width > 600;
 
     final hasImage = !_useDefaultProfile &&
@@ -203,7 +194,7 @@ class _ProfileEditorContentState extends State<_ProfileEditorContent> {
                       TextField(
                         controller: _nameController,
                         maxLength: 20,
-                        textInputAction: TextInputAction.next,
+                        textInputAction: TextInputAction.done,
                         onChanged: (_) => setState(() {}),
                         decoration: InputDecoration(
                           labelText: l10n.profileEditorNameLabel,
@@ -214,40 +205,7 @@ class _ProfileEditorContentState extends State<_ProfileEditorContent> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
-
-                      // Bio input
-                      Text(
-                        l10n.profileEditorBioLabel,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _bioController,
-                        maxLength: bioMaxLength,
-                        maxLines: 3,
-                        textInputAction: TextInputAction.done,
-                        decoration: InputDecoration(
-                          hintText: l10n.profileEditorBioHint,
-                          hintStyle: TextStyle(color: colors.textMuted),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        l10n.profileEditorBioFooter,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colors.textMuted,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 24),
 
                       // Save button
                       SizedBox(
@@ -359,7 +317,6 @@ class _ProfileEditorContentState extends State<_ProfileEditorContent> {
       name: _nameController.text,
       removeImage: _useDefaultProfile,
       pickedImagePath: _draftImagePath,
-      bio: _bioController.text,
     );
     if (!mounted) return;
     Navigator.of(context).pop();

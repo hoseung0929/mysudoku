@@ -3,7 +3,6 @@ import 'package:sudoku159/utils/app_logger.dart';
 
 import 'package:sudoku159/utils/sudoku_generator.dart';
 
-
 class SudokuBoardController {
   SudokuBoardController({
     required List<List<int>> initialBoard,
@@ -121,6 +120,9 @@ class SudokuBoardController {
     }
   }
 
+  void clearNotes(int row, int col) {
+    _noteNumbers[row][col].clear();
+  }
 
   Set<int> getCellNotes(int row, int col) {
     return Set<int>.from(_noteNumbers[row][col]);

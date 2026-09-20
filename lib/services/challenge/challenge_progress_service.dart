@@ -10,19 +10,28 @@ import 'package:sudoku159/services/catalog/remote_puzzle_service.dart';
 class ChallengeProgressSummary {
   const ChallengeProgressSummary({
     required this.streakDays,
+    this.activityStreakDays = 0,
     required this.isTodayChallengeCleared,
     required this.todayChallengeLevelName,
     required this.todayChallengeGameNumber,
+    this.challengeDate,
     required this.lastClearDate,
     required this.weeklyClearCount,
     required this.weeklyGoalTarget,
     required this.perfectClearCount,
   });
 
+  /// 오늘의 도전 완료 날짜 기준 연속 일수.
   final int streakDays;
+
+  /// 일반 퍼즐을 포함해 하루 1판 이상 완료한 날의 연속 일수(기록 화면과 같은 기준).
+  final int activityStreakDays;
   final bool isTodayChallengeCleared;
   final String todayChallengeLevelName;
   final int todayChallengeGameNumber;
+
+  /// 위 타깃이 정해진 로컬 일자(YYYY-MM-DD).
+  final String? challengeDate;
   final String? lastClearDate;
   final int weeklyClearCount;
   final int weeklyGoalTarget;
@@ -133,15 +142,26 @@ class ChallengeProgressService {
         recentClearEvents ?? await _loadRecentClearEvents(limit: 365);
     final completionDates = await _dailyRepo.getCompletionDatesDescending();
     final streak = calculateDailyChallengeStreakFromDates(completionDates);
+    final activityDates = clearEvents
+        .map((event) => event['clear_date']?.toString())
+        .whereType<String>()
+        .where((date) => date.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort((a, b) => b.compareTo(a));
+    final activityStreak =
+        calculateDailyChallengeStreakFromDates(activityDates);
     final weeklyClearCount = calculateWeeklyClearCount(clearEvents);
     final perfectClearCount = calculatePerfectClearCount(clearEvents);
     final weeklyGoalTarget = calculateWeeklyGoalTarget(clearEvents);
 
     return ChallengeProgressSummary(
       streakDays: streak,
+      activityStreakDays: activityStreak,
       isTodayChallengeCleared: isTodayCleared,
       todayChallengeLevelName: challengeTarget.levelName,
       todayChallengeGameNumber: challengeTarget.gameNumber,
+      challengeDate: challengeTarget.date,
       lastClearDate: _firstClearDate(clearEvents) ?? _firstClearDate(recent),
       weeklyClearCount: weeklyClearCount,
       weeklyGoalTarget: weeklyGoalTarget,
@@ -198,21 +218,50 @@ class ChallengeProgressService {
     await prefs.setBool(_backfillPrefsKey, true);
   }
 
+  static const _targetCachePrefix = 'daily_challenge_target_v1_';
+
   /// 로컬 달력 일 기준으로 그날의 오늘의 도전(레벨·게임 번호)을 반환합니다.
+  ///
+  /// 그날 처음 확정된 타깃을 로컬에 고정한다. 이후 네트워크 상태가 바뀌어도
+  /// 같은 날에는 표시·시작·완료 판정이 같은 타깃을 쓴다.
   Future<TodayChallengeTarget> getChallengeTargetForCalendarDay(
     DateTime calendarDay,
   ) async {
-    if (await _shouldUseRemoteDailyChallenge() &&
-        _remotePuzzleService.isConfigured) {
-      final remoteTarget = await _remotePuzzleService.fetchDailyChallengeTarget(
-        date: calendarDay,
+    final dateKey = formatLocalDate(calendarDay);
+    final cacheKey = '$_targetCachePrefix$dateKey';
+    SharedPreferences? prefs;
+    try {
+      prefs = await SharedPreferences.getInstance();
+    } catch (_) {
+      prefs = null;
+    }
+    final cached = prefs?.getString(cacheKey)?.split('|');
+    final cachedNumber =
+        cached != null && cached.length == 2 ? int.tryParse(cached[1]) : null;
+    if (cached != null && cachedNumber != null) {
+      return TodayChallengeTarget(
+        levelName: cached[0],
+        gameNumber: cachedNumber,
+        date: dateKey,
       );
-      if (remoteTarget != null) {
-        return remoteTarget;
-      }
     }
 
-    return _getLocalChallengeTargetForCalendarDay(calendarDay);
+    TodayChallengeTarget? resolved;
+    if (await _shouldUseRemoteDailyChallenge() &&
+        _remotePuzzleService.isConfigured) {
+      resolved = await _remotePuzzleService.fetchDailyChallengeTarget(
+        date: calendarDay,
+      );
+    }
+    resolved ??= await _getLocalChallengeTargetForCalendarDay(calendarDay);
+    final target = TodayChallengeTarget(
+      levelName: resolved.levelName,
+      gameNumber: resolved.gameNumber,
+      date: dateKey,
+    );
+    await prefs?.setString(
+        cacheKey, '${target.levelName}|${target.gameNumber}');
+    return target;
   }
 
   Future<TodayChallengeTarget> _getLocalChallengeTargetForCalendarDay(
@@ -241,6 +290,32 @@ class ChallengeProgressService {
 
   Future<TodayChallengeTarget> getTodayChallengeTarget() async {
     return getChallengeTargetForCalendarDay(DateTime.now());
+  }
+
+  /// 완료한 게임이 어느 날의 오늘의 도전 완료로 귀속되는지 반환한다(해당 없으면 null).
+  ///
+  /// 오늘의 도전으로 시작한 게임([challengeDate] 있음)은 시작한 도전 날짜에
+  /// 귀속한다. 자정을 넘겨 완료해도 다른 날 타깃으로 재판정하지 않는다. 일반
+  /// 경로로 푼 경우는 지정 문제와 일치할 때만 완료 시점의 오늘로 처리한다.
+  Future<DateTime?> resolveCompletionDay({
+    required String levelName,
+    required int gameNumber,
+    String? challengeDate,
+    DateTime? now,
+  }) async {
+    if (challengeDate == null) {
+      final isToday = await isTodayChallenge(
+        levelName: levelName,
+        gameNumber: gameNumber,
+      );
+      return isToday ? (now ?? DateTime.now()) : null;
+    }
+    final day = DateTime.tryParse(challengeDate);
+    if (day == null) return null;
+    final target = await getChallengeTargetForCalendarDay(day);
+    final matches =
+        target.levelName == levelName && target.gameNumber == gameNumber;
+    return matches ? day : null;
   }
 
   Future<bool> isTodayChallenge({

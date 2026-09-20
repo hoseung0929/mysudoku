@@ -180,7 +180,60 @@ void main() {
       expect([1, 3, 7], contains(target.gameNumber));
     });
 
+    test('pins the first resolved target for the day (offline then online)',
+        () async {
+      SharedPreferences.setMockInitialValues({});
+      var online = false;
+      final service = ChallengeProgressService(
+        loadGameNumbersForLevel: (_) async => [1, 2, 3],
+        remotePuzzleService: _FakeRemotePuzzleService(
+          target: const TodayChallengeTarget(levelName: '마스터', gameNumber: 42),
+          onFetch: () => online,
+        ),
+        shouldUseRemoteDailyChallenge: () async => true,
+      );
+      final day = DateTime(2026, 4, 12);
+
+      final offline = await service.getChallengeTargetForCalendarDay(day);
+      online = true;
+      final later = await service.getChallengeTargetForCalendarDay(day);
+
+      expect(offline.date, '2026-04-12');
+      expect(later.levelName, offline.levelName);
+      expect(later.gameNumber, offline.gameNumber);
+      expect(later.levelName, isNot('마스터'));
+    });
+
+    test('completion is attributed to the started day, not the finish day',
+        () async {
+      SharedPreferences.setMockInitialValues({});
+      final service = ChallengeProgressService(
+        loadGameNumbersForLevel: (_) async => [1, 2, 3, 4, 5],
+        shouldUseRemoteDailyChallenge: () async => false,
+      );
+      final started = DateTime(2026, 4, 12);
+      final target = await service.getChallengeTargetForCalendarDay(started);
+
+      // 4/12 도전으로 시작해 자정을 넘겨 완료 → 4/12에 귀속.
+      final day = await service.resolveCompletionDay(
+        levelName: target.levelName,
+        gameNumber: target.gameNumber,
+        challengeDate: '2026-04-12',
+        now: DateTime(2026, 4, 13, 0, 5),
+      );
+      expect(day, DateTime(2026, 4, 12));
+
+      // 같은 날짜로 시작했어도 다른 문제를 완료하면 도전 완료가 아니다.
+      final other = await service.resolveCompletionDay(
+        levelName: target.levelName,
+        gameNumber: target.gameNumber + 100,
+        challengeDate: '2026-04-12',
+      );
+      expect(other, isNull);
+    });
+
     test('uses remote daily challenge when remote catalog is active', () async {
+      SharedPreferences.setMockInitialValues({});
       final service = ChallengeProgressService(
         remotePuzzleService: _FakeRemotePuzzleService(
           target: const TodayChallengeTarget(levelName: '마스터', gameNumber: 42),
@@ -194,6 +247,36 @@ void main() {
 
       expect(target.levelName, '마스터');
       expect(target.gameNumber, 42);
+    });
+
+    test('activity streak counts every completed day, not only challenges',
+        () async {
+      SharedPreferences.setMockInitialValues({
+        'daily_challenge_backfill_v1': true,
+      });
+      final service = ChallengeProgressService(
+        dailyChallengeCompletionRepository:
+            _FakeDailyChallengeCompletionRepository(),
+        loadGameNumbersForLevel: (_) async => [1],
+        shouldUseRemoteDailyChallenge: () async => false,
+      );
+      final today = DateTime.now();
+      String format(DateTime value) =>
+          ChallengeProgressService.formatLocalDate(value);
+      final summary = await service.load(
+        recentRecords: const [],
+        recentClearEvents: [
+          for (var i = 0; i < 3; i++)
+            {
+              'clear_date': format(today.subtract(Duration(days: i))),
+              'wrong_count': 0,
+            },
+          // 같은 날 반복 완료는 하루로 센다.
+          {'clear_date': format(today), 'wrong_count': 1},
+        ],
+      );
+      expect(summary.activityStreakDays, 3);
+      expect(summary.streakDays, 0); // 도전 완료 기록은 없음
     });
 
     test('load uses clear events for weekly and perfect counts', () async {
@@ -229,15 +312,17 @@ void main() {
 }
 
 class _FakeRemotePuzzleService extends RemotePuzzleService {
-  _FakeRemotePuzzleService({required this.target})
+  _FakeRemotePuzzleService({required this.target, this.onFetch})
       : super(baseUrl: 'https://example.com');
 
   final TodayChallengeTarget target;
+  final bool Function()? onFetch;
 
   @override
   Future<TodayChallengeTarget?> fetchDailyChallengeTarget({
     required DateTime date,
   }) async {
+    if (onFetch != null && !onFetch!()) return null;
     return target;
   }
 }

@@ -52,8 +52,8 @@ class GameCompletionCoordinator {
     required int clearTimeSeconds,
     required int wrongCount,
     required int hintsUsed,
+    String? challengeDate,
   }) async {
-    final challengeBefore = await _challengeProgressService.load();
     final beforeAchievements = await _achievementService.load(l10n);
     await _databaseHelper.saveClearEvent(
       levelName: level.name,
@@ -69,53 +69,48 @@ class GameCompletionCoordinator {
       wrongCount: wrongCount,
       hintsUsed: hintsUsed,
     );
-    final isTodayChallenge = await _challengeProgressService.isTodayChallenge(
+    final attributionDay = await _challengeProgressService.resolveCompletionDay(
       levelName: level.name,
       gameNumber: game.gameNumber,
+      challengeDate: challengeDate,
     );
-    if (isTodayChallenge) {
-      await _databaseHelper.recordDailyChallengeCompletion(DateTime.now());
+    var isNewDailyCompletion = false;
+    if (attributionDay != null) {
+      isNewDailyCompletion =
+          !await _databaseHelper.hasDailyChallengeCompletionForDate(
+        ChallengeProgressService.formatLocalDate(attributionDay),
+      );
+      // 같은 날 중복은 저장소(PK)에서 무시된다.
+      await _databaseHelper.recordDailyChallengeCompletion(attributionDay);
     }
     final afterAchievements = await _achievementService.load(l10n);
     final newlyUnlockedBadges = _achievementService.getNewlyUnlockedBadges(
       before: beforeAchievements,
       after: afterAchievements,
     );
-    final challengeAfter = await _challengeProgressService.load();
 
     GameRecordNotifier.instance.notifyChanged();
 
     try {
-      await _notificationService.showGameCompleteNotification(
-        levelName: level.name,
-        gameNumber: game.gameNumber,
-        isNewBestRecord: isNewBestRecord,
-      );
-      if (!challengeBefore.isWeeklyGoalAchieved &&
-          challengeAfter.isWeeklyGoalAchieved) {
-        await _notificationService.showDailyGoalAchievedNotification(
-          weeklyClearCount: challengeAfter.weeklyClearCount,
-          weeklyGoalTarget: challengeAfter.weeklyGoalTarget,
-        );
-      }
-      if (isTodayChallenge) {
-        await _notificationService.resyncFromStoredSettings();
-      }
+      await _notificationService.syncReminders();
     } catch (e) {
       if (kDebugMode) {
-        AppLogger.debug('완료 알림 처리 실패(무시): $e');
+        AppLogger.debug('알림 재동기화 실패(무시): $e');
       }
     }
 
     SudokuGame? nextGame;
     try {
-      final nextGameNumber = await _databaseHelper.findFirstUnclearedGameNumberAfter(
+      final nextGameNumber =
+          await _databaseHelper.findFirstUnclearedGameNumberAfter(
         level.name,
         game.gameNumber,
       );
       if (nextGameNumber != null) {
         final gamesInLevel = await SudokuGameSet.create(level.name);
-        nextGame = gamesInLevel.where((g) => g.gameNumber == nextGameNumber).firstOrNull;
+        nextGame = gamesInLevel
+            .where((g) => g.gameNumber == nextGameNumber)
+            .firstOrNull;
       }
     } catch (e) {
       if (kDebugMode) {
@@ -127,7 +122,8 @@ class GameCompletionCoordinator {
     return GameCompletionData(
       isNewBestRecord: isNewBestRecord,
       newlyUnlockedBadges: newlyUnlockedBadges,
-      challengeMessage: isTodayChallenge ? l10n.challengeCompletedToday : null,
+      challengeMessage:
+          isNewDailyCompletion ? l10n.challengeCompletedToday : null,
       nextGame: nextGame,
     );
   }

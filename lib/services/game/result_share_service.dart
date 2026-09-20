@@ -1,4 +1,5 @@
 import 'package:sudoku159/l10n/app_localizations.dart';
+import 'package:sudoku159/utils/time_format.dart';
 
 class ResultShareService {
   String buildClearResultText({
@@ -14,7 +15,7 @@ class ResultShareService {
       badge,
       l10n.shareClearHeader,
       l10n.shareClearLine(localizedLevelName, gameNumber),
-      l10n.shareClearStats(_formatSeconds(clearTimeSeconds), wrongCount),
+      l10n.shareClearStats(formatElapsedSeconds(clearTimeSeconds), wrongCount),
       l10n.shareClearTags,
     ].where((line) => line.isNotEmpty).join('\n');
   }
@@ -25,15 +26,8 @@ class ResultShareService {
     required int wrongCount,
   }) {
     return l10n.shareSummaryPattern(
-      _formatSeconds(clearTimeSeconds),
+      formatElapsedSeconds(clearTimeSeconds),
       wrongCount,
     );
-  }
-
-  String _formatSeconds(int value) {
-    final hours = value ~/ 3600;
-    final minutes = (value % 3600) ~/ 60;
-    final seconds = value % 60;
-    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 }

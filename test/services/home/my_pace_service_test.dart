@@ -12,11 +12,6 @@ void main() {
         gameNumber: 7,
       );
       final service = MyPaceService(
-        isGameCleared: (levelName, gameNumber) async {
-          expect(levelName, '중급');
-          expect(gameNumber, 7);
-          return false;
-        },
         loadRecentClearEvents: ({int limit = 1}) async {
           fail('최근 클리어 이벤트를 조회하면 안 됩니다.');
         },
@@ -41,36 +36,25 @@ void main() {
       expect(target.restoreSavedSession, isTrue);
     });
 
-    test('if continue game already cleared, moves to next uncleared game',
+    test(
+        'continue game with past clear record is still resumed (retry session)',
         () async {
       final continueSummary = _buildContinueSummary(
         levelName: '초급',
         gameNumber: 1,
       );
-      final queriedLevels = <String>[];
       final service = MyPaceService(
-        isGameCleared: (levelName, gameNumber) async {
-          expect(levelName, '초급');
-          expect(gameNumber, 1);
-          return true;
-        },
         loadRecentClearEvents: ({int limit = 1}) async {
-          fail('continue 기준으로 처리할 때 최근 클리어 이벤트를 조회하면 안 됩니다.');
-        },
-        findFirstUnclearedGameNumberAfter: (levelName, after) async {
-          expect(levelName, '초급');
-          expect(after, 1);
-          return 2;
+          fail('최근 클리어 이벤트를 조회하면 안 됩니다.');
         },
         findFirstUnclearedGameNumber: (levelName) async {
-          queriedLevels.add(levelName);
-          return null;
+          fail('미클리어 게임을 조회하면 안 됩니다.');
+        },
+        findFirstUnclearedGameNumberAfter: (levelName, after) async {
+          fail('미클리어 after 조회를 하면 안 됩니다.');
         },
         loadGameEntry: (levelName, gameNumber) async {
-          if (levelName == '초급' && gameNumber == 2) {
-            return _entry(gameNumber: 2);
-          }
-          return null;
+          fail('게임 엔트리를 조회하면 안 됩니다.');
         },
       );
 
@@ -78,11 +62,8 @@ void main() {
         preferContinueGame: continueSummary,
       );
 
-      expect(queriedLevels, isEmpty);
-      expect(target, isNotNull);
-      expect(target!.level.name, '초급');
-      expect(target.game.gameNumber, 2);
-      expect(target.restoreSavedSession, isFalse);
+      expect(target!.game.gameNumber, 1);
+      expect(target.restoreSavedSession, isTrue);
     });
 
     test(
@@ -91,7 +72,6 @@ void main() {
         final requestedLevels = <String>[];
         final requestedEntries = <String>[];
         final service = MyPaceService(
-          isGameCleared: (levelName, gameNumber) async => false,
           loadRecentClearEvents: ({int limit = 1}) async => const [
             {'level_name': '중급'},
           ],
@@ -130,7 +110,6 @@ void main() {
     test('wraps to beginner when last cleared level is master', () async {
       final requestedLevels = <String>[];
       final service = MyPaceService(
-        isGameCleared: (levelName, gameNumber) async => false,
         loadRecentClearEvents: ({int limit = 1}) async => const [
           {'level_name': '마스터', 'game_number': 100},
         ],
@@ -172,7 +151,6 @@ void main() {
       final requestedLevels = <String>[];
       final requestedEntries = <String>[];
       final service = MyPaceService(
-        isGameCleared: (levelName, gameNumber) async => false,
         loadRecentClearEvents: ({int limit = 1}) async => const [],
         findFirstUnclearedGameNumberAfter: (levelName, after) async => null,
         findFirstUnclearedGameNumber: (levelName) async {
@@ -199,7 +177,6 @@ void main() {
       'after clearing beginner game 1, next target is beginner game 2',
       () async {
         final service = MyPaceService(
-          isGameCleared: (levelName, gameNumber) async => false,
           loadRecentClearEvents: ({int limit = 1}) async => const [
             {'level_name': '초급', 'game_number': 1},
           ],

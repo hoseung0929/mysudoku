@@ -1,0 +1,858 @@
+{
+  "@@locale": "zh",
+  "appTitle": "Sudoku159",
+  "navHome": "首页",
+  "navChallenge": "挑战",
+  "navRecords": "记录",
+  "navSettings": "设置",
+  "recordsScreenTitle": "记录与统计",
+  "challengeScreenTitle": "挑战",
+  "settingsTitle": "设置",
+  "settingsSectionNotifications": "通知",
+  "settingsSectionLanguage": "语言",
+  "settingsSectionGame": "游戏",
+  "settingsSectionInfo": "关于",
+  "settingsNotificationsTitle": "通知设置",
+  "settingsNotificationsSubtitle": "今天的挑战还未完成时发送提醒",
+  "settingsStreakReminderTitle": "连续记录提醒",
+  "settingsStreakReminderSubtitle": "已有连续记录时再多发一次提醒",
+  "settingsNotificationTimeTitle": "通知时间",
+  "settingsNotificationTimeSubtitle": "选择接收提醒的时间",
+  "settingsNotificationsPermissionDenied": "需要通知权限才能开启提醒。",
+  "settingsLanguageTitle": "语言设置",
+  "settingsLanguageSubtitle": "更改应用语言",
+  "settingsLanguageSystem": "跟随系统",
+  "settingsLanguageEnglish": "English",
+  "settingsLanguageKorean": "한국어",
+  "settingsLanguageJapanese": "日本語",
+  "settingsLanguageChinese": "中文",
+  "settingsLanguageSpanish": "Español",
+  "settingsLanguagePickerTitle": "选择语言",
+  "settingsVibrationTitle": "输入震动",
+  "settingsVibrationSubtitle": "输入数字时使用震动反馈",
+  "settingsKeepScreenAwakeTitle": "保持屏幕常亮",
+  "settingsKeepScreenAwakeSubtitle": "防止游戏画面自动熄屏",
+  "settingsOneHandModeTitle": "单手模式",
+  "settingsOneHandModeSubtitle": "在手机游戏画面使用更紧凑的按钮布局",
+  "settingsMemoHighlightTitle": "备注高亮",
+  "settingsMemoHighlightSubtitle": "显示备注焦点、候选数字和唯一候选高亮",
+  "settingsSmartHintTitle": "可填格高亮",
+  "settingsSmartHintSubtitle": "轻微高亮按规则可以立即填入的格子",
+  "settingsAppInfoTitle": "应用信息",
+  "settingsAppInfoSubtitle": "版本与开发者信息",
+  "settingsPrivacyTitle": "隐私政策",
+  "settingsPrivacySubtitle": "我们如何处理你的数据",
+  "settingsTabletNotificationsHeader": "通知设置",
+  "settingsTabletNotificationsBody": "管理并设置游戏通知。",
+  "settingsGameCompleteNotifTitle": "游戏完成通知",
+  "settingsGameCompleteNotifSubtitle": "完成一局游戏时通知你",
+  "settingsDailyGoalNotifTitle": "每日目标通知",
+  "settingsDailyGoalNotifSubtitle": "达成每周目标的瞬间送上祝贺",
+  "settingsHintNotifTitle": "使用提示通知",
+  "settingsHintNotifSubtitle": "使用提示时通知你",
+  "levelBeginner": "初级",
+  "levelIntermediate": "中级",
+  "levelAdvanced": "高级",
+  "levelExpert": "专家",
+  "levelMaster": "大师",
+  "levelDescBeginner": "适合刚接触数独的你",
+  "levelDescIntermediate": "适合了解基本规则的玩家",
+  "levelDescAdvanced": "适合有经验的玩家",
+  "levelDescExpert": "适合数独高手",
+  "levelDescMaster": "终极挑战",
+  "gameNumberLabel": "第 {number} 局",
+  "@gameNumberLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "gameHintShort": "提示",
+  "gameUndoShort": "撤销",
+  "gameRedoShort": "重做",
+  "gameMemoShort": "备注",
+  "gameCellLabel": "第 {row} 行第 {col} 列：{content}",
+  "gameCellEmpty": "空",
+  "gameCellNotes": "笔记 {notes}",
+  "gameCellGiven": "题面数字",
+  "gameCellHint": "提示",
+  "gameCellWrong": "错误",
+  "gameEraseShort": "擦除",
+  "gameMoreOptions": "更多选项",
+  "gameMemoOnShort": "备注 开",
+  "gameMemoStateOn": "开",
+  "gameMemoStateOff": "关",
+  "gameMemoFocusShort": "聚焦",
+  "gameMemoFocusIdle": "无",
+  "gameWrongShort": "错误",
+  "gamePerfectShort": "完美",
+  "gamePerfectReady": "保持中",
+  "gamePerfectMissed": "已中断",
+  "gameProgressShort": "进度",
+  "gameTimeShort": "用时",
+  "gameNumberInputTitle": "数字输入",
+  "gameRowsCompleted": "完成 {count} 行",
+  "@gameRowsCompleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "gameColsCompleted": "完成 {count} 列",
+  "@gameColsCompleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "gameBoxesCompleted": "完成 {count} 个宫",
+  "@gameBoxesCompleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "gamePause": "暂停",
+  "gameResume": "继续",
+  "gameAnswerPreview": "答案",
+  "challengeCompletedToday": "你已完成今天的挑战！",
+  "shareCopySuccess": "结果已复制到剪贴板。",
+  "shareSubject": "Sudoku159 结果",
+  "shareClearHeader": "Sudoku159 通关",
+  "shareClearLine": "{level} · 第 {number} 局",
+  "@shareClearLine": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      },
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "shareClearStats": "{time} · {wrong} 次错误",
+  "@shareClearStats": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "wrong": {
+        "type": "int"
+      }
+    }
+  },
+  "shareClearTags": "#Sudoku159 #SudokuChallenge",
+  "shareSummaryPattern": "{time} · {wrong} 次错误",
+  "@shareSummaryPattern": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "wrong": {
+        "type": "int"
+      }
+    }
+  },
+  "dialogCongratulations": "恭喜！",
+  "dialogNewBest": "NEW BEST",
+  "dialogSudokuComplete": "你完成了这个数独！",
+  "dialogNewBadges": "获得新徽章",
+  "dialogElapsedTime": "用时",
+  "dialogWrongCount": "错误次数",
+  "dialogWrongCountValue": "{count} 次",
+  "@dialogWrongCountValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dialogSharePreview": "分享文案",
+  "dialogCopyResult": "复制",
+  "dialogShare": "分享",
+  "dialogBackToLevels": "谜题列表",
+  "dialogPlayAgain": "重新解题",
+  "dialogPuzzleCompleteTitle": "谜题完成",
+  "dialogNewBestMessage": "刷新了最佳记录",
+  "dialogHintsUsed": "使用提示 {count} 次",
+  "dialogSolveSameAgain": "重新解这道谜题",
+  "dialogNextPuzzle": "下一题",
+  "updateRequiredTitle": "需要更新",
+  "updateRequiredMessage": "有新版本可用。\n请更新后继续游戏。",
+  "updateNowButton": "立即更新",
+  "settingsNotificationsComingSoonTitle": "通知",
+  "settingsNotificationsComingSoonBody": "推送提醒和详细通知设置将在后续更新中提供，感谢你的耐心等待！",
+  "settingsAboutDialogTitle": "关于本应用",
+  "settingsAboutVersionLabel": "版本 {version}",
+  "@settingsAboutVersionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAboutDeveloperNote": "祝你玩得开心，Sudoku159！",
+  "settingsAboutSupportEmail": "· team929.support@gmail.com",
+  "commonOk": "确定",
+  "commonCancel": "取消",
+  "gameOverTitle": "已达到失误上限",
+  "gameOverMessage": "你可以从头重新解题，或选择其他谜题。",
+  "gameOverWrongLabel": "本局：失误 {count} 次 / 上限 {maxCount} 次",
+  "@gameOverWrongLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "maxCount": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsFilterSectionTitle": "筛选",
+  "recordsFilterAllLevels": "全部难度",
+  "recordsPeriodLabel": "时间范围",
+  "recordsPeriodAll": "全部时间",
+  "recordsPeriodLastDays": "最近 {days} 天",
+  "@recordsPeriodLastDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsSummaryTitle": "最近 7 天",
+  "recordsTrendTitle": "最近 7 天趋势",
+  "recordsTrendEmpty": "最近的通关记录还不够，无法显示 7 天趋势。",
+  "recordsTrendClears": "通关数",
+  "recordsTrendActiveDays": "游玩天数",
+  "recordsTrendWindowAvgTime": "平均用时（同一时段）",
+  "recordsTrendWindowAvgWrong": "平均错误（同一时段）",
+  "recordsHeroBadgeFlow": "节奏",
+  "recordsHeroTitle": "先来看看这份\n平缓上升的进度曲线。",
+  "recordsHeroSubtitle": "上方曲线是同样这一周的柔化展示，下方卡片可以查看每天的具体通关数。",
+  "recordsInsightThisWeekEyebrow": "本周概览",
+  "recordsInsightClearsValue": "{count} 次",
+  "@recordsInsightClearsValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsInsightAvgPaceEyebrow": "平均节奏",
+  "recordsTrendSectionSubtitle": "最近七天的每日通关数一览。",
+  "recordsTrendLegendDailyClears": "每日通关",
+  "recordsTrendTodayLabel": "今天",
+  "recordsPlayInsightsTitle": "本周概览",
+  "recordsPlayCalendarTitle": "按天查看",
+  "recordsWeeklyReportTitle": "本周报告",
+  "recordsWeeklyReportBusiestDay": "最活跃的一天",
+  "recordsWeeklyReportTopDayValue": "{day}，{count} 次",
+  "@recordsWeeklyReportTopDayValue": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsWeeklyReportTopDayFallback": "还没有通关记录",
+  "recordsTimelineTitle": "最近的时间线",
+  "recordsTimelineEmpty": "开始游玩后，最近的通关记录会显示在这里。",
+  "recordsTimelineMistakesValue": "{count} 次错误",
+  "@recordsTimelineMistakesValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsTimelinePerfect": "完美通关",
+  "recordsPaceTitle": "节奏变化",
+  "recordsPaceEmpty": "还需要再积累一周的记录才能对比你的节奏。",
+  "recordsPaceRecentWindow": "最近 7 天",
+  "recordsPacePreviousWindow": "此前 7 天",
+  "recordsPaceDelta": "变化",
+  "recordsMetricClears": "通关数（已筛选）",
+  "recordsMetricClearRate": "谜题完成情况",
+  "recordsMetricPerfectRate": "无失误占比",
+  "recordsSummaryMetricsFootnote": "每道谜题只按其最佳记录计一次，并遵循当前筛选。完成情况是与同一范围内谜题总数的比较。",
+  "recordsMetricAvgTime": "最佳用时平均",
+  "recordsMetricAvgWrong": "最佳记录平均失误",
+  "recordsByLevelTitle": "按难度的记录",
+  "recordsByLevelEmpty": "该筛选条件下暂无统计数据。",
+  "recordsByLevelSectionSubtitle": "查看你在哪些难度上越来越得心应手。",
+  "recordsLevelInfographicClearRate": "谜题完成情况",
+  "recordsLevelMiniBest": "最佳",
+  "recordsLevelMiniPerfectRate": "完美率",
+  "recordsLevelMiniAvgWrong": "平均错误",
+  "recordsStatsLoadError": "暂时无法加载统计数据，请稍后再试。",
+  "recordsRetry": "重试",
+  "recordsEmptyTitle": "完成第一道谜题后，记录就会积累起来。",
+  "recordsEmptyAction": "开始解题",
+  "recordsLevelEmpty": "该难度还没有完成记录。",
+  "recordsRowBestTime": "最佳用时",
+  "recordsAverageBasisNote": "平均值基于每道谜题的最佳记录，而不是每一次游玩。",
+  "recordsCalendarTitle": "活动日历",
+  "recordsCalendarPeriod": "最近 {weeks} 周",
+  "recordsViewAchievements": "查看成就",
+  "recordsOverallNote": "所有难度共 {total} 道谜题，已完成 {cleared} 道。",
+  "recordsWeekActiveDays": "活动 {count} 天",
+  "recordsWeekCompletions": "完成 {count} 局",
+  "recordsWeekDayDone": "{day}：完成 {count} 局",
+  "recordsWeekDayNone": "{day}：没有完成",
+  "recordsStatsPageSubtitle": "一览通关数与平均用时。",
+  "recordsKpiWeeklyClearsLabel": "完成的谜题",
+  "recordsKpiAvgSolveTimeLabel": "最佳用时平均",
+  "recordsActivityOverviewTitle": "活动概览",
+  "recordsActivityHeatmapTitle": "近期活动",
+  "recordsActivityHeatmapCaption": "颜色越深，当天完成次数越多。",
+  "recordsActivityTotalClearsLabel": "累计完成次数",
+  "recordsActivityCurrentStreakLabel": "当前连续天数",
+  "recordsActivityBestStreakLabel": "最长连续天数",
+  "recordsActivityDayCount": "{count} 天",
+  "@recordsActivityDayCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsActivityClearCount": "{count} 次通关",
+  "@recordsActivityClearCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsSectionBestRecordTitle": "最佳战绩",
+  "recordsSectionDifficultyTitle": "按难度统计",
+  "recordsSectionDetailStatsTitle": "详细记录",
+  "recordsBestSingleEmpty": "还没有值得展示的最佳战绩。",
+  "recordsHintUsageLabel": "提示使用记录",
+  "recordsHintUsageNoData": "暂无数据",
+  "recordsDetailMistakesShort": "平均错误",
+  "recordsDetailStreakShort": "连续游玩天数",
+  "recordsDetailStreakDays": "{count} 天",
+  "@recordsDetailStreakDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsStatAverageWrongFormatted": "{value}",
+  "@recordsStatAverageWrongFormatted": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "recordsDifficultySnapshotEmpty": "还没有各难度的游玩记录。",
+  "recordsLevelDoneShort": "完成",
+  "recordsStatsHeroEyebrow": "最近 7 天的数独记录",
+  "recordsStatsHeroHeadline": "一眼看清你最近 7 天的\n数独记录。",
+  "recordsTrendA11yMaxClears": "最高 {count} 次",
+  "@recordsTrendA11yMaxClears": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsHeroChartEmptyHint": "在最近 7 天内通关一题，这里就会出现你的节奏曲线。",
+  "recordsHeroSubtitleNoChart": "下方卡片可查看最近 7 天的每日通关数。",
+  "recordsCalendarPlayedLabel": "已通关",
+  "recordsCalendarEmptyLabel": "无通关",
+  "recordsNoAverageTime": "暂无记录",
+  "recordsStatsBasisFootnote": "统计数据基于每道题的最佳通关记录计算。",
+  "recordsBestByLevelTitle": "各难度最佳记录",
+  "recordsBestByLevelEmpty": "该筛选条件下暂无各难度最佳记录。",
+  "recordsBestByLevelDetail": "{time} · 错误 {wrongCount} 次",
+  "@recordsBestByLevelDetail": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "wrongCount": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsPerfectBadge": "完美",
+  "recordsAvgTimeDetail": "平均用时 {time}",
+  "@recordsAvgTimeDetail": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recordsRecentTitle": "最近通关",
+  "recordsRecentEmpty": "没有符合该筛选条件的通关记录。",
+  "recordsBestTitle": "最佳用时 Top 5",
+  "recordsBestEmpty": "该筛选条件下暂无最佳记录。",
+  "recordsGameNumberTitle": "{level} · 第 {number} 局",
+  "@recordsGameNumberTitle": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      },
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsRecentDetail": "{time} · 错误 {wrongCount} 次 · {date}",
+  "@recordsRecentDetail": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "wrongCount": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "recordsBestDetail": "{time} · 错误 {wrongCount} 次",
+  "@recordsBestDetail": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "wrongCount": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsGameLoadError": "无法加载题目数据。",
+  "recordsChallengeTabHint": "每周目标和连续记录可在挑战标签页查看。",
+  "recordsGoToChallengeTab": "前往挑战标签页",
+  "challengeLoadError": "无法加载挑战数据。",
+  "challengeTodaysChallengeTitle": "今日挑战",
+  "challengeTodayDoneHint": "你已经完成今天的挑战，随时可以再回顾一遍。",
+  "challengeTodayPendingHint": "用今天的精选题目延续你的连续记录。",
+  "challengeTodayReviewButton": "按自己的节奏继续",
+  "challengeTodayStartButton": "按自己的节奏开始",
+  "myPaceNoPlayableTitle": "暂时没有可玩的题目",
+  "myPaceNoPlayableMessage": "所有难度中都没有可以开始的新题目了。",
+  "challengeWeeklyGoalReachedTitle": "已达成本周目标",
+  "challengeWeeklyGoalRemainingTitle": "再通关 {count} 局即可达成本周目标",
+  "@challengeWeeklyGoalRemainingTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeWeeklyGoalReachedBody": "再多几次完美通关，让节奏更上一层楼。",
+  "challengeWeeklyGoalCatchUpBody": "只要再玩几局，就能完成本周的目标。",
+  "challengePerfectThisWeek": "本周完成了 {count} 次完美通关",
+  "@challengePerfectThisWeek": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengePerfectThisWeekFirst": "试试本周的第一次完美通关吧",
+  "challengePerfectPositiveBody": "保持零失误通关，你的进步会更明显。",
+  "challengePerfectZeroBody": "善用备注模式，能让你更接近零失误通关。",
+  "challengeWeeklyGoalHeading": "每周目标",
+  "challengeWeeklyClearsLine": "本周已通关 {count} 局",
+  "@challengeWeeklyClearsLine": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeWeeklyProgressShort": "{done} / {target} 完成",
+  "@challengeWeeklyProgressShort": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeWeeklyPerfectShort": "完美 {count} 次",
+  "@challengeWeeklyPerfectShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeWeeklyCongratsFooter": "本周目标已达成——继续创造好成绩吧！",
+  "challengeWeeklyAlmostFooter": "再通关 {count} 局就能完成本周目标。",
+  "@challengeWeeklyAlmostFooter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeAchievementsHeading": "成就 · 徽章",
+  "challengeBadgesCollected": "已获得 {unlocked} / {total}",
+  "@challengeBadgesCollected": {
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeViewAllBadges": "查看全部",
+  "challengeEarnedBadgesHeading": "已获得的徽章",
+  "challengeNextBadgeTargets": "下一个目标",
+  "challengeBadgeProgressLine": "{desc} · 进度：{progress}",
+  "@challengeBadgeProgressLine": {
+    "placeholders": {
+      "desc": {
+        "type": "String"
+      },
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
+  "challengeStreakDays": "连续 {days} 天",
+  "@challengeStreakDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeStreakStartToday": "今天就挑战你的第一次通关",
+  "challengeTabHeroHeadline": "今日题目与每周节奏，\n一目了然。",
+  "challengeHeroPendingDetail": "可以从首页开始游戏，或使用下方按钮。",
+  "challengeHeroDoneDetail": "今天的挑战已完成。徽章和每周进度都在这个标签页里。",
+  "challengeOpenTodayOnHomeButton": "在首页打开今日题目",
+  "challengeHeroDoneCaption": "你完成了今天的挑战，明天再来延续你的连续记录。",
+  "challengeHeroPendingCaption": "今天的题目还等着你——现在开始，保持连续记录。",
+  "homeGuestTitle": "旅人",
+  "homeGuestSubtitle": "轻点一下即可开始游戏",
+  "homeContinueTitle": "继续游戏",
+  "homeContinueSubtitle": "{level} · 第 {gameNumber} 局 · 已填 {cells} 格",
+  "@homeContinueSubtitle": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      },
+      "gameNumber": {
+        "type": "int"
+      },
+      "cells": {
+        "type": "int"
+      }
+    }
+  },
+  "homeContinueDescription": "从上次暂停的地方继续解题。",
+  "homeContinueSameAsSpotlightSupporting": "继续今天的题目",
+  "homeContinueActionButton": "继续",
+  "homeProgressPercent": "进度 {percent}%",
+  "@homeProgressPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "homeTodayChallengeCardDoneBody": "你已完成今天的挑战，继续保持连续记录！",
+  "homeTodayChallengeCardPendingBody": "每天一题，轻松保持状态。",
+  "homeTodayChallengeFooterDoneStreak": "今日挑战已完成 · 连续 {days} 天",
+  "@homeTodayChallengeFooterDoneStreak": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "homeTodayChallengeFooterPending": "用今天的题目开启你的连续记录。",
+  "homeQuickStartSectionTitle": "快速开始",
+  "homeBrowseLevelsTitle": "浏览难度",
+  "homeStreakTodayDoneLine": "今天的挑战也完成了。",
+  "homeStreakTodayPendingLine": "完成今天的挑战即可延续连续记录。",
+  "homeBadgeProgressTitle": "徽章进度",
+  "homeCatalogPreparingTitle": "正在准备题库",
+  "homeCatalogProgressDetail": "已准备 {generated}/{target} 题 · 还剩 {remaining} 题",
+  "@homeCatalogProgressDetail": {
+    "placeholders": {
+      "generated": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "levelPickDifficultyTitle": "选择难度",
+  "levelPickDifficultySubtitle": "选择一个难度开始游戏。",
+  "levelPickGameSubtitle": "选择一道题开始游戏。",
+  "levelGamesScreenTitle": "{levelName} 题目",
+  "@levelGamesScreenTitle": {
+    "placeholders": {
+      "levelName": {
+        "type": "String"
+      }
+    }
+  },
+  "levelLoadingGames": "正在加载题目…",
+  "levelTapToStart": "立即开始",
+  "levelClearedBadge": "已通关",
+  "levelOverviewTitle": "难度概览",
+  "levelPuzzlesSectionTitle": "题目列表",
+  "levelProgressLabel": "进度",
+  "levelNoRecordYet": "暂无记录",
+  "levelStatusReady": "全新题目",
+  "levelStatusCleared": "已完成题目",
+  "levelEmptyCellsLabel": "{count} 个空格",
+  "@levelEmptyCellsLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "levelPuzzleCountSummary": "共 {count} 题",
+  "@levelPuzzleCountSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "levelCatalogPreparingShort": "正在准备更多题目 · {done}/{total}",
+  "@levelCatalogPreparingShort": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementCollectionAppBarTitle": "徽章",
+  "achievementLoadError": "无法加载徽章。",
+  "achievementViewSettings": "显示",
+  "achievementSortLabel": "排序",
+  "achievementFilterAll": "全部",
+  "achievementFilterUnlocked": "已获得",
+  "achievementFilterLocked": "进行中",
+  "achievementSectionAll": "全部徽章",
+  "achievementSectionUnlocked": "已获得徽章",
+  "achievementSectionLocked": "进行中的徽章",
+  "achievementEmptyAll": "暂无可显示的徽章。",
+  "achievementEmptyUnlocked": "还没有获得任何徽章。",
+  "achievementEmptyLocked": "你已解锁全部徽章。",
+  "achievementHeroTitle": "成就",
+  "achievementHeroProgress": "已获得 {unlocked} / {total}",
+  "@achievementHeroProgress": {
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementHeroAllUnlocked": "你已收集全部徽章，太棒了！",
+  "achievementHeroKeepGoing": "继续游玩以解锁更多徽章。",
+  "achievementBadgeFirstClearTitle": "初次通关",
+  "achievementBadgeFirstClearDesc": "完成你的第一道题目，开启数独之旅。",
+  "achievementBadgeStreakTitle": "连续 3 天",
+  "achievementBadgeStreakDesc": "连续三天通关题目，养成好习惯。",
+  "achievementBadgeWeeklyTitle": "每周常客",
+  "achievementBadgeWeeklyDesc": "在最近 7 天内通关五道题目。",
+  "achievementBadgePerfectTitle": "完美通关",
+  "achievementBadgePerfectDesc": "零失误完成一道题目。",
+  "achievementBadgeMasterTitle": "大师首胜",
+  "achievementBadgeMasterDesc": "首次通关大师难度题目。",
+  "achievementProgressFraction": "{current}/{max}",
+  "@achievementProgressFraction": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementProgressStreak": "{current}/{max} 天",
+  "@achievementProgressStreak": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementProgressWeekly": "{current}/{max} 次",
+  "@achievementProgressWeekly": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementStatusDone": "完成",
+  "achievementStatusNotMet": "未达成",
+  "achievementStatusTrying": "进行中",
+  "achievementTileProgress": "进度：{label}",
+  "@achievementTileProgress": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementTileRarity": "稀有度：{label}",
+  "@achievementTileRarity": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementRarityCommon": "普通",
+  "achievementRarityRare": "稀有",
+  "achievementRarityEpic": "史诗",
+  "achievementSortDefault": "默认顺序",
+  "achievementSortRarity": "按稀有度",
+  "commonSave": "保存",
+  "settingsDisplaySection": "显示",
+  "settingsTheme": "主题",
+  "settingsThemeSystem": "系统",
+  "settingsThemeLight": "浅色",
+  "settingsThemeDark": "深色",
+  "profileEditorTitle": "编辑资料",
+  "profileEditorRemovePhoto": "移除照片",
+  "profileEditorNameLabel": "昵称",
+  "profileEditorDefaultProfile": "默认头像",
+  "profileEditorDefaultProfileDesc": "使用应用自带的默认图片",
+  "profileEditorPickFromAlbum": "从相册选择",
+  "profileEditorPickFromAlbumDesc": "使用自己的照片作为头像",
+  "homeTodayLabel": "今天",
+  "homeTodayPuzzleTitle": "静下心来，专注片刻。",
+  "homeTodayChallengeStartButton": "开始今日挑战",
+  "homeTodayChallengeResumeButton": "继续今日挑战",
+  "homeTodayChallengeReviewButton": "再玩今日谜题",
+  "homeTodayChallengeLoadError": "无法加载今日谜题。",
+  "homeTodayChallengeDateChanged": "日期已变更，已刷新今日挑战。",
+  "homeFirstStartTitle": "开始你的第一道谜题",
+  "homeNewPuzzleTitle": "开始一道新谜题",
+  "homeChooseLevelBody": "请选择难度。进度会自动保存。",
+  "homeChooseLevelButton": "选择难度",
+  "homeViewAllInProgress": "查看全部进行中的游戏 ({count})",
+  "homeNewGameSectionTitle": "新游戏 · 选择难度",
+  "homeLevelBlankCells": "{count} 个空格",
+  "homeSavedGamesTitle": "进行中的游戏",
+  "homeSavedGamesDescription": "选择要继续的游戏。删除只会移除已保存的进度，不影响完成记录。",
+  "homeSavedGameDeleteTooltip": "删除已保存的进度",
+  "homeSavedGameDeleteTitle": "删除已保存的进度？",
+  "homeSavedGameDeleteBody": "该谜题的输入和笔记将被删除。完成记录会保留。",
+  "homeSavedGameDeleteConfirm": "删除",
+  "homeLoadError": "无法加载游戏信息。",
+  "homeCatalogFirstTitle": "正在准备第一批题目",
+  "homeCatalogFirstBody": "首次启动时，数独题目会保存到你的设备上。之后应用会打开得快很多。",
+  "homeCatalogFirstNote": "准备工作会在后台继续进行，你可以直接开始探索。",
+  "homeCatalogFirstContinue": "继续前往首页",
+  "homeLevelProgressSolved": "{cleared} / {total}",
+  "@homeLevelProgressSolved": {
+    "placeholders": {
+      "cleared": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "levelFilterAll": "全部",
+  "levelFilterNew": "全新",
+  "levelFilterInProgress": "进行中",
+  "levelFilterDone": "已完成",
+  "levelProgressCardMessage": "今天就从 {levelName} 题目开始吧",
+  "@levelProgressCardMessage": {
+    "placeholders": {
+      "levelName": {"type": "String"}
+    }
+  },
+  "levelProgressCompleted": "/ {total} 已完成",
+  "@levelProgressCompleted": {
+    "placeholders": {
+      "total": {"type": "int"}
+    }
+  },
+  "levelRecentBadge": "最近",
+  "levelStatusInProgress": "进行中",
+  "levelNoResults": "暂无结果。",
+  "levelReplayTitle": "要重新挑战这道题吗？",
+  "levelReplayBody": "已完成的记录会保留，只有取得更好成绩时才会更新。",
+  "levelReplayConfirm": "重新挑战",
+  "levelInProgressLimitTitle": "有 {maxCount} 道谜题进行中",
+  "@levelInProgressLimitTitle": {
+    "placeholders": {
+      "maxCount": {"type": "int"}
+    }
+  },
+  "levelInProgressLimitBody": "最多可以同时进行 {maxCount} 道题。\n请从下方选择一道继续挑战。",
+  "@levelInProgressLimitBody": {
+    "placeholders": {
+      "maxCount": {"type": "int"}
+    }
+  },
+  "levelInProgressLimitLater": "稍后再说",
+  "levelTryAgain": "再试一次",
+  "levelContinueButton": "继续解题",
+  "levelStartNextNew": "开始新谜题 · {number}",
+  "levelViewInProgress": "查看 {count} 个进行中",
+  "levelNotesInProgress": "正在写笔记",
+  "levelEmptyInProgress": "没有可继续的谜题。",
+  "levelEmptyCompleted": "创建你的第一条完成记录。",
+  "levelEmptyFresh": "没有可开始的新谜题。",
+  "levelAllCompleted": "你已完成该难度的所有谜题。",
+  "levelActionShowNew": "查看新谜题",
+  "levelActionShowInProgress": "查看进行中",
+  "levelActionShowAll": "查看全部",
+  "levelBestTime": "最佳用时 {time}",
+  "levelCellSemantics": "第 {number} 题，{status}",
+  "gameResetDialogTitle": "从头重新开始",
+  "gameResetDialogBody": "要清除已输入的数字、笔记、提示、错误次数和用时，并回到初始棋盘吗？以往的通关记录会保留。",
+  "gameResetConfirm": "重新开始",
+  "gameNumberInputLegend": "小数字表示剩余数量，打勾表示已完成的数字。",
+  "dialogSuggestedNextStep": "推荐下一步",
+  "dialogSetTomorrowReminder": "设置明天的提醒",
+  "dialogTryAnotherLevel": "试试其他难度",
+  "savedGamesSortRecent": "最近游玩",
+  "savedGamesSortProgress": "按进度",
+  "savedGamesSortPlayTime": "按游玩时长",
+  "savedGamesEmpty": "没有符合该筛选条件的存档。",
+  "challengeMetricBasisTitle": "挑战指标说明",
+  "challengeMetricBasisWeekly": "每周进度：基于最近 7 天的通关事件计算。",
+  "challengeMetricBasisStreak": "连续记录：基于连续完成每日挑战的天数计算。"
+}

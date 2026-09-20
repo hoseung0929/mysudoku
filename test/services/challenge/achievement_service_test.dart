@@ -32,7 +32,9 @@ void main() {
       final service = AchievementService(
         challengeProgressService: _FixedChallengeProgressService(
           const ChallengeProgressSummary(
-            streakDays: 5,
+            // 도전 연속(0)과 무관하게 일반 완료 연속(5)으로 판정한다.
+            streakDays: 0,
+            activityStreakDays: 5,
             isTodayChallengeCleared: false,
             todayChallengeLevelName: '초급',
             todayChallengeGameNumber: 1,
@@ -107,14 +109,40 @@ void main() {
           summary.badges.firstWhere((badge) => badge.id == 'first_clear');
       final perfectClear =
           summary.badges.firstWhere((badge) => badge.id == 'perfect_clear');
-      final masterClear =
-          summary.badges.firstWhere((badge) => badge.id == 'master_clear');
 
       expect(firstClear.unlocked, isFalse);
       expect(firstClear.progressLabel, '0/1');
       expect(perfectClear.unlocked, isFalse);
-      expect(masterClear.unlocked, isFalse);
-      expect(summary.inProgressBadges.length, 5);
+      // 마스터는 홈에서 선택할 수 없으므로 마스터 기록이 없으면 업적도 보이지 않는다.
+      expect(
+          summary.badges.any((badge) => badge.id == 'master_clear'), isFalse);
+      expect(summary.inProgressBadges.length, 4);
+    });
+
+    test('challenge-only streak does not unlock the daily streak badge',
+        () async {
+      final service = AchievementService(
+        challengeProgressService: _FixedChallengeProgressService(
+          const ChallengeProgressSummary(
+            streakDays: 5,
+            activityStreakDays: 1,
+            isTodayChallengeCleared: false,
+            todayChallengeLevelName: '초급',
+            todayChallengeGameNumber: 1,
+            lastClearDate: null,
+            weeklyClearCount: 0,
+            weeklyGoalTarget: 5,
+            perfectClearCount: 0,
+          ),
+        ),
+        loadOverallStatistics: () async => {'total_cleared': 1},
+        loadRecentRecords: () async => const [],
+      );
+      final summary = await service.load(l10nKo);
+      expect(
+        summary.badges.firstWhere((b) => b.id == 'streak_3').unlocked,
+        isFalse,
+      );
     });
 
     test('finds only newly unlocked badges between two summaries', () {

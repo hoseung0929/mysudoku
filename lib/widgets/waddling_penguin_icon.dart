@@ -48,6 +48,14 @@ class _WaddlingPenguinIconState extends State<WaddlingPenguinIcon>
 
   @override
   Widget build(BuildContext context) {
+    // 동작 줄이기: 뒤뚱거림 없이 정지한 이미지로 보여준다.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      return Image.asset(
+        'assets/images/character.png',
+        width: widget.size,
+        height: widget.size,
+      );
+    }
     return AnimatedBuilder(
       animation: _waddleController,
       builder: (context, child) {

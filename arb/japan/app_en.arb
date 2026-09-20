@@ -25,6 +25,8 @@
   "settingsLanguageEnglish": "English",
   "settingsLanguageKorean": "Korean",
   "settingsLanguageJapanese": "Japanese",
+  "settingsLanguageChinese": "中文",
+  "settingsLanguageSpanish": "Español",
   "settingsLanguagePickerTitle": "Choose language",
   "settingsVibrationTitle": "Haptic feedback",
   "settingsVibrationSubtitle": "Vibrate when entering numbers",
@@ -70,6 +72,34 @@
   "gameUndoShort": "Undo",
   "gameRedoShort": "Redo",
   "gameMemoShort": "Memo",
+  "gameCellLabel": "Row {row}, column {col}: {content}",
+  "@gameCellLabel": {
+    "placeholders": {
+      "row": {
+        "type": "int"
+      },
+      "col": {
+        "type": "int"
+      },
+      "content": {
+        "type": "String"
+      }
+    }
+  },
+  "gameCellEmpty": "empty",
+  "gameCellNotes": "notes {notes}",
+  "@gameCellNotes": {
+    "placeholders": {
+      "notes": {
+        "type": "String"
+      }
+    }
+  },
+  "gameCellGiven": "given",
+  "gameCellHint": "hint",
+  "gameCellWrong": "incorrect",
+  "gameEraseShort": "Erase",
+  "gameMoreOptions": "More options",
   "gameMemoOnShort": "Memo ON",
   "gameMemoStateOn": "ON",
   "gameMemoStateOff": "OFF",
@@ -164,8 +194,19 @@
   "dialogSharePreview": "Share text",
   "dialogCopyResult": "Copy",
   "dialogShare": "Share",
-  "dialogBackToLevels": "Level list",
-  "dialogPlayAgain": "Play again",
+  "dialogBackToLevels": "Puzzle list",
+  "dialogPlayAgain": "Solve again",
+  "dialogPuzzleCompleteTitle": "Puzzle complete",
+  "dialogNewBestMessage": "New best record!",
+  "dialogHintsUsed": "Hints used: {count}",
+  "@dialogHintsUsed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dialogSolveSameAgain": "Solve this puzzle again",
   "dialogNextPuzzle": "Next puzzle",
   "updateRequiredTitle": "Update required",
   "updateRequiredMessage": "A new version of this app is available.\nPlease update to continue playing.",
@@ -185,9 +226,9 @@
   "settingsAboutSupportEmail": "· team929.support@gmail.com",
   "commonOk": "OK",
   "commonCancel": "Cancel",
-  "gameOverTitle": "Game over",
-  "gameOverMessage": "You exceeded the mistake limit.",
-  "gameOverWrongLabel": "Mistakes: {count}/{maxCount}",
+  "gameOverTitle": "You reached the mistake limit",
+  "gameOverMessage": "You can start this puzzle over or choose another one.",
+  "gameOverWrongLabel": "This game: {count} mistakes / limit {maxCount}",
   "@gameOverWrongLabel": {
     "placeholders": {
       "count": {
@@ -266,29 +307,90 @@
   "recordsPacePreviousWindow": "Previous 7 days",
   "recordsPaceDelta": "Change",
   "recordsMetricClears": "Clears (filtered)",
-  "recordsMetricClearRate": "Overall progress",
-  "recordsMetricPerfectRate": "Perfect rate",
-  "recordsSummaryMetricsFootnote": "Clear counts follow your active filters. Overall progress compares cleared puzzles with the total puzzle count in the same scope.",
-  "recordsMetricAvgTime": "Avg. time",
-  "recordsMetricAvgWrong": "Avg. mistakes",
-  "recordsByLevelTitle": "By level",
+  "recordsMetricClearRate": "Puzzle completion",
+  "recordsMetricPerfectRate": "Mistake-free share",
+  "recordsSummaryMetricsFootnote": "Each puzzle counts once, using its best record, and follows your active filters. Completion compares those puzzles with the total number of puzzles in the same scope.",
+  "recordsMetricAvgTime": "Avg. best time",
+  "recordsMetricAvgWrong": "Avg. mistakes (best runs)",
+  "recordsByLevelTitle": "Records by level",
   "recordsByLevelEmpty": "No stats for this filter.",
   "recordsByLevelSectionSubtitle": "See which levels are starting to feel more comfortable.",
-  "recordsLevelInfographicClearRate": "Clear rate",
+  "recordsLevelInfographicClearRate": "Puzzle completion",
   "recordsLevelMiniBest": "Best",
   "recordsLevelMiniPerfectRate": "Perfect",
   "recordsLevelMiniAvgWrong": "Avg wrong",
   "recordsStatsLoadError": "Unable to load statistics right now. Please try again shortly.",
   "recordsRetry": "Try again",
+  "recordsEmptyTitle": "Your records will build up once you finish your first puzzle.",
+  "recordsEmptyAction": "Start a puzzle",
+  "recordsLevelEmpty": "No completed puzzles at this level yet.",
+  "recordsRowBestTime": "Best time",
+  "recordsAverageBasisNote": "Averages use each puzzle's best record, not every play.",
+  "recordsCalendarTitle": "Activity calendar",
+  "recordsCalendarPeriod": "Last {weeks} weeks",
+  "@recordsCalendarPeriod": {
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsViewAchievements": "View achievements",
+  "recordsOverallNote": "{cleared} of {total} puzzles completed across all levels.",
+  "@recordsOverallNote": {
+    "placeholders": {
+      "cleared": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsWeekActiveDays": "Active days: {count}",
+  "@recordsWeekActiveDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsWeekCompletions": "Completed: {count}",
+  "@recordsWeekCompletions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsWeekDayDone": "{day}: {count} completed",
+  "@recordsWeekDayDone": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsWeekDayNone": "{day}: no completions",
+  "@recordsWeekDayNone": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
   "recordsStatsPageSubtitle": "Clears and average time at a glance.",
-  "recordsKpiWeeklyClearsLabel": "Clears",
-  "recordsKpiAvgSolveTimeLabel": "Avg. time",
+  "recordsKpiWeeklyClearsLabel": "Puzzles cleared",
+  "recordsKpiAvgSolveTimeLabel": "Avg. best time",
   "recordsActivityOverviewTitle": "Activity overview",
   "recordsActivityHeatmapTitle": "Recent activity",
-  "recordsActivityHeatmapCaption": "Darker cells mean more clears on that day.",
-  "recordsActivityTotalClearsLabel": "Total clears",
-  "recordsActivityCurrentStreakLabel": "Current streak",
-  "recordsActivityBestStreakLabel": "Best streak",
+  "recordsActivityHeatmapCaption": "Darker cells mean more completions on that day.",
+  "recordsActivityTotalClearsLabel": "Total completions",
+  "recordsActivityCurrentStreakLabel": "Current daily streak",
+  "recordsActivityBestStreakLabel": "Best daily streak",
   "recordsActivityDayCount": "{count, plural, one{{count} day} other{{count} days}}",
   "@recordsActivityDayCount": {
     "placeholders": {
@@ -729,15 +831,45 @@
   "profileEditorTitle": "Edit profile",
   "profileEditorRemovePhoto": "Remove photo",
   "profileEditorNameLabel": "Name",
-  "profileEditorBioLabel": "Bio",
-  "profileEditorBioHint": "Write a short introduction about yourself",
-  "profileEditorBioFooter": "Your bio and profile photo are displayed on your profile.",
   "profileEditorDefaultProfile": "Default profile",
   "profileEditorDefaultProfileDesc": "Start with the app's default image",
   "profileEditorPickFromAlbum": "Choose from album",
   "profileEditorPickFromAlbumDesc": "Set your own photo as profile",
   "homeTodayLabel": "TODAY",
   "homeTodayPuzzleTitle": "A quiet moment to focus.",
+  "homeTodayChallengeStartButton": "Start today's challenge",
+  "homeTodayChallengeResumeButton": "Resume today's challenge",
+  "homeTodayChallengeReviewButton": "Play today's puzzle again",
+  "homeTodayChallengeLoadError": "Couldn't load today's puzzle.",
+  "homeTodayChallengeDateChanged": "A new day started. Today's challenge was refreshed.",
+  "homeFirstStartTitle": "Start your first puzzle",
+  "homeNewPuzzleTitle": "Start a new puzzle",
+  "homeChooseLevelBody": "Choose a level. Your progress is saved automatically.",
+  "homeChooseLevelButton": "Choose a level",
+  "homeViewAllInProgress": "View all in-progress games ({count})",
+  "@homeViewAllInProgress": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeNewGameSectionTitle": "New game · choose a level",
+  "homeLevelBlankCells": "{count} blanks",
+  "@homeLevelBlankCells": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeSavedGamesTitle": "In-progress games",
+  "homeSavedGamesDescription": "Pick one to resume. Deleting removes only the saved progress, not your records.",
+  "homeSavedGameDeleteTooltip": "Delete saved progress",
+  "homeSavedGameDeleteTitle": "Delete saved progress?",
+  "homeSavedGameDeleteBody": "Your entries and notes for this puzzle will be removed. Completion records are kept.",
+  "homeSavedGameDeleteConfirm": "Delete",
+  "homeLoadError": "Couldn't load your games.",
   "homeCatalogFirstTitle": "Preparing your first puzzle set",
   "homeCatalogFirstBody": "On your first launch, Nanpre puzzles are saved on your device. After this, the app opens much faster.",
   "homeCatalogFirstNote": "Preparation continues in the background, so you can keep exploring right away.",
@@ -771,7 +903,7 @@
   "levelReplayTitle": "Replay this puzzle?",
   "levelReplayBody": "Your completed record is kept, and it updates only if the new result is better.",
   "levelReplayConfirm": "Replay",
-  "levelInProgressLimitTitle": "You're juggling {maxCount} puzzles!",
+  "levelInProgressLimitTitle": "{maxCount} puzzles in progress",
   "@levelInProgressLimitTitle": {
     "placeholders": {
       "maxCount": {"type": "int"}
@@ -785,9 +917,53 @@
   },
   "levelInProgressLimitLater": "Later",
   "levelTryAgain": "Try again",
-  "gameResetDialogTitle": "Reset current game",
-  "gameResetDialogBody": "Clear entered numbers, notes, hints, mistakes, and time, then return to the starting board?",
-  "gameResetConfirm": "Reset",
+  "levelContinueButton": "Continue",
+  "levelStartNextNew": "Start new puzzle · {number}",
+  "@levelStartNextNew": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "levelViewInProgress": "View {count} in progress",
+  "@levelViewInProgress": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "levelNotesInProgress": "Writing notes",
+  "levelEmptyInProgress": "No puzzles to continue.",
+  "levelEmptyCompleted": "Make your first completion record.",
+  "levelEmptyFresh": "No new puzzles to start.",
+  "levelAllCompleted": "You've completed every puzzle at this level.",
+  "levelActionShowNew": "Show new puzzles",
+  "levelActionShowInProgress": "Show in progress",
+  "levelActionShowAll": "Show all",
+  "levelBestTime": "Best time {time}",
+  "@levelBestTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "levelCellSemantics": "Puzzle {number}, {status}",
+  "@levelCellSemantics": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "gameResetDialogTitle": "Restart from the beginning",
+  "gameResetDialogBody": "Clear entered numbers, notes, hints, mistakes, and time, then return to the starting board? Your past clear records are kept.",
+  "gameResetConfirm": "Restart",
   "gameNumberInputLegend": "Small numbers show what remains, checks mean completed.",
   "dialogSuggestedNextStep": "Suggested next step",
   "dialogSetTomorrowReminder": "Set tomorrow reminder",

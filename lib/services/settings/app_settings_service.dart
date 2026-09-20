@@ -7,14 +7,6 @@ class AppSettingsService {
   static const String smartHintHighlightEnabledKey =
       'smart_hint_highlight_enabled';
   static const String oneHandModeEnabledKey = 'one_hand_mode_enabled';
-  static const String notificationsEnabledKey = 'notifications_enabled';
-  static const String streakReminderEnabledKey = 'streak_reminder_enabled';
-  static const String gameCompleteNotificationEnabledKey =
-      'game_complete_notification_enabled';
-  static const String dailyGoalNotificationEnabledKey =
-      'daily_goal_notification_enabled';
-  static const String notificationHourKey = 'notification_hour';
-  static const String notificationMinuteKey = 'notification_minute';
   // int: ThemeMode.index (0=system, 1=light, 2=dark). 키 없으면 system(0) 기본값.
   static const String themeModeKey = 'theme_mode';
 

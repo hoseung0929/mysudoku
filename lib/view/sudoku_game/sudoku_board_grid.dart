@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/presenter/game/sudoku_game_presenter.dart';
 import 'package:sudoku159/theme/app_colors.dart';
 import 'package:sudoku159/theme/app_theme.dart';
@@ -53,9 +54,8 @@ class SudokuBoardGrid extends StatelessWidget {
     final sameNumberColor = isDark
         ? const Color(0xFF304050)
         : AppTheme.lightBlueColor.withValues(alpha: 0.14);
-    final relatedFill = isDark
-        ? const Color(0xFF242A30)
-        : context.colors.surfaceSubtle;
+    final relatedFill =
+        isDark ? const Color(0xFF242A30) : context.colors.surfaceSubtle;
     final wrongCellColor = isDark
         ? const Color(0xFF4A2525)
         : AppTheme.pinkColor.withValues(alpha: 0.18);
@@ -96,7 +96,8 @@ class SudokuBoardGrid extends StatelessWidget {
         final board = Container(
           decoration: BoxDecoration(
             color: context.colors.surface,
-            border: Border.all(color: boardOutlineColor, width: isDark ? 1.2 : 1.0),
+            border:
+                Border.all(color: boardOutlineColor, width: isDark ? 1.2 : 1.0),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF21382A).withValues(alpha: 0.06),
@@ -138,110 +139,144 @@ class SudokuBoardGrid extends StatelessWidget {
                     final isErrorActive = errorActive['$row,$col'] == true;
                     final horizontalOffset = errorOffset['$row,$col'] ?? 0.0;
 
+                    final l10n = AppLocalizations.of(context)!;
+                    final content = value != 0
+                        ? '$value'
+                        : notes.isEmpty
+                            ? l10n.gameCellEmpty
+                            : l10n.gameCellNotes(
+                                (notes.toList()..sort()).join(', '));
+                    final cellLabel = [
+                      l10n.gameCellLabel(row + 1, col + 1, content),
+                      if (isFixed) l10n.gameCellGiven,
+                      if (isHint) l10n.gameCellHint,
+                      if (isWrong) l10n.gameCellWrong,
+                    ].join(', ');
+
                     return Expanded(
-                      child: GestureDetector(
+                      child: Semantics(
+                        button: true,
+                        selected: isSelected,
+                        label: cellLabel,
+                        excludeSemantics: true,
                         onTap: () => onCellTapped(row, col),
-                        child: AnimatedSlide(
-                          duration: const Duration(milliseconds: 70),
-                          offset: Offset(horizontalOffset / 48, 0),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            decoration: BoxDecoration(
-                              border: Border(
-                                top: BorderSide(
-                                  color: (row == 0 || row == 3 || row == 6)
-                                      ? borderColorStrong
-                                      : borderColor,
-                                  width: (row == 0 || row == 3 || row == 6)
-                                      ? 1.2
-                                      : 0.35,
-                                ),
-                                left: BorderSide(
-                                  color: (col == 0 || col == 3 || col == 6)
-                                      ? borderColorStrong
-                                      : borderColor,
-                                  width: (col == 0 || col == 3 || col == 6)
-                                      ? 1.2
-                                      : 0.35,
-                                ),
-                                right: BorderSide(
-                                  color: (col == 2 || col == 5 || col == 8)
-                                      ? borderColorStrong
-                                      : borderColor,
-                                  width: (col == 2 || col == 5 || col == 8)
-                                      ? 1.2
-                                      : 0.35,
-                                ),
-                                bottom: BorderSide(
-                                  color: (row == 2 || row == 5 || row == 8)
-                                      ? borderColorStrong
-                                      : borderColor,
-                                  width: (row == 2 || row == 5 || row == 8)
-                                      ? 1.2
-                                      : 0.35,
-                                ),
-                              ),
-                              color: isErrorActive
-                                  ? errorActiveCellColor
-                                  : isWave
-                                      ? waveCellColor
-                                      : isLineComplete
-                                          ? lineCompleteCellColor
-                                          : isSelected
-                                              ? selectedCellColor
-                                              : isWrong
-                                                  ? wrongCellColor
-                                                  : isSameNumber
-                                                      ? sameNumberColor
-                                                      : isHiddenSingleForHighlightedMemo
-                                                          ? hiddenSingleColor
-                                                          : hasHighlightedMemoCandidate
-                                                              ? memoHighlightColor
-                                                              : isSingleCandidateCell
-                                                                  ? singleCandidateColor
-                                                                  : isRelated
-                                                                      ? relatedFill
-                                                                      : null,
-                            ),
-                            child: Center(
-                              child: value != 0
-                                  ? Text(
-                                      value.toString(),
-                                      style: isWrong
-                                          ? AppTheme.sudokuWrongNumberStyle
-                                              .copyWith(
-                                              fontSize: digitFontSize,
-                                            )
-                                          : isFixed
-                                              ? GoogleFonts.notoSans(
-                                                  fontSize: digitFontSize,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: digitOnBoard,
-                                                )
-                                              : isHint
-                                                  ? GoogleFonts.notoSans(
-                                                      fontSize: digitFontSize,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      color: const Color(
-                                                          0xFF457B9D),
-                                                    )
-                                                  : GoogleFonts.notoSans(
-                                                      fontSize: digitFontSize,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      color: context.colors
-                                                          .boardUserNumber,
-                                                    ),
+                        child: GestureDetector(
+                          onTap: () => onCellTapped(row, col),
+                          child: AnimatedSlide(
+                            duration: const Duration(milliseconds: 36),
+                            offset: Offset(horizontalOffset / 48, 0),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              // 성공·오답 강조가 선택 배경색을 덮어도 선택 칸은 테두리로 남긴다.
+                              foregroundDecoration: isSelected &&
+                                      (isWave ||
+                                          isLineComplete ||
+                                          isErrorActive)
+                                  ? BoxDecoration(
+                                      border: Border.all(
+                                        color: levelPalette.primaryPurple,
+                                        width: 2,
+                                      ),
                                     )
-                                  : SudokuMemoNotesGrid(
-                                      notes: notes,
-                                      highlightedNote: highlightedMemo,
-                                      isSingleCandidate: isSingleCandidateCell,
-                                      isHiddenSingleCandidate:
-                                          isHiddenSingleForHighlightedMemo,
-                                      cellExtent: memoCellExtent,
-                                    ),
+                                  : null,
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  top: BorderSide(
+                                    color: (row == 0 || row == 3 || row == 6)
+                                        ? borderColorStrong
+                                        : borderColor,
+                                    width: (row == 0 || row == 3 || row == 6)
+                                        ? 1.2
+                                        : 0.35,
+                                  ),
+                                  left: BorderSide(
+                                    color: (col == 0 || col == 3 || col == 6)
+                                        ? borderColorStrong
+                                        : borderColor,
+                                    width: (col == 0 || col == 3 || col == 6)
+                                        ? 1.2
+                                        : 0.35,
+                                  ),
+                                  right: BorderSide(
+                                    color: (col == 2 || col == 5 || col == 8)
+                                        ? borderColorStrong
+                                        : borderColor,
+                                    width: (col == 2 || col == 5 || col == 8)
+                                        ? 1.2
+                                        : 0.35,
+                                  ),
+                                  bottom: BorderSide(
+                                    color: (row == 2 || row == 5 || row == 8)
+                                        ? borderColorStrong
+                                        : borderColor,
+                                    width: (row == 2 || row == 5 || row == 8)
+                                        ? 1.2
+                                        : 0.35,
+                                  ),
+                                ),
+                                color: isErrorActive
+                                    ? errorActiveCellColor
+                                    : isWave
+                                        ? waveCellColor
+                                        : isLineComplete
+                                            ? lineCompleteCellColor
+                                            : isSelected
+                                                ? selectedCellColor
+                                                : isWrong
+                                                    ? wrongCellColor
+                                                    : isSameNumber
+                                                        ? sameNumberColor
+                                                        : isHiddenSingleForHighlightedMemo
+                                                            ? hiddenSingleColor
+                                                            : hasHighlightedMemoCandidate
+                                                                ? memoHighlightColor
+                                                                : isSingleCandidateCell
+                                                                    ? singleCandidateColor
+                                                                    : isRelated
+                                                                        ? relatedFill
+                                                                        : null,
+                              ),
+                              child: Center(
+                                child: value != 0
+                                    ? Text(
+                                        value.toString(),
+                                        style: isWrong
+                                            ? AppTheme.sudokuWrongNumberStyle
+                                                .copyWith(
+                                                fontSize: digitFontSize,
+                                              )
+                                            : isFixed
+                                                ? GoogleFonts.notoSans(
+                                                    fontSize: digitFontSize,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: digitOnBoard,
+                                                  )
+                                                : isHint
+                                                    ? GoogleFonts.notoSans(
+                                                        fontSize: digitFontSize,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        color: const Color(
+                                                            0xFF457B9D),
+                                                      )
+                                                    : GoogleFonts.notoSans(
+                                                        fontSize: digitFontSize,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        color: context.colors
+                                                            .boardUserNumber,
+                                                      ),
+                                      )
+                                    : SudokuMemoNotesGrid(
+                                        notes: notes,
+                                        highlightedNote: highlightedMemo,
+                                        isSingleCandidate:
+                                            isSingleCandidateCell,
+                                        isHiddenSingleCandidate:
+                                            isHiddenSingleForHighlightedMemo,
+                                        cellExtent: memoCellExtent,
+                                      ),
+                              ),
                             ),
                           ),
                         ),

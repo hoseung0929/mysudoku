@@ -122,6 +122,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       .setAppLocale(const Locale('ja'));
                 },
               ),
+              if (!AppConfig.isJapan) ...[
+                _buildLanguageOption(
+                  context: ctx,
+                  label: l10n.settingsLanguageChinese,
+                  languageCode: 'zh',
+                  selectedLanguageCode: selectedLanguageCode,
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    await AppLocaleScope.of(context)
+                        .setAppLocale(const Locale('zh'));
+                  },
+                ),
+                _buildLanguageOption(
+                  context: ctx,
+                  label: l10n.settingsLanguageSpanish,
+                  languageCode: 'es',
+                  selectedLanguageCode: selectedLanguageCode,
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    await AppLocaleScope.of(context)
+                        .setAppLocale(const Locale('es'));
+                  },
+                ),
+              ],
             ],
           ),
         );

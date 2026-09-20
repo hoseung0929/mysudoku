@@ -13,6 +13,7 @@ import 'package:sudoku159/presenter/game/sudoku_game_presenter.dart';
 import 'package:sudoku159/theme/app_colors.dart';
 import 'package:sudoku159/theme/app_theme.dart';
 import 'package:sudoku159/utils/app_logger.dart';
+import 'package:sudoku159/utils/time_format.dart';
 import 'package:sudoku159/view/sudoku_game/game_end_flow.dart';
 import 'package:sudoku159/view/sudoku_game/game_session_controller.dart';
 import 'package:sudoku159/view/sudoku_game/game_settings_controller.dart';
@@ -31,11 +32,15 @@ class SudokuGameScreen extends StatefulWidget {
   final SudokuLevel level;
   final bool restoreSavedSession;
 
+  /// 오늘의 도전으로 시작했다면 그 도전의 날짜(YYYY-MM-DD). 완료 귀속에 쓰인다.
+  final String? challengeDate;
+
   const SudokuGameScreen({
     super.key,
     required this.game,
     required this.level,
     this.restoreSavedSession = false,
+    this.challengeDate,
   });
 
   @override
@@ -45,6 +50,9 @@ class SudokuGameScreen extends StatefulWidget {
 class _SudokuGameScreenState extends State<SudokuGameScreen>
     with WidgetsBindingObserver {
   late final GameEndFlow _gameEndFlow = GameEndFlow();
+
+  /// 이 게임이 속한 오늘의 도전 날짜(없으면 일반 게임). 저장 세션에도 보존된다.
+  String? _challengeDate;
   final GameSessionController _sessionController = GameSessionController();
   final GameSettingsController _settingsController = GameSettingsController();
   late final SudokuGamePresenter _presenter;
@@ -173,6 +181,15 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     return _presenter.getCellValue(row, col) == 0;
   }
 
+  bool get _canEraseSelection =>
+      _presenterReady && _presenter.canEraseSelectedCell;
+
+  void _eraseSelectedCell() {
+    if (!_canEraseSelection) return;
+    _cancelWrongCellTimer(_presenter.selectedRow, _presenter.selectedCol);
+    _presenter.eraseSelectedCell();
+  }
+
   bool get _canResetCurrentGame {
     return _presenterReady &&
         !_presenter.isGameComplete &&
@@ -193,6 +210,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       isGameOver: _presenter.isGameOver,
       hintsRemaining: _presenter.hintsRemaining,
       hintCells: _presenter.hintCells,
+      challengeDate: _challengeDate,
     );
   }
 
@@ -217,16 +235,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   Future<void> _flushPendingSessionOnPause() async {
     if (!_presenterReady) return;
     await _flushPendingSessionSave();
-  }
-
-  String _formatCalmTime(int totalSeconds) {
-    final hours = totalSeconds ~/ 3600;
-    final minutes = (totalSeconds % 3600) ~/ 60;
-    final seconds = totalSeconds % 60;
-    final mm = minutes.toString().padLeft(2, '0');
-    final ss = seconds.toString().padLeft(2, '0');
-    // 1시간 미만이면 불필요한 "00:" 시간 자리를 표시하지 않는다.
-    return hours > 0 ? '$hours:$mm:$ss' : '$mm:$ss';
   }
 
   Future<void> _popAfterSaving() async {
@@ -257,6 +265,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     );
 
     final activeSession = sessionBootstrap.activeSession;
+    // 도전으로 시작했다면 그 날짜를, 저장 세션을 이어받았다면 세션에 남은 날짜를 쓴다.
+    _challengeDate = widget.challengeDate ?? activeSession?.challengeDate;
     final initialBoard = sessionBootstrap.initialBoard;
 
     _effectsController.resetForBoard(
@@ -285,7 +295,11 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           isMounted: () => mounted,
         );
         setState(() {});
-        _showCompletionFeedback(completionDelta);
+        if (completionDelta.isPuzzleComplete) {
+          _hideCompletionFeedback();
+        } else {
+          _showCompletionFeedback(completionDelta);
+        }
         _scheduleSessionSave();
       },
       onFixedNumbersChanged: (fixedNumbers) {
@@ -298,7 +312,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         }
       },
       onTimeChanged: (time) {
-        _timeNotifier.value = _formatCalmTime(time);
+        _timeNotifier.value = formatElapsedSeconds(time);
       },
       onPauseStateChanged: (isPaused) {
         setState(() {});
@@ -336,7 +350,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         _showGameOverDialog();
       },
       onCorrectAnswer: (row, col) {
-        _effectsController.triggerWaveEffect(
+        _effectsController.triggerCorrectEffect(
           row: row,
           col: col,
           setState: setState,
@@ -382,6 +396,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           _presenter.togglePause();
           _autoPausedByLifecycle = true;
         }
+        _effectsController.clearTransientEffects();
         unawaited(_flushPendingSessionOnPause());
         return;
       case AppLifecycleState.resumed:
@@ -595,6 +610,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   @override
   Widget build(BuildContext context) {
     final surface = Theme.of(context).colorScheme.surface;
+    _effectsController.reduceMotion = MediaQuery.disableAnimationsOf(context);
 
     if (!_presenterReady) {
       return PopScope(
@@ -657,12 +673,15 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       titleSpacing: 0,
       title: GestureDetector(
         onLongPress: kDebugMode ? _toggleDeveloperAnswerPreview : null,
-        child: Text(
-          titleText,
-          style: GoogleFonts.notoSans(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: context.colors.textPrimary,
+        child: MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1.3,
+          child: Text(
+            titleText,
+            style: GoogleFonts.notoSans(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: context.colors.textPrimary,
+            ),
           ),
         ),
       ),
@@ -675,7 +694,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       actions: [
         if (kDebugMode) _buildDeveloperMenuButton(),
         Padding(
-          padding: const EdgeInsets.only(right: 14),
+          padding: const EdgeInsets.only(right: 2),
           child: Center(
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -684,20 +703,42 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                 const SizedBox(width: 6),
                 ValueListenableBuilder<String>(
                   valueListenable: _timeNotifier,
-                  builder: (context, time, _) => Text(
-                    time,
-                    style: GoogleFonts.notoSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? const Color(0xFFB8B8B8)
-                          : context.colors.textSecondary,
+                  builder: (context, time, _) =>
+                      MediaQuery.withClampedTextScaling(
+                    maxScaleFactor: 1.3,
+                    child: Text(
+                      time,
+                      style: GoogleFonts.notoSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFFB8B8B8)
+                            : context.colors.textSecondary,
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
           ),
+        ),
+        _buildGameMenuButton(l10n),
+      ],
+    );
+  }
+
+  /// 전체 초기화 진입점. 주요 입력 버튼과 떨어뜨려 오조작을 막는다.
+  Widget _buildGameMenuButton(AppLocalizations l10n) {
+    return PopupMenuButton<String>(
+      tooltip: l10n.gameMoreOptions,
+      icon: Icon(Icons.more_vert, size: 22, color: context.colors.textPrimary),
+      padding: EdgeInsets.zero,
+      onSelected: (_) => _showResetCurrentGameDialog(),
+      itemBuilder: (context) => [
+        PopupMenuItem<String>(
+          value: 'restart',
+          enabled: _canResetCurrentGame,
+          child: Text(l10n.gameResetDialogTitle),
         ),
       ],
     );
@@ -857,7 +898,11 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                               children: [
                                 _buildMobileActionButton(
                                   icon: Icons.edit_note,
-                                  label: '',
+                                  label: _presenter.isMemoMode
+                                      ? l10n.gameMemoOnShort
+                                      : l10n.gameMemoShort,
+                                  semanticsLabel: l10n.gameMemoShort,
+                                  toggled: _presenter.isMemoMode,
                                   color: _presenter.isMemoMode
                                       ? AppTheme.mintColor
                                       : AppTheme.lightBlueColor,
@@ -880,10 +925,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                 ),
                                 _buildMobileActionButton(
                                   icon: Icons.backspace_outlined,
-                                  label: '',
+                                  label: l10n.gameEraseShort,
                                   color: context.colors.attentionSurface,
-                                  onPressed: _canResetCurrentGame
-                                      ? _showResetCurrentGameDialog
+                                  onPressed: _canEraseSelection
+                                      ? _eraseSelectedCell
                                       : null,
                                   compact: true,
                                   size: metrics.actionButtonSize,
@@ -1013,7 +1058,12 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                         children: [
                           _buildMobileActionButton(
                             icon: Icons.edit_note,
-                            label: '',
+                            label: _presenter.isMemoMode
+                                ? AppLocalizations.of(context)!.gameMemoOnShort
+                                : AppLocalizations.of(context)!.gameMemoShort,
+                            semanticsLabel:
+                                AppLocalizations.of(context)!.gameMemoShort,
+                            toggled: _presenter.isMemoMode,
                             color: _presenter.isMemoMode
                                 ? AppTheme.mintColor
                                 : AppTheme.lightBlueColor,
@@ -1037,11 +1087,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                           ),
                           _buildMobileActionButton(
                             icon: Icons.backspace_outlined,
-                            label: '',
+                            label: AppLocalizations.of(context)!.gameEraseShort,
                             color: context.colors.attentionSurface,
-                            onPressed: _canResetCurrentGame
-                                ? _showResetCurrentGameDialog
-                                : null,
+                            onPressed:
+                                _canEraseSelection ? _eraseSelectedCell : null,
                             compact: true,
                             size: metrics.actionButtonSize,
                             labelFontSize: metrics.actionLabelFontSize,
@@ -1115,22 +1164,25 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 680, maxHeight: 680),
-        child: SudokuBoardGrid(
-          presenter: _presenter,
-          waveActive: _effectsController.waveActive,
-          lineCompleteActive: _effectsController.lineCompleteActive,
-          errorActive: _effectsController.errorActive,
-          errorOffset: _effectsController.errorOffset,
-          highlightedMemoNumber:
-              _memoHighlightEnabled && _featurePolicy.memoEnabled
-                  ? _memoFocusNumber
-                  : null,
-          enableMemoHighlights:
-              _memoHighlightEnabled && _featurePolicy.memoEnabled,
-          onCellTapped: (row, col) {
-            _presenter.selectCell(row, col);
-          },
-          onPencilDigit: isTablet ? _insertDigit : null,
+        // 칸 크기가 고정이라 시스템 글씨 크기를 따라 숫자가 커지면 칸 안에서 잘린다.
+        child: MediaQuery.withNoTextScaling(
+          child: SudokuBoardGrid(
+            presenter: _presenter,
+            waveActive: _effectsController.waveActive,
+            lineCompleteActive: _effectsController.lineCompleteActive,
+            errorActive: _effectsController.errorActive,
+            errorOffset: _effectsController.errorOffset,
+            highlightedMemoNumber:
+                _memoHighlightEnabled && _featurePolicy.memoEnabled
+                    ? _memoFocusNumber
+                    : null,
+            enableMemoHighlights:
+                _memoHighlightEnabled && _featurePolicy.memoEnabled,
+            onCellTapped: (row, col) {
+              _presenter.selectCell(row, col);
+            },
+            onPencilDigit: isTablet ? _insertDigit : null,
+          ),
         ),
       ),
     );
@@ -1225,12 +1277,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     const digitAlignment = Alignment.center;
     final badgeBaseSize = isCompactSmallButton ? 22.0 : 24.0;
     final badgeBaseInset = isCompactSmallButton ? 7.0 : 10.0;
-    final badgeSize = largeBadge
-        ? (buttonWidth * 0.23).clamp(18.0, 22.0)
-        : badgeBaseSize;
-    final badgeInset = largeBadge
-        ? (buttonWidth * 0.08).clamp(6.0, 8.0)
-        : badgeBaseInset;
+    final badgeSize =
+        largeBadge ? (buttonWidth * 0.23).clamp(18.0, 22.0) : badgeBaseSize;
+    final badgeInset =
+        largeBadge ? (buttonWidth * 0.08).clamp(6.0, 8.0) : badgeBaseInset;
     final badgeScale = badgeSize / badgeBaseSize;
     final effectiveBackgroundColor = isCompletedNumber
         ? (isDark ? const Color(0xFF232323) : context.colors.surfaceSubtle)
@@ -1240,7 +1290,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                 : buttonColor.withValues(alpha: 0.22))
             : (isDark ? const Color(0xFF323232) : context.colors.surface);
 
-    return ProgressiveBlurButton(
+    return MediaQuery.withNoTextScaling(
+        child: ProgressiveBlurButton(
       onPressed: isEnabled ? () => _insertDigit(number) : null,
       backgroundColor: effectiveBackgroundColor,
       width: width ?? (compact ? 72 : 95),
@@ -1318,7 +1369,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           ),
         ],
       ),
-    );
+    ));
   }
 
   void _scheduleWrongCellAutoClear(int row, int col) {
@@ -1378,6 +1429,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     // 상태일 때 아이콘 색도 포인트 컬러(color)로 바꿔서 on/off를 더 뚜렷하게
     // 보여준다. 폰 레이아웃 호출부는 그대로 둬서 기존 모습이 안 바뀐다.
     bool emphasizeActiveIcon = false,
+    // 스크린리더용 이름(라벨이 "메모 ON"처럼 상태를 포함할 때 기본 이름을 따로 전달)
+    // 과 토글 상태. toggled가 null이면 토글 버튼이 아니다.
+    String? semanticsLabel,
+    bool? toggled,
   }) {
     final buttonSize =
         size ?? (compact ? 52.0 : (_oneHandModeEnabled ? 62.0 : 70.0));
@@ -1389,40 +1444,64 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         horizontal: compact ? 1 : (_oneHandModeEnabled ? 2 : 3),
         vertical: compact ? 0.5 : (_oneHandModeEnabled ? 2 : 3),
       ),
-      child: ProgressiveBlurButton(
-        onPressed: onPressed,
-        width: buttonSize,
-        height: buttonSize,
-        borderRadius: buttonSize / 2,
-        backgroundColor: color,
-        isActive: isActive,
-        child: Builder(
-          builder: (context) {
-            final isDark = Theme.of(context).brightness == Brightness.dark;
-            final contentColor = (isActive && isDark)
-                ? const Color(0xFF6DCCA0)
-                : (isActive && emphasizeActiveIcon)
-                    ? color
-                    : Theme.of(context).colorScheme.onSurface;
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, color: contentColor, size: iconSize - 1),
-                if (hasLabel) ...[
-                  SizedBox(height: compact ? 2 : 4),
-                  Text(
-                    label,
-                    style: GoogleFonts.notoSans(
-                      color: contentColor,
-                      fontSize: labelFontSize ??
-                          (compact ? 8 : (_oneHandModeEnabled ? 10 : 11)),
-                      fontWeight: FontWeight.w600,
+      child: Semantics(
+        container: true,
+        button: true,
+        enabled: onPressed != null,
+        toggled: toggled,
+        label: semanticsLabel ?? label,
+        excludeSemantics: true,
+        onTap: onPressed,
+        child: ProgressiveBlurButton(
+          onPressed: onPressed,
+          width: buttonSize,
+          height: buttonSize,
+          borderRadius: buttonSize / 2,
+          backgroundColor: color,
+          isActive: isActive,
+          child: Builder(
+            builder: (context) {
+              final isDark = Theme.of(context).brightness == Brightness.dark;
+              final contentColor = (isActive && isDark)
+                  ? const Color(0xFF6DCCA0)
+                  : (isActive && emphasizeActiveIcon)
+                      ? color
+                      : Theme.of(context).colorScheme.onSurface;
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, color: contentColor, size: iconSize - 1),
+                  if (hasLabel) ...[
+                    SizedBox(height: compact ? 2 : 4),
+                    // 큰 글씨/좁은 화면에서도 원형 버튼 안에 이름이 들어오도록
+                    // 배율 상한을 두고 폭에 맞춰 줄인다.
+                    MediaQuery.withClampedTextScaling(
+                      maxScaleFactor: 1.3,
+                      child: ConstrainedBox(
+                        constraints:
+                            BoxConstraints(maxWidth: buttonSize * 0.86),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            label,
+                            maxLines: 1,
+                            style: GoogleFonts.notoSans(
+                              color: contentColor,
+                              fontSize: labelFontSize ??
+                                  (compact
+                                      ? 8
+                                      : (_oneHandModeEnabled ? 10 : 11)),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ],
-              ],
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );
@@ -1437,7 +1516,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       children: [
         _buildMobileActionButton(
           icon: Icons.lightbulb_outline,
-          label: '',
+          label: AppLocalizations.of(context)!.gameHintShort,
           color: Theme.of(context).brightness == Brightness.dark
               ? const Color(0xFF8A6820)
               : AppTheme.yellowColor,
@@ -1474,6 +1553,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
             ),
             child: Text(
               '$_visibleHintsRemaining',
+              // 18px 고정 원 안이므로 시스템 글씨 크기를 따르지 않는다.
+              textScaler: TextScaler.noScaling,
               style: GoogleFonts.notoSans(
                 fontSize: 9,
                 fontWeight: FontWeight.w800,
@@ -1496,6 +1577,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       clearTimeSeconds: _presenter.seconds,
       wrongCount: _presenter.wrongCount,
       hintsUsed: _featurePolicy.maxHints - _presenter.hintsRemaining,
+      challengeDate: _challengeDate,
       onRestart: _resetAndRestartCurrentGame,
       onGoToLevelSelection: _exitToLevelSelection,
       onNextPuzzle: (nextGame) async {

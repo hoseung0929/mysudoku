@@ -1,288 +1,288 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
-import 'package:sudoku159/theme/level_status_colors.dart';
+import 'package:sudoku159/utils/time_format.dart';
+import 'package:sudoku159/widgets/mascot_image.dart';
+import 'package:sudoku159/widgets/game_result_dialog_frame.dart';
 
-/// 게임 완료 축하 다이얼로그 위젯
-class GameCompleteDialog extends StatelessWidget {
-  final int timeInSeconds;
-  final int wrongCount;
-  final bool isNewBestRecord;
-  final String? challengeMessage;
-  final VoidCallback onRestart;
-  final VoidCallback onGoToLevelSelection;
-  final VoidCallback? onOpenSettings;
-
-  /// 같은 난이도의 다음 게임이 있을 때만 전달합니다.
-  final VoidCallback? onNextPuzzle;
-
+/// 게임 완료 다이얼로그.
+///
+/// 위에서 아래로: 작은 축하 이미지 → 제목 → 난이도·번호 → 시간·실수 →
+/// (조건부) 성취 메시지 한 줄 → 주요 버튼 → 보조 버튼.
+class GameCompleteDialog extends StatefulWidget {
   const GameCompleteDialog({
     super.key,
+    required this.levelLabel,
     required this.timeInSeconds,
     required this.wrongCount,
+    this.hintsUsed = 0,
     this.isNewBestRecord = false,
     this.challengeMessage,
     required this.onRestart,
     required this.onGoToLevelSelection,
-    this.onOpenSettings,
     this.onNextPuzzle,
   });
 
-  String get formattedTime {
-    final hours = timeInSeconds ~/ 3600;
-    final minutes = (timeInSeconds % 3600) ~/ 60;
-    final seconds = timeInSeconds % 60;
-    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
+  /// "중급 · 게임 18"처럼 이미 지역화된 난이도·문제 번호.
+  final String levelLabel;
+  final int timeInSeconds;
+  final int wrongCount;
+
+  /// 이번 플레이에서 사용한 힌트 수. 0이면 표시하지 않는다.
+  final int hintsUsed;
+  final bool isNewBestRecord;
+  final String? challengeMessage;
+  final VoidCallback onRestart;
+  final VoidCallback onGoToLevelSelection;
+
+  /// 실제로 시작할 수 있는 다음 퍼즐이 있을 때만 전달한다.
+  final VoidCallback? onNextPuzzle;
+
+  String get formattedTime => formatElapsedSeconds(timeInSeconds);
+
+  @override
+  State<GameCompleteDialog> createState() => _GameCompleteDialogState();
+}
+
+class _GameCompleteDialogState extends State<GameCompleteDialog> {
+  // 빠르게 반복해서 눌러도 화면 이동/팝이 한 번만 일어나게 한다.
+  bool _handled = false;
+
+  VoidCallback _once(VoidCallback action) => () {
+        if (_handled) return;
+        _handled = true;
+        action();
+      };
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    final onSurface = cs.onSurface;
-    final onVar = cs.onSurfaceVariant;
-    final levelPalette = LevelStatusPalette.of(context);
-    final isTablet = MediaQuery.of(context).size.width > 600;
-    final dialogMaxContentHeight = MediaQuery.of(context).size.height * 0.52;
-    final dialogMaxWidth = isTablet ? 440.0 : double.infinity;
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final themeSuffix = isDarkMode ? 'black' : 'white';
-    final secondaryActionStyle = OutlinedButton.styleFrom(
-      minimumSize: Size.fromHeight(isTablet ? 52 : 46),
-      foregroundColor: onVar,
-      backgroundColor: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-      side: BorderSide(color: cs.outline.withValues(alpha: 0.4)),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-      ),
-      textStyle: GoogleFonts.notoSans(
-        fontSize: isTablet ? 16 : 14,
-        fontWeight: FontWeight.w600,
-      ),
-    );
-    final primaryActionStyle = ElevatedButton.styleFrom(
-      minimumSize: Size.fromHeight(isTablet ? 56 : 50),
-      backgroundColor: cs.primary,
-      foregroundColor: cs.onPrimary,
-      elevation: 0,
-      shadowColor: Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-    );
-    return AlertDialog(
-      backgroundColor: cs.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(28),
-        side: BorderSide(color: cs.outlineVariant),
-      ),
-      title: Image.asset(
-        isNewBestRecord
-            ? 'assets/images/newbest_$themeSuffix.png'
-            : 'assets/images/clear_$themeSuffix.png',
-        height: isTablet ? 180 : 150,
-      ),
-      titlePadding: EdgeInsets.fromLTRB(24, isTablet ? 32 : 28, 24, 0),
-      contentPadding: const EdgeInsets.fromLTRB(24, 0.1, 24, 24),
-      content: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: dialogMaxContentHeight,
-          maxWidth: dialogMaxWidth,
+    final hasNext = widget.onNextPuzzle != null;
+
+    // 성취 메시지는 최대 한 개: 오늘의 도전 완료 > 새 최고 기록.
+    final achievement = widget.challengeMessage ??
+        (widget.isNewBestRecord ? l10n.dialogNewBestMessage : null);
+
+    return GameResultDialogFrame(
+      header: const _CelebrationHeader(),
+      body: [
+        Text(
+          l10n.dialogPuzzleCompleteTitle,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
         ),
-        child: SingleChildScrollView(
+        const SizedBox(height: 6),
+        Text(
+          widget.levelLabel,
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: 20),
+        _ResultSummary(
+          timeLabel: l10n.dialogElapsedTime,
+          timeValue: widget.formattedTime,
+          mistakesLabel: l10n.dialogWrongCount,
+          mistakesValue: l10n.dialogWrongCountValue(widget.wrongCount),
+        ),
+        if (widget.hintsUsed > 0) ...[
+          const SizedBox(height: 8),
+          Text(
+            l10n.dialogHintsUsed(widget.hintsUsed),
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+          ),
+        ],
+        if (achievement != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            achievement,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: cs.onSurface,
+            ),
+          ),
+        ],
+      ],
+      primaryLabel: hasNext ? l10n.dialogNextPuzzle : l10n.dialogBackToLevels,
+      onPrimary: _once(
+        hasNext ? widget.onNextPuzzle! : widget.onGoToLevelSelection,
+      ),
+      secondaryLabel:
+          hasNext ? l10n.dialogBackToLevels : l10n.dialogSolveSameAgain,
+      onSecondary: _once(
+        hasNext ? widget.onGoToLevelSelection : widget.onRestart,
+      ),
+    );
+  }
+}
+
+/// 시간·실수 두 항목을 한 덩어리(옅은 배경)에 같은 너비 2열로 표시한다.
+/// 큰 글씨로 두 열이 들어가지 않으면 세로로 전환한다.
+class _ResultSummary extends StatelessWidget {
+  const _ResultSummary({
+    required this.timeLabel,
+    required this.timeValue,
+    required this.mistakesLabel,
+    required this.mistakesValue,
+  });
+
+  final String timeLabel;
+  final String timeValue;
+  final String mistakesLabel;
+  final String mistakesValue;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final stacked = MediaQuery.textScalerOf(context).scale(1.0) > 1.3;
+
+    Widget item(String label, String value) => Semantics(
+          container: true,
+          label: '$label $value',
+          excludeSemantics: true,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (challengeMessage != null) ...[
-                const SizedBox(height: 10),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isTablet ? 13 : 10,
-                    vertical: isTablet ? 10 : 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.local_fire_department,
-                          size: isTablet ? 22 : 18, color: onSurface),
-                      SizedBox(width: isTablet ? 10 : 8),
-                      Expanded(
-                        child: Text(
-                          challengeMessage!,
-                          style: GoogleFonts.notoSans(
-                            fontSize: isTablet ? 15 : 13,
-                            fontWeight: FontWeight.w600,
-                            color: onSurface,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  fontFeatures: [FontFeature.tabularFigures()],
                 ),
-                const SizedBox(height: 10),
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(isTablet ? 15 : 12),
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: cs.outlineVariant),
+              ),
+            ],
+          ),
+        );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: stacked
+          ? Column(
+              children: [
+                item(timeLabel, timeValue),
+                Divider(height: 24, color: cs.outlineVariant),
+                item(mistakesLabel, mistakesValue),
+              ],
+            )
+          : IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: Center(child: item(timeLabel, timeValue))),
+                  VerticalDivider(width: 1, color: cs.outlineVariant),
+                  Expanded(
+                    child: Center(child: item(mistakesLabel, mistakesValue)),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.dialogSuggestedNextStep,
-                        style: GoogleFonts.notoSans(
-                          fontSize: isTablet ? 15 : 13,
-                          fontWeight: FontWeight.w700,
-                          color: onSurface,
-                        ),
-                      ),
-                      SizedBox(height: isTablet ? 10 : 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          if (onOpenSettings != null)
-                            ActionChip(
-                              avatar: const Icon(
-                                  Icons.notifications_active_outlined,
-                                  size: 16),
-                              label: Text(l10n.dialogSetTomorrowReminder),
-                              onPressed: onOpenSettings,
-                            ),
-                          ActionChip(
-                            avatar:
-                                const Icon(Icons.explore_outlined, size: 16),
-                            label: Text(l10n.dialogTryAnotherLevel),
-                            onPressed: onGoToLevelSelection,
-                          ),
-                        ],
-                      ),
-                    ],
+                ],
+              ),
+            ),
+    );
+  }
+}
+
+/// 완료 축하 그래픽: 왕관과 별 메달을 든 펭귄 + 정적 반짝임 3개.
+/// 글씨가 아주 크면 본문(제목·결과)과 버튼이 밀려나지 않도록 생략한다.
+///
+/// 결과창 인스턴스당 한 번, 캐릭터만 280ms 동안 나타난다(투명도 0→1,
+/// 크기 0.94→1.0). 자리는 처음부터 확보되어 레이아웃이 움직이지 않고,
+/// 동작 줄이기에서는 바로 최종 상태로 보인다.
+class _CelebrationHeader extends StatefulWidget {
+  const _CelebrationHeader();
+
+  @override
+  State<_CelebrationHeader> createState() => _CelebrationHeaderState();
+}
+
+class _CelebrationHeaderState extends State<_CelebrationHeader>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 280),
+  );
+  late final Animation<double> _curve =
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.value = 1;
+    } else {
+      _controller.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.textScalerOf(context).scale(1.0) > 1.6) {
+      return const SizedBox.shrink();
+    }
+    final gold = Theme.of(context).brightness == Brightness.dark
+        ? const Color(0xFFE8B84A)
+        : const Color(0xFFF0AE2E);
+    // 큰 화면에서도 그림을 키우지 않는다.
+    const size = 104.0;
+    return ExcludeSemantics(
+      child: SizedBox(
+        width: size + 40,
+        height: size,
+        child: FadeTransition(
+          opacity: _curve,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.94, end: 1.0).animate(_curve),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                const MascotImage(asset: MascotImage.celebrate, size: size),
+                Positioned(
+                  left: 4,
+                  top: 10,
+                  child:
+                      Icon(Icons.auto_awesome_rounded, size: 20, color: gold),
+                ),
+                Positioned(
+                  right: 6,
+                  top: 4,
+                  child: Icon(Icons.star_rounded, size: 14, color: gold),
+                ),
+                Positioned(
+                  right: 0,
+                  top: size * 0.5,
+                  child: Icon(
+                    Icons.auto_awesome_rounded,
+                    size: 14,
+                    color: gold.withValues(alpha: 0.8),
                   ),
                 ),
               ],
-              SizedBox(height: isTablet ? 24 : 20),
-              // 통계 정보
-              Container(
-                padding: EdgeInsets.all(isTablet ? 20 : 16),
-                decoration: BoxDecoration(
-                  color: levelPalette.completedBackground,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: levelPalette.completedBorder),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.timer,
-                              color: levelPalette.primaryPurple,
-                              size: isTablet ? 24 : 20,
-                            ),
-                            SizedBox(width: isTablet ? 10 : 8),
-                            Text(
-                              l10n.dialogElapsedTime,
-                              style: GoogleFonts.notoSans(
-                                fontSize: isTablet ? 16 : 14,
-                                color: onVar,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Text(
-                          formattedTime,
-                          style: GoogleFonts.notoSans(
-                            fontSize: isTablet ? 19 : 16,
-                            fontWeight: FontWeight.bold,
-                            color: levelPalette.primaryPurple,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: isTablet ? 10 : 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: levelPalette.primaryPurple,
-                              size: isTablet ? 24 : 20,
-                            ),
-                            SizedBox(width: isTablet ? 10 : 8),
-                            Text(
-                              l10n.dialogWrongCount,
-                              style: GoogleFonts.notoSans(
-                                fontSize: isTablet ? 16 : 14,
-                                color: onVar,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Text(
-                          l10n.dialogWrongCountValue(wrongCount),
-                          style: GoogleFonts.notoSans(
-                            fontSize: isTablet ? 19 : 16,
-                            fontWeight: FontWeight.bold,
-                            color: levelPalette.primaryPurple,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
-      actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      buttonPadding: EdgeInsets.zero,
-      actions: [
-        SizedBox(
-          width: dialogMaxWidth,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: onGoToLevelSelection,
-                  style: secondaryActionStyle,
-                  child: Text(l10n.dialogBackToLevels),
-                ),
-              ),
-              SizedBox(height: isTablet ? 14 : 12),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: onNextPuzzle ?? onRestart,
-                  style: primaryActionStyle,
-                  child: Text(
-                    onNextPuzzle != null
-                        ? l10n.dialogNextPuzzle
-                        : l10n.dialogPlayAgain,
-                    style: GoogleFonts.notoSans(
-                      fontSize: isTablet ? 18 : 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

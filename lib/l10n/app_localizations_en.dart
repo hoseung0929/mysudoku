@@ -88,6 +88,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLanguageJapanese => 'Japanese';
 
   @override
+  String get settingsLanguageChinese => '中文';
+
+  @override
+  String get settingsLanguageSpanish => 'Español';
+
+  @override
   String get settingsLanguagePickerTitle => 'Choose language';
 
   @override
@@ -209,6 +215,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gameMemoShort => 'Memo';
+
+  @override
+  String gameCellLabel(int row, int col, String content) {
+    return 'Row $row, column $col: $content';
+  }
+
+  @override
+  String get gameCellEmpty => 'empty';
+
+  @override
+  String gameCellNotes(String notes) {
+    return 'notes $notes';
+  }
+
+  @override
+  String get gameCellGiven => 'given';
+
+  @override
+  String get gameCellHint => 'hint';
+
+  @override
+  String get gameCellWrong => 'incorrect';
+
+  @override
+  String get gameEraseShort => 'Erase';
+
+  @override
+  String get gameMoreOptions => 'More options';
 
   @override
   String get gameMemoOnShort => 'Memo ON';
@@ -333,10 +367,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dialogShare => 'Share';
 
   @override
-  String get dialogBackToLevels => 'Level list';
+  String get dialogBackToLevels => 'Puzzle list';
 
   @override
-  String get dialogPlayAgain => 'Play again';
+  String get dialogPlayAgain => 'Solve again';
+
+  @override
+  String get dialogPuzzleCompleteTitle => 'Puzzle complete';
+
+  @override
+  String get dialogNewBestMessage => 'New best record!';
+
+  @override
+  String dialogHintsUsed(int count) {
+    return 'Hints used: $count';
+  }
+
+  @override
+  String get dialogSolveSameAgain => 'Solve this puzzle again';
 
   @override
   String get dialogNextPuzzle => 'Next puzzle';
@@ -379,14 +427,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonCancel => 'Cancel';
 
   @override
-  String get gameOverTitle => 'Game over';
+  String get gameOverTitle => 'You reached the mistake limit';
 
   @override
-  String get gameOverMessage => 'You exceeded the mistake limit.';
+  String get gameOverMessage =>
+      'You can start this puzzle over or choose another one.';
 
   @override
   String gameOverWrongLabel(int count, int maxCount) {
-    return 'Mistakes: $count/$maxCount';
+    return 'This game: $count mistakes / limit $maxCount';
   }
 
   @override
@@ -533,23 +582,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsMetricClears => 'Clears (filtered)';
 
   @override
-  String get recordsMetricClearRate => 'Overall progress';
+  String get recordsMetricClearRate => 'Puzzle completion';
 
   @override
-  String get recordsMetricPerfectRate => 'Perfect rate';
+  String get recordsMetricPerfectRate => 'Mistake-free share';
 
   @override
   String get recordsSummaryMetricsFootnote =>
-      'Clear counts follow your active filters. Overall progress compares cleared puzzles with the total puzzle count in the same scope.';
+      'Each puzzle counts once, using its best record, and follows your active filters. Completion compares those puzzles with the total number of puzzles in the same scope.';
 
   @override
-  String get recordsMetricAvgTime => 'Avg. time';
+  String get recordsMetricAvgTime => 'Avg. best time';
 
   @override
-  String get recordsMetricAvgWrong => 'Avg. mistakes';
+  String get recordsMetricAvgWrong => 'Avg. mistakes (best runs)';
 
   @override
-  String get recordsByLevelTitle => 'By level';
+  String get recordsByLevelTitle => 'Records by level';
 
   @override
   String get recordsByLevelEmpty => 'No stats for this filter.';
@@ -559,7 +608,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'See which levels are starting to feel more comfortable.';
 
   @override
-  String get recordsLevelInfographicClearRate => 'Clear rate';
+  String get recordsLevelInfographicClearRate => 'Puzzle completion';
 
   @override
   String get recordsLevelMiniBest => 'Best';
@@ -578,13 +627,66 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsRetry => 'Try again';
 
   @override
+  String get recordsEmptyTitle =>
+      'Your records will build up once you finish your first puzzle.';
+
+  @override
+  String get recordsEmptyAction => 'Start a puzzle';
+
+  @override
+  String get recordsLevelEmpty => 'No completed puzzles at this level yet.';
+
+  @override
+  String get recordsRowBestTime => 'Best time';
+
+  @override
+  String get recordsAverageBasisNote =>
+      'Averages use each puzzle\'s best record, not every play.';
+
+  @override
+  String get recordsCalendarTitle => 'Activity calendar';
+
+  @override
+  String recordsCalendarPeriod(int weeks) {
+    return 'Last $weeks weeks';
+  }
+
+  @override
+  String get recordsViewAchievements => 'View achievements';
+
+  @override
+  String recordsOverallNote(int cleared, int total) {
+    return '$cleared of $total puzzles completed across all levels.';
+  }
+
+  @override
+  String recordsWeekActiveDays(int count) {
+    return 'Active days: $count';
+  }
+
+  @override
+  String recordsWeekCompletions(int count) {
+    return 'Completed: $count';
+  }
+
+  @override
+  String recordsWeekDayDone(String day, int count) {
+    return '$day: $count completed';
+  }
+
+  @override
+  String recordsWeekDayNone(String day) {
+    return '$day: no completions';
+  }
+
+  @override
   String get recordsStatsPageSubtitle => 'Clears and average time at a glance.';
 
   @override
-  String get recordsKpiWeeklyClearsLabel => 'Clears';
+  String get recordsKpiWeeklyClearsLabel => 'Puzzles cleared';
 
   @override
-  String get recordsKpiAvgSolveTimeLabel => 'Avg. time';
+  String get recordsKpiAvgSolveTimeLabel => 'Avg. best time';
 
   @override
   String get recordsActivityOverviewTitle => 'Activity overview';
@@ -594,16 +696,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recordsActivityHeatmapCaption =>
-      'Darker cells mean more clears on that day.';
+      'Darker cells mean more completions on that day.';
 
   @override
-  String get recordsActivityTotalClearsLabel => 'Total clears';
+  String get recordsActivityTotalClearsLabel => 'Total completions';
 
   @override
-  String get recordsActivityCurrentStreakLabel => 'Current streak';
+  String get recordsActivityCurrentStreakLabel => 'Current daily streak';
 
   @override
-  String get recordsActivityBestStreakLabel => 'Best streak';
+  String get recordsActivityBestStreakLabel => 'Best daily streak';
 
   @override
   String recordsActivityDayCount(int count) {
@@ -1197,17 +1299,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileEditorNameLabel => 'Name';
 
   @override
-  String get profileEditorBioLabel => 'Bio';
-
-  @override
-  String get profileEditorBioHint =>
-      'Write a short introduction about yourself';
-
-  @override
-  String get profileEditorBioFooter =>
-      'Your bio and profile photo are displayed on your profile.';
-
-  @override
   String get profileEditorDefaultProfile => 'Default profile';
 
   @override
@@ -1225,6 +1316,71 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeTodayPuzzleTitle => 'A quiet moment to focus.';
+
+  @override
+  String get homeTodayChallengeStartButton => 'Start today\'s challenge';
+
+  @override
+  String get homeTodayChallengeResumeButton => 'Resume today\'s challenge';
+
+  @override
+  String get homeTodayChallengeReviewButton => 'Play today\'s puzzle again';
+
+  @override
+  String get homeTodayChallengeLoadError => 'Couldn\'t load today\'s puzzle.';
+
+  @override
+  String get homeTodayChallengeDateChanged =>
+      'A new day started. Today\'s challenge was refreshed.';
+
+  @override
+  String get homeFirstStartTitle => 'Start your first puzzle';
+
+  @override
+  String get homeNewPuzzleTitle => 'Start a new puzzle';
+
+  @override
+  String get homeChooseLevelBody =>
+      'Choose a level. Your progress is saved automatically.';
+
+  @override
+  String get homeChooseLevelButton => 'Choose a level';
+
+  @override
+  String homeViewAllInProgress(int count) {
+    return 'View all in-progress games ($count)';
+  }
+
+  @override
+  String get homeNewGameSectionTitle => 'New game · choose a level';
+
+  @override
+  String homeLevelBlankCells(int count) {
+    return '$count blanks';
+  }
+
+  @override
+  String get homeSavedGamesTitle => 'In-progress games';
+
+  @override
+  String get homeSavedGamesDescription =>
+      'Pick one to resume. Deleting removes only the saved progress, not your records.';
+
+  @override
+  String get homeSavedGameDeleteTooltip => 'Delete saved progress';
+
+  @override
+  String get homeSavedGameDeleteTitle => 'Delete saved progress?';
+
+  @override
+  String get homeSavedGameDeleteBody =>
+      'Your entries and notes for this puzzle will be removed. Completion records are kept.';
+
+  @override
+  String get homeSavedGameDeleteConfirm => 'Delete';
+
+  @override
+  String get homeLoadError => 'Couldn\'t load your games.';
 
   @override
   String get homeCatalogFirstTitle => 'Preparing your first puzzle set';
@@ -1288,7 +1444,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String levelInProgressLimitTitle(int maxCount) {
-    return 'You\'re juggling $maxCount puzzles!';
+    return '$maxCount puzzles in progress';
   }
 
   @override
@@ -1303,14 +1459,62 @@ class AppLocalizationsEn extends AppLocalizations {
   String get levelTryAgain => 'Try again';
 
   @override
-  String get gameResetDialogTitle => 'Reset current game';
+  String get levelContinueButton => 'Continue';
+
+  @override
+  String levelStartNextNew(String number) {
+    return 'Start new puzzle · $number';
+  }
+
+  @override
+  String levelViewInProgress(int count) {
+    return 'View $count in progress';
+  }
+
+  @override
+  String get levelNotesInProgress => 'Writing notes';
+
+  @override
+  String get levelEmptyInProgress => 'No puzzles to continue.';
+
+  @override
+  String get levelEmptyCompleted => 'Make your first completion record.';
+
+  @override
+  String get levelEmptyFresh => 'No new puzzles to start.';
+
+  @override
+  String get levelAllCompleted =>
+      'You\'ve completed every puzzle at this level.';
+
+  @override
+  String get levelActionShowNew => 'Show new puzzles';
+
+  @override
+  String get levelActionShowInProgress => 'Show in progress';
+
+  @override
+  String get levelActionShowAll => 'Show all';
+
+  @override
+  String levelBestTime(String time) {
+    return 'Best time $time';
+  }
+
+  @override
+  String levelCellSemantics(String number, String status) {
+    return 'Puzzle $number, $status';
+  }
+
+  @override
+  String get gameResetDialogTitle => 'Restart from the beginning';
 
   @override
   String get gameResetDialogBody =>
-      'Clear entered numbers, notes, hints, mistakes, and time, then return to the starting board?';
+      'Clear entered numbers, notes, hints, mistakes, and time, then return to the starting board? Your past clear records are kept.';
 
   @override
-  String get gameResetConfirm => 'Reset';
+  String get gameResetConfirm => 'Restart';
 
   @override
   String get gameNumberInputLegend =>

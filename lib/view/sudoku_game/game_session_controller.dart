@@ -17,6 +17,7 @@ class GameSessionSnapshot {
     required this.isGameOver,
     required this.hintsRemaining,
     required this.hintCells,
+    this.challengeDate,
   });
 
   final List<List<int>> board;
@@ -28,6 +29,7 @@ class GameSessionSnapshot {
   final bool isGameOver;
   final int hintsRemaining;
   final Set<String> hintCells;
+  final String? challengeDate;
 }
 
 class GameSessionBootstrap {
@@ -161,6 +163,7 @@ class GameSessionController {
       hintCells: snapshot.hintCells,
       isGameComplete: snapshot.isGameComplete,
       isGameOver: snapshot.isGameOver,
+      challengeDate: snapshot.challengeDate,
     );
     _lastSavedSignatureByGame[key] = signature;
   }

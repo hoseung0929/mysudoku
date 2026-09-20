@@ -255,7 +255,6 @@ class SudokuGamePresenter {
     _hintCells.clear();
     _boardController.clearSelection();
 
-
     _timerController.reset();
     _notifySessionReset();
   }
@@ -369,6 +368,37 @@ class SudokuGamePresenter {
     _boardController.recomputeWrongStatus();
     onBoardChanged(_boardController.board);
     onWrongNumbersChanged(_boardController.wrongNumbers);
+  }
+
+  /// 지우기 버튼 대상 여부: 선택한 칸에 사용자 숫자나 후보 메모가 있을 때만 true.
+  /// 고정 칸과 힌트 칸은 기존 정책대로 수정할 수 없다.
+  bool get canEraseSelectedCell {
+    if (_isGameComplete || _isGameOver || _isPaused) return false;
+    final row = _boardController.selectedRow;
+    final col = _boardController.selectedCol;
+    if (row == null || col == null) return false;
+    if (_boardController.isCellFixed(row, col)) return false;
+    if (_hintCells.contains('$row,$col')) return false;
+    return _boardController.getCellValue(row, col) != 0 ||
+        _boardController.getCellNotes(row, col).isNotEmpty;
+  }
+
+  /// 선택한 칸의 사용자 입력만 지운다. 숫자가 있으면 숫자를, 없으면 그 칸의
+  /// 후보 메모를 지운다(숫자 입력 시 그 칸 메모는 이미 비워지므로 둘이 함께
+  /// 존재하지 않는다). 오답·힌트 횟수와 다른 칸의 메모는 건드리지 않는다.
+  void eraseSelectedCell() {
+    if (!canEraseSelectedCell) return;
+    final row = _boardController.selectedRow!;
+    final col = _boardController.selectedCol!;
+    if (_boardController.getCellValue(row, col) != 0) {
+      _boardController.setCellValue(row, col, 0);
+      _boardController.recomputeWrongStatus();
+      onBoardChanged(_boardController.board);
+      onWrongNumbersChanged(_boardController.wrongNumbers);
+    } else {
+      _boardController.clearNotes(row, col);
+      onBoardChanged(_boardController.board);
+    }
   }
 
   void useHint() {

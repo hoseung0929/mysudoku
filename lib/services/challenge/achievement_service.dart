@@ -135,7 +135,8 @@ class AchievementService {
     required ChallengeProgressSummary progress,
   }) {
     final totalCleared = overall['total_cleared'] as int? ?? 0;
-    final streakDays = progress.streakDays;
+    // 업적 문구가 "퍼즐을 3일 연속 클리어"이므로 일반 퍼즐 완료 기준(기록 화면과 동일).
+    final streakDays = progress.activityStreakDays;
     final weeklyClearCount = progress.weeklyClearCount;
     final hasPerfectClear = records.any((record) {
       return (record['wrong_count'] as int? ?? 0) == 0;
@@ -193,17 +194,19 @@ class AchievementService {
           rarity: AchievementRarity.epic,
           sortOrder: 3,
         ),
-        AchievementBadge(
-          id: 'master_clear',
-          title: l10n.achievementBadgeMasterTitle,
-          description: l10n.achievementBadgeMasterDesc,
-          progressLabel: hasMasterClear
-              ? l10n.achievementStatusDone
-              : l10n.achievementStatusTrying,
-          unlocked: hasMasterClear,
-          rarity: AchievementRarity.epic,
-          sortOrder: 4,
-        ),
+        // 마스터는 홈에서 선택할 수 없으므로 과거 마스터 기록이 있는 경우에만 노출한다.
+        if (hasMasterClear)
+          AchievementBadge(
+            id: 'master_clear',
+            title: l10n.achievementBadgeMasterTitle,
+            description: l10n.achievementBadgeMasterDesc,
+            progressLabel: hasMasterClear
+                ? l10n.achievementStatusDone
+                : l10n.achievementStatusTrying,
+            unlocked: hasMasterClear,
+            rarity: AchievementRarity.epic,
+            sortOrder: 4,
+          ),
       ],
     );
   }

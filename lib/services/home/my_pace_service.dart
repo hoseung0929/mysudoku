@@ -19,7 +19,8 @@ class MyPaceTarget {
 /// "나만의 속도" 버튼을 눌렀을 때 어떤 게임을 열어야 할지를 결정하는 서비스.
 ///
 /// 우선순위:
-/// 1. 저장된 이어하기 세션(`ContinueGameSummary`)이 있으면 그 게임을 복원.
+/// 1. 저장된 이어하기 세션(`ContinueGameSummary`)이 있으면 그 게임을 복원
+///    (과거 완료 기록이 있어도 재도전 세션이 우선).
 /// 2. 최근 클리어 이벤트에 레벨·게임 번호가 있으면, **그 레벨에서** 방금 깬 번호보다
 ///    큰 미클리어 최소값 → 없으면 그 레벨의 미클리어 최소값 순으로 시도.
 /// 3. 그렇지 않으면 `초급 → 전문가` 순서(직전 클리어 레벨 다음부터 순회)로
@@ -34,7 +35,6 @@ class MyPaceService {
     Future<int?> Function(String levelName)? findFirstUnclearedGameNumber,
     Future<int?> Function(String levelName, int afterGameNumber)?
         findFirstUnclearedGameNumberAfter,
-    Future<bool> Function(String levelName, int gameNumber)? isGameCleared,
     Future<Map<String, dynamic>?> Function(String levelName, int gameNumber)?
         loadGameEntry,
   })  : _loadRecentClearEvents = loadRecentClearEvents ??
@@ -45,11 +45,6 @@ class MyPaceService {
             findFirstUnclearedGameNumberAfter ??
                 (databaseHelper ?? DatabaseHelper())
                     .findFirstUnclearedGameNumberAfter,
-        _isGameCleared = isGameCleared ??
-            ((levelName, gameNumber) async =>
-                (await (databaseHelper ?? DatabaseHelper())
-                    .getClearRecord(levelName, gameNumber)) !=
-                null),
         _loadGameEntry =
             loadGameEntry ?? (databaseHelper ?? DatabaseHelper()).getGameEntry;
 
@@ -58,7 +53,6 @@ class MyPaceService {
   final Future<int?> Function(String levelName) _findFirstUnclearedGameNumber;
   final Future<int?> Function(String levelName, int afterGameNumber)
       _findFirstUnclearedGameNumberAfter;
-  final Future<bool> Function(String levelName, int gameNumber) _isGameCleared;
   final Future<Map<String, dynamic>?> Function(String levelName, int gameNumber)
       _loadGameEntry;
 
@@ -74,21 +68,13 @@ class MyPaceService {
   Future<MyPaceTarget?> resolveTarget({
     ContinueGameSummary? preferContinueGame,
   }) async {
+    // 저장 세션이 남아 있으면 완료 기록이 있더라도 재도전 이어하기를 우선한다.
+    // (완료·게임오버 세션은 저장 단계에서 이미 이어하기 목록에서 제외된다.)
     if (preferContinueGame != null) {
-      final continueCleared = await _isGameCleared(
-        preferContinueGame.level.name,
-        preferContinueGame.game.gameNumber,
-      );
-      if (!continueCleared) {
-        return MyPaceTarget(
-          level: preferContinueGame.level,
-          game: preferContinueGame.game,
-          restoreSavedSession: true,
-        );
-      }
-      return _resolveFromAnchor(
-        levelName: preferContinueGame.level.name,
-        gameNumber: preferContinueGame.game.gameNumber,
+      return MyPaceTarget(
+        level: preferContinueGame.level,
+        game: preferContinueGame.game,
+        restoreSavedSession: true,
       );
     }
     return resolveNextPlayableTarget();

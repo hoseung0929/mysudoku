@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
+import 'package:sudoku159/l10n/sudoku_level_l10n.dart';
 import 'package:sudoku159/model/sudoku_game.dart';
 import 'package:sudoku159/model/sudoku_level.dart';
 import 'package:sudoku159/view/sudoku_game/game_completion_coordinator.dart';
 import 'package:sudoku159/view/sudoku_game/game_over_flow.dart';
-import 'package:sudoku159/view/settings/settings_screen.dart';
 import 'package:sudoku159/widgets/game_complete_dialog.dart';
 
 class GameEndFlow {
@@ -22,6 +22,7 @@ class GameEndFlow {
     required int clearTimeSeconds,
     required int wrongCount,
     required int hintsUsed,
+    String? challengeDate,
     required Future<void> Function() onRestart,
     required Future<void> Function() onGoToLevelSelection,
     required Future<void> Function(SudokuGame nextGame) onNextPuzzle,
@@ -34,6 +35,7 @@ class GameEndFlow {
       clearTimeSeconds: clearTimeSeconds,
       wrongCount: wrongCount,
       hintsUsed: hintsUsed,
+      challengeDate: challengeDate,
     );
     if (!context.mounted) return;
 
@@ -42,21 +44,13 @@ class GameEndFlow {
       barrierDismissible: false,
       builder: (dialogContext) {
         return GameCompleteDialog(
+          levelLabel:
+              '${level.localizedName(l10n)} · ${l10n.gameNumberLabel(game.gameNumber)}',
+          hintsUsed: hintsUsed,
           timeInSeconds: clearTimeSeconds,
           wrongCount: wrongCount,
           isNewBestRecord: completionData.isNewBestRecord,
           challengeMessage: completionData.challengeMessage,
-          onOpenSettings: () async {
-            Navigator.of(dialogContext).pop();
-            await Future<void>.delayed(Duration.zero);
-            if (!context.mounted) return;
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const SettingsScreen(),
-              ),
-            );
-          },
           onNextPuzzle: completionData.nextGame == null
               ? null
               : () async {
