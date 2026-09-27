@@ -13,14 +13,17 @@ import 'package:sudoku159/presenter/game/sudoku_game_presenter.dart';
 import 'package:sudoku159/theme/app_colors.dart';
 import 'package:sudoku159/theme/app_theme.dart';
 import 'package:sudoku159/utils/app_logger.dart';
+import 'package:sudoku159/utils/sudoku_hint_finder.dart';
 import 'package:sudoku159/utils/time_format.dart';
 import 'package:sudoku159/view/sudoku_game/game_end_flow.dart';
 import 'package:sudoku159/view/sudoku_game/game_session_controller.dart';
 import 'package:sudoku159/view/sudoku_game/game_settings_controller.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_answer_box.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_board_grid.dart';
+import 'package:sudoku159/view/sudoku_game/sudoku_hint_panel.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_info_card.dart';
 import 'package:sudoku159/view/sudoku_game/game_effects_controller.dart';
+import 'package:sudoku159/services/game/auto_notes_tip_service.dart';
 import 'package:sudoku159/view/home/level_picker_screen.dart';
 import 'package:sudoku159/widgets/progressive_blur_button.dart';
 import 'package:sudoku159/widgets/waddling_penguin_icon.dart';
@@ -35,12 +38,18 @@ class SudokuGameScreen extends StatefulWidget {
   /// 오늘의 도전으로 시작했다면 그 도전의 날짜(YYYY-MM-DD). 완료 귀속에 쓰인다.
   final String? challengeDate;
 
+  /// 이 도전 완료가 연속 일수 계산에 들어가도 되는지. 오늘의 도전을 정상적인
+  /// 흐름으로 시작했으면 true(기본값), 과거 날짜를 월간 달력에서 다시
+  /// 시작했으면 false로 넘긴다.
+  final bool challengeCountsForStreak;
+
   const SudokuGameScreen({
     super.key,
     required this.game,
     required this.level,
     this.restoreSavedSession = false,
     this.challengeDate,
+    this.challengeCountsForStreak = true,
   });
 
   @override
@@ -65,7 +74,12 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   final ValueNotifier<String> _timeNotifier = ValueNotifier<String>('0m');
   bool _isLeavingScreen = false;
   int? _memoFocusNumber;
+  // 자동 메모 적용 직후 보드 전체에 짧게 강조를 준다. 트리거될 때마다 새 키를
+  // 줘서 TweenAnimationBuilder가 처음부터 다시 재생하게 한다.
+  Key? _autoNotesFlashKey;
+  bool _autoNotesTipShown = false;
   final GameEffectsController _effectsController = GameEffectsController();
+  final AutoNotesTipService _autoNotesTipService = AutoNotesTipService();
   OverlayEntry? _completionFeedbackEntry;
   Timer? _completionFeedbackTimer;
   final Map<String, Timer> _wrongCellTimers = {};
@@ -73,6 +87,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   bool _isPenguinActive = false;
   Timer? _penguinActiveTimer;
   bool _autoPausedByLifecycle = false;
+
+  /// 설명 중인 힌트와 단계(1: 살펴볼 곳, 2: 기법과 이유).
+  SudokuHint? _activeHint;
+  int _hintStep = 1;
 
   /// 가로줄(0~8) · 세로줄(9~17) · 3x3박스(18~26) 중 현재 완성된 유닛 id 집합.
   Set<int> _computeCompletedUnitIds() {
@@ -165,20 +183,239 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         !_presenter.isGameOver;
   }
 
+  /// 자동 메모는 메모 버튼을 쓸 수 있는 상태이면서, 힌트 패널이 열려 있지
+  /// 않을 때만 실행한다.
+  bool get _canUseAutoNotes => _canToggleMemo && _activeHint == null;
+
+  Future<void> _toggleMemoMode() async {
+    final wasOff = !_presenter.isMemoMode;
+    setState(() {
+      _memoFocusNumber = null;
+      _presenter.toggleMemoMode();
+    });
+    if (wasOff && _presenter.isMemoMode) {
+      unawaited(_maybeShowAutoNotesTip());
+    }
+  }
+
+  Future<void> _maybeShowAutoNotesTip() async {
+    if (_autoNotesTipShown) return;
+    final alreadyShown = await _autoNotesTipService.hasShownTip();
+    if (alreadyShown) {
+      _autoNotesTipShown = true;
+      return;
+    }
+    _autoNotesTipShown = true;
+    await _autoNotesTipService.markTipShown();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+          content: Text(AppLocalizations.of(context)!.autoNotesTipMessage)),
+    );
+  }
+
+  Future<void> _applyAutoNotes() async {
+    if (!_canUseAutoNotes) return;
+    final hasExistingNotes = _presenter.allCellNotes
+        .any((row) => row.any((cell) => cell.isNotEmpty));
+    if (hasExistingNotes) {
+      final l10n = AppLocalizations.of(context)!;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.autoNotesConfirmTitle),
+          content: Text(l10n.autoNotesConfirmBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l10n.commonCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(l10n.autoNotesConfirmApply),
+            ),
+          ],
+        ),
+      );
+      if (!mounted || confirmed != true) return;
+    }
+
+    final result = _presenter.applyAutoNotes();
+    if (!mounted) return;
+    switch (result) {
+      case AutoNotesResult.applied:
+        setState(() {
+          _autoNotesFlashKey = UniqueKey();
+        });
+        break;
+      case AutoNotesResult.contradiction:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.autoNotesContradictionMessage,
+            ),
+          ),
+        );
+        break;
+      case AutoNotesResult.noBlankCells:
+      case AutoNotesResult.blocked:
+        break;
+    }
+  }
+
+  /// 힌트는 선택 칸과 상관없이 쓸 수 있다. 선택한 빈칸에서 풀 수 있는 수가
+  /// 있으면 그 칸을, 없으면 먼저 풀 수 있는 다른 칸을 설명한다.
   bool get _canUseHint {
     if (!_presenterReady ||
         !_featurePolicy.hintEnabled ||
         _presenter.isPaused ||
         _presenter.isGameComplete ||
-        _presenter.isGameOver) {
+        _presenter.isGameOver ||
+        _activeHint != null) {
       return false;
     }
-    if (_presenter.hintsRemaining <= 0) return false;
-    final row = _presenter.selectedRow;
-    final col = _presenter.selectedCol;
-    if (row == null || col == null) return false;
-    if (_presenter.isCellFixed(row, col)) return false;
-    return _presenter.getCellValue(row, col) == 0;
+    return _presenter.hintsRemaining > 0 && _presenter.progress < 1.0;
+  }
+
+  /// 1단계의 숨은 싱글은 영역만 보여 주고 정답 칸은 2단계에서 드러낸다.
+  int? get _visibleHintTarget {
+    final hint = _activeHint;
+    if (hint == null) return null;
+    final revealsCellEarly =
+        hint.technique == SudokuHintTechnique.nakedSingle ||
+            hint.technique == SudokuHintTechnique.reveal;
+    return _hintStep == 2 || revealsCellEarly ? hint.cellIndex : null;
+  }
+
+  void _startHint() {
+    if (!_canUseHint) return;
+    final hint = SudokuHintFinder.find(
+      board: _presenter.boardSnapshot,
+      solution: _presenter.solutionSnapshot,
+      selectedRow: _hasEditableSelection ? _presenter.selectedRow : null,
+      selectedCol: _hasEditableSelection ? _presenter.selectedCol : null,
+    );
+    if (hint == null || !_presenter.consumeHint()) return;
+    // 1단계에서 정답 칸을 바로 드러내지 않도록 선택을 잠시 해제한다.
+    _presenter.clearSelection();
+    setState(() {
+      _memoFocusNumber = null;
+      _activeHint = hint;
+      _hintStep = 1;
+    });
+  }
+
+  void _advanceHint() {
+    final hint = _activeHint;
+    if (hint == null) return;
+    _presenter.selectCell(hint.row, hint.col);
+    setState(() => _hintStep = 2);
+  }
+
+  /// `onCorrectAnswer` 콜백이 [revealHintAt] 안에서 동기적으로 실행되는
+  /// 동안만 켠다. 그동안은 일반 정답 강조 대신 힌트 전용 강조를 쓴다.
+  bool _isApplyingHintFill = false;
+
+  void _fillHint() {
+    final hint = _activeHint;
+    if (hint == null) return;
+    setState(() => _activeHint = null);
+    _cancelWrongCellTimer(hint.row, hint.col);
+    _presenter.selectCell(hint.row, hint.col);
+    if (!_presenter.isHintCell(hint.row, hint.col)) {
+      // 정답 입력과 저장은 이 강조와 무관하게 즉시 처리된다 — revealHintAt은
+      // 동기 호출이라 애니메이션을 기다리지 않는다.
+      _isApplyingHintFill = true;
+      try {
+        _presenter.revealHintAt(hint.row, hint.col);
+      } finally {
+        _isApplyingHintFill = false;
+      }
+    }
+  }
+
+  void _closeHint() {
+    if (_activeHint == null) return;
+    setState(() => _activeHint = null);
+  }
+
+  static const Duration _hintPanelEnterDuration = Duration(milliseconds: 160);
+  static const Duration _hintPanelExitDuration = Duration(milliseconds: 120);
+
+  /// 숫자패드·동작 버튼 영역 위에 힌트 설명을 겹친다. 아래 영역의 크기는
+  /// 그대로 두므로 보드 배치가 바뀌지 않는다.
+  ///
+  /// 패널이 없을 때(hint == null)는 항상 `IgnorePointer`로 감싸, 방금 닫혀
+  /// 아직 120ms 페이드아웃 중인 이전 패널이 남아 있어도 숫자패드를 즉시
+  /// 다시 쓸 수 있게 한다. 패널이 있을 때는 전체 영역을 불투명 히트테스트로
+  /// 막아 등장 애니메이션 중에도 빈 여백을 통해 뒤 숫자패드가 눌리지 않는다.
+  Widget _withHintPanel(Widget keypad, {double bottomInset = 0}) {
+    final hint = _activeHint;
+    final reduceMotion = _effectsController.reduceMotion;
+    return Stack(
+      children: [
+        keypad,
+        Positioned(
+          left: 0,
+          top: 0,
+          right: 0,
+          bottom: bottomInset,
+          child: IgnorePointer(
+            ignoring: hint == null,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              child: AnimatedSwitcher(
+                duration:
+                    reduceMotion ? Duration.zero : _hintPanelEnterDuration,
+                reverseDuration:
+                    reduceMotion ? Duration.zero : _hintPanelExitDuration,
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeOutCubic,
+                layoutBuilder: (currentChild, previousChildren) => Stack(
+                  children: [
+                    for (final child in previousChildren)
+                      Positioned.fill(child: child),
+                    if (currentChild != null)
+                      Positioned.fill(child: currentChild),
+                  ],
+                ),
+                transitionBuilder: (child, animation) {
+                  if (reduceMotion) {
+                    return FadeTransition(opacity: animation, child: child);
+                  }
+                  return FadeTransition(
+                    opacity: animation,
+                    child: AnimatedBuilder(
+                      animation: animation,
+                      // 닫힐 때(reverse)는 자리 이동 없이 페이드만 한다.
+                      // 열릴 때만 4px 아래에서 제자리로 올라온다.
+                      builder: (context, builtChild) =>
+                          animation.status == AnimationStatus.reverse
+                              ? builtChild!
+                              : Transform.translate(
+                                  offset: Offset(0, (1 - animation.value) * 4),
+                                  child: builtChild,
+                                ),
+                      child: child,
+                    ),
+                  );
+                },
+                child: hint == null
+                    ? const SizedBox.shrink(key: ValueKey('hint-panel-empty'))
+                    : SudokuHintPanel(
+                        key: const ValueKey('hint-panel-visible'),
+                        hint: hint,
+                        step: _hintStep,
+                        onNext: _advanceHint,
+                        onFill: _fillHint,
+                        onClose: _closeHint,
+                      ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   bool get _canEraseSelection =>
@@ -190,10 +427,80 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     _presenter.eraseSelectedCell();
   }
 
+  bool get _canUndo => _presenterReady && _presenter.canUndo;
+
+  /// presenter.undo()가 동기적으로 실행되는 동안만 켠다. onBoardChanged
+  /// 콜백이 이 플래그를 보고 정답·오답·줄 완성 효과를 재실행하지 않는다.
+  bool _isApplyingUndo = false;
+
+  void _undoLastInput() {
+    if (!_canUndo) return;
+    // 되돌린 칸에 오답 자동 삭제 타이머가 남아 있으면 복원한 값을 지워 버린다.
+    _cancelAllWrongCellTimers();
+    setState(() {
+      _memoFocusNumber = null;
+    });
+    _isApplyingUndo = true;
+    try {
+      _presenter.undo();
+    } finally {
+      _isApplyingUndo = false;
+    }
+
+    final cell = _presenter.lastUndoCell;
+    if (cell == null) return;
+    _effectsController.triggerUndoEffect(
+      row: cell.$1,
+      col: cell.$2,
+      setState: setState,
+      isMounted: () => mounted,
+    );
+    unawaited(_maybeVibrateForUndo());
+  }
+
+  Future<void> _maybeVibrateForUndo() async {
+    if (!_isVibrationEnabled || _effectsController.reduceMotion) return;
+    await HapticFeedback.selectionClick();
+  }
+
+  /// 사용자가 직접 멈춘 일시정지(앱 전환으로 인한 자동 정지와 구분하지 않고,
+  /// 멈춰 있는 동안에는 보드를 가린다).
+  bool get _isBoardCovered =>
+      _presenterReady &&
+      _presenter.isPaused &&
+      !_presenter.isGameComplete &&
+      !_presenter.isGameOver;
+
+  bool get _canTogglePause =>
+      _presenterReady && !_presenter.isGameComplete && !_presenter.isGameOver;
+
+  void _togglePause() {
+    if (!_canTogglePause) return;
+    _autoPausedByLifecycle = false;
+    _effectsController.clearTransientEffects();
+    _activeHint = null;
+    _presenter.togglePause();
+  }
+
   bool get _canResetCurrentGame {
     return _presenterReady &&
         !_presenter.isGameComplete &&
         !_presenter.isGameOver;
+  }
+
+  /// 고정(원본) 칸을 제외하고 사용자가 직접 채운 숫자 칸 수. 힌트로 채운
+  /// 칸도 "채웠다"에 포함한다(실제로 칸이 비어 있지 않으므로).
+  int get _userFilledCellCount {
+    var count = 0;
+    for (var row = 0; row < 9; row++) {
+      for (var col = 0; col < 9; col++) {
+        if (!_presenter.isCellFixed(row, col) &&
+            _presenter.getCellValue(row, col) != 0) {
+          count++;
+        }
+      }
+    }
+    return count;
   }
 
   GameSessionSnapshot _buildSessionSnapshot() {
@@ -211,6 +518,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       hintsRemaining: _presenter.hintsRemaining,
       hintCells: _presenter.hintCells,
       challengeDate: _challengeDate,
+      initialHints: _featurePolicy.maxHints,
+      autoNotesUsed: _presenter.autoNotesUsed,
+      userFilledCells: _userFilledCellCount,
     );
   }
 
@@ -257,12 +567,28 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   Future<void> _initializeGame() async {
     await _loadGameSettings();
 
-    final sessionBootstrap = await _sessionController.prepareSession(
+    var sessionBootstrap = await _sessionController.prepareSession(
       game: widget.game,
       level: widget.level,
       restoreSavedSession: widget.restoreSavedSession,
       maxWrongCount: _featurePolicy.maxWrongCount,
     );
+
+    // 이 화면이 특정 날짜의 도전으로 열렸다면, 복원된 세션이 그 날짜가 아닌
+    // 다른(또는 없는) challengeDate를 갖고 있을 때 이어하지 않는다. 같은
+    // 레벨·번호의 퍼즐이라도 다른 날짜 세션을 잘못 복원하지 않기 위함이다.
+    if (widget.challengeDate != null &&
+        sessionBootstrap.activeSession != null &&
+        sessionBootstrap.activeSession!.challengeDate != widget.challengeDate) {
+      await _sessionController.clear(
+        level: widget.level,
+        gameNumber: widget.game.gameNumber,
+      );
+      sessionBootstrap = GameSessionBootstrap(
+        initialBoard: widget.game.board,
+        activeSession: null,
+      );
+    }
 
     final activeSession = sessionBootstrap.activeSession;
     // 도전으로 시작했다면 그 날짜를, 저장 세션을 이어받았다면 세션에 남은 날짜를 쓴다.
@@ -286,8 +612,21 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       initialNotes: activeSession?.notes,
       initialHintsRemaining: activeSession?.hintsRemaining,
       initialHintCells: activeSession?.hintCells ?? const {},
+      initialAutoNotesUsed: activeSession?.autoNotesUsed ?? false,
       level: widget.level,
       onBoardChanged: (board) {
+        if (_isApplyingUndo) {
+          // 되돌리기는 정답·오답·줄 완성 효과를 재실행하지 않는다. 완성된
+          // 줄 추적만 조용히 새 보드에 맞추고(다음 정상 입력부터 다시
+          // "새로 완성됨"을 올바르게 판정하도록), 효과·안내는 생략한다.
+          _effectsController.initializeCompletedLineState(
+            board: board,
+            solution: widget.game.solution,
+          );
+          setState(() {});
+          _scheduleSessionSave();
+          return;
+        }
         final completionDelta = _effectsController.handleBoardChanged(
           board: board,
           solution: widget.game.solution,
@@ -320,6 +659,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       },
       onGameCompleteChanged: (isComplete) {
         if (isComplete) {
+          _activeHint = null;
           if (_isVibrationEnabled) {
             HapticFeedback.heavyImpact()
                 .then((_) => Future<void>.delayed(
@@ -336,6 +676,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         _scheduleSessionSave();
       },
       onGameOver: () {
+        _activeHint = null;
         if (_isVibrationEnabled) {
           HapticFeedback.heavyImpact()
               .then((_) => Future<void>.delayed(
@@ -350,6 +691,17 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         _showGameOverDialog();
       },
       onCorrectAnswer: (row, col) {
+        if (_isApplyingHintFill) {
+          // 힌트로 채운 칸은 일반 정답 강조 대신 전용 강조를 쓴다. 둘 다
+          // 같은 칸에 걸면 나중 호출이 앞 호출을 즉시 지워 버리므로 배타적으로 둔다.
+          _effectsController.triggerHintAppliedEffect(
+            row: row,
+            col: col,
+            setState: setState,
+            isMounted: () => mounted,
+          );
+          return;
+        }
         _effectsController.triggerCorrectEffect(
           row: row,
           col: col,
@@ -696,34 +1048,126 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         Padding(
           padding: const EdgeInsets.only(right: 2),
           child: Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                WaddlingPenguinIcon(size: 22, active: _isPenguinActive),
-                const SizedBox(width: 6),
-                ValueListenableBuilder<String>(
-                  valueListenable: _timeNotifier,
-                  builder: (context, time, _) =>
-                      MediaQuery.withClampedTextScaling(
-                    maxScaleFactor: 1.3,
-                    child: Text(
-                      time,
-                      style: GoogleFonts.notoSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFFB8B8B8)
-                            : context.colors.textSecondary,
+            child: _buildTimerPauseButton(
+              l10n,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  WaddlingPenguinIcon(size: 22, active: _isPenguinActive),
+                  const SizedBox(width: 6),
+                  ValueListenableBuilder<String>(
+                    valueListenable: _timeNotifier,
+                    builder: (context, time, _) =>
+                        MediaQuery.withClampedTextScaling(
+                      maxScaleFactor: 1.3,
+                      child: Text(
+                        time,
+                        style: GoogleFonts.notoSans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? const Color(0xFFB8B8B8)
+                              : context.colors.textSecondary,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 4),
+                  Icon(
+                    _isBoardCovered
+                        ? Icons.play_arrow_rounded
+                        : Icons.pause_rounded,
+                    size: 18,
+                    color: _canTogglePause
+                        ? context.colors.textSecondary
+                        : context.colors.textDisabled,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
         _buildGameMenuButton(l10n),
       ],
+    );
+  }
+
+  /// 앱바의 펭귄·타이머 묶음 전체를 일시정지/계속 버튼으로 쓴다.
+  Widget _buildTimerPauseButton(AppLocalizations l10n,
+      {required Widget child}) {
+    return Semantics(
+      container: true,
+      button: true,
+      enabled: _canTogglePause,
+      label: _isBoardCovered ? l10n.gameResume : l10n.gamePause,
+      child: Tooltip(
+        message: _isBoardCovered ? l10n.gameResume : l10n.gamePause,
+        child: InkWell(
+          onTap: _canTogglePause ? _togglePause : null,
+          borderRadius: BorderRadius.circular(22),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 44),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: child,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 일시정지 중 보드를 가리는 덮개. 보드 칸과 달리 시스템 글씨 크기를 따른다.
+  Widget _buildPauseCover(AppLocalizations l10n) {
+    return Container(
+      key: const ValueKey('game-pause-cover'),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        border: Border.all(color: context.colors.border),
+      ),
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.pause_circle_outline_rounded,
+                size: 44,
+                color: context.colors.textSecondary,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l10n.gamePausedTitle,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.notoSans(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: context.colors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                l10n.gamePausedBody,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.notoSans(
+                  fontSize: 14,
+                  color: context.colors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 18),
+              FilledButton.icon(
+                onPressed: _togglePause,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(160, 48),
+                ),
+                icon: const Icon(Icons.play_arrow_rounded),
+                label: Text(l10n.gameResume),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -865,79 +1309,105 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                         ),
                       ),
                       SizedBox(height: metrics.sectionGap),
-                      for (int i = 0; i < 3; i++)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            for (int j = 1; j <= 3; j++)
-                              Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: metrics.numberButtonGap / 2,
-                                  vertical: metrics.numberButtonGap / 2,
-                                ),
-                                child: _buildNumberButton(
-                                  i * 3 + j,
-                                  compact: true,
-                                  width: metrics.numberButtonWidth,
-                                  height: metrics.numberButtonHeight,
-                                  borderRadius: metrics.numberButtonRadius,
-                                ),
-                              ),
-                          ],
-                        ),
-                      SizedBox(height: metrics.compactGap),
-                      Padding(
-                        padding: EdgeInsets.only(
-                          bottom: metrics.scrollBottomPadding,
-                        ),
-                        child: Column(
+                      _withHintPanel(
+                        Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                _buildMobileActionButton(
-                                  icon: Icons.edit_note,
-                                  label: _presenter.isMemoMode
-                                      ? l10n.gameMemoOnShort
-                                      : l10n.gameMemoShort,
-                                  semanticsLabel: l10n.gameMemoShort,
-                                  toggled: _presenter.isMemoMode,
-                                  color: _presenter.isMemoMode
-                                      ? AppTheme.mintColor
-                                      : AppTheme.lightBlueColor,
-                                  isActive: _presenter.isMemoMode,
-                                  onPressed: _canToggleMemo
-                                      ? () {
-                                          setState(() {
-                                            _memoFocusNumber = null;
-                                            _presenter.toggleMemoMode();
-                                          });
-                                        }
-                                      : null,
-                                  compact: true,
-                                  size: metrics.actionButtonSize,
-                                  labelFontSize: metrics.actionLabelFontSize,
-                                ),
-                                _buildMobileHintButton(
-                                  buttonSize: metrics.actionButtonSize,
-                                  labelFontSize: metrics.actionLabelFontSize,
-                                ),
-                                _buildMobileActionButton(
-                                  icon: Icons.backspace_outlined,
-                                  label: l10n.gameEraseShort,
-                                  color: context.colors.attentionSurface,
-                                  onPressed: _canEraseSelection
-                                      ? _eraseSelectedCell
-                                      : null,
-                                  compact: true,
-                                  size: metrics.actionButtonSize,
-                                  labelFontSize: metrics.actionLabelFontSize,
-                                ),
-                              ],
+                            for (int i = 0; i < 3; i++)
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  for (int j = 1; j <= 3; j++)
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: metrics.numberButtonGap / 2,
+                                        vertical: metrics.numberButtonGap / 2,
+                                      ),
+                                      child: _buildNumberButton(
+                                        i * 3 + j,
+                                        compact: true,
+                                        width: metrics.numberButtonWidth,
+                                        height: metrics.numberButtonHeight,
+                                        borderRadius:
+                                            metrics.numberButtonRadius,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            SizedBox(height: metrics.compactGap),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                bottom: metrics.scrollBottomPadding,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      _buildMobileActionButton(
+                                        icon: Icons.undo_rounded,
+                                        label: l10n.gameUndoShort,
+                                        color: AppTheme.lightBlueColor,
+                                        onPressed:
+                                            _canUndo ? _undoLastInput : null,
+                                        compact: true,
+                                        size: metrics.actionButtonSize,
+                                        labelFontSize:
+                                            metrics.actionLabelFontSize,
+                                      ),
+                                      _buildMobileActionButton(
+                                        icon: Icons.edit_note,
+                                        label: _presenter.isMemoMode
+                                            ? l10n.gameMemoOnShort
+                                            : l10n.gameMemoShort,
+                                        semanticsLabel: l10n.gameMemoShort,
+                                        toggled: _presenter.isMemoMode,
+                                        color: _presenter.isMemoMode
+                                            ? AppTheme.mintColor
+                                            : AppTheme.lightBlueColor,
+                                        isActive: _presenter.isMemoMode,
+                                        onPressed: _canToggleMemo
+                                            ? () {
+                                                unawaited(_toggleMemoMode());
+                                              }
+                                            : null,
+                                        onLongPress: _canUseAutoNotes
+                                            ? () => unawaited(_applyAutoNotes())
+                                            : null,
+                                        longPressSemanticsHint:
+                                            l10n.gameMemoLongPressHint,
+                                        showAutoNotesBadge: true,
+                                        compact: true,
+                                        size: metrics.actionButtonSize,
+                                        labelFontSize:
+                                            metrics.actionLabelFontSize,
+                                      ),
+                                      _buildMobileHintButton(
+                                        buttonSize: metrics.actionButtonSize,
+                                        labelFontSize:
+                                            metrics.actionLabelFontSize,
+                                      ),
+                                      _buildMobileActionButton(
+                                        icon: Icons.backspace_outlined,
+                                        label: l10n.gameEraseShort,
+                                        color: context.colors.attentionSurface,
+                                        onPressed: _canEraseSelection
+                                            ? _eraseSelectedCell
+                                            : null,
+                                        compact: true,
+                                        size: metrics.actionButtonSize,
+                                        labelFontSize:
+                                            metrics.actionLabelFontSize,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
+                        bottomInset: metrics.scrollBottomPadding,
                       ),
                     ],
                   ),
@@ -1024,78 +1494,106 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                       const Spacer(flex: _kLandscapeEdgeSpacerFlex),
                       _buildLandscapeStatsPanel(),
                       const Spacer(flex: _kLandscapeMidSpacerFlex),
-                      for (int i = 0; i < 3; i++)
-                        Padding(
-                          padding: EdgeInsets.only(
-                            bottom: i < 2 ? metrics.numberButtonGap : 0,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              for (int j = 1; j <= 3; j++)
-                                Padding(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: metrics.numberButtonGap / 2,
-                                  ),
-                                  child: _buildNumberButton(
-                                    i * 3 + j,
-                                    compact: true,
-                                    width: metrics.numberButtonWidth,
-                                    height: metrics.numberButtonHeight,
-                                    borderRadius: metrics.numberButtonRadius,
-                                    largeBadge: true,
-                                  ),
+                      _withHintPanel(
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            for (int i = 0; i < 3; i++)
+                              Padding(
+                                padding: EdgeInsets.only(
+                                  bottom: i < 2 ? metrics.numberButtonGap : 0,
                                 ),
-                            ],
-                          ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    for (int j = 1; j <= 3; j++)
+                                      Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal:
+                                              metrics.numberButtonGap / 2,
+                                        ),
+                                        child: _buildNumberButton(
+                                          i * 3 + j,
+                                          compact: true,
+                                          width: metrics.numberButtonWidth,
+                                          height: metrics.numberButtonHeight,
+                                          borderRadius:
+                                              metrics.numberButtonRadius,
+                                          largeBadge: true,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            SizedBox(
+                              height: metrics.compactGap +
+                                  _kLandscapeKeypadActionGapBonus,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _buildMobileActionButton(
+                                  icon: Icons.undo_rounded,
+                                  label: AppLocalizations.of(context)!
+                                      .gameUndoShort,
+                                  color: AppTheme.lightBlueColor,
+                                  onPressed: _canUndo ? _undoLastInput : null,
+                                  compact: true,
+                                  size: metrics.actionButtonSize,
+                                  labelFontSize: metrics.actionLabelFontSize,
+                                ),
+                                _buildMobileActionButton(
+                                  icon: Icons.edit_note,
+                                  label: _presenter.isMemoMode
+                                      ? AppLocalizations.of(context)!
+                                          .gameMemoOnShort
+                                      : AppLocalizations.of(context)!
+                                          .gameMemoShort,
+                                  semanticsLabel: AppLocalizations.of(context)!
+                                      .gameMemoShort,
+                                  toggled: _presenter.isMemoMode,
+                                  color: _presenter.isMemoMode
+                                      ? AppTheme.mintColor
+                                      : AppTheme.lightBlueColor,
+                                  isActive: _presenter.isMemoMode,
+                                  emphasizeActiveIcon: true,
+                                  onPressed: _canToggleMemo
+                                      ? () {
+                                          unawaited(_toggleMemoMode());
+                                        }
+                                      : null,
+                                  onLongPress: _canUseAutoNotes
+                                      ? () => unawaited(_applyAutoNotes())
+                                      : null,
+                                  longPressSemanticsHint: AppLocalizations.of(
+                                    context,
+                                  )!
+                                      .gameMemoLongPressHint,
+                                  showAutoNotesBadge: true,
+                                  compact: true,
+                                  size: metrics.actionButtonSize,
+                                  labelFontSize: metrics.actionLabelFontSize,
+                                ),
+                                _buildMobileHintButton(
+                                  buttonSize: metrics.actionButtonSize,
+                                  labelFontSize: metrics.actionLabelFontSize,
+                                ),
+                                _buildMobileActionButton(
+                                  icon: Icons.backspace_outlined,
+                                  label: AppLocalizations.of(context)!
+                                      .gameEraseShort,
+                                  color: context.colors.attentionSurface,
+                                  onPressed: _canEraseSelection
+                                      ? _eraseSelectedCell
+                                      : null,
+                                  compact: true,
+                                  size: metrics.actionButtonSize,
+                                  labelFontSize: metrics.actionLabelFontSize,
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      SizedBox(
-                        height: metrics.compactGap +
-                            _kLandscapeKeypadActionGapBonus,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildMobileActionButton(
-                            icon: Icons.edit_note,
-                            label: _presenter.isMemoMode
-                                ? AppLocalizations.of(context)!.gameMemoOnShort
-                                : AppLocalizations.of(context)!.gameMemoShort,
-                            semanticsLabel:
-                                AppLocalizations.of(context)!.gameMemoShort,
-                            toggled: _presenter.isMemoMode,
-                            color: _presenter.isMemoMode
-                                ? AppTheme.mintColor
-                                : AppTheme.lightBlueColor,
-                            isActive: _presenter.isMemoMode,
-                            emphasizeActiveIcon: true,
-                            onPressed: _canToggleMemo
-                                ? () {
-                                    setState(() {
-                                      _memoFocusNumber = null;
-                                      _presenter.toggleMemoMode();
-                                    });
-                                  }
-                                : null,
-                            compact: true,
-                            size: metrics.actionButtonSize,
-                            labelFontSize: metrics.actionLabelFontSize,
-                          ),
-                          _buildMobileHintButton(
-                            buttonSize: metrics.actionButtonSize,
-                            labelFontSize: metrics.actionLabelFontSize,
-                          ),
-                          _buildMobileActionButton(
-                            icon: Icons.backspace_outlined,
-                            label: AppLocalizations.of(context)!.gameEraseShort,
-                            color: context.colors.attentionSurface,
-                            onPressed:
-                                _canEraseSelection ? _eraseSelectedCell : null,
-                            compact: true,
-                            size: metrics.actionButtonSize,
-                            labelFontSize: metrics.actionLabelFontSize,
-                          ),
-                        ],
                       ),
                       const Spacer(flex: _kLandscapeEdgeSpacerFlex),
                     ],
@@ -1137,7 +1635,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SudokuInfoCard(
-          '오답',
+          AppLocalizations.of(context)!.gameWrongShort,
           '$wrongCount/$maxWrongCount',
           Icons.close_rounded,
           // 오답 0개일 때까지 경고색으로 보이지 않도록 accentColor를 안 주고
@@ -1146,7 +1644,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         ),
         const SizedBox(height: 12),
         SudokuInfoCard(
-          '진행률',
+          AppLocalizations.of(context)!.gameProgressShort,
           '$progressPercent%',
           Icons.donut_large_rounded,
           accentColor: AppTheme.statisticsAccent,
@@ -1164,25 +1662,59 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 680, maxHeight: 680),
-        // 칸 크기가 고정이라 시스템 글씨 크기를 따라 숫자가 커지면 칸 안에서 잘린다.
-        child: MediaQuery.withNoTextScaling(
-          child: SudokuBoardGrid(
-            presenter: _presenter,
-            waveActive: _effectsController.waveActive,
-            lineCompleteActive: _effectsController.lineCompleteActive,
-            errorActive: _effectsController.errorActive,
-            errorOffset: _effectsController.errorOffset,
-            highlightedMemoNumber:
-                _memoHighlightEnabled && _featurePolicy.memoEnabled
-                    ? _memoFocusNumber
-                    : null,
-            enableMemoHighlights:
-                _memoHighlightEnabled && _featurePolicy.memoEnabled,
-            onCellTapped: (row, col) {
-              _presenter.selectCell(row, col);
-            },
-            onPencilDigit: isTablet ? _insertDigit : null,
-          ),
+        child: Stack(
+          children: [
+            // 칸 크기가 고정이라 시스템 글씨 크기를 따라 숫자가 커지면 칸 안에서 잘린다.
+            MediaQuery.withNoTextScaling(
+              child: SudokuBoardGrid(
+                presenter: _presenter,
+                waveActive: _effectsController.waveActive,
+                lineCompleteActive: _effectsController.lineCompleteActive,
+                errorActive: _effectsController.errorActive,
+                errorOffset: _effectsController.errorOffset,
+                undoActive: _effectsController.undoActive,
+                hintAppliedActive: _effectsController.hintAppliedActive,
+                highlightedMemoNumber:
+                    _memoHighlightEnabled && _featurePolicy.memoEnabled
+                        ? _memoFocusNumber
+                        : null,
+                enableMemoHighlights:
+                    _memoHighlightEnabled && _featurePolicy.memoEnabled,
+                onCellTapped: (row, col) {
+                  _presenter.selectCell(row, col);
+                },
+                hintRegionCells: _activeHint?.regionCells ?? const {},
+                hintBlockerCells: _hintStep == 2
+                    ? _activeHint?.blockerCells ?? const {}
+                    : const {},
+                hintTargetCell: _visibleHintTarget,
+                onPencilDigit:
+                    isTablet && !_isBoardCovered ? _insertDigit : null,
+              ),
+            ),
+            if (_isBoardCovered)
+              Positioned.fill(
+                child: _buildPauseCover(AppLocalizations.of(context)!),
+              ),
+            if (_autoNotesFlashKey != null)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: TweenAnimationBuilder<double>(
+                    key: _autoNotesFlashKey,
+                    tween: Tween(begin: 1, end: 0),
+                    duration: MediaQuery.disableAnimationsOf(context)
+                        ? Duration.zero
+                        : const Duration(milliseconds: 150),
+                    builder: (context, t, child) => Opacity(
+                      opacity: t * 0.12,
+                      child: Container(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -1386,6 +1918,13 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     );
   }
 
+  void _cancelAllWrongCellTimers() {
+    for (final timer in _wrongCellTimers.values) {
+      timer.cancel();
+    }
+    _wrongCellTimers.clear();
+  }
+
   void _cancelWrongCellTimer(int? row, int? col) {
     if (row == null || col == null) return;
     final key = '$row,$col';
@@ -1433,19 +1972,25 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     // 과 토글 상태. toggled가 null이면 토글 버튼이 아니다.
     String? semanticsLabel,
     bool? toggled,
+    // 메모 버튼 전용(호출부에서만 넘김): 길게 누르면 자동 메모를 실행한다.
+    // null이면(다른 버튼들) 기존과 완전히 동일하게 동작한다.
+    VoidCallback? onLongPress,
+    String? longPressSemanticsHint,
+    bool showAutoNotesBadge = false,
   }) {
     final buttonSize =
         size ?? (compact ? 52.0 : (_oneHandModeEnabled ? 62.0 : 70.0));
     final iconSize =
         compact ? buttonSize * 0.36 : (_oneHandModeEnabled ? 28.0 : 32.0);
     final hasLabel = label.isNotEmpty;
-    return Padding(
+    Widget button = Padding(
       padding: EdgeInsets.symmetric(
         horizontal: compact ? 1 : (_oneHandModeEnabled ? 2 : 3),
         vertical: compact ? 0.5 : (_oneHandModeEnabled ? 2 : 3),
       ),
       child: Semantics(
         container: true,
+        hint: longPressSemanticsHint,
         button: true,
         enabled: onPressed != null,
         toggled: toggled,
@@ -1505,6 +2050,29 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         ),
       ),
     );
+    if (showAutoNotesBadge) {
+      button = Stack(
+        clipBehavior: Clip.none,
+        children: [
+          button,
+          Positioned(
+            top: compact ? 2 : 4,
+            right: compact ? 6 : 8,
+            child: IgnorePointer(
+              child: Icon(
+                Icons.auto_awesome,
+                size: compact ? 12 : 14,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    if (onLongPress != null) {
+      button = GestureDetector(onLongPress: onLongPress, child: button);
+    }
+    return button;
   }
 
   Widget _buildMobileHintButton({
@@ -1521,13 +2089,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
               ? const Color(0xFF8A6820)
               : AppTheme.yellowColor,
           isActive: false,
-          onPressed: _canUseHint
-              ? () {
-                  setState(() {
-                    _presenter.useHint();
-                  });
-                }
-              : null,
+          onPressed: _canUseHint ? _startHint : null,
           compact: true,
           size: buttonSize,
           labelFontSize: labelFontSize,
@@ -1577,7 +2139,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       clearTimeSeconds: _presenter.seconds,
       wrongCount: _presenter.wrongCount,
       hintsUsed: _featurePolicy.maxHints - _presenter.hintsRemaining,
+      autoNotesUsed: _presenter.autoNotesUsed,
       challengeDate: _challengeDate,
+      challengeCountsForStreak: widget.challengeCountsForStreak,
       onRestart: _resetAndRestartCurrentGame,
       onGoToLevelSelection: _exitToLevelSelection,
       onNextPuzzle: (nextGame) async {

@@ -31,20 +31,69 @@
 
 - **nanpre159(일본 플레이버) App Store 재심사** — 2026-08-17 재제출 완료, 결과 대기 중.
 
-## 예정 (다음 착수 대상)
+## 최근 완료
 
-- **알림 하드코딩(설정 UI 없이 내부적으로 항상 ON)** — 2026-08-17에 설정 화면 토글 UI로 한 차례 구현했으나(챌린지 리마인더/스트릭 리마인더 토글 + 시간 선택), 방향을 바꿔 **UI 없이 내부적으로 하드코딩**하기로 결정 → `settings_screen.dart`에 추가했던 UI는 되돌림(원상 복구 완료).
-  - **게임 완료 알림 / 주간 목표 달성 알림은 소스 자체를 제거함** — 완료 시점엔 이미 인앱 다이얼로그로 같은 정보를 보여주고 있어 시스템 알림이 중복이라고 판단 (`notification_service.dart`, `app_settings_service.dart`, `settings_controller.dart`, `game_completion_coordinator.dart`에서 관련 코드 전부 삭제).
-  - **챌린지 리마인더 + 스트릭 리마인더 통합 후, 하루 3회(아침 9시·점심 1시·저녁 8시) 리마인드로 재설계** — 처음엔 "알림 1개로 통합"했었지만, 이후 `_reminderSlots`(아침/점심/저녁 3개 슬롯)로 다시 바꿔서 오늘 퍼즐을 하나도 안 깼으면 하루 세 번 리마인드하도록 최종 확정(2026-08-24). `syncReminders()` 호출 시 오늘 이미 클리어했으면(`lastClearDate == 오늘`) 전부 취소, 아니면 스트릭 유무에 따라 문구만 바꿔 3개 슬롯 전부 재예약 (`_streakReminderId`/`_shiftedTime` 제거, `_morningReminderId`/`_noonReminderId`/`_eveningReminderId`로 대체).
-  - **알림 권한 요청 + 자동 재동기화 하드코딩 완료** — 설정 UI 토글을 되돌리면서 권한 요청 호출부(`requestNotificationPermissions()`)도 같이 사라졌던 걸 발견 → `main.dart`의 `_bootstrapNotificationState()`에서 `initialize()` 직후 `requestPermissions()`를 직접 호출하도록 복구. iOS/Android 모두 사용자가 이미 응답한 뒤엔 재호출해도 시스템 프롬프트가 다시 뜨지 않으므로 별도 "최초 1회" 플래그 없이 매 실행마다 호출.
-  - **알림 발송 조건도 "오늘의 챌린지 클리어"에서 "오늘 아무 퍼즐이나 1판 클리어"로 변경** — 챌린지 탭의 "시작하기" 버튼이 실제로는 `MyPaceService`(이어하기/진행순서 로직)로 열려서 오늘의 챌린지 타깃과 다른 퍼즐을 여는 경우가 많다는 걸 확인, 알림 조건을 실제 동작에 맞게 단순화. `syncReminders()`도 이제 `isTodayChallenge` 여부와 무관하게 매 클리어마다 재동기화됨 (`notification_service.dart`, `game_completion_coordinator.dart`).
-  - 남은 이슈: 챌린지 탭 "시작하기" 버튼이 여전히 화면에 표시된 오늘의 챌린지 타깃과 다른 퍼즐을 열어주는 라벨-동작 불일치는 미해결 (별도 작업 필요). 이번 알림 관련 변경이 출시되는 다음 업데이트의 App Store 심사 노트에 반영할 것.
+- **초보자 가이드·자동 메모·오늘의 도전 월간 달력 (2026-09-26 구현, 2026-09-27 출시 전 검토 반영, 미커밋)** — 실기기 육안 확인은 아직 없음(위젯 테스트로만 확인, 아래 "미해결" 참고).
+  - **초보자용 첫 게임 가이드**: `BeginnerTutorialService`(SharedPreferences, 키 `beginner_tutorial_state_v1`, unseen/completed/dismissed)로 상태를 관리. 초급 새 문제를 처음 시작할 때만 안내 다이얼로그(가이드 시작/건너뛰기)를 보여주고, 이어하기·완료 재도전·오늘의 도전에서는 자동으로 뜨지 않는다. `BeginnerTutorialScreen`은 실제 `SudokuGamePresenter`/`SudokuBoardController`/`SudokuBoardGrid`/`SudokuHintPanel`을 그대로 재사용하는 고정 연습 퍼즐(일반 기록·연속 일수·업적에 미반영)로 행·열·박스 규칙 → 숫자 입력 → 메모·지우기 → 힌트 → 완료 7단계를 안내한다. 설정 화면 "게임 방법"에서 언제든 다시 볼 수 있다.
+    - **설정에서 "다시 보기" 시 상태 보존** (2026-09-27): 최초 안내(`isReplay==false`)만 완료/닫기에 따라 `completed`/`dismissed`를 실제로 기록하고, 설정에서 다시 볼 때(`isReplay==true`)는 완료하든 중간에 닫든 기존에 저장된 상태를 그대로 둔다 — 이미 `completed`였던 사용자가 다시 보기를 하다 중간에 나가도 `dismissed`로 덮어써지지 않는다.
+    - **시스템 뒤로가기 처리** (2026-09-27): `PopScope`를 추가해 안드로이드 뒤로가기·iOS 뒤로가기 제스처도 X 버튼과 동일한 종료 경로(`_finish(completed: false)`)를 타도록 함 — 이전엔 시스템 뒤로가기로 나가면 최초 안내가 `unseen`으로 남는 버그가 있었음. 닫기 버튼과 시스템 뒤로가기가 거의 동시에 들어와도 `_finished` 가드로 한 번만 처리.
+  - **자동 메모 채우기**: `SudokuBoardController.computeBasicCandidates()`가 정답(solution)을 보지 않고 행·열·박스 규칙만으로 빈 칸 후보를 계산, 모순(후보 0개)이 하나라도 있으면 전체를 되돌린다. 메모 버튼을 길게 누르면 실행(탭은 기존 메모 모드 토글 그대로), 기존 메모가 있으면 확인 대화상자, 전체 변경은 되돌리기 한 단계로 기록되고 남은 힌트·실수 횟수는 건드리지 않는다. `SudokuGamePresenter.autoNotesUsed`가 세션에 저장되고(재시작 시 초기화, 되돌려도 사용 기록 유지) `clear_records`/`clear_events`에도 `auto_notes_used` 컬럼으로 반영(DB v7→v8). 메모 모드를 처음 켰을 때 한 번만 사용법 SnackBar 안내. 힌트 패널이 열려 있는 동안은 메모 길게 누르기 자체가 비활성화된다(`_canUseAutoNotes`가 false면 길게 누르기 콜백을 아예 연결하지 않음).
+  - **오늘의 도전 월간 달력**: `ChallengeScreen`의 오늘의 도전 카드 아래 `ChallengeMonthlyCalendarCard` 추가(새 하단 탭 없음). `daily_challenge_completions` 테이블에 `level_name`/`game_number`/`clear_time`/`wrong_count`/`hints_used`/`auto_notes_used`/`streak_eligible` 컬럼 추가(DB v8→v9, 기존 행은 `streak_eligible=1`로 보존). 재도전은 오답→힌트→시간 순으로 더 좋은 결과일 때만 세부 기록을 갱신하고 `streak_eligible`은 최초 기록 이후 절대 바꾸지 않는다(과거 달력에서 다시 풀어도 연속 일수가 복구되지 않도록). 연속 일수 계산은 `streak_eligible=true`인 날짜만 사용. 달력 셀은 날짜마다 조회하지 않고 그 달 전체를 한 번에 배치 조회하며, 완료·완벽 완료(`wrong_count==0`)·진행 중(저장 세션 존재)·미완료·미래를 아이콘으로 구분(색상만 사용 안 함). 날짜를 누르면 `getChallengeTargetForCalendarDay`로 그 날짜의 정확한 타깃을 불러와 열고(`challengeCountsForStreak: false`), 저장 세션은 `challengeDate`가 정확히 일치할 때만 이어한다. 오늘 날짜는 기존 오늘의 도전 흐름 그대로.
+    - **진입점 추가** (2026-09-27): 처음 구현 시 `ChallengeScreen` 자체는 만들었지만 홈 화면 어디에서도 들어갈 방법이 없었음(하단 탭은 홈/기록뿐). 홈 화면의 오늘의 도전 카드(및 이어하기와 오늘의 도전이 같은 게임이라 병합되는 카드)의 시작/이어하기 버튼 아래에 "월간 도전 기록 보기" 텍스트 버튼(`Icons.calendar_month_outlined`)을 추가해 `ChallengeScreen`으로 이동, 복귀 시 홈 대시보드를 다시 불러온다. 새 하단 탭은 추가하지 않았다.
+    - **"진행 중" 판정 정확도 개선** (2026-09-27): 기존엔 메모·오답·힌트 사용 여부로만 진행 중을 판정해, 정답 숫자만 틀리지 않고 채운 세션은 실제로 저장돼 있어도 달력에 "미완료"로 잘못 표시됐다. `GameSessionState`에 `userFilledCells`(고정 칸 제외, 사용자가 채운 칸 수 — 저장 시점에 원본 퍼즐을 아는 `SudokuGameScreen`에서 계산)를 추가하고, 판정식을 `userFilledCells > 0 || hasNotes || wrongCount > 0 || hasUsedHint`로 확장. 기존 저장 데이터엔 이 필드가 없으므로 `json['userFilledCells'] as int? ?? 0`으로 읽어 하위 호환 유지, 달력 셀별 DB/퍼즐 재조회 없이 배치 조회 방식 그대로 유지.
+  - **검증**: `flutter analyze --no-pub` 0건, `flutter test --no-pub` 전체 통과(589개, 경고 0건 — 자동 메모 "힌트 패널 열림 중 차단" 테스트가 이전엔 히트테스트 경고를 냈으나 길게 누르기 콜백 미연결을 위젯 트리로 직접 확인하는 방식으로 교체해 제거), `git diff --check` 통과. DB v7→v9 실제 업그레이드 경로 테스트가 v9 이전 형식(날짜만 있는 `daily_challenge_completions` 행)을 시드해 마이그레이션 후에도 기존 데이터가 보존되는지까지 확인하도록 보강됨.
+  - **실기기 확인 필요(아직 안 함)**: 초보자 가이드 첫 진입/다시 보기, 자동 메모 길게 누르기 실제 느낌, 월간 달력 진입 버튼·달력 화면 실제 터치 동작 — 전부 위젯 테스트로만 확인했고 시뮬레이터/실기기 육안 검증은 없음.
+
+- **인터랙션 효과 2차 + 저장 게임 삭제 실패 안내 (2026-09-26, 미커밋)**
+  - **힌트로 채운 칸 강조**: `GameEffectsController.triggerHintAppliedEffect()`가 힌트로 채운 칸만 180~220ms 배경 강조(정답·오답·줄 완성·되돌리기와 다른 별도 색). 같은 입력이 줄/퍼즐 완성까지 트리거하면 `_suppressCorrectPulse` 플래그로 힌트 강조를 양보하고 줄 완성·완료 효과가 우선한다.
+  - **홈 난이도 이동·필터 칩·난이도 카드 동작 줄이기 대응**: `home_screen.dart`의 `_scrollToLevels()`는 동작 줄이기에서 `animateTo()` 대신 `jumpTo()`, 난이도 카드 `AnimatedOpacity`(기존 140ms)는 동작 줄이기에서 `Duration.zero`. `level_picker_screen.dart`의 필터 칩 `AnimatedContainer`(기존 150ms)도 동일하게 처리.
+  - **레벨 카드 로딩 표시**: `_openingGameNumber`를 실제 퍼즐 로딩 시작 시점(확인/한도 대화상자 이후)에만 설정해, 탭한 카드에는 16px 로딩 인디케이터, 다른 카드는 0.75 불투명도(140ms, 동작 줄이기 시 0)로 낮춘다. 성공·실패·화면 복귀 모든 경로에서 `finally`로 해제.
+  - **저장 게임 삭제 행 로딩·축소·실패 안내**: 전역 `_isDeleting` 플래그를 행별 `_deletingKey`/`_removingKey`(레벨명+게임번호 키)로 교체. 삭제 확정 시 170ms 페이드+높이 축소 후 목록 갱신, 마지막 항목이면 애니메이션 후 화면을 닫는다. 동작 줄이기는 즉시 제거. **삭제 실패 시**(예외 발생) 대상 행은 유지하고 로딩만 해제, 다른 행 삭제 버튼도 함께 풀리며(동시 삭제 방지 잠금 해제) 현지화된 `savedGamesDeleteFailed` SnackBar로 안내한다 — 이전엔 실패해도 안내 없이 조용히 로딩만 풀렸음.
+  - **업적 필터/정렬 크로스페이드**: 요약 카드·필터 컨트롤은 고정하고 배지 목록 영역만 `AnimatedSwitcher`(130ms, `_filter`+`_sort` 키)로 전환. 동작 줄이기는 0ms.
+  - **설정 알림 스위치 테스트 정리**: 작은 화면 테스트가 화면 밖 스위치를 `tester.ensureVisible()` 없이 바로 tap해 hit-test 경고가 나던 것을 수정하고, 실제로 busy 상태가 됐는지까지 검증하도록 보강.
+  - **검증**: `flutter analyze --no-pub` 0건, `git diff --check` 통과, 전체 테스트 471→493개 통과(신규: 힌트 강조 12, 홈/레벨피커 동작줄이기 5, 저장게임 삭제 6→7(실패 케이스 추가), 레벨카드 로딩 7, 업적 크로스페이드 5, 설정 스위치 경고 수정).
+
+- **인터랙션 효과 1차: 힌트 패널·되돌리기·기록 화면 선택 전환 (2026-09-26, 미커밋)**
+  - **힌트 패널 등장·단계 전환**: 패널은 숫자패드 영역을 덮는 `AnimatedSwitcher`(등장 160ms·닫힘 120ms, `Curves.easeOutCubic`, 등장만 4px 이동)로 겹치고, `hint == null`일 때 `IgnorePointer`로 감싸 닫힌 직후(페이드아웃 중이어도) 숫자패드를 바로 다시 쓸 수 있게 했다. 열려 있는 동안은 `GestureDetector(opaque)`로 패널 전체를 히트테스트 차단해, 등장 애니메이션 중에도 빈 공간으로 뒤 숫자패드가 눌리지 않는다. 1↔2단계는 `SudokuHintPanel` 안의 제목·본문·버튼 각각을 `AnimatedSwitcher`(170ms)로 크로스페이드. 정답 입력(`revealHintAt`)은 항상 애니메이션과 무관하게 즉시 실행(기존 구조 그대로). 동작 줄이기에서는 모든 관련 `AnimatedSwitcher` duration이 0.
+  - **보드 힌트 영역·블로커 강조**: 기존 `sudoku_board_grid.dart`의 선택 배경 `AnimatedContainer`(100ms 이내 제약이 있는 기존 테스트가 있어 90ms 유지)와는 별도로, 힌트 영역/블로커 전용 레이어(`cell-hint-$row-$col`, 140ms, 120~160ms 범위)를 새로 추가해 선택색과 섞이지 않게 분리했다.
+  - **되돌리기 결과 칸 강조**: `SudokuGamePresenter.undo()`가 실제로 바뀐 칸을 `lastUndoCell`로 노출하고, `GameEffectsController.triggerUndoEffect()`가 그 칸만 옅은 보라로 200ms(140ms 유지+60ms 페이드) 강조한다. 연속 되돌리기는 이전 칸 강조를 기다리지 않고 즉시 지운다. `_isApplyingUndo` 플래그로 undo 중의 `onBoardChanged`는 `initializeCompletedLineState`만 조용히 호출해, 되돌리기로 줄이 다시 완성돼도 정답·줄 완성 효과·토스트가 재실행되지 않는다. 진동은 `HapticFeedback.selectionClick()`을 진동 설정 ON·동작 줄이기 OFF일 때만.
+  - **기록 화면 선택 전환**: 요일 칸 배경은 `AnimatedContainer`(130ms), 선택 설명 영역은 `AnimatedSwitcher`+`AnimatedSize`(170/180ms)로 전환. 난이도 칩 전환은 헤더(이름·완료수)와 하단 행(최고/평균 시간 등)을 각각 `AnimatedSwitcher`(170ms)로 분리하고, 진행률 바는 크로스페이드 블록 밖에 안정적으로 둬 `TweenAnimationBuilder`(250ms)로 이전 값→새 값을 부드럽게 채운다(숫자 텍스트는 즉시 갱신, 카운트업 없음). **버그 발견·수정**: 동작 줄이기에서 `AnimatedSize`(duration 0) 안에 duration 0인 `AnimatedSwitcher`/`TweenAnimationBuilder`를 중첩하면 "RenderAnimatedSize was mutated in its own performLayout" 재진입 오류가 남 — 동작 줄이기일 때는 `AnimatedSize` 자체를 아예 안 쓰도록(`_maybeAnimatedSize` 헬퍼) 고쳤다.
+  - **검증**: `flutter analyze` 0건, 전체 테스트 428→459(신규 31개: 힌트 패널 모션 10, 되돌리기 강조 controller단 6+screen단 9, 기록 화면 선택 전환 7). 기존 `sudoku_board_grid_test.dart`의 "기본 배경 100ms 이내" 제약 테스트가 처음 시도(공유 duration 140ms로 올림)를 잡아내 레이어 분리로 수정.
+
+- **출시 전 추가 보완 2건 (2026-09-26, 미커밋)**
+  - **알림 실패가 완료 후 이동을 막지 않음**: 알림 켜기는 `NotificationService.enableReminders()` 한 곳에서 처리(권한 요청 → 7일 예약 → 둘 다 성공해야 ON 저장, 거부·예외면 OFF 저장 + 레거시 포함 전체 취소, 예외를 던지지 않음). 첫 완료 안내(`NotificationOptInFlow.maybeShow`)는 예외를 삼키고, `GameEndFlow`는 `try/finally`로 사용자가 고른 이동(다음 퍼즐·재시작·목록)을 항상 한 번 실행. 권한 거부와 시스템·예약 오류는 서로 다른 안내 문구.
+  - **설정 알림 스위치**: 처리 중에는 그 스위치만 비활성화(중복 입력 방지). ON은 성공 후에만 표시, 실패 시 OFF 복구·안내. OFF는 선택을 유지하고 취소 실패는 로그만.
+  - **iOS 번들 언어 플레이버 분리**: 글로벌 `Info.plist`(en·ko·ja·es·zh-Hans), 일본 `Info-japan.plist`(en·ko·ja). 일본 구성 3개(`Debug/Release/Profile-japan`)만 `INFOPLIST_FILE`을 바꿈. 두 파일은 언어 목록 외 동일 — 테스트로 강제.
+
+- **출시 전 보완 4건 (2026-09-24, 미커밋)**
+  - **힌트만 쓰고 나가도 차감 유지**: 세션에 `initialHints`(저장 시점 난이도 정책의 최대 힌트 수)를 새로 저장하고, `hintsRemaining < initialHints`면 이어하기 대상으로 본다. 이 필드가 없는 기존 저장 데이터는 힌트 사용 여부를 추정하지 않는다(과거 기본값 3이 초급 5·중급 4와 달라 오판하기 때문).
+  - **알림 7일 예약**: 알림 ON이면 앞으로 7일 저녁 8시를 ID 1100~1106으로 예약. 오늘 이미 완료했거나 8시가 지났으면 내일부터. 매 동기화마다 레거시 1001~1003과 1100~1106을 모두 취소 후 재예약. 연속 일수 문구는 확실한 날(오늘 미완료 시 오늘, 오늘 완료 시 내일)에만.
+  - **첫 실행 권한 팝업 제거**: 알림 기본값 OFF. 기존 `DarwinInitializationSettings()` 기본값이 플러그인 초기화만으로 iOS 권한을 요청하던 것도 끔. 첫 완료 결과창을 닫은 뒤 앱 내부 안내(`notification_opt_in_prompt_seen`로 1회) → "알림 받기"일 때만 OS 권한 요청. 이전 버전에서 이미 iOS 권한을 허용한 사용자는 팝업 없이 확인해 ON 유지.
+  - **개인정보 문서 정정**: Firebase Core·Remote Config(강제 업데이트 확인), Google Fonts 런타임 다운로드를 문서에 반영. "Data Not Collected"는 Firebase SDK 매니페스트(Other Diagnostic Data 선언) 때문에 단정하지 않음 — [app-store-privacy-checklist.md](app-store-privacy-checklist.md).
+  - **추가 수정**: Android manifest에 예약 알림 리시버·`RECEIVE_BOOT_COMPLETED` 추가(없으면 Android에서 예약 알림이 표시되지 않음). iOS 번들 언어는 2026-09-26에 플레이버별로 분리(아래).
+  - **남은 후속**: Google Fonts(Noto Sans 5개 굵기) 번들 — 폰트 파일 추가에 사용자 확인 필요.
+
+- **되돌리기·일시정지·홈 연속 일수·힌트 풀이 설명 1차 (2026-09-24, 미커밋)** — 기획 검토에서 뽑은 추천 순서(②~④)를 구현. 자세한 동작은 [worklist](worklist).
+  - **되돌리기**: 숫자 입력·메모·지우기를 되돌린다(최대 200단계, 앱 세션 안에서만 유지 — 저장 데이터 형식은 바꾸지 않음). 실수 횟수·남은 힌트는 되돌리지 않고, 힌트 칸은 되돌려도 유지. 되돌린 칸을 자동 선택. 동작 버튼 줄 맨 앞(되돌리기·메모·힌트·지우기).
+  - **일시정지**: 앱바의 펭귄·타이머 묶음을 누르면 일시정지/계속. 멈춘 동안 보드를 가리고 입력을 막는다. 앱 전환 자동 정지 중에도 보드가 가려진다.
+  - **홈 연속 일수 칩**: 홈 헤더(이름과 설정 사이)에 🔥 N일. 기준은 기록 화면과 같은 "하루 1판 이상 완료" 연속. 오늘 아직 안 풀었으면 테두리만 있는 옅은 칩 + "오늘 한 판을 완료하면 이어져요" 툴팁/스크린리더 문장. 0일이면 숨김.
+  - **첫 완료 "새 최고 기록" 문구 제거**: 기존 기록을 넘어섰을 때만 표시(`GameRecordService.isBetterThan`). 저장 정책(첫 완료는 저장)은 그대로.
+  - **힌트 풀이 설명 1차(싱글 기법)**: 힌트 버튼 → 숫자패드 자리에 2단계 패널. 1단계 "살펴볼 곳"(박스/줄/칸 영역만 강조, 정답 칸은 숨김) → 2단계 기법 이름(히든 싱글/네이키드 싱글)과 이유(다른 빈칸을 막는 같은 숫자를 진하게 표시) → 정답 넣기. 1단계에서 바로 정답 넣기도 가능. 선택한 칸에 싱글이 없으면 "먼저 풀 수 있는 곳"으로 안내, 싱글이 전혀 없으면 정답 알려주기로 대체. **힌트는 패널을 여는 순간 1회 차감**(닫아도 환불 없음). 이제 선택 칸 없이도 힌트 사용 가능. 번들 퍼즐 표본 23개(난이도별 5개, 마스터 3개)를 힌트만으로 끝까지 풀어 모든 힌트 값이 정답과 일치함을 테스트로 확인 — 초급·중급·마스터 표본은 전부 싱글로 설명, 고급 1칸·전문가 5칸만 정답 알려주기로 대체됨.
+  - **검증**: `flutter analyze` 0건, 전체 테스트 370개 통과(307→370). iPhone 17 시뮬레이터에서 힌트 1·2단계(라이트·다크), 되돌리기, 일시정지 덮개, 첫 완료 다이얼로그, 홈 연속 칩을 실제 화면으로 확인. 아이패드 가로는 위젯 테스트(1024×768)로만 확인.
+
+- **알림 정책 정리 완료(2026-09-24, 사용자 확인 후 유지 결정)** — 설정 화면에 알림 ON/OFF를 제공하고, 기존 하루 3회 알림을 저녁 8시 하루 1회로 줄였다. 기존 사용자는 저장값이 없으면 ON을 유지하며, OFF 시 이전 버전에서 예약한 오전·점심·저녁 알림을 모두 취소한다. (참고: 이 변경 자체는 게임 인터랙션 작업 도중 별도 요청 없이 함께 적용됐던 것으로, 이후 세션에서 내용을 검토해 유지하기로 확정했다.)
+  - **완료·주간 목표 알림은 애초에 별도로 존재한 적 없음** — 이 문서에 한때 "게임 완료/주간 목표 알림을 소스에서 제거했다"고 적혀 있었으나 실제 코드(`game_completion_coordinator.dart`)에는 해당 로직이 없었던 것으로 확인돼 문구를 정정한다. 존재하는 시스템 알림은 "오늘 퍼즐 미완료 시 저녁 8시 리마인드" 하나뿐이다.
+  - **하루 1회 리마인드** — 오늘 퍼즐을 하나도 완료하지 않았을 때 저녁 8시에 한 번만 예약한다. 오늘 한 판을 완료하면 남은 알림을 취소한다.
+  - **권한과 설정 연동** — 앱 설정이 OFF면 시작 시 시스템 권한을 다시 요청하지 않는다. ON으로 바꿀 때 권한을 요청하며 거부되면 토글을 OFF로 되돌리고 안내한다.
+  - **지원 언어 알림 적용** — 앱에서 선택한 언어를 기준으로 한국어·영어·일본어·중국어·스페인어 제목, 본문, Android 채널 이름과 설명을 제공한다. 언어를 변경하면 예약된 알림도 새 언어로 다시 맞춘다.
+  - **알림 발송 조건은 "오늘 아무 퍼즐이나 1판 클리어" 유지** — `syncReminders()`는 `isTodayChallenge` 여부와 무관하게 매 클리어마다 재동기화한다 (`notification_service.dart`, `game_completion_coordinator.dart`).
+  - **오늘의 도전 표시-시작 대상 일치 완료(2026-09-24)** — `ChallengeScreen`은 `HomeDashboardData.todayChallenge`에 표시된 동일한 문제를 열고, 해당 문제의 저장 세션 여부와 `challengeDate`를 전달한다. 다른 일반 이어하기 세션이나 `MyPaceService` 타깃으로 대체하지 않는다. 날짜가 바뀌거나 타깃을 불러오지 못하면 문제를 열지 않고 대시보드를 갱신한다. 현재 기본 하단 탭은 홈·기록 두 개이며 `ChallengeScreen`은 연결되지 않은 상태이므로 새 탭은 추가하지 않았다.
 
 ## 고도화 백로그 (우선순위순, 2026-09-13 경쟁사 조사 후 재배치)
 
 경쟁 스도쿠 앱(sudoku.com, Good Sudoku, Enjoy Sudoku, Logic Wiz, Andoku 3 등) 조사 결과를 반영해 2026-08-17 순서에서 재배치함. 자세한 조사 근거는 이 세션 대화 참고.
 
-1. **힌트 풀이 설명** — 정답만 채우지 않고 실제 기법명(예: naked pair, X-Wing, pointing triple)으로 왜 이 숫자인지 설명. Good Sudoku/Enjoy Sudoku/Logic Wiz 등에서 확인된 핵심 차별화 포인트라 1순위로 상향.
+1. **힌트 풀이 설명** — (2026-09-24 1차 완료: 싱글 기법. 다음은 pointing/naked pair 등 2차 기법) — 정답만 채우지 않고 실제 기법명(예: naked pair, X-Wing, pointing triple)으로 왜 이 숫자인지 설명. Good Sudoku/Enjoy Sudoku/Logic Wiz 등에서 확인된 핵심 차별화 포인트라 1순위로 상향.
 2. **자동 메모 채우기** — 버튼으로 각 칸 후보 숫자 일괄 채우기 (상급자용, on/off 가능). Good Sudoku의 대표 기능("auto-annotation")으로 확인됨. 1번(기법 설명)과 세트로 묶으면 시너지(설명한 기법이 실제로 쓰는 후보 숫자를 자동 표시).
 3. **iOS 홈 화면 위젯** — 오늘 챌린지 상태·스트릭만 보여주는 WidgetKit 위젯. 서버 불필요. 위젯만으로 완결되는 경쟁 앱까지 있을 정도로 활발한 영역이라 우선순위 유지.
 4. **Game Center 연동** — 자체 서버 없이 업적/랭킹 제공 가능. 여러 경쟁 앱이 채택 중이고 서버 비용이 0이라 기존보다 우선순위 상향 검토.
@@ -73,4 +122,4 @@
 - [ARCHITECTURE.md](../ARCHITECTURE.md) — 아키텍처 문서
 
 ---
-마지막 갱신: 2026-09-13 (경쟁사 조사 기반 백로그 재배치)
+마지막 갱신: 2026-09-27 (초보자 가이드·자동 메모·월간 달력 출시 전 검토 반영 — 월간 달력 진입점 추가, 다시 보기 상태 보존, 시스템 뒤로가기 처리, 진행 중 판정(userFilledCells) 수정, 테스트 경고 제거. 전체 테스트 589개 통과, 경고 0건. 실기기 육안 검증은 아직 안 함)

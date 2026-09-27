@@ -24,10 +24,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navSettings => 'Settings';
 
   @override
-  String get recordsScreenTitle => 'Records & stats';
+  String get recordsHeroImageSubtitle => 'My growing record of solving';
 
   @override
-  String get challengeScreenTitle => 'Challenge';
+  String get settingsHeroSubtitle => 'Make it yours';
+
+  @override
+  String get recordsScreenTitle => 'Records & stats';
 
   @override
   String get settingsTitle => 'Settings';
@@ -482,7 +485,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recordsHeroTitle =>
-      'Start with the gentle\nshape of your progress.';
+      'Start with the gentle shape of your progress.';
 
   @override
   String get recordsHeroSubtitle =>
@@ -517,6 +520,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recordsPlayInsightsTitle => 'This week';
+
+  @override
+  String get recordsWeekSubtitle => 'Tap a day to see your record';
 
   @override
   String get recordsPlayCalendarTitle => 'By day';
@@ -601,6 +607,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsByLevelTitle => 'Records by level';
 
   @override
+  String get recordsByLevelSubtitle => 'Tap a difficulty to see its details';
+
+  @override
   String get recordsByLevelEmpty => 'No stats for this filter.';
 
   @override
@@ -644,7 +653,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Averages use each puzzle\'s best record, not every play.';
 
   @override
-  String get recordsCalendarTitle => 'Activity calendar';
+  String get recordsCalendarTitle => 'Play activity';
+
+  @override
+  String get recordsCalendarSubtitle => 'Your play history from the last year';
 
   @override
   String recordsCalendarPeriod(int weeks) {
@@ -696,16 +708,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recordsActivityHeatmapCaption =>
-      'Darker cells mean more completions on that day.';
+      'Activity for every puzzle you\'ve completed.';
 
   @override
   String get recordsActivityTotalClearsLabel => 'Total completions';
 
   @override
-  String get recordsActivityCurrentStreakLabel => 'Current daily streak';
+  String get recordsActivityCurrentStreakLabel => 'Current streak';
 
   @override
   String get recordsActivityBestStreakLabel => 'Best daily streak';
+
+  @override
+  String get recordsChallengeStreakLabel => 'Challenge streak';
 
   @override
   String recordsActivityDayCount(int count) {
@@ -781,7 +796,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recordsStatsHeroHeadline =>
-      'See your last 7 days of\nSudoku at a glance.';
+      'See your last 7 days of Sudoku at a glance.';
 
   @override
   String recordsTrendA11yMaxClears(int count) {
@@ -867,9 +882,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsGoToChallengeTab => 'Open Challenge tab';
 
   @override
-  String get challengeLoadError => 'Couldn\'t load challenge data.';
-
-  @override
   String get challengeTodaysChallengeTitle => 'Today\'s challenge';
 
   @override
@@ -892,14 +904,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get myPaceNoPlayableMessage =>
       'There are no new puzzles left to play across all levels.';
-
-  @override
-  String get challengeWeeklyGoalReachedTitle => 'Weekly goal reached';
-
-  @override
-  String challengeWeeklyGoalRemainingTitle(int count) {
-    return '$count more clears to hit your weekly goal';
-  }
 
   @override
   String get challengeWeeklyGoalReachedBody =>
@@ -927,73 +931,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Memo mode gets you much closer to mistake-free clears.';
 
   @override
-  String get challengeWeeklyGoalHeading => 'Weekly goal';
-
-  @override
-  String challengeWeeklyClearsLine(int count) {
-    return '$count clears this week';
-  }
-
-  @override
-  String challengeWeeklyProgressShort(int done, int target) {
-    return '$done / $target done';
-  }
-
-  @override
-  String challengeWeeklyPerfectShort(int count) {
-    return '$count perfect';
-  }
-
-  @override
-  String get challengeWeeklyCongratsFooter =>
-      'Weekly goal complete—keep stacking great records!';
-
-  @override
-  String challengeWeeklyAlmostFooter(int count) {
-    return '$count more clears to finish the week.';
-  }
-
-  @override
-  String get challengeAchievementsHeading => 'Achievements · badges';
-
-  @override
-  String challengeBadgesCollected(int unlocked, int total) {
-    return '$unlocked / $total earned';
-  }
-
-  @override
-  String get challengeViewAllBadges => 'View all';
-
-  @override
-  String get challengeEarnedBadgesHeading => 'Earned badges';
-
-  @override
-  String get challengeNextBadgeTargets => 'Next targets';
-
-  @override
-  String challengeBadgeProgressLine(String desc, String progress) {
-    return '$desc · Progress: $progress';
-  }
-
-  @override
-  String challengeStreakDays(int days) {
-    return '$days-day streak';
-  }
-
-  @override
-  String get challengeStreakStartToday => 'Chase your first clear today';
-
-  @override
   String get challengeTabHeroHeadline =>
-      'Today\'s puzzle and weekly rhythm,\nin one calm view.';
-
-  @override
-  String get challengeHeroPendingDetail =>
-      'Start playing from Home, or use the button below.';
-
-  @override
-  String get challengeHeroDoneDetail =>
-      'Today\'s challenge is complete. Badges and weekly progress stay on this tab.';
+      'Today\'s puzzle and weekly rhythm, in one calm view.';
 
   @override
   String get challengeOpenTodayOnHomeButton => 'Open today\'s puzzle on Home';
@@ -1542,13 +1481,347 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedGamesEmpty => 'No saved games match this filter.';
 
   @override
-  String get challengeMetricBasisTitle => 'Challenge metric basis';
+  String get savedGamesDeleteFailed =>
+      'Couldn\'t delete this puzzle. Please try again.';
 
   @override
-  String get challengeMetricBasisWeekly =>
-      'Weekly progress: based on clear events from the last 7 days.';
+  String get recordsMyRecordTitle => 'My record';
 
   @override
-  String get challengeMetricBasisStreak =>
-      'Streak: based on consecutive dates when the daily challenge was completed.';
+  String get recordsSummaryTotalCleared => 'Total cleared';
+
+  @override
+  String get recordsSummaryPerfectClears => 'Perfect clears';
+
+  @override
+  String get challengeMonthlyDescription =>
+      'Pick a date to replay a past challenge.';
+
+  @override
+  String get challengeTodayEyebrow => 'Today';
+
+  @override
+  String get gamePausedTitle => 'Paused';
+
+  @override
+  String get gamePausedBody => 'The timer is stopped and the board is hidden.';
+
+  @override
+  String homeStreakChip(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeStreakActive(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Solved a puzzle $count days in a row',
+      one: 'Solved a puzzle today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeStreakAtRisk(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count-day streak. Finish a puzzle today to keep it going.',
+      one: '1-day streak. Finish a puzzle today to keep it going.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get hintStepLookTitle => 'Hint · Where to look';
+
+  @override
+  String get hintLookCell =>
+      'Look at the row, column, and box of the highlighted cell.';
+
+  @override
+  String hintLookBox(int value) {
+    return 'Find where $value goes in the highlighted box.';
+  }
+
+  @override
+  String hintLookRow(int value) {
+    return 'Find where $value goes in the highlighted row.';
+  }
+
+  @override
+  String hintLookCol(int value) {
+    return 'Find where $value goes in the highlighted column.';
+  }
+
+  @override
+  String get hintMovedFromSelection =>
+      'There\'s an easier cell to solve first.';
+
+  @override
+  String get hintTechniqueNakedSingle => 'Naked single';
+
+  @override
+  String get hintTechniqueHiddenSingle => 'Hidden single';
+
+  @override
+  String get hintTechniqueReveal => 'Answer';
+
+  @override
+  String hintExplainNakedSingle(int value) {
+    return 'The row, column, and box of this cell already hold the other eight numbers, so only $value fits.';
+  }
+
+  @override
+  String hintExplainHiddenSingleBox(int value) {
+    return 'In this box, $value can only go here. Every other empty cell shares a row or column with a highlighted $value.';
+  }
+
+  @override
+  String hintExplainHiddenSingleRow(int value) {
+    return 'In this row, $value can only go here. Every other empty cell shares a column or box with a highlighted $value.';
+  }
+
+  @override
+  String hintExplainHiddenSingleCol(int value) {
+    return 'In this column, $value can only go here. Every other empty cell shares a row or box with a highlighted $value.';
+  }
+
+  @override
+  String get hintExplainReveal =>
+      'This cell needs a more advanced technique. You can fill in the answer below.';
+
+  @override
+  String get hintNextStep => 'Tell me more';
+
+  @override
+  String get hintFillAnswer => 'Fill in answer';
+
+  @override
+  String get hintClose => 'Close hint';
+
+  @override
+  String get notificationOptInTitle => 'Want a daily puzzle reminder?';
+
+  @override
+  String get notificationOptInBody =>
+      'If you haven\'t solved a puzzle by 8 PM, we\'ll remind you. You can turn this off anytime in Settings.';
+
+  @override
+  String get notificationOptInAccept => 'Turn on reminders';
+
+  @override
+  String get notificationOptInLater => 'Not now';
+
+  @override
+  String get notificationOptInDenied =>
+      'Notifications aren\'t allowed. Allow them in your device settings, then turn reminders on in Settings.';
+
+  @override
+  String get notificationSetupFailed =>
+      'We couldn\'t set up reminders. Please try again later in Settings.';
+
+  @override
+  String get beginnerTutorialPromptTitle => 'New to Sudoku?';
+
+  @override
+  String get beginnerTutorialPromptBody =>
+      'Try a quick, guided practice puzzle before you start solving — it only takes a minute.';
+
+  @override
+  String get beginnerTutorialStart => 'Start the guide';
+
+  @override
+  String get beginnerTutorialSkip => 'Skip';
+
+  @override
+  String beginnerTutorialStepIndicator(int current, int total) {
+    return 'Step $current of $total';
+  }
+
+  @override
+  String get beginnerTutorialStepRowTitle => 'Rule: rows';
+
+  @override
+  String get beginnerTutorialStepRowBody =>
+      'Each row must contain every number from 1 to 9, with no repeats.';
+
+  @override
+  String get beginnerTutorialStepColumnTitle => 'Rule: columns';
+
+  @override
+  String get beginnerTutorialStepColumnBody =>
+      'Each column must also contain every number from 1 to 9, with no repeats.';
+
+  @override
+  String get beginnerTutorialStepBoxTitle => 'Rule: 3×3 boxes';
+
+  @override
+  String get beginnerTutorialStepBoxBody =>
+      'Each 3×3 box must contain every number from 1 to 9, with no repeats.';
+
+  @override
+  String get beginnerTutorialStepInputTitle => 'Enter a number';
+
+  @override
+  String get beginnerTutorialStepInputBody =>
+      'Only one number can go in this highlighted cell. Tap the cell, then tap the correct number.';
+
+  @override
+  String get beginnerTutorialStepInputWrongHint =>
+      'That number is already used in this row, column, or box. Try another number.';
+
+  @override
+  String get beginnerTutorialStepMemoTitle => 'Notes and erasing';
+
+  @override
+  String get beginnerTutorialStepMemoAddBody =>
+      'Turn on Notes, tap this cell, then tap a candidate number to jot it down.';
+
+  @override
+  String get beginnerTutorialStepMemoEraseBody =>
+      'Now tap that same number again to erase the note.';
+
+  @override
+  String get beginnerTutorialStepHintTitle => 'Hints';
+
+  @override
+  String get beginnerTutorialStepHintBody =>
+      'Tap Hint to see where to look and why, without spending one of your real hints.';
+
+  @override
+  String get beginnerTutorialStepHintButton => 'Open hint';
+
+  @override
+  String get beginnerTutorialStepDoneTitle => 'You\'re ready!';
+
+  @override
+  String get beginnerTutorialStepDoneBody =>
+      'You\'ve learned the basics: rows, columns, boxes, entering numbers, notes, and hints.';
+
+  @override
+  String get beginnerTutorialFirstPuzzleButton => 'Start my first puzzle';
+
+  @override
+  String get beginnerTutorialNextButton => 'Next';
+
+  @override
+  String get beginnerTutorialCloseButton => 'Done';
+
+  @override
+  String get settingsHowToPlayTitle => 'How to play';
+
+  @override
+  String get settingsHowToPlaySubtitle => 'Replay the guided tutorial';
+
+  @override
+  String get autoNotesConfirmTitle => 'Refill all notes?';
+
+  @override
+  String get autoNotesConfirmBody =>
+      'This replaces every blank cell\'s notes with the current candidates. Candidates you removed by hand may reappear.';
+
+  @override
+  String get autoNotesConfirmApply => 'Refill notes';
+
+  @override
+  String get autoNotesContradictionMessage =>
+      'Some cells have no possible number left, so notes were not filled in. Check your entries and try again.';
+
+  @override
+  String get autoNotesTipMessage =>
+      'Tip: long-press Notes to fill in all candidate numbers at once.';
+
+  @override
+  String get gameMemoLongPressHint =>
+      'Tap to toggle Notes. Long-press to auto-fill candidate notes.';
+
+  @override
+  String get challengeMonthlyTitle => 'Challenge history';
+
+  @override
+  String get challengePreviousMonth => 'Previous month';
+
+  @override
+  String get challengeBackToCurrentMonth => 'This month';
+
+  @override
+  String get challengeStatusNotCompleted => 'Not completed';
+
+  @override
+  String get challengeStatusInProgress => 'In progress';
+
+  @override
+  String get challengeStatusCompleted => 'Completed';
+
+  @override
+  String get challengeStatusPerfect => 'Perfect clear';
+
+  @override
+  String get challengeStatusFuture => 'Not available yet';
+
+  @override
+  String get challengeMonthComplete => 'Monthly complete';
+
+  @override
+  String get challengeStartPastChallenge => 'Start past challenge';
+
+  @override
+  String get challengeResumePastChallenge => 'Resume past challenge';
+
+  @override
+  String get challengeRetryPastChallenge => 'Retry past challenge';
+
+  @override
+  String get challengePuzzleLoadFailed => 'Couldn\'t load this puzzle.';
+
+  @override
+  String get challengeCalendarLoadError =>
+      'Unable to load the challenge calendar.';
+
+  @override
+  String get challengeStreakExcludedNote =>
+      'Completing a past challenge doesn\'t count toward your streak';
+
+  @override
+  String challengeDayCellSemantics(String date, String status) {
+    return '$date, $status';
+  }
+
+  @override
+  String get homeGreetingMorning => 'Start with a light puzzle.';
+
+  @override
+  String get homeGreetingAfternoon => 'A focused puzzle fits now.';
+
+  @override
+  String get homeGreetingEvening => 'Wind down with a calm puzzle.';
+
+  @override
+  String get levelNoPuzzlesAvailable =>
+      'No puzzles are available for this level.';
+
+  @override
+  String get levelLastPlayedToday => 'Today';
+
+  @override
+  String get levelLastPlayedYesterday => 'Yesterday';
+
+  @override
+  String levelLastPlayedDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days ago',
+      one: '1 day ago',
+    );
+    return '$_temp0';
+  }
 }

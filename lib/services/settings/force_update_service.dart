@@ -27,14 +27,12 @@ class ForceUpdateService {
   // 서로 덮어쓰지 않도록 japan은 별도 키를 씁니다.
   static String get _minVersionIosKey =>
       AppConfig.isJapan ? 'min_version_ios_japan' : 'min_version_ios';
-  static String get _minVersionAndroidKey => AppConfig.isJapan
-      ? 'min_version_android_japan'
-      : 'min_version_android';
+  static String get _minVersionAndroidKey =>
+      AppConfig.isJapan ? 'min_version_android_japan' : 'min_version_android';
   static String get _updateUrlIosKey =>
       AppConfig.isJapan ? 'update_url_ios_japan' : 'update_url_ios';
-  static String get _updateUrlAndroidKey => AppConfig.isJapan
-      ? 'update_url_android_japan'
-      : 'update_url_android';
+  static String get _updateUrlAndroidKey =>
+      AppConfig.isJapan ? 'update_url_android_japan' : 'update_url_android';
 
   Future<ForceUpdateInfo?> checkForUpdate() async {
     try {
@@ -52,7 +50,9 @@ class ForceUpdateService {
         _updateUrlIosKey: '',
         _updateUrlAndroidKey: '',
       });
-      await remoteConfig.fetchAndActivate().timeout(const Duration(seconds: 10));
+      await remoteConfig
+          .fetchAndActivate()
+          .timeout(const Duration(seconds: 10));
 
       final minVersion = remoteConfig
           .getString(Platform.isIOS ? _minVersionIosKey : _minVersionAndroidKey)

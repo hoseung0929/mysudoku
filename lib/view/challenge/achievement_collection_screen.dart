@@ -5,7 +5,10 @@ import 'package:sudoku159/services/challenge/achievement_service.dart';
 import 'package:sudoku159/widgets/custom_app_bar.dart';
 
 class AchievementCollectionScreen extends StatefulWidget {
-  const AchievementCollectionScreen({super.key});
+  const AchievementCollectionScreen({super.key, this.achievementService});
+
+  /// 테스트에서 서비스를 대체하기 위한 선택적 주입. 기본값은 실제 구현.
+  final AchievementService? achievementService;
 
   @override
   State<AchievementCollectionScreen> createState() =>
@@ -14,7 +17,8 @@ class AchievementCollectionScreen extends StatefulWidget {
 
 class _AchievementCollectionScreenState
     extends State<AchievementCollectionScreen> {
-  final AchievementService _achievementService = AchievementService();
+  late final AchievementService _achievementService =
+      widget.achievementService ?? AchievementService();
   bool _isLoading = true;
   AchievementSummary? _summary;
   _BadgeFilter _filter = _BadgeFilter.all;
@@ -96,6 +100,7 @@ class _AchievementCollectionScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: CustomAppBar(
@@ -116,10 +121,18 @@ class _AchievementCollectionScreenState
                       const SizedBox(height: 16),
                       _buildControls(l10n),
                       const SizedBox(height: 16),
-                      _BadgeSection(
-                        title: _sectionTitle(l10n),
-                        badges: _visibleBadges,
-                        emptyMessage: _emptyMessage(l10n),
+                      AnimatedSwitcher(
+                        duration: reduceMotion
+                            ? Duration.zero
+                            : const Duration(milliseconds: 130),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeOutCubic,
+                        child: _BadgeSection(
+                          key: ValueKey('${_filter.name}-${_sort.name}'),
+                          title: _sectionTitle(l10n),
+                          badges: _visibleBadges,
+                          emptyMessage: _emptyMessage(l10n),
+                        ),
                       ),
                     ],
                   ),
@@ -294,9 +307,8 @@ class _CollectionHero extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 10,
-              backgroundColor: isDark
-                  ? const Color(0xFF2C1E00)
-                  : const Color(0xFFF5E8BE),
+              backgroundColor:
+                  isDark ? const Color(0xFF2C1E00) : const Color(0xFFF5E8BE),
               valueColor:
                   const AlwaysStoppedAnimation<Color>(Color(0xFFDAA520)),
             ),
@@ -316,6 +328,7 @@ class _CollectionHero extends StatelessWidget {
 
 class _BadgeSection extends StatelessWidget {
   const _BadgeSection({
+    super.key,
     required this.title,
     required this.badges,
     required this.emptyMessage,

@@ -17,6 +17,7 @@ class WaddlingPenguinIcon extends StatefulWidget {
 class _WaddlingPenguinIconState extends State<WaddlingPenguinIcon>
     with SingleTickerProviderStateMixin {
   late final AnimationController _waddleController;
+  bool _reduceMotion = false;
 
   @override
   void initState() {
@@ -31,12 +32,32 @@ class _WaddlingPenguinIconState extends State<WaddlingPenguinIcon>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    if (reduceMotion == _reduceMotion) return;
+    _reduceMotion = reduceMotion;
+    if (reduceMotion) {
+      // 정적 이미지로 전환되는 동안에도 컨트롤러가 계속 도는 것을 막고,
+      // 정자세(0)로 되돌려 나중에 해제됐을 때 이전 위치에서 기울거나 뜬
+      // 채로 보이지 않게 한다.
+      _waddleController
+        ..stop()
+        ..value = 0;
+    } else if (widget.active) {
+      _waddleController.repeat();
+    }
+  }
+
+  @override
   void didUpdateWidget(covariant WaddlingPenguinIcon oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (_reduceMotion) return;
     if (widget.active && !oldWidget.active) {
       _waddleController.repeat();
     } else if (!widget.active && oldWidget.active) {
-      _waddleController.animateTo(0, duration: const Duration(milliseconds: 200));
+      _waddleController.animateTo(0,
+          duration: const Duration(milliseconds: 200));
     }
   }
 
@@ -49,7 +70,7 @@ class _WaddlingPenguinIconState extends State<WaddlingPenguinIcon>
   @override
   Widget build(BuildContext context) {
     // 동작 줄이기: 뒤뚱거림 없이 정지한 이미지로 보여준다.
-    if (MediaQuery.disableAnimationsOf(context)) {
+    if (_reduceMotion) {
       return Image.asset(
         'assets/images/character.png',
         width: widget.size,

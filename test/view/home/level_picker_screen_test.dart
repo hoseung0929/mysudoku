@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sudoku159/database/database_helper.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/model/sudoku_level.dart';
@@ -9,17 +10,50 @@ import 'package:sudoku159/services/game/game_state_service.dart';
 import 'package:sudoku159/theme/app_theme.dart';
 import 'package:sudoku159/utils/app_logger.dart';
 import 'package:sudoku159/view/home/level_picker_screen.dart';
+import 'package:sudoku159/view/sudoku_game/sudoku_game_screen.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:wakelock_plus_platform_interface/wakelock_plus_platform_interface.dart';
+
+class _NoopWakelockPlatform extends WakelockPlusPlatformInterface {
+  @override
+  Future<void> toggle({required bool enable}) async {}
+
+  @override
+  Future<bool> get enabled async => false;
+}
 
 final _level = SudokuLevel.levels.first;
+
+List<List<int>> _solution() => List.generate(
+      9,
+      (r) => List.generate(9, (c) => (r * 3 + r ~/ 3 + c) % 9 + 1),
+    );
+
+List<List<int>> _puzzle() {
+  final b = _solution();
+  for (var i = 0; i < _level.emptyCells; i++) {
+    b[i ~/ 9][i % 9] = 0;
+  }
+  return b;
+}
 
 class _FakeDb implements DatabaseHelper {
   @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError(invocation.memberName.toString());
 
-  _FakeDb(this.games, {this.cleared = const {}});
+  _FakeDb(
+    this.games, {
+    this.cleared = const {},
+    this.gameEntryGate,
+    this.failGameEntry = false,
+  });
   final List<int> games;
   final Set<int> cleared;
+  // 설정하면 getGameEntry가 이 Future가 끝날 때까지 대기한다(로딩 상태 테스트용).
+  final Future<void>? gameEntryGate;
+  // true면 getGameEntry가 null을 반환해 로딩 실패를 흉내낸다.
+  final bool failGameEntry;
 
   @override
   Future<List<int>> getGameNumbersForLevel(String levelName) async => games;
@@ -36,6 +70,20 @@ class _FakeDb implements DatabaseHelper {
         for (final n in cleared)
           {'game_number': n, 'clear_time': 125, 'level_name': levelName},
       ];
+
+  @override
+  Future<Map<String, dynamic>?> getGameEntry(
+    String levelName,
+    int gameNumber,
+  ) async {
+    if (gameEntryGate != null) await gameEntryGate;
+    if (failGameEntry) return null;
+    return {
+      'game_number': gameNumber,
+      'board': _puzzle(),
+      'solution': _solution(),
+    };
+  }
 }
 
 /// [saved]: 게임 번호 → (플레이어가 채운 칸 수, 메모 여부, 몇 분 전)
@@ -86,6 +134,11 @@ class _FakeStates extends GameStateService {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   AppLogger.setMuted(true);
+  wakelockPlusPlatformInstance = _NoopWakelockPlatform();
+
+  setUp(() => SharedPreferences.setMockInitialValues({
+        'beginner_tutorial_state_v1': 'completed',
+      }));
 
   Future<void> pumpPicker(
     WidgetTester tester, {
@@ -97,6 +150,9 @@ void main() {
     double textScale = 1.0,
     ThemeData? theme,
     Locale? locale,
+    bool reduceMotion = false,
+    Future<void>? gameEntryGate,
+    bool failGameEntry = false,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
@@ -109,13 +165,20 @@ void main() {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context)
-              .copyWith(textScaler: TextScaler.linear(textScale)),
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(textScale),
+            disableAnimations: reduceMotion,
+          ),
           child: child!,
         ),
         home: LevelPickerScreen(
           level: _level,
-          databaseHelper: _FakeDb(games, cleared: cleared),
+          databaseHelper: _FakeDb(
+            games,
+            cleared: cleared,
+            gameEntryGate: gameEntryGate,
+            failGameEntry: failGameEntry,
+          ),
           gameStateService: _FakeStates(saved, gate: gate),
         ),
       ),
@@ -323,5 +386,193 @@ void main() {
         tester.getTopLeft(find.text(label)).dy,
     ];
     expect(ys.toSet().length, lessThanOrEqualTo(2)); // 한 줄(길면 두 줄)
+  });
+
+  testWidgets('filter chip transition duration follows reduce motion',
+      (tester) async {
+    await pumpPicker(tester, games: games);
+    AnimatedContainer chipContainer() => tester.widget<AnimatedContainer>(
+          find.ancestor(
+            of: find.text('All 12'),
+            matching: find.byType(AnimatedContainer),
+          ),
+        );
+    expect(chipContainer().duration, const Duration(milliseconds: 150));
+
+    await pumpPicker(tester, games: games, reduceMotion: true);
+    expect(chipContainer().duration, Duration.zero);
+  });
+
+  group('card loading feedback', () {
+    testWidgets('loading indicator shows only on the tapped card; others dim',
+        (tester) async {
+      final gate = Completer<void>();
+      await pumpPicker(
+        tester,
+        games: [1, 2, 3],
+        gameEntryGate: gate.future,
+      );
+
+      await tester.tap(find.text('002'));
+      await tester.pump();
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      final openingOpacity = tester.widget<AnimatedOpacity>(
+        find.ancestor(
+          of: find.text('002'),
+          matching: find.byType(AnimatedOpacity),
+        ),
+      );
+      expect(openingOpacity.opacity, 1.0);
+      final otherOpacity = tester.widget<AnimatedOpacity>(
+        find.ancestor(
+          of: find.text('003'),
+          matching: find.byType(AnimatedOpacity),
+        ),
+      );
+      expect(otherOpacity.opacity, lessThan(1.0));
+      expect(otherOpacity.opacity, greaterThanOrEqualTo(0.72));
+
+      gate.complete();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets(
+        'confirm dialog for a completed puzzle does not start loading until confirmed',
+        (tester) async {
+      final gate = Completer<void>();
+      await pumpPicker(
+        tester,
+        games: [1, 2, 3],
+        cleared: {1},
+        gameEntryGate: gate.future,
+      );
+
+      await tester.tap(find.text('001').first);
+      await tester.pump();
+      // 확인 대화상자가 떠 있는 동안에는 로딩이 시작되지 않는다.
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+
+      await tester.tap(find.text('Replay'));
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+      gate.complete();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('in-progress limit dialog cancel leaves no stray loading state',
+        (tester) async {
+      await pumpPicker(
+        tester,
+        games: [1, 2, 3, 4, 5, 6, 7],
+        saved: {
+          1: (2, false, 5),
+          2: (2, false, 5),
+          3: (2, false, 5),
+          4: (2, false, 5),
+          5: (2, false, 5),
+        },
+      );
+
+      await tester.tap(find.text('006'));
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+
+      await tester.tap(find.text('Later'));
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      final opacity = tester.widget<AnimatedOpacity>(
+        find.ancestor(
+          of: find.text('007'),
+          matching: find.byType(AnimatedOpacity),
+        ),
+      );
+      expect(opacity.opacity, 1.0);
+    });
+
+    testWidgets('rapid taps on the same fresh card do not double-launch',
+        (tester) async {
+      final gate = Completer<void>();
+      await pumpPicker(
+        tester,
+        games: [1, 2, 3],
+        gameEntryGate: gate.future,
+      );
+
+      await tester.tap(find.text('002'));
+      await tester.tap(find.text('002'));
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+      gate.complete();
+      await tester.pumpAndSettle();
+      expect(find.byType(SudokuGameScreen), findsOneWidget);
+    });
+
+    testWidgets('a failed load clears the loading state and re-enables cards',
+        (tester) async {
+      await pumpPicker(
+        tester,
+        games: [1, 2, 3],
+        failGameEntry: true,
+      );
+
+      await tester.tap(find.text('002'));
+      await tester.pump();
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      final opacity = tester.widget<AnimatedOpacity>(
+        find.ancestor(
+          of: find.text('003'),
+          matching: find.byType(AnimatedOpacity),
+        ),
+      );
+      expect(opacity.opacity, 1.0);
+    });
+
+    testWidgets('returning from the game screen leaves no stray loading state',
+        (tester) async {
+      await pumpPicker(tester, games: [1, 2, 3]);
+
+      await tester.tap(find.text('002'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SudokuGameScreen), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      final opacity = tester.widget<AnimatedOpacity>(
+        find.ancestor(
+          of: find.text('002'),
+          matching: find.byType(AnimatedOpacity),
+        ),
+      );
+      expect(opacity.opacity, 1.0);
+    });
+
+    testWidgets('reduce motion: dimmed opacity applies with zero duration',
+        (tester) async {
+      final gate = Completer<void>();
+      await pumpPicker(
+        tester,
+        games: [1, 2, 3],
+        gameEntryGate: gate.future,
+        reduceMotion: true,
+      );
+
+      await tester.tap(find.text('002'));
+      await tester.pump();
+      final opacity = tester.widget<AnimatedOpacity>(
+        find.ancestor(
+          of: find.text('003'),
+          matching: find.byType(AnimatedOpacity),
+        ),
+      );
+      expect(opacity.duration, Duration.zero);
+
+      gate.complete();
+      await tester.pumpAndSettle();
+    });
   });
 }

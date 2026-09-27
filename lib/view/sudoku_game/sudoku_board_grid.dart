@@ -5,6 +5,7 @@ import 'package:sudoku159/presenter/game/sudoku_game_presenter.dart';
 import 'package:sudoku159/theme/app_colors.dart';
 import 'package:sudoku159/theme/app_theme.dart';
 import 'package:sudoku159/theme/level_status_colors.dart';
+import 'package:sudoku159/view/sudoku_game/game_effects_controller.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_memo_notes_grid.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_pencil_input_overlay.dart';
 
@@ -21,6 +22,11 @@ class SudokuBoardGrid extends StatelessWidget {
     this.highlightedMemoNumber,
     required this.onCellTapped,
     this.onPencilDigit,
+    this.hintRegionCells = const {},
+    this.hintBlockerCells = const {},
+    this.hintTargetCell,
+    this.undoActive = const {},
+    this.hintAppliedActive = const {},
   });
 
   final SudokuGamePresenter presenter;
@@ -34,6 +40,17 @@ class SudokuBoardGrid extends StatelessWidget {
   // 아이패드 애플펜슬 필기 입력 콜백 (선택 사항). null이면(기본값, 아이폰
   // 호출부) 오버레이 자체를 만들지 않아 기존 동작과 완전히 동일하다.
   final void Function(int digit)? onPencilDigit;
+
+  // 힌트 설명 중 강조할 칸(칸 번호 = row * 9 + col). 비어 있으면 평소와 같다.
+  final Set<int> hintRegionCells;
+  final Set<int> hintBlockerCells;
+  final int? hintTargetCell;
+
+  // 되돌리기 결과 칸 강조('$row,$col' 키, 항상 최대 1개 true).
+  final Map<String, bool> undoActive;
+
+  // 힌트로 채운 칸 강조('$row,$col' 키, 항상 최대 1개 true).
+  final Map<String, bool> hintAppliedActive;
 
   @override
   Widget build(BuildContext context) {
@@ -77,6 +94,23 @@ class SudokuBoardGrid extends StatelessWidget {
     final singleCandidateColor = isDark
         ? const Color(0xFF3A3020)
         : AppTheme.yellowColor.withValues(alpha: 0.16);
+    final hintRegionColor =
+        isDark ? const Color(0xFF3A331C) : const Color(0xFFFFF0C2);
+    final hintBlockerColor =
+        isDark ? const Color(0xFF6A5520) : const Color(0xFFF6CD5C);
+    const hintTargetBorderColor = Color(0xFFE0A526);
+    // 되돌리기 강조: 선택 배경(0.14~0.25)보다 진하지만 정답·오답 강조보다
+    // 세지 않은 옅은 보라. 정답·오답·줄 완성 색과 겹치지 않는 별도 키로 관리한다.
+    final undoHighlightColor = isDark
+        ? levelPalette.primaryPurple.withValues(alpha: 0.32)
+        : levelPalette.primaryPurple.withValues(alpha: 0.24);
+    // 힌트로 채운 칸 강조: 보드 안 힌트 숫자 색(파란 계열)과 어울리되 배경으로
+    // 쓰기엔 채도를 낮춘 톤. 정답(민트)·오답(핑크)·줄 완성(노랑)·되돌리기(보라)와
+    // 겹치지 않는 별도 키로 관리한다.
+    final hintAppliedColor = isDark
+        ? const Color(0xFF2E4A57).withValues(alpha: 0.75)
+        : const Color(0xFFDCEAF0);
+    final isHintActive = hintRegionCells.isNotEmpty;
     final digitOnBoard = cs.onSurface;
     final selectedRow = presenter.selectedRow;
     final selectedCol = presenter.selectedCol;
@@ -86,6 +120,19 @@ class SudokuBoardGrid extends StatelessWidget {
     final highlightedMemo = enableMemoHighlights
         ? (selectedValue == 0 ? highlightedMemoNumber : selectedValue)
         : null;
+
+    // 동작 줄이기: 선택·정답·오답 상태를 즉시 반영하고 이동은 만들지 않는다
+    // (흔들림 자체는 컨트롤러가 오프셋을 채우지 않아 이미 생략된다).
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final baseTransitionDuration =
+        reduceMotion ? Duration.zero : const Duration(milliseconds: 90);
+    final effectTransitionDuration =
+        reduceMotion ? Duration.zero : GameEffectsController.effectFadeDuration;
+    // 힌트 영역·블로커 강조 전용(공통 모션 규칙의 "선택 상태 변경" 범위,
+    // 120~160ms). 선택 등 기본 배경(baseTransitionDuration, 100ms 이내)과는
+    // 별개 레이어라 서로의 속도를 바꾸지 않는다.
+    final hintTransitionDuration =
+        reduceMotion ? Duration.zero : const Duration(milliseconds: 140);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -115,7 +162,13 @@ class SudokuBoardGrid extends StatelessWidget {
                     final isFixed = presenter.isCellFixed(row, col);
                     final isSelected = presenter.isCellSelected(row, col);
                     final isSameNumber = presenter.isSameNumber(row, col);
-                    final isRelated = presenter.isRelated(row, col);
+                    final cellIndex = row * 9 + col;
+                    final isHintRegion = hintRegionCells.contains(cellIndex);
+                    final isHintBlocker = hintBlockerCells.contains(cellIndex);
+                    final isHintTarget = hintTargetCell == cellIndex;
+                    // 힌트 중에는 선택 칸 주변 강조를 끄고 힌트 영역만 보여 준다.
+                    final isRelated =
+                        !isHintActive && presenter.isRelated(row, col);
                     final isWrong = presenter.isWrongNumber(row, col);
                     final isHint = presenter.isHintCell(row, col);
                     final notes = presenter.getCellNotes(row, col);
@@ -137,6 +190,9 @@ class SudokuBoardGrid extends StatelessWidget {
                     final isLineComplete =
                         lineCompleteActive['$row,$col'] == true;
                     final isErrorActive = errorActive['$row,$col'] == true;
+                    final isUndoActive = undoActive['$row,$col'] == true;
+                    final isHintApplied =
+                        hintAppliedActive['$row,$col'] == true;
                     final horizontalOffset = errorOffset['$row,$col'] ?? 0.0;
 
                     final l10n = AppLocalizations.of(context)!;
@@ -162,23 +218,36 @@ class SudokuBoardGrid extends StatelessWidget {
                         onTap: () => onCellTapped(row, col),
                         child: GestureDetector(
                           onTap: () => onCellTapped(row, col),
-                          child: AnimatedSlide(
-                            duration: const Duration(milliseconds: 36),
-                            offset: Offset(horizontalOffset / 48, 0),
+                          // 흔들림은 자식 크기에 비례하는 AnimatedSlide 대신
+                          // 실제 픽셀 값을 그대로 옮겨, 칸 크기가 달라지는
+                          // 아이폰·아이패드에서 이동 폭이 항상 동일하게 한다.
+                          // 키프레임을 그대로 반영하므로 별도 보간은 두지
+                          // 않는다(취소·종료 시 오프셋이 0으로 즉시 복귀).
+                          child: Transform.translate(
+                            offset: Offset(horizontalOffset, 0),
                             child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
+                              key: ValueKey('cell-base-$row-$col'),
+                              duration: baseTransitionDuration,
+                              curve: Curves.easeOut,
                               // 성공·오답 강조가 선택 배경색을 덮어도 선택 칸은 테두리로 남긴다.
-                              foregroundDecoration: isSelected &&
-                                      (isWave ||
-                                          isLineComplete ||
-                                          isErrorActive)
+                              foregroundDecoration: isHintTarget
                                   ? BoxDecoration(
                                       border: Border.all(
-                                        color: levelPalette.primaryPurple,
-                                        width: 2,
+                                        color: hintTargetBorderColor,
+                                        width: 2.5,
                                       ),
                                     )
-                                  : null,
+                                  : isSelected &&
+                                          (isWave ||
+                                              isLineComplete ||
+                                              isErrorActive)
+                                      ? BoxDecoration(
+                                          border: Border.all(
+                                            color: levelPalette.primaryPurple,
+                                            width: 2,
+                                          ),
+                                        )
+                                      : null,
                               decoration: BoxDecoration(
                                 border: Border(
                                   top: BorderSide(
@@ -214,68 +283,112 @@ class SudokuBoardGrid extends StatelessWidget {
                                         : 0.35,
                                   ),
                                 ),
-                                color: isErrorActive
-                                    ? errorActiveCellColor
-                                    : isWave
-                                        ? waveCellColor
-                                        : isLineComplete
-                                            ? lineCompleteCellColor
-                                            : isSelected
-                                                ? selectedCellColor
-                                                : isWrong
-                                                    ? wrongCellColor
-                                                    : isSameNumber
-                                                        ? sameNumberColor
-                                                        : isHiddenSingleForHighlightedMemo
-                                                            ? hiddenSingleColor
-                                                            : hasHighlightedMemoCandidate
-                                                                ? memoHighlightColor
-                                                                : isSingleCandidateCell
-                                                                    ? singleCandidateColor
-                                                                    : isRelated
-                                                                        ? relatedFill
-                                                                        : null,
+                                // 성공·오답 강조는 별도의 빠른 오버레이로 그려
+                                // 여기서는 선택·오답 확정·관련 칸 등 시간에
+                                // 덜 민감한 배경만 담당한다.
+                                color: isSelected
+                                    ? selectedCellColor
+                                    : isWrong
+                                        ? wrongCellColor
+                                        : isSameNumber
+                                            ? sameNumberColor
+                                            : isHiddenSingleForHighlightedMemo
+                                                ? hiddenSingleColor
+                                                : hasHighlightedMemoCandidate
+                                                    ? memoHighlightColor
+                                                    : isSingleCandidateCell
+                                                        ? singleCandidateColor
+                                                        : isRelated
+                                                            ? relatedFill
+                                                            : null,
                               ),
-                              child: Center(
-                                child: value != 0
-                                    ? Text(
-                                        value.toString(),
-                                        style: isWrong
-                                            ? AppTheme.sudokuWrongNumberStyle
-                                                .copyWith(
-                                                fontSize: digitFontSize,
-                                              )
-                                            : isFixed
-                                                ? GoogleFonts.notoSans(
+                              child: Stack(
+                                children: [
+                                  // 힌트 영역·블로커 강조: 선택 등 기본 배경과
+                                  // 별개 레이어라 각자의 전환 시간을 그대로
+                                  // 지킨다(기본 배경은 100ms 이내, 이 레이어는
+                                  // 120~160ms 범위).
+                                  Positioned.fill(
+                                    child: AnimatedContainer(
+                                      key: ValueKey('cell-hint-$row-$col'),
+                                      duration: hintTransitionDuration,
+                                      curve: Curves.easeOut,
+                                      color: isHintBlocker
+                                          ? hintBlockerColor
+                                          : isHintRegion
+                                              ? hintRegionColor
+                                              : Colors.transparent,
+                                    ),
+                                  ),
+                                  // 정답·오답·줄 완성 색은 기본 배경과 분리된
+                                  // 자신만의 짧은 전환 시간을 써서, 컨트롤러의
+                                  // 대기 시간에 위젯 전환 시간이 더해지며 전체
+                                  // 지속 시간이 늘어나지 않게 한다.
+                                  Positioned.fill(
+                                    child: AnimatedContainer(
+                                      key: ValueKey('cell-effect-$row-$col'),
+                                      duration: effectTransitionDuration,
+                                      curve: Curves.easeOut,
+                                      color: isErrorActive
+                                          ? errorActiveCellColor
+                                          : isWave
+                                              ? waveCellColor
+                                              : isLineComplete
+                                                  ? lineCompleteCellColor
+                                                  : isHintApplied
+                                                      ? hintAppliedColor
+                                                      : isUndoActive
+                                                          ? undoHighlightColor
+                                                          : Colors.transparent,
+                                    ),
+                                  ),
+                                  Center(
+                                    child: value != 0
+                                        ? Text(
+                                            value.toString(),
+                                            style: isWrong
+                                                ? AppTheme
+                                                    .sudokuWrongNumberStyle
+                                                    .copyWith(
                                                     fontSize: digitFontSize,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: digitOnBoard,
                                                   )
-                                                : isHint
+                                                : isFixed
                                                     ? GoogleFonts.notoSans(
                                                         fontSize: digitFontSize,
                                                         fontWeight:
-                                                            FontWeight.w600,
-                                                        color: const Color(
-                                                            0xFF457B9D),
+                                                            FontWeight.bold,
+                                                        color: digitOnBoard,
                                                       )
-                                                    : GoogleFonts.notoSans(
-                                                        fontSize: digitFontSize,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                        color: context.colors
-                                                            .boardUserNumber,
-                                                      ),
-                                      )
-                                    : SudokuMemoNotesGrid(
-                                        notes: notes,
-                                        highlightedNote: highlightedMemo,
-                                        isSingleCandidate:
-                                            isSingleCandidateCell,
-                                        isHiddenSingleCandidate:
-                                            isHiddenSingleForHighlightedMemo,
-                                        cellExtent: memoCellExtent,
-                                      ),
+                                                    : isHint
+                                                        ? GoogleFonts.notoSans(
+                                                            fontSize:
+                                                                digitFontSize,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            color: const Color(
+                                                                0xFF457B9D),
+                                                          )
+                                                        : GoogleFonts.notoSans(
+                                                            fontSize:
+                                                                digitFontSize,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            color: context
+                                                                .colors
+                                                                .boardUserNumber,
+                                                          ),
+                                          )
+                                        : SudokuMemoNotesGrid(
+                                            notes: notes,
+                                            highlightedNote: highlightedMemo,
+                                            isSingleCandidate:
+                                                isSingleCandidateCell,
+                                            isHiddenSingleCandidate:
+                                                isHiddenSingleForHighlightedMemo,
+                                            cellExtent: memoCellExtent,
+                                          ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),

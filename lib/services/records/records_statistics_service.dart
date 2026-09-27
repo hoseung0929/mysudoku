@@ -14,6 +14,7 @@ class RecordsStatisticsData {
   final List<Map<String, dynamic>> levels;
   final List<Map<String, dynamic>> recent;
   final Map<String, dynamic> activitySummary;
+
   /// 히트맵 표시 범위에 해당하는 클리어 이벤트
   final List<Map<String, dynamic>> events;
 }
@@ -39,7 +40,8 @@ class RecordsStatisticsService {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final currentWeekStart = today.subtract(Duration(days: today.weekday - 1));
-    final heatmapStartWeek = currentWeekStart.subtract(const Duration(days: 175));
+    final heatmapStartWeek =
+        currentWeekStart.subtract(const Duration(days: 175));
 
     final List<Map<String, dynamic>> recent;
     if (selectedPeriodDays == 0) {
@@ -545,7 +547,8 @@ class RecordsStatisticsService {
     int currentStreakDays = 0;
     final startOffset = playedDays.contains(_formatDate(today)) ? 0 : 1;
     while (playedDays.contains(
-      _formatDate(today.subtract(Duration(days: startOffset + currentStreakDays))),
+      _formatDate(
+          today.subtract(Duration(days: startOffset + currentStreakDays))),
     )) {
       currentStreakDays++;
     }

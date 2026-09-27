@@ -149,7 +149,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 800));
 
       // 인식 후 필드는 즉시 비워진다.
-      expect(tester.widget<TextField>(find.byType(TextField)).controller!.text, '');
+      expect(tester.widget<TextField>(find.byType(TextField)).controller!.text,
+          '');
       expect(tester.takeException(), isNull);
     },
   );

@@ -252,7 +252,8 @@ void main() {
       expect(presenter.getCellValue(0, 1), 3);
     });
 
-    test('clearCellValue removes a wrong input without changing wrong count', () {
+    test('clearCellValue removes a wrong input without changing wrong count',
+        () {
       presenter.selectCell(0, 1);
       presenter.setSelectedCellValue(4);
 

@@ -3,6 +3,7 @@ import 'package:sudoku159/services/settings/app_settings_service.dart';
 
 class SettingsState {
   const SettingsState({
+    required this.notificationsEnabled,
     required this.isVibrationEnabled,
     required this.keepScreenAwake,
     required this.oneHandModeEnabled,
@@ -10,6 +11,7 @@ class SettingsState {
     required this.themeMode,
   });
 
+  final bool notificationsEnabled;
   final bool isVibrationEnabled;
   final bool keepScreenAwake;
   final bool oneHandModeEnabled;
@@ -17,6 +19,7 @@ class SettingsState {
   final ThemeMode themeMode;
 
   SettingsState copyWith({
+    bool? notificationsEnabled,
     bool? isVibrationEnabled,
     bool? keepScreenAwake,
     bool? oneHandModeEnabled,
@@ -24,6 +27,7 @@ class SettingsState {
     ThemeMode? themeMode,
   }) {
     return SettingsState(
+      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       isVibrationEnabled: isVibrationEnabled ?? this.isVibrationEnabled,
       keepScreenAwake: keepScreenAwake ?? this.keepScreenAwake,
       oneHandModeEnabled: oneHandModeEnabled ?? this.oneHandModeEnabled,
@@ -33,6 +37,7 @@ class SettingsState {
   }
 
   static const SettingsState initial = SettingsState(
+    notificationsEnabled: AppSettingsService.notificationsEnabledDefault,
     isVibrationEnabled: true,
     keepScreenAwake: false,
     oneHandModeEnabled: false,
@@ -49,6 +54,10 @@ class SettingsController {
   final AppSettingsService _settingsService;
 
   Future<SettingsState> load() async {
+    final notificationsEnabled = await _settingsService.getBool(
+      AppSettingsService.notificationsEnabledKey,
+      defaultValue: AppSettingsService.notificationsEnabledDefault,
+    );
     final vibrationEnabled = await _settingsService.getBool(
       AppSettingsService.vibrationEnabledKey,
       defaultValue: true,
@@ -71,12 +80,30 @@ class SettingsController {
     );
 
     return SettingsState(
+      notificationsEnabled: notificationsEnabled,
       isVibrationEnabled: vibrationEnabled,
       keepScreenAwake: keepScreenAwake,
       oneHandModeEnabled: oneHandModeEnabled,
       memoHighlightEnabled: memoHighlightEnabled,
-      themeMode: ThemeMode.values[themeModeIndex.clamp(0, ThemeMode.values.length - 1)],
+      themeMode: ThemeMode
+          .values[themeModeIndex.clamp(0, ThemeMode.values.length - 1)],
     );
+  }
+
+  Future<SettingsState> setNotificationsEnabled(
+    SettingsState state,
+    bool value,
+  ) async {
+    await _settingsService.setBool(
+      AppSettingsService.notificationsEnabledKey,
+      value,
+    );
+    // 설정에서 직접 선택했으면 첫 완료 후 알림 안내를 다시 띄우지 않는다.
+    await _settingsService.setBool(
+      AppSettingsService.notificationOptInPromptSeenKey,
+      true,
+    );
+    return state.copyWith(notificationsEnabled: value);
   }
 
   Future<SettingsState> setVibrationEnabled(

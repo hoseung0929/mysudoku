@@ -11,8 +11,10 @@ import 'package:sudoku159/model/sudoku_level.dart';
 import 'package:sudoku159/navigation/app_page_route.dart';
 import 'package:sudoku159/services/game/game_state_service.dart';
 import 'package:sudoku159/services/home/level_progress_service.dart';
+import 'package:sudoku159/services/onboarding/beginner_tutorial_service.dart';
 import 'package:sudoku159/theme/level_status_colors.dart';
 import 'package:sudoku159/utils/time_format.dart';
+import 'package:sudoku159/view/onboarding/beginner_tutorial_screen.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_game_screen.dart';
 
 enum _PuzzleFilter { all, fresh, inProgress, completed }
@@ -26,6 +28,7 @@ class LevelPickerScreen extends StatefulWidget {
   final DatabaseHelper? databaseHelper;
   final GameStateService? gameStateService;
   final LevelProgressService? levelProgressService;
+  final BeginnerTutorialService? tutorialService;
 
   const LevelPickerScreen({
     super.key,
@@ -33,6 +36,7 @@ class LevelPickerScreen extends StatefulWidget {
     this.databaseHelper,
     this.gameStateService,
     this.levelProgressService,
+    this.tutorialService,
   });
 
   @override
@@ -49,6 +53,8 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
       widget.gameStateService ?? GameStateService();
   late final DatabaseHelper _dbHelper =
       widget.databaseHelper ?? DatabaseHelper();
+  late final BeginnerTutorialService _tutorialService =
+      widget.tutorialService ?? BeginnerTutorialService();
   final Map<String, List<int>> _gameCache = {};
   final Map<String, Future<List<int>>> _gameFutureCache = {};
   final Map<String, Map<int, SudokuGame>> _playGameCache = {};
@@ -62,6 +68,8 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
   _PuzzleFilter _selectedFilter = _PuzzleFilter.all;
   bool _isGameTransitioning = false;
   bool _selectionInFlight = false;
+  // 실제 퍼즐 로딩이 시작된 카드 번호(확인/한도 대화상자가 떠 있는 동안은 null).
+  int? _openingGameNumber;
   // 저장 상태(진행 중·완료 기록) 로딩이 끝난 레벨. 끝나기 전에는 목록·시작 버튼을
   // 확정 표시하지 않는다.
   final Set<String> _metadataReady = <String>{};
@@ -228,8 +236,16 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
       if (!mounted || picked == null) return;
       return _startGame(picked, level);
     }
+    if (kind == _PuzzleCardKind.fresh &&
+        level.name == SudokuLevel.levels.first.name) {
+      final shouldContinue = await _maybeShowBeginnerTutorial();
+      if (!mounted || !shouldContinue) return;
+    }
 
-    setState(() => _isGameTransitioning = true);
+    setState(() {
+      _isGameTransitioning = true;
+      _openingGameNumber = gameNumber;
+    });
     final game = await _loadGameForPlay(level.name, gameNumber);
     if (!mounted) return;
     if (game == null) {
@@ -238,9 +254,13 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
             content: Text(AppLocalizations.of(context)!.recordsGameLoadError)),
       );
       if (mounted) {
-        setState(() => _isGameTransitioning = false);
+        setState(() {
+          _isGameTransitioning = false;
+          _openingGameNumber = null;
+        });
       } else {
         _isGameTransitioning = false;
+        _openingGameNumber = null;
       }
       return;
     }
@@ -273,9 +293,13 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
       if (mounted) setState(() {});
     } finally {
       if (mounted) {
-        setState(() => _isGameTransitioning = false);
+        setState(() {
+          _isGameTransitioning = false;
+          _openingGameNumber = null;
+        });
       } else {
         _isGameTransitioning = false;
+        _openingGameNumber = null;
       }
     }
   }
@@ -301,6 +325,49 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
         );
       },
     );
+  }
+
+  /// 초급 새 문제를 처음 시작할 때만 가이드 선택 안내를 보여준다. 건너뛰면
+  /// 다시 묻지 않고(dismissed로 저장) true를 돌려줘 원래 문제를 그대로 연다.
+  /// 가이드를 시작해 완료(또는 중간에 닫아도) 화면에서 돌아오면 역시 true를
+  /// 돌려줘 원래 선택한 문제를 연다. 반환값이 false면 아무것도 하지 않는다
+  /// (이 함수 자체는 항상 true를 반환하지만, mounted 가드를 위해 bool로 둔다).
+  Future<bool> _maybeShowBeginnerTutorial() async {
+    final state = await _tutorialService.getState();
+    if (!mounted) return false;
+    if (state != BeginnerTutorialState.unseen) return true;
+
+    final l10n = AppLocalizations.of(context)!;
+    final startGuide = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.beginnerTutorialPromptTitle),
+        content: Text(l10n.beginnerTutorialPromptBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.beginnerTutorialSkip),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.beginnerTutorialStart),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return false;
+    if (startGuide != true) {
+      await _tutorialService.markDismissed();
+      return mounted;
+    }
+    await Navigator.push(
+      context,
+      buildAppPageRoute(
+        builder: (context) =>
+            BeginnerTutorialScreen(tutorialService: _tutorialService),
+      ),
+    );
+    return mounted;
   }
 
   Future<int?> _showInProgressLimitDialog() {
@@ -460,13 +527,8 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
           return _buildStateMessage(l10n.levelLoadingGames, showSpinner: true);
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          final lc = Localizations.localeOf(context).languageCode;
           return _buildStateMessage(
-            lc == 'ko'
-                ? '선택 가능한 게임이 없습니다.'
-                : lc == 'ja'
-                    ? 'このレベルのパズルがありません。'
-                    : 'No puzzles are available for this level.',
+            l10n.levelNoPuzzlesAvailable,
             icon: Icons.inbox_outlined,
           );
         }
@@ -886,7 +948,9 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
       child: GestureDetector(
         onTap: () => _selectFilter(filter),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 150),
           constraints: const BoxConstraints(minHeight: 44),
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
@@ -1082,104 +1146,131 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
       semanticsDetail == null ? statusText : '$statusText, $semanticsDetail',
     );
 
-    return Semantics(
-      button: true,
-      enabled: !(_isGameTransitioning || _selectionInFlight),
-      label: semanticsLabel,
-      excludeSemantics: true,
-      child: _InteractiveTile(
-        onTap: _isGameTransitioning || _selectionInFlight
-            ? null
-            : () => _onGameSelected(gameNumber, widget.level),
-        child: Container(
-          clipBehavior: Clip.hardEdge,
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: borderColor, width: borderWidth),
-          ),
-          child: Stack(
-            children: [
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          numberText,
-                          style: TextStyle(
-                            fontSize: 19,
-                            fontWeight: isFresh
-                                ? FontWeight.w400
-                                : isCompleted
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
-                            color: textColor,
-                            height: 1.1,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                        if (isInProgress)
+    final isOpening = _openingGameNumber == gameNumber;
+    final isDimmedByOtherOpening = _openingGameNumber != null && !isOpening;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+
+    return AnimatedOpacity(
+      duration:
+          reduceMotion ? Duration.zero : const Duration(milliseconds: 140),
+      curve: Curves.easeOutCubic,
+      opacity: isDimmedByOtherOpening ? 0.75 : 1.0,
+      child: Semantics(
+        button: true,
+        enabled: !(_isGameTransitioning || _selectionInFlight),
+        label: semanticsLabel,
+        excludeSemantics: true,
+        child: _InteractiveTile(
+          onTap: _isGameTransitioning || _selectionInFlight
+              ? null
+              : () => _onGameSelected(gameNumber, widget.level),
+          child: Container(
+            clipBehavior: Clip.hardEdge,
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: borderColor, width: borderWidth),
+            ),
+            child: Stack(
+              children: [
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                           Text(
-                            notesOnly ? l10n.gameMemoShort : '$pct%',
-                            maxLines: 1,
+                            numberText,
                             style: TextStyle(
-                              fontSize: 11.5,
-                              fontWeight:
-                                  isRecent ? FontWeight.w700 : FontWeight.w500,
-                              color: colors.inProgressPrimary,
-                              height: 1.4,
+                              fontSize: 19,
+                              fontWeight: isFresh
+                                  ? FontWeight.w400
+                                  : isCompleted
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                              color: textColor,
+                              height: 1.1,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures()
+                              ],
                             ),
                           ),
-                        if (clearTimeLabel != null)
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.timer_outlined,
-                                size: 11,
-                                color: colors.secondaryText,
+                          if (isInProgress)
+                            Text(
+                              notesOnly ? l10n.gameMemoShort : '$pct%',
+                              maxLines: 1,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: isRecent
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                color: colors.inProgressPrimary,
+                                height: 1.4,
                               ),
-                              const SizedBox(width: 2),
-                              Text(
-                                clearTimeLabel,
-                                maxLines: 1,
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w500,
+                            ),
+                          if (clearTimeLabel != null)
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.timer_outlined,
+                                  size: 11,
                                   color: colors.secondaryText,
-                                  height: 1.4,
-                                  fontFeatures: const [
-                                    FontFeature.tabularFigures()
-                                  ],
                                 ),
-                              ),
-                            ],
-                          ),
-                      ],
+                                const SizedBox(width: 2),
+                                Text(
+                                  clearTimeLabel,
+                                  maxLines: 1,
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w500,
+                                    color: colors.secondaryText,
+                                    height: 1.4,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures()
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              if (!isFresh)
-                Positioned(
-                  top: 5,
-                  right: 5,
-                  child: Icon(
-                    notesOnly ? Icons.edit_note_rounded : _statusIcon(kind),
-                    size: isCompleted
-                        ? LevelStatusColors.completedCheckIconSize
-                        : 12,
-                    color: isCompleted
-                        ? iconColor.withValues(
-                            alpha: LevelStatusColors.completedCheckIconOpacity)
-                        : iconColor,
+                if (isOpening)
+                  Positioned(
+                    top: 5,
+                    right: 5,
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: iconColor,
+                      ),
+                    ),
+                  )
+                else if (!isFresh)
+                  Positioned(
+                    top: 5,
+                    right: 5,
+                    child: Icon(
+                      notesOnly ? Icons.edit_note_rounded : _statusIcon(kind),
+                      size: isCompleted
+                          ? LevelStatusColors.completedCheckIconSize
+                          : 12,
+                      color: isCompleted
+                          ? iconColor.withValues(
+                              alpha:
+                                  LevelStatusColors.completedCheckIconOpacity)
+                          : iconColor,
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -1192,30 +1283,10 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     final diffMs =
         DateTime.now().millisecondsSinceEpoch - saved.lastPlayedAtMillis;
     final days = (diffMs / 86400000).floor();
-    final languageCode = Localizations.localeOf(context).languageCode;
-    if (languageCode == 'ko') {
-      if (days == 0) return '오늘';
-      if (days == 1) return '어제';
-      return '$days일 전';
-    }
-    if (languageCode == 'ja') {
-      if (days == 0) return '今日';
-      if (days == 1) return '昨日';
-      return '$days日前';
-    }
-    if (languageCode == 'zh') {
-      if (days == 0) return '今天';
-      if (days == 1) return '昨天';
-      return '$days天前';
-    }
-    if (languageCode == 'es') {
-      if (days == 0) return 'hoy';
-      if (days == 1) return 'ayer';
-      return 'hace $days días';
-    }
-    if (days == 0) return 'today';
-    if (days == 1) return 'yesterday';
-    return '${days}d ago';
+    final l10n = AppLocalizations.of(context)!;
+    if (days == 0) return l10n.levelLastPlayedToday;
+    if (days == 1) return l10n.levelLastPlayedYesterday;
+    return l10n.levelLastPlayedDaysAgo(days);
   }
 
   // ─── Status styling ───────────────────────────────────────────────────────

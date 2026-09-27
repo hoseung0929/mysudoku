@@ -6,6 +6,35 @@ import 'package:sudoku159/database/database_manager.dart';
 import 'package:sudoku159/model/sudoku_level.dart';
 import 'package:sudoku159/model/today_challenge_target.dart';
 import 'package:sudoku159/services/catalog/remote_puzzle_service.dart';
+import 'package:sudoku159/services/game/game_state_service.dart';
+
+enum ChallengeDayStatus {
+  future,
+  notCompleted,
+  inProgress,
+  completed,
+  perfectCompleted,
+}
+
+class ChallengeMonthCalendar {
+  const ChallengeMonthCalendar({
+    required this.year,
+    required this.month,
+    required this.statusByDate,
+    required this.isMonthFullyCompleted,
+  });
+
+  final int year;
+  final int month;
+
+  /// 날짜(YYYY-MM-DD) → 그날의 상태. 그 달의 실제 날짜 수만큼 들어 있다.
+  final Map<String, ChallengeDayStatus> statusByDate;
+
+  /// 그 달의 모든(미래 제외) 날짜가 완료 상태여야 하고, 현재 달이면 마지막
+  /// 날까지 지나 있어야 true가 된다(미래 날짜가 하나라도 있으면 자동으로
+  /// false).
+  final bool isMonthFullyCompleted;
+}
 
 class ChallengeProgressSummary {
   const ChallengeProgressSummary({
@@ -52,7 +81,9 @@ class ChallengeProgressService {
         loadRecentClearEvents,
     RemotePuzzleService? remotePuzzleService,
     Future<bool> Function()? shouldUseRemoteDailyChallenge,
+    GameStateService? gameStateService,
   })  : _databaseHelper = databaseHelper ?? DatabaseHelper(),
+        _gameStateService = gameStateService ?? GameStateService(),
         _dailyRepo = dailyChallengeCompletionRepository ??
             DailyChallengeCompletionRepository(),
         _loadGameNumbersForLevel = loadGameNumbersForLevel ??
@@ -72,6 +103,7 @@ class ChallengeProgressService {
   static const _backfillPrefsKey = 'daily_challenge_backfill_v1';
 
   final DatabaseHelper _databaseHelper;
+  final GameStateService _gameStateService;
   final DailyChallengeCompletionRepository _dailyRepo;
   final Future<List<int>> Function(String levelName) _loadGameNumbersForLevel;
   final Future<List<Map<String, dynamic>>> Function({int limit})
@@ -140,7 +172,7 @@ class ChallengeProgressService {
         await _databaseHelper.getRecentClearRecords(limit: 365);
     final clearEvents =
         recentClearEvents ?? await _loadRecentClearEvents(limit: 365);
-    final completionDates = await _dailyRepo.getCompletionDatesDescending();
+    final completionDates = await _dailyRepo.getStreakEligibleDatesDescending();
     final streak = calculateDailyChallengeStreakFromDates(completionDates);
     final activityDates = clearEvents
         .map((event) => event['clear_date']?.toString())
@@ -290,6 +322,74 @@ class ChallengeProgressService {
 
   Future<TodayChallengeTarget> getTodayChallengeTarget() async {
     return getChallengeTargetForCalendarDay(DateTime.now());
+  }
+
+  /// 이번 달의 하루하루 상태를 한 번에 계산한다(달력 셀 개수만큼 DB·원격을
+  /// 반복 호출하지 않도록, 완료 세부 기록은 배치 조회 한 번, 진행 중 판정은
+  /// 저장된 세션 목록 한 번으로 처리한다). 각 날짜의 실제 퍼즐은 사용자가
+  /// 그 날짜를 눌렀을 때만 별도로 불러온다.
+  Future<ChallengeMonthCalendar> loadMonthCalendar({
+    required int year,
+    required int month,
+  }) async {
+    final completions =
+        await _databaseHelper.getDailyChallengeCompletionsForMonth(
+      year,
+      month,
+    );
+    final savedGames = await _gameStateService.getSavedGames();
+    final inProgressDates = <String>{
+      for (final saved in savedGames)
+        if (saved.session.challengeDate != null &&
+            _looksInProgress(saved.session))
+          saved.session.challengeDate!,
+    };
+
+    final today = _dateOnly(DateTime.now());
+    final daysInMonth = DateTime(year, month + 1, 0).day;
+    final statusByDate = <String, ChallengeDayStatus>{};
+    for (var day = 1; day <= daysInMonth; day++) {
+      final date = DateTime(year, month, day);
+      final dateStr = formatLocalDate(date);
+      if (date.isAfter(today)) {
+        statusByDate[dateStr] = ChallengeDayStatus.future;
+        continue;
+      }
+      final detail = completions[dateStr];
+      if (detail != null) {
+        statusByDate[dateStr] = detail.isPerfect
+            ? ChallengeDayStatus.perfectCompleted
+            : ChallengeDayStatus.completed;
+      } else if (inProgressDates.contains(dateStr)) {
+        statusByDate[dateStr] = ChallengeDayStatus.inProgress;
+      } else {
+        statusByDate[dateStr] = ChallengeDayStatus.notCompleted;
+      }
+    }
+
+    final isMonthFullyCompleted = statusByDate.values.every(
+      (status) =>
+          status == ChallengeDayStatus.completed ||
+          status == ChallengeDayStatus.perfectCompleted,
+    );
+
+    return ChallengeMonthCalendar(
+      year: year,
+      month: month,
+      statusByDate: statusByDate,
+      isMonthFullyCompleted: isMonthFullyCompleted,
+    );
+  }
+
+  /// 세션 저장 시점에 계산돼 함께 저장된 [GameSessionState.userFilledCells]를
+  /// 쓰므로, 퍼즐마다 원본 보드를 다시 불러오지 않고도(달력 셀 31개를 한
+  /// 번에 계산해야 하므로) 정답 숫자만 채운 세션까지 정확히 판정한다.
+  bool _looksInProgress(GameSessionState session) {
+    if (session.isGameComplete || session.isGameOver) return false;
+    return session.userFilledCells > 0 ||
+        session.hasNotes ||
+        session.wrongCount > 0 ||
+        session.hasUsedHint;
   }
 
   /// 완료한 게임이 어느 날의 오늘의 도전 완료로 귀속되는지 반환한다(해당 없으면 null).

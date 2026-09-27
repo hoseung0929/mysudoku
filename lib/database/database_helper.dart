@@ -1,3 +1,5 @@
+import 'package:sudoku159/model/daily_challenge_completion_detail.dart';
+
 import 'database_manager.dart';
 import 'daily_challenge_completion_repository.dart';
 import 'game_repository.dart';
@@ -85,6 +87,7 @@ class DatabaseHelper {
     required int clearTime,
     required int wrongCount,
     required int hintsUsed,
+    bool autoNotesUsed = false,
   }) async {
     await _clearRecordRepository.saveClearRecord(
       levelName: levelName,
@@ -92,6 +95,7 @@ class DatabaseHelper {
       clearTime: clearTime,
       wrongCount: wrongCount,
       hintsUsed: hintsUsed,
+      autoNotesUsed: autoNotesUsed,
     );
   }
 
@@ -102,6 +106,7 @@ class DatabaseHelper {
     required int clearTime,
     required int wrongCount,
     required int hintsUsed,
+    bool autoNotesUsed = false,
     DateTime? clearedAtLocal,
   }) async {
     await _clearRecordRepository.saveClearEvent(
@@ -110,6 +115,7 @@ class DatabaseHelper {
       clearTime: clearTime,
       wrongCount: wrongCount,
       hintsUsed: hintsUsed,
+      autoNotesUsed: autoNotesUsed,
       clearedAtLocal: clearedAtLocal,
     );
   }
@@ -163,17 +169,52 @@ class DatabaseHelper {
     return _clearRecordRepository.getAllClearRecords();
   }
 
-  /// 오늘의 도전을 깬 로컬 일자를 기록합니다 (같은 날 중복은 무시).
-  Future<void> recordDailyChallengeCompletion(DateTime clearedAtLocal) async {
+  /// 오늘의 도전을 깬 로컬 일자를 기록합니다 (같은 날짜는 더 좋은 결과일
+  /// 때만 세부 정보를 갱신하고, streak_eligible은 최초 기록 이후 바꾸지 않음).
+  Future<void> recordDailyChallengeCompletion(
+    DateTime clearedAtLocal, {
+    String? levelName,
+    int? gameNumber,
+    int? clearTime,
+    int? wrongCount,
+    int? hintsUsed,
+    bool autoNotesUsed = false,
+    bool streakEligible = true,
+  }) async {
     final d =
         DateTime(clearedAtLocal.year, clearedAtLocal.month, clearedAtLocal.day);
     final dateStr =
         '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-    await _dailyChallengeCompletionRepository.addCompletionForDate(dateStr);
+    await _dailyChallengeCompletionRepository.addCompletionForDate(
+      dateStr,
+      levelName: levelName,
+      gameNumber: gameNumber,
+      clearTime: clearTime,
+      wrongCount: wrongCount,
+      hintsUsed: hintsUsed,
+      autoNotesUsed: autoNotesUsed,
+      streakEligible: streakEligible,
+    );
   }
 
   Future<bool> hasDailyChallengeCompletionForDate(String yyyyMmDd) async {
     return _dailyChallengeCompletionRepository.hasCompletionForDate(yyyyMmDd);
+  }
+
+  Future<Map<String, DailyChallengeCompletionDetail>>
+      getDailyChallengeCompletionsForMonth(int year, int month) async {
+    return _dailyChallengeCompletionRepository.getCompletionsForMonth(
+      year,
+      month,
+    );
+  }
+
+  Future<List<String>> getStreakEligibleChallengeDatesDescending({
+    int limit = 400,
+  }) async {
+    return _dailyChallengeCompletionRepository.getStreakEligibleDatesDescending(
+      limit: limit,
+    );
   }
 
   /// 특정 레벨의 클리어 기록을 삭제합니다.

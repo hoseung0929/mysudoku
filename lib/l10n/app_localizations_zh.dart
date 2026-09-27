@@ -24,10 +24,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get navSettings => '设置';
 
   @override
-  String get recordsScreenTitle => '记录与统计';
+  String get recordsHeroImageSubtitle => '逐步积累的解题记录';
 
   @override
-  String get challengeScreenTitle => '挑战';
+  String get settingsHeroSubtitle => '按喜好来设置';
+
+  @override
+  String get recordsScreenTitle => '记录与统计';
 
   @override
   String get settingsTitle => '设置';
@@ -467,7 +470,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsHeroBadgeFlow => '节奏';
 
   @override
-  String get recordsHeroTitle => '先来看看这份\n平缓上升的进度曲线。';
+  String get recordsHeroTitle => '先来看看这份 平缓上升的进度曲线。';
 
   @override
   String get recordsHeroSubtitle => '上方曲线是同样这一周的柔化展示，下方卡片可以查看每天的具体通关数。';
@@ -494,6 +497,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recordsPlayInsightsTitle => '本周概览';
+
+  @override
+  String get recordsWeekSubtitle => '点按星期查看记录';
 
   @override
   String get recordsPlayCalendarTitle => '按天查看';
@@ -564,6 +570,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsByLevelTitle => '按难度的记录';
 
   @override
+  String get recordsByLevelSubtitle => '点击难度查看详细记录';
+
+  @override
   String get recordsByLevelEmpty => '该筛选条件下暂无统计数据。';
 
   @override
@@ -603,7 +612,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsAverageBasisNote => '平均值基于每道谜题的最佳记录，而不是每一次游玩。';
 
   @override
-  String get recordsCalendarTitle => '活动日历';
+  String get recordsCalendarTitle => '游玩活动';
+
+  @override
+  String get recordsCalendarSubtitle => '最近一年的游玩记录';
 
   @override
   String recordsCalendarPeriod(int weeks) {
@@ -654,16 +666,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsActivityHeatmapTitle => '近期活动';
 
   @override
-  String get recordsActivityHeatmapCaption => '颜色越深，当天完成次数越多。';
+  String get recordsActivityHeatmapCaption => '已完成的所有拼图的活动记录。';
 
   @override
   String get recordsActivityTotalClearsLabel => '累计完成次数';
 
   @override
-  String get recordsActivityCurrentStreakLabel => '当前连续天数';
+  String get recordsActivityCurrentStreakLabel => '当前连续';
 
   @override
   String get recordsActivityBestStreakLabel => '最长连续天数';
+
+  @override
+  String get recordsChallengeStreakLabel => '挑战连续';
 
   @override
   String recordsActivityDayCount(int count) {
@@ -719,7 +734,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsStatsHeroEyebrow => '最近 7 天的数独记录';
 
   @override
-  String get recordsStatsHeroHeadline => '一眼看清你最近 7 天的\n数独记录。';
+  String get recordsStatsHeroHeadline => '一眼看清你最近 7 天的 数独记录。';
 
   @override
   String recordsTrendA11yMaxClears(int count) {
@@ -800,9 +815,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsGoToChallengeTab => '前往挑战标签页';
 
   @override
-  String get challengeLoadError => '无法加载挑战数据。';
-
-  @override
   String get challengeTodaysChallengeTitle => '今日挑战';
 
   @override
@@ -822,14 +834,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get myPaceNoPlayableMessage => '所有难度中都没有可以开始的新题目了。';
-
-  @override
-  String get challengeWeeklyGoalReachedTitle => '已达成本周目标';
-
-  @override
-  String challengeWeeklyGoalRemainingTitle(int count) {
-    return '再通关 $count 局即可达成本周目标';
-  }
 
   @override
   String get challengeWeeklyGoalReachedBody => '再多几次完美通关，让节奏更上一层楼。';
@@ -852,69 +856,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get challengePerfectZeroBody => '善用备注模式，能让你更接近零失误通关。';
 
   @override
-  String get challengeWeeklyGoalHeading => '每周目标';
-
-  @override
-  String challengeWeeklyClearsLine(int count) {
-    return '本周已通关 $count 局';
-  }
-
-  @override
-  String challengeWeeklyProgressShort(int done, int target) {
-    return '$done / $target 完成';
-  }
-
-  @override
-  String challengeWeeklyPerfectShort(int count) {
-    return '完美 $count 次';
-  }
-
-  @override
-  String get challengeWeeklyCongratsFooter => '本周目标已达成——继续创造好成绩吧！';
-
-  @override
-  String challengeWeeklyAlmostFooter(int count) {
-    return '再通关 $count 局就能完成本周目标。';
-  }
-
-  @override
-  String get challengeAchievementsHeading => '成就 · 徽章';
-
-  @override
-  String challengeBadgesCollected(int unlocked, int total) {
-    return '已获得 $unlocked / $total';
-  }
-
-  @override
-  String get challengeViewAllBadges => '查看全部';
-
-  @override
-  String get challengeEarnedBadgesHeading => '已获得的徽章';
-
-  @override
-  String get challengeNextBadgeTargets => '下一个目标';
-
-  @override
-  String challengeBadgeProgressLine(String desc, String progress) {
-    return '$desc · 进度：$progress';
-  }
-
-  @override
-  String challengeStreakDays(int days) {
-    return '连续 $days 天';
-  }
-
-  @override
-  String get challengeStreakStartToday => '今天就挑战你的第一次通关';
-
-  @override
-  String get challengeTabHeroHeadline => '今日题目与每周节奏，\n一目了然。';
-
-  @override
-  String get challengeHeroPendingDetail => '可以从首页开始游戏，或使用下方按钮。';
-
-  @override
-  String get challengeHeroDoneDetail => '今天的挑战已完成。徽章和每周进度都在这个标签页里。';
+  String get challengeTabHeroHeadline => '今日题目与每周节奏， 一目了然。';
 
   @override
   String get challengeOpenTodayOnHomeButton => '在首页打开今日题目';
@@ -1439,11 +1381,301 @@ class AppLocalizationsZh extends AppLocalizations {
   String get savedGamesEmpty => '没有符合该筛选条件的存档。';
 
   @override
-  String get challengeMetricBasisTitle => '挑战指标说明';
+  String get savedGamesDeleteFailed => '删除失败,请重试。';
 
   @override
-  String get challengeMetricBasisWeekly => '每周进度：基于最近 7 天的通关事件计算。';
+  String get recordsMyRecordTitle => '我的记录';
 
   @override
-  String get challengeMetricBasisStreak => '连续记录：基于连续完成每日挑战的天数计算。';
+  String get recordsSummaryTotalCleared => '总完成数';
+
+  @override
+  String get recordsSummaryPerfectClears => '完美通关';
+
+  @override
+  String get challengeMonthlyDescription => '选择日期即可重新挑战过去的题目。';
+
+  @override
+  String get challengeTodayEyebrow => '今日动态';
+
+  @override
+  String get gamePausedTitle => '已暂停';
+
+  @override
+  String get gamePausedBody => '计时已停止，棋盘暂时隐藏。';
+
+  @override
+  String homeStreakChip(int count) {
+    return '$count天';
+  }
+
+  @override
+  String homeStreakActive(int count) {
+    return '已连续 $count 天完成谜题';
+  }
+
+  @override
+  String homeStreakAtRisk(int count) {
+    return '已连续 $count 天。今天完成一局即可延续。';
+  }
+
+  @override
+  String get hintStepLookTitle => '提示 · 看这里';
+
+  @override
+  String get hintLookCell => '看看高亮格子所在的行、列和宫。';
+
+  @override
+  String hintLookBox(int value) {
+    return '在高亮的宫里找出 $value 的位置。';
+  }
+
+  @override
+  String hintLookRow(int value) {
+    return '在高亮的行里找出 $value 的位置。';
+  }
+
+  @override
+  String hintLookCol(int value) {
+    return '在高亮的列里找出 $value 的位置。';
+  }
+
+  @override
+  String get hintMovedFromSelection => '有比所选格子更容易先解的位置。';
+
+  @override
+  String get hintTechniqueNakedSingle => '唯一候选数';
+
+  @override
+  String get hintTechniqueHiddenSingle => '隐性唯一数';
+
+  @override
+  String get hintTechniqueReveal => '答案';
+
+  @override
+  String hintExplainNakedSingle(int value) {
+    return '这个格子所在的行、列和宫里已经有其他 8 个数字，只能填 $value。';
+  }
+
+  @override
+  String hintExplainHiddenSingleBox(int value) {
+    return '在这个宫里，$value 只能填在这里。其他空格都和高亮的 $value 在同一行或同一列。';
+  }
+
+  @override
+  String hintExplainHiddenSingleRow(int value) {
+    return '在这一行里，$value 只能填在这里。其他空格都和高亮的 $value 在同一列或同一宫。';
+  }
+
+  @override
+  String hintExplainHiddenSingleCol(int value) {
+    return '在这一列里，$value 只能填在这里。其他空格都和高亮的 $value 在同一行或同一宫。';
+  }
+
+  @override
+  String get hintExplainReveal => '这个格子需要更高级的技巧。可以用下方按钮填入答案。';
+
+  @override
+  String get hintNextStep => '再提示一下';
+
+  @override
+  String get hintFillAnswer => '填入答案';
+
+  @override
+  String get hintClose => '关闭提示';
+
+  @override
+  String get notificationOptInTitle => '要每天提醒你解一局吗？';
+
+  @override
+  String get notificationOptInBody => '如果每天晚上 8 点还没有解谜题，我们会提醒你。你可以随时在设置中关闭。';
+
+  @override
+  String get notificationOptInAccept => '开启提醒';
+
+  @override
+  String get notificationOptInLater => '以后再说';
+
+  @override
+  String get notificationOptInDenied => '未获得通知权限。请在设备设置中允许后，再在设置中开启提醒。';
+
+  @override
+  String get notificationSetupFailed => '无法设置提醒。请稍后在设置中重试。';
+
+  @override
+  String get beginnerTutorialPromptTitle => '第一次玩数独吗?';
+
+  @override
+  String get beginnerTutorialPromptBody => '开始解题前先做一个简短的引导练习吧，只需一分钟。';
+
+  @override
+  String get beginnerTutorialStart => '开始引导';
+
+  @override
+  String get beginnerTutorialSkip => '跳过';
+
+  @override
+  String beginnerTutorialStepIndicator(int current, int total) {
+    return '第 $current/$total 步';
+  }
+
+  @override
+  String get beginnerTutorialStepRowTitle => '规则：行';
+
+  @override
+  String get beginnerTutorialStepRowBody => '每一行必须包含 1 到 9 的数字，且不能重复。';
+
+  @override
+  String get beginnerTutorialStepColumnTitle => '规则：列';
+
+  @override
+  String get beginnerTutorialStepColumnBody => '每一列同样必须包含 1 到 9 的数字，且不能重复。';
+
+  @override
+  String get beginnerTutorialStepBoxTitle => '规则：3×3 宫格';
+
+  @override
+  String get beginnerTutorialStepBoxBody => '每个 3×3 宫格也必须包含 1 到 9 的数字，且不能重复。';
+
+  @override
+  String get beginnerTutorialStepInputTitle => '输入数字';
+
+  @override
+  String get beginnerTutorialStepInputBody => '高亮的格子里只能填一个数字。点击格子，再点击正确的数字。';
+
+  @override
+  String get beginnerTutorialStepInputWrongHint =>
+      '这个数字已经出现在同一行、列或宫格中，请试试其他数字。';
+
+  @override
+  String get beginnerTutorialStepMemoTitle => '笔记与擦除';
+
+  @override
+  String get beginnerTutorialStepMemoAddBody => '打开笔记模式，点击这个格子，再点击候选数字记下来。';
+
+  @override
+  String get beginnerTutorialStepMemoEraseBody => '现在再次点击同一个数字，把这个笔记擦掉。';
+
+  @override
+  String get beginnerTutorialStepHintTitle => '提示';
+
+  @override
+  String get beginnerTutorialStepHintBody => '点击提示可以查看该看哪里、为什么，而不会消耗真正的提示次数。';
+
+  @override
+  String get beginnerTutorialStepHintButton => '打开提示';
+
+  @override
+  String get beginnerTutorialStepDoneTitle => '准备好了!';
+
+  @override
+  String get beginnerTutorialStepDoneBody =>
+      '你已经学会了基础知识：行、列、宫格规则，以及输入数字、笔记和提示。';
+
+  @override
+  String get beginnerTutorialFirstPuzzleButton => '开始我的第一道题';
+
+  @override
+  String get beginnerTutorialNextButton => '下一步';
+
+  @override
+  String get beginnerTutorialCloseButton => '完成';
+
+  @override
+  String get settingsHowToPlayTitle => '玩法说明';
+
+  @override
+  String get settingsHowToPlaySubtitle => '重新观看引导教程';
+
+  @override
+  String get autoNotesConfirmTitle => '重新填写所有笔记吗?';
+
+  @override
+  String get autoNotesConfirmBody => '这会用当前候选数字替换每个空白格子的笔记。你手动删除的候选数字可能会重新出现。';
+
+  @override
+  String get autoNotesConfirmApply => '重新填写笔记';
+
+  @override
+  String get autoNotesContradictionMessage =>
+      '有些格子已经没有任何可能的数字，因此未能填写笔记。请检查你的输入内容后重试。';
+
+  @override
+  String get autoNotesTipMessage => '提示：长按笔记可以一次性填写所有候选数字。';
+
+  @override
+  String get gameMemoLongPressHint => '点击切换笔记模式，长按自动填写笔记。';
+
+  @override
+  String get challengeMonthlyTitle => '挑战记录';
+
+  @override
+  String get challengePreviousMonth => '上个月';
+
+  @override
+  String get challengeBackToCurrentMonth => '本月';
+
+  @override
+  String get challengeStatusNotCompleted => '未完成';
+
+  @override
+  String get challengeStatusInProgress => '进行中';
+
+  @override
+  String get challengeStatusCompleted => '已完成';
+
+  @override
+  String get challengeStatusPerfect => '完美通关';
+
+  @override
+  String get challengeStatusFuture => '尚不可用';
+
+  @override
+  String get challengeMonthComplete => '本月全部完成';
+
+  @override
+  String get challengeStartPastChallenge => '开始过去的挑战';
+
+  @override
+  String get challengeResumePastChallenge => '继续过去的挑战';
+
+  @override
+  String get challengeRetryPastChallenge => '重新挑战过去的题目';
+
+  @override
+  String get challengePuzzleLoadFailed => '无法加载这道题。';
+
+  @override
+  String get challengeCalendarLoadError => '无法加载挑战日历。';
+
+  @override
+  String get challengeStreakExcludedNote => '完成过去的挑战不计入连续天数';
+
+  @override
+  String challengeDayCellSemantics(String date, String status) {
+    return '$date，$status';
+  }
+
+  @override
+  String get homeGreetingMorning => '从一局轻松的谜题开始吧。';
+
+  @override
+  String get homeGreetingAfternoon => '现在适合专注解一局。';
+
+  @override
+  String get homeGreetingEvening => '静下心来，用一局谜题收尾吧。';
+
+  @override
+  String get levelNoPuzzlesAvailable => '此难度暂无可用题目。';
+
+  @override
+  String get levelLastPlayedToday => '今天';
+
+  @override
+  String get levelLastPlayedYesterday => '昨天';
+
+  @override
+  String levelLastPlayedDaysAgo(int count) {
+    return '$count 天前';
+  }
 }

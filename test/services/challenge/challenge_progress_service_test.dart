@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sudoku159/database/daily_challenge_completion_repository.dart';
+import 'package:sudoku159/model/daily_challenge_completion_detail.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
 import 'package:sudoku159/model/today_challenge_target.dart';
 import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
 import 'package:sudoku159/services/catalog/remote_puzzle_service.dart';
@@ -163,21 +165,24 @@ void main() {
 
     test('selects an existing challenge game number when numbering has holes',
         () async {
+      // 어떤 날짜가 어느 난이도로 매핑되는지는 서비스의 날짜 기반 정책이
+      // 정하므로 고정하지 않는다. 모든 난이도에 같은 구멍 뚫린 번호 목록을
+      // 줘서, 그날 선택된 난이도가 무엇이든 구멍을 건너뛰고 실제 존재하는
+      // 번호 중 하나가 선택되는지만 검증한다.
+      const holeyGameNumbers = [1, 3, 7];
       final service = ChallengeProgressService(
-        loadGameNumbersForLevel: (levelName) async {
-          if (levelName == '초급') {
-            return [1, 3, 7];
-          }
-          return [1];
-        },
+        loadGameNumbersForLevel: (levelName) async => holeyGameNumbers,
       );
 
       final target = await service.getChallengeTargetForCalendarDay(
         DateTime(2026, 4, 10),
       );
 
-      expect(target.levelName, '초급');
-      expect([1, 3, 7], contains(target.gameNumber));
+      final activeLevelNames = SudokuLevel.levels
+          .where((level) => !level.isMasterLevel)
+          .map((level) => level.name);
+      expect(activeLevelNames, contains(target.levelName));
+      expect(holeyGameNumbers, contains(target.gameNumber));
     });
 
     test('pins the first resolved target for the day (offline then online)',
@@ -330,7 +335,16 @@ class _FakeRemotePuzzleService extends RemotePuzzleService {
 class _FakeDailyChallengeCompletionRepository
     extends DailyChallengeCompletionRepository {
   @override
-  Future<void> addCompletionForDate(String yyyyMmDd) async {}
+  Future<void> addCompletionForDate(
+    String yyyyMmDd, {
+    String? levelName,
+    int? gameNumber,
+    int? clearTime,
+    int? wrongCount,
+    int? hintsUsed,
+    bool autoNotesUsed = false,
+    bool streakEligible = true,
+  }) async {}
 
   @override
   Future<void> clearAll() async {}
@@ -338,6 +352,19 @@ class _FakeDailyChallengeCompletionRepository
   @override
   Future<List<String>> getCompletionDatesDescending({int limit = 400}) async =>
       const [];
+
+  @override
+  Future<List<String>> getStreakEligibleDatesDescending({
+    int limit = 400,
+  }) async =>
+      const [];
+
+  @override
+  Future<Map<String, DailyChallengeCompletionDetail>> getCompletionsForMonth(
+    int year,
+    int month,
+  ) async =>
+      const {};
 
   @override
   Future<bool> hasCompletionForDate(String yyyyMmDd) async => false;

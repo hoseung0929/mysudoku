@@ -26,13 +26,18 @@ class BottomNavBar extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final items = [
       _BottomNavItemData(
-        icon: Icons.cottage_rounded,
+        icon: Icons.home_rounded,
         label: l10n.navHome,
         isTablet: isTablet,
       ),
       _BottomNavItemData(
         icon: Icons.bar_chart_rounded,
         label: l10n.navRecords,
+        isTablet: isTablet,
+      ),
+      _BottomNavItemData(
+        icon: Icons.settings_outlined,
+        label: l10n.navSettings,
         isTablet: isTablet,
       ),
     ];

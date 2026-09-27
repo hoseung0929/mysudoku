@@ -46,20 +46,24 @@ class SudokuInfoCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(icon, size: 26, color: ic),
               const SizedBox(width: 10),
-              Text(
-                label,
-                style: GoogleFonts.notoSans(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  // 제목이 너무 연해 보이지 않도록 onSurfaceVariant보다 한 단계
-                  // 진한 onSurface를 사용. 값(굵고 포인트색)과의 계층은 유지됨.
-                  color: cs.onSurface,
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 2,
+                  style: GoogleFonts.notoSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    // 제목이 너무 연해 보이지 않도록 onSurfaceVariant보다 한 단계
+                    // 진한 onSurface를 사용. 값(굵고 포인트색)과의 계층은 유지됨.
+                    color: cs.onSurface,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               Text(
                 value,
                 style: GoogleFonts.notoSans(

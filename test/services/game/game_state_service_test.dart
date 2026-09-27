@@ -83,6 +83,115 @@ void main() {
       expect(restored.isGameOver, isFalse);
     });
 
+    test('saves and loads autoNotesUsed', () async {
+      const levelName = '중급';
+      const gameNumber = 20;
+      final board = List.generate(
+        9,
+        (row) => List.generate(9, (col) => (row + col) % 9),
+      );
+
+      await service.saveSession(
+        levelName: levelName,
+        gameNumber: gameNumber,
+        board: board,
+        notes: List.generate(9, (_) => List.generate(9, (_) => <int>{})),
+        elapsedSeconds: 10,
+        hintsRemaining: 3,
+        wrongCount: 0,
+        isMemoMode: false,
+        autoNotesUsed: true,
+      );
+
+      final restored = await service.loadSession(
+        levelName: levelName,
+        gameNumber: gameNumber,
+      );
+      expect(restored!.autoNotesUsed, isTrue);
+    });
+
+    test('existing saved data without autoNotesUsed defaults to false',
+        () async {
+      const levelName = '중급';
+      const gameNumber = 21;
+      final board = List.generate(
+        9,
+        (row) => List.generate(9, (col) => (row + col) % 9),
+      );
+      // autoNotesUsed 필드가 아직 없던 시절의 저장 형식을 흉내낸다.
+      await service.saveSession(
+        levelName: levelName,
+        gameNumber: gameNumber,
+        board: board,
+        notes: List.generate(9, (_) => List.generate(9, (_) => <int>{})),
+        elapsedSeconds: 10,
+        hintsRemaining: 3,
+        wrongCount: 0,
+        isMemoMode: false,
+      );
+
+      final restored = await service.loadSession(
+        levelName: levelName,
+        gameNumber: gameNumber,
+      );
+      expect(restored!.autoNotesUsed, isFalse);
+    });
+
+    test('saves and loads userFilledCells, surviving a fresh service instance',
+        () async {
+      const levelName = '중급';
+      const gameNumber = 22;
+      final board = List.generate(
+        9,
+        (row) => List.generate(9, (col) => (row + col) % 9),
+      );
+
+      await service.saveSession(
+        levelName: levelName,
+        gameNumber: gameNumber,
+        board: board,
+        notes: List.generate(9, (_) => List.generate(9, (_) => <int>{})),
+        elapsedSeconds: 10,
+        hintsRemaining: 3,
+        wrongCount: 0,
+        isMemoMode: false,
+        userFilledCells: 17,
+      );
+
+      // 앱을 재실행한 것처럼 새 서비스 인스턴스로 다시 불러온다.
+      final reloaded = await GameStateService().loadSession(
+        levelName: levelName,
+        gameNumber: gameNumber,
+      );
+      expect(reloaded!.userFilledCells, 17);
+    });
+
+    test('existing saved data without userFilledCells defaults to 0', () async {
+      const levelName = '중급';
+      const gameNumber = 23;
+      final board = List.generate(
+        9,
+        (row) => List.generate(9, (col) => (row + col) % 9),
+      );
+      // userFilledCells 필드가 아직 없던 시절의 저장 형식을 흉내낸다.
+      await service.saveSession(
+        levelName: levelName,
+        gameNumber: gameNumber,
+        board: board,
+        notes: List.generate(9, (_) => List.generate(9, (_) => <int>{})),
+        elapsedSeconds: 10,
+        hintsRemaining: 3,
+        wrongCount: 0,
+        isMemoMode: false,
+      );
+
+      final restored = await service.loadSession(
+        levelName: levelName,
+        gameNumber: gameNumber,
+      );
+      expect(restored!.userFilledCells, 0);
+    });
+
     test('loads terminal session flags when present', () async {
       const levelName = '전문가';
       const gameNumber = 5;

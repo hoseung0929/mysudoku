@@ -85,6 +85,11 @@ flutter:
   assets:
     - assets/images/app_logo.png
     - assets/images/character.png
+    - assets/images/home_hero.webp
+    - assets/images/records_hero.webp
+    - assets/images/settings_hero.webp
+    - assets/images/records_week_penguin.png
+    - assets/images/records_challenge_penguin.png
     - assets/images/level1.png
     - assets/images/level2.png
     - assets/images/level3.png

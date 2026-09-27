@@ -5,8 +5,9 @@
   "navChallenge": "Challenge",
   "navRecords": "Records",
   "navSettings": "Settings",
+  "recordsHeroImageSubtitle": "My growing record of solving",
+  "settingsHeroSubtitle": "Make it yours",
   "recordsScreenTitle": "Records & stats",
-  "challengeScreenTitle": "Challenge",
   "settingsTitle": "Settings",
   "settingsSectionNotifications": "Notifications",
   "settingsSectionLanguage": "Language",
@@ -259,7 +260,7 @@
   "recordsTrendWindowAvgTime": "Avg. time (same window)",
   "recordsTrendWindowAvgWrong": "Avg. mistakes (same window)",
   "recordsHeroBadgeFlow": "Flow",
-  "recordsHeroTitle": "Start with the gentle\nshape of your progress.",
+  "recordsHeroTitle": "Start with the gentle shape of your progress.",
   "recordsHeroSubtitle": "The curve above is the same week, softened for a quick read. Use the card below for exact clears per day.",
   "recordsInsightThisWeekEyebrow": "This week",
   "recordsInsightClearsValue": "{count, plural, one{{count} clear} other{{count} clears}}",
@@ -275,6 +276,7 @@
   "recordsTrendLegendDailyClears": "Daily clears",
   "recordsTrendTodayLabel": "Today",
   "recordsPlayInsightsTitle": "This week",
+  "recordsWeekSubtitle": "Tap a day to see your record",
   "recordsPlayCalendarTitle": "By day",
   "recordsWeeklyReportTitle": "Weekly report",
   "recordsWeeklyReportBusiestDay": "Most active day",
@@ -313,6 +315,7 @@
   "recordsMetricAvgTime": "Avg. best time",
   "recordsMetricAvgWrong": "Avg. mistakes (best runs)",
   "recordsByLevelTitle": "Records by level",
+  "recordsByLevelSubtitle": "Tap a difficulty to see its details",
   "recordsByLevelEmpty": "No stats for this filter.",
   "recordsByLevelSectionSubtitle": "See which levels are starting to feel more comfortable.",
   "recordsLevelInfographicClearRate": "Puzzle completion",
@@ -326,7 +329,8 @@
   "recordsLevelEmpty": "No completed puzzles at this level yet.",
   "recordsRowBestTime": "Best time",
   "recordsAverageBasisNote": "Averages use each puzzle's best record, not every play.",
-  "recordsCalendarTitle": "Activity calendar",
+  "recordsCalendarTitle": "Play activity",
+  "recordsCalendarSubtitle": "Your play history from the last year",
   "recordsCalendarPeriod": "Last {weeks} weeks",
   "@recordsCalendarPeriod": {
     "placeholders": {
@@ -387,10 +391,11 @@
   "recordsKpiAvgSolveTimeLabel": "Avg. best time",
   "recordsActivityOverviewTitle": "Activity overview",
   "recordsActivityHeatmapTitle": "Recent activity",
-  "recordsActivityHeatmapCaption": "Darker cells mean more completions on that day.",
+  "recordsActivityHeatmapCaption": "Activity for every puzzle you've completed.",
   "recordsActivityTotalClearsLabel": "Total completions",
-  "recordsActivityCurrentStreakLabel": "Current daily streak",
+  "recordsActivityCurrentStreakLabel": "Current streak",
   "recordsActivityBestStreakLabel": "Best daily streak",
+  "recordsChallengeStreakLabel": "Challenge streak",
   "recordsActivityDayCount": "{count, plural, one{{count} day} other{{count} days}}",
   "@recordsActivityDayCount": {
     "placeholders": {
@@ -434,7 +439,7 @@
   "recordsDifficultySnapshotEmpty": "Play a few games to see your difficulty mix here.",
   "recordsLevelDoneShort": "Done",
   "recordsStatsHeroEyebrow": "Nanpre in the last 7 days",
-  "recordsStatsHeroHeadline": "See your last 7 days of\nNanpre at a glance.",
+  "recordsStatsHeroHeadline": "See your last 7 days of Nanpre at a glance.",
   "recordsTrendA11yMaxClears": "Peak {count}",
   "@recordsTrendA11yMaxClears": {
     "placeholders": {
@@ -514,7 +519,6 @@
   "recordsGameLoadError": "Could not load puzzle data.",
   "recordsChallengeTabHint": "Weekly goals and streaks are on the Challenge tab.",
   "recordsGoToChallengeTab": "Open Challenge tab",
-  "challengeLoadError": "Couldn't load challenge data.",
   "challengeTodaysChallengeTitle": "Today's challenge",
   "challengeTodayDoneHint": "You've already finished today. Open it again anytime to review.",
   "challengeTodayPendingHint": "Keep your streak with today's featured puzzle.",
@@ -522,15 +526,6 @@
   "challengeTodayStartButton": "Start at your pace",
   "myPaceNoPlayableTitle": "No playable game",
   "myPaceNoPlayableMessage": "There are no new puzzles left to play across all levels.",
-  "challengeWeeklyGoalReachedTitle": "Weekly goal reached",
-  "challengeWeeklyGoalRemainingTitle": "{count} more clears to hit your weekly goal",
-  "@challengeWeeklyGoalRemainingTitle": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "challengeWeeklyGoalReachedBody": "Add more perfect clears to build an even stronger rhythm.",
   "challengeWeeklyGoalCatchUpBody": "A few quick sessions can finish this week's target.",
   "challengePerfectThisWeek": "{count} perfect clears this week",
@@ -544,81 +539,7 @@
   "challengePerfectThisWeekFirst": "Try your first perfect clear this week",
   "challengePerfectPositiveBody": "Flawless runs make your progress easier to see.",
   "challengePerfectZeroBody": "Memo mode gets you much closer to mistake-free clears.",
-  "challengeWeeklyGoalHeading": "Weekly goal",
-  "challengeWeeklyClearsLine": "{count} clears this week",
-  "@challengeWeeklyClearsLine": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "challengeWeeklyProgressShort": "{done} / {target} done",
-  "@challengeWeeklyProgressShort": {
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "target": {
-        "type": "int"
-      }
-    }
-  },
-  "challengeWeeklyPerfectShort": "{count} perfect",
-  "@challengeWeeklyPerfectShort": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "challengeWeeklyCongratsFooter": "Weekly goal complete—keep stacking great records!",
-  "challengeWeeklyAlmostFooter": "{count} more clears to finish the week.",
-  "@challengeWeeklyAlmostFooter": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "challengeAchievementsHeading": "Achievements · badges",
-  "challengeBadgesCollected": "{unlocked} / {total} earned",
-  "@challengeBadgesCollected": {
-    "placeholders": {
-      "unlocked": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "challengeViewAllBadges": "View all",
-  "challengeEarnedBadgesHeading": "Earned badges",
-  "challengeNextBadgeTargets": "Next targets",
-  "challengeBadgeProgressLine": "{desc} · Progress: {progress}",
-  "@challengeBadgeProgressLine": {
-    "placeholders": {
-      "desc": {
-        "type": "String"
-      },
-      "progress": {
-        "type": "String"
-      }
-    }
-  },
-  "challengeStreakDays": "{days}-day streak",
-  "@challengeStreakDays": {
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
-  "challengeStreakStartToday": "Chase your first clear today",
-  "challengeTabHeroHeadline": "Today's puzzle and weekly rhythm,\nin one calm view.",
-  "challengeHeroPendingDetail": "Start playing from Home, or use the button below.",
-  "challengeHeroDoneDetail": "Today's challenge is complete. Badges and weekly progress stay on this tab.",
+  "challengeTabHeroHeadline": "Today's puzzle and weekly rhythm, in one calm view.",
   "challengeOpenTodayOnHomeButton": "Open today's puzzle on Home",
   "challengeHeroDoneCaption": "You finished today's challenge. Come back tomorrow to extend your streak.",
   "challengeHeroPendingCaption": "Today's puzzle is still open—start now to keep your streak alive.",
@@ -877,8 +798,12 @@
   "homeLevelProgressSolved": "{cleared} / {total}",
   "@homeLevelProgressSolved": {
     "placeholders": {
-      "cleared": {"type": "int"},
-      "total": {"type": "int"}
+      "cleared": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "levelFilterAll": "All",
@@ -888,13 +813,17 @@
   "levelProgressCardMessage": "Start with {levelName} puzzles today",
   "@levelProgressCardMessage": {
     "placeholders": {
-      "levelName": {"type": "String"}
+      "levelName": {
+        "type": "String"
+      }
     }
   },
   "levelProgressCompleted": "/ {total} completed",
   "@levelProgressCompleted": {
     "placeholders": {
-      "total": {"type": "int"}
+      "total": {
+        "type": "int"
+      }
     }
   },
   "levelRecentBadge": "Recent",
@@ -906,13 +835,17 @@
   "levelInProgressLimitTitle": "{maxCount} puzzles in progress",
   "@levelInProgressLimitTitle": {
     "placeholders": {
-      "maxCount": {"type": "int"}
+      "maxCount": {
+        "type": "int"
+      }
     }
   },
   "levelInProgressLimitBody": "You can keep up to {maxCount} puzzles going at once.\nPick one below to continue.",
   "@levelInProgressLimitBody": {
     "placeholders": {
-      "maxCount": {"type": "int"}
+      "maxCount": {
+        "type": "int"
+      }
     }
   },
   "levelInProgressLimitLater": "Later",
@@ -972,7 +905,192 @@
   "savedGamesSortProgress": "Progress",
   "savedGamesSortPlayTime": "Play time",
   "savedGamesEmpty": "No saved games match this filter.",
-  "challengeMetricBasisTitle": "Challenge metric basis",
-  "challengeMetricBasisWeekly": "Weekly progress: based on clear events from the last 7 days.",
-  "challengeMetricBasisStreak": "Streak: based on consecutive dates when the daily challenge was completed."
+  "savedGamesDeleteFailed": "Couldn't delete this puzzle. Please try again.",
+  "recordsMyRecordTitle": "My record",
+  "recordsSummaryTotalCleared": "Total cleared",
+  "recordsSummaryPerfectClears": "Perfect clears",
+  "challengeMonthlyDescription": "Pick a date to replay a past challenge.",
+  "challengeTodayEyebrow": "Today",
+  "gamePausedTitle": "Paused",
+  "gamePausedBody": "The timer is stopped and the board is hidden.",
+  "homeStreakChip": "{count, plural, =1{1 day} other{{count} days}}",
+  "@homeStreakChip": {
+    "description": "Compact streak chip in the home header (consecutive days with at least one cleared puzzle).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeStreakActive": "{count, plural, =1{Solved a puzzle today} other{Solved a puzzle {count} days in a row}}",
+  "@homeStreakActive": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeStreakAtRisk": "{count, plural, =1{1-day streak. Finish a puzzle today to keep it going.} other{{count}-day streak. Finish a puzzle today to keep it going.}}",
+  "@homeStreakAtRisk": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hintStepLookTitle": "Hint · Where to look",
+  "hintLookCell": "Look at the row, column, and box of the highlighted cell.",
+  "hintLookBox": "Find where {value} goes in the highlighted box.",
+  "@hintLookBox": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "hintLookRow": "Find where {value} goes in the highlighted row.",
+  "@hintLookRow": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "hintLookCol": "Find where {value} goes in the highlighted column.",
+  "@hintLookCol": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "hintMovedFromSelection": "There's an easier cell to solve first.",
+  "hintTechniqueNakedSingle": "Naked single",
+  "hintTechniqueHiddenSingle": "Hidden single",
+  "hintTechniqueReveal": "Answer",
+  "hintExplainNakedSingle": "The row, column, and box of this cell already hold the other eight numbers, so only {value} fits.",
+  "@hintExplainNakedSingle": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "hintExplainHiddenSingleBox": "In this box, {value} can only go here. Every other empty cell shares a row or column with a highlighted {value}.",
+  "@hintExplainHiddenSingleBox": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "hintExplainHiddenSingleRow": "In this row, {value} can only go here. Every other empty cell shares a column or box with a highlighted {value}.",
+  "@hintExplainHiddenSingleRow": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "hintExplainHiddenSingleCol": "In this column, {value} can only go here. Every other empty cell shares a row or box with a highlighted {value}.",
+  "@hintExplainHiddenSingleCol": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "hintExplainReveal": "This cell needs a more advanced technique. You can fill in the answer below.",
+  "hintNextStep": "Tell me more",
+  "hintFillAnswer": "Fill in answer",
+  "hintClose": "Close hint",
+  "notificationOptInTitle": "Want a daily puzzle reminder?",
+  "notificationOptInBody": "If you haven't solved a puzzle by 8 PM, we'll remind you. You can turn this off anytime in Settings.",
+  "notificationOptInAccept": "Turn on reminders",
+  "notificationOptInLater": "Not now",
+  "notificationOptInDenied": "Notifications aren't allowed. Allow them in your device settings, then turn reminders on in Settings.",
+  "notificationSetupFailed": "We couldn't set up reminders. Please try again later in Settings.",
+  "beginnerTutorialPromptTitle": "New to Sudoku?",
+  "beginnerTutorialPromptBody": "Try a quick, guided practice puzzle before you start solving — it only takes a minute.",
+  "beginnerTutorialStart": "Start the guide",
+  "beginnerTutorialSkip": "Skip",
+  "beginnerTutorialStepIndicator": "Step {current} of {total}",
+  "@beginnerTutorialStepIndicator": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "beginnerTutorialStepRowTitle": "Rule: rows",
+  "beginnerTutorialStepRowBody": "Each row must contain every number from 1 to 9, with no repeats.",
+  "beginnerTutorialStepColumnTitle": "Rule: columns",
+  "beginnerTutorialStepColumnBody": "Each column must also contain every number from 1 to 9, with no repeats.",
+  "beginnerTutorialStepBoxTitle": "Rule: 3×3 boxes",
+  "beginnerTutorialStepBoxBody": "Each 3×3 box must contain every number from 1 to 9, with no repeats.",
+  "beginnerTutorialStepInputTitle": "Enter a number",
+  "beginnerTutorialStepInputBody": "Only one number can go in this highlighted cell. Tap the cell, then tap the correct number.",
+  "beginnerTutorialStepInputWrongHint": "That number is already used in this row, column, or box. Try another number.",
+  "beginnerTutorialStepMemoTitle": "Notes and erasing",
+  "beginnerTutorialStepMemoAddBody": "Turn on Notes, tap this cell, then tap a candidate number to jot it down.",
+  "beginnerTutorialStepMemoEraseBody": "Now tap that same number again to erase the note.",
+  "beginnerTutorialStepHintTitle": "Hints",
+  "beginnerTutorialStepHintBody": "Tap Hint to see where to look and why, without spending one of your real hints.",
+  "beginnerTutorialStepHintButton": "Open hint",
+  "beginnerTutorialStepDoneTitle": "You're ready!",
+  "beginnerTutorialStepDoneBody": "You've learned the basics: rows, columns, boxes, entering numbers, notes, and hints.",
+  "beginnerTutorialFirstPuzzleButton": "Start my first puzzle",
+  "beginnerTutorialNextButton": "Next",
+  "beginnerTutorialCloseButton": "Done",
+  "settingsHowToPlayTitle": "How to play",
+  "settingsHowToPlaySubtitle": "Replay the guided tutorial",
+  "autoNotesConfirmTitle": "Refill all notes?",
+  "autoNotesConfirmBody": "This replaces every blank cell's notes with the current candidates. Candidates you removed by hand may reappear.",
+  "autoNotesConfirmApply": "Refill notes",
+  "autoNotesContradictionMessage": "Some cells have no possible number left, so notes were not filled in. Check your entries and try again.",
+  "autoNotesTipMessage": "Tip: long-press Notes to fill in all candidate numbers at once.",
+  "gameMemoLongPressHint": "Tap to toggle Notes. Long-press to auto-fill candidate notes.",
+  "challengeMonthlyTitle": "Challenge history",
+  "challengePreviousMonth": "Previous month",
+  "challengeBackToCurrentMonth": "This month",
+  "challengeStatusNotCompleted": "Not completed",
+  "challengeStatusInProgress": "In progress",
+  "challengeStatusCompleted": "Completed",
+  "challengeStatusPerfect": "Perfect clear",
+  "challengeStatusFuture": "Not available yet",
+  "challengeMonthComplete": "Monthly complete",
+  "challengeStartPastChallenge": "Start past challenge",
+  "challengeResumePastChallenge": "Resume past challenge",
+  "challengeRetryPastChallenge": "Retry past challenge",
+  "challengePuzzleLoadFailed": "Couldn't load this puzzle.",
+  "challengeCalendarLoadError": "Unable to load the challenge calendar.",
+  "challengeStreakExcludedNote": "Completing a past challenge doesn't count toward your streak",
+  "challengeDayCellSemantics": "{date}, {status}",
+  "@challengeDayCellSemantics": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "homeGreetingMorning": "Start with a light puzzle.",
+  "homeGreetingAfternoon": "A focused puzzle fits now.",
+  "homeGreetingEvening": "Wind down with a calm puzzle.",
+  "levelNoPuzzlesAvailable": "No puzzles are available for this level.",
+  "levelLastPlayedToday": "Today",
+  "levelLastPlayedYesterday": "Yesterday",
+  "levelLastPlayedDaysAgo": "{count, plural, =1{1 day ago} other{{count} days ago}}",
+  "@levelLastPlayedDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

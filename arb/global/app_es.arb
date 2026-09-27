@@ -5,8 +5,9 @@
   "navChallenge": "Desafío",
   "navRecords": "Registros",
   "navSettings": "Ajustes",
+  "recordsHeroImageSubtitle": "Mi historial de resoluciones",
+  "settingsHeroSubtitle": "Hazlo a tu manera",
   "recordsScreenTitle": "Registros y estadísticas",
-  "challengeScreenTitle": "Desafío",
   "settingsTitle": "Ajustes",
   "settingsSectionNotifications": "Notificaciones",
   "settingsSectionLanguage": "Idioma",
@@ -232,7 +233,7 @@
   "recordsTrendWindowAvgTime": "Tiempo prom. (mismo periodo)",
   "recordsTrendWindowAvgWrong": "Errores prom. (mismo periodo)",
   "recordsHeroBadgeFlow": "Ritmo",
-  "recordsHeroTitle": "Empieza con la forma\nsuave de tu progreso.",
+  "recordsHeroTitle": "Empieza con la forma suave de tu progreso.",
   "recordsHeroSubtitle": "La curva de arriba es la misma semana, suavizada para verla rápido. Usa la tarjeta de abajo para ver las victorias exactas por día.",
   "recordsInsightThisWeekEyebrow": "Esta semana",
   "recordsInsightClearsValue": "{count, plural, one{{count} victoria} other{{count} victorias}}",
@@ -248,6 +249,7 @@
   "recordsTrendLegendDailyClears": "Victorias diarias",
   "recordsTrendTodayLabel": "Hoy",
   "recordsPlayInsightsTitle": "Esta semana",
+  "recordsWeekSubtitle": "Toca un día para ver tu registro",
   "recordsPlayCalendarTitle": "Por día",
   "recordsWeeklyReportTitle": "Informe semanal",
   "recordsWeeklyReportBusiestDay": "Día más activo",
@@ -286,6 +288,7 @@
   "recordsMetricAvgTime": "Media de mejores tiempos",
   "recordsMetricAvgWrong": "Errores medios (mejores)",
   "recordsByLevelTitle": "Registros por nivel",
+  "recordsByLevelSubtitle": "Toca una dificultad para ver los detalles",
   "recordsByLevelEmpty": "No hay estadísticas para este filtro.",
   "recordsByLevelSectionSubtitle": "Descubre en qué niveles te sientes cada vez más cómodo.",
   "recordsLevelInfographicClearRate": "Puzles completados",
@@ -299,7 +302,8 @@
   "recordsLevelEmpty": "Aún no hay puzles completados en este nivel.",
   "recordsRowBestTime": "Mejor tiempo",
   "recordsAverageBasisNote": "Los promedios usan el mejor registro de cada puzle, no todas las partidas.",
-  "recordsCalendarTitle": "Calendario de actividad",
+  "recordsCalendarTitle": "Actividad de juego",
+  "recordsCalendarSubtitle": "Tu historial de juego del último año",
   "recordsCalendarPeriod": "Últimas {weeks} semanas",
   "recordsViewAchievements": "Ver logros",
   "recordsOverallNote": "{cleared} de {total} puzles completados en todos los niveles.",
@@ -312,10 +316,11 @@
   "recordsKpiAvgSolveTimeLabel": "Media de mejores tiempos",
   "recordsActivityOverviewTitle": "Resumen de actividad",
   "recordsActivityHeatmapTitle": "Actividad reciente",
-  "recordsActivityHeatmapCaption": "Cuanto más oscura la casilla, más completados ese día.",
+  "recordsActivityHeatmapCaption": "Actividad de todos los puzles que completaste.",
   "recordsActivityTotalClearsLabel": "Completados en total",
-  "recordsActivityCurrentStreakLabel": "Racha diaria actual",
+  "recordsActivityCurrentStreakLabel": "Racha actual",
   "recordsActivityBestStreakLabel": "Mejor racha diaria",
+  "recordsChallengeStreakLabel": "Racha de desafíos",
   "recordsActivityDayCount": "{count, plural, one{{count} día} other{{count} días}}",
   "@recordsActivityDayCount": {
     "placeholders": {
@@ -359,7 +364,7 @@
   "recordsDifficultySnapshotEmpty": "Juega algunas partidas para ver aquí tu mezcla de dificultades.",
   "recordsLevelDoneShort": "Hecho",
   "recordsStatsHeroEyebrow": "Sudoku de los últimos 7 días",
-  "recordsStatsHeroHeadline": "Mira de un vistazo tus\núltimos 7 días de sudoku.",
+  "recordsStatsHeroHeadline": "Mira de un vistazo tus últimos 7 días de sudoku.",
   "recordsTrendA11yMaxClears": "Máximo {count}",
   "@recordsTrendA11yMaxClears": {
     "placeholders": {
@@ -439,7 +444,6 @@
   "recordsGameLoadError": "No se pudieron cargar los datos del puzle.",
   "recordsChallengeTabHint": "Los objetivos semanales y las rachas están en la pestaña Desafío.",
   "recordsGoToChallengeTab": "Abrir la pestaña Desafío",
-  "challengeLoadError": "No se pudo cargar la información del desafío.",
   "challengeTodaysChallengeTitle": "Desafío de hoy",
   "challengeTodayDoneHint": "Ya terminaste el de hoy. Ábrelo de nuevo cuando quieras repasarlo.",
   "challengeTodayPendingHint": "Mantén tu racha con el puzle destacado de hoy.",
@@ -447,15 +451,6 @@
   "challengeTodayStartButton": "Empezar a tu ritmo",
   "myPaceNoPlayableTitle": "No hay partidas disponibles",
   "myPaceNoPlayableMessage": "No quedan puzles nuevos por jugar en ningún nivel.",
-  "challengeWeeklyGoalReachedTitle": "Objetivo semanal alcanzado",
-  "challengeWeeklyGoalRemainingTitle": "{count} victorias más para alcanzar tu objetivo semanal",
-  "@challengeWeeklyGoalRemainingTitle": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "challengeWeeklyGoalReachedBody": "Consigue más victorias perfectas para reforzar tu ritmo.",
   "challengeWeeklyGoalCatchUpBody": "Con unas pocas partidas más puedes completar el objetivo de esta semana.",
   "challengePerfectThisWeek": "{count} victorias perfectas esta semana",
@@ -469,81 +464,7 @@
   "challengePerfectThisWeekFirst": "Intenta tu primera victoria perfecta esta semana",
   "challengePerfectPositiveBody": "Las partidas sin errores hacen que tu progreso se note más.",
   "challengePerfectZeroBody": "El modo notas te acerca mucho más a las victorias sin errores.",
-  "challengeWeeklyGoalHeading": "Objetivo semanal",
-  "challengeWeeklyClearsLine": "{count} victorias esta semana",
-  "@challengeWeeklyClearsLine": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "challengeWeeklyProgressShort": "{done} / {target} hecho",
-  "@challengeWeeklyProgressShort": {
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "target": {
-        "type": "int"
-      }
-    }
-  },
-  "challengeWeeklyPerfectShort": "{count} perfectas",
-  "@challengeWeeklyPerfectShort": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "challengeWeeklyCongratsFooter": "Objetivo semanal completado. ¡Sigue acumulando buenos resultados!",
-  "challengeWeeklyAlmostFooter": "{count} victorias más para terminar la semana.",
-  "@challengeWeeklyAlmostFooter": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "challengeAchievementsHeading": "Logros · insignias",
-  "challengeBadgesCollected": "{unlocked} / {total} obtenidas",
-  "@challengeBadgesCollected": {
-    "placeholders": {
-      "unlocked": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "challengeViewAllBadges": "Ver todas",
-  "challengeEarnedBadgesHeading": "Insignias obtenidas",
-  "challengeNextBadgeTargets": "Próximos objetivos",
-  "challengeBadgeProgressLine": "{desc} · Progreso: {progress}",
-  "@challengeBadgeProgressLine": {
-    "placeholders": {
-      "desc": {
-        "type": "String"
-      },
-      "progress": {
-        "type": "String"
-      }
-    }
-  },
-  "challengeStreakDays": "Racha de {days} días",
-  "@challengeStreakDays": {
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
-  "challengeStreakStartToday": "Consigue tu primera victoria hoy",
-  "challengeTabHeroHeadline": "El puzle de hoy y tu ritmo semanal,\nen una sola vista tranquila.",
-  "challengeHeroPendingDetail": "Empieza a jugar desde Inicio o usa el botón de abajo.",
-  "challengeHeroDoneDetail": "El desafío de hoy está completo. Las insignias y el progreso semanal se guardan en esta pestaña.",
+  "challengeTabHeroHeadline": "El puzle de hoy y tu ritmo semanal, en una sola vista tranquila.",
   "challengeOpenTodayOnHomeButton": "Abrir el puzle de hoy en Inicio",
   "challengeHeroDoneCaption": "Terminaste el desafío de hoy. Vuelve mañana para extender tu racha.",
   "challengeHeroPendingCaption": "El puzle de hoy sigue abierto: empieza ahora para mantener viva tu racha.",
@@ -788,8 +709,12 @@
   "homeLevelProgressSolved": "{cleared} / {total}",
   "@homeLevelProgressSolved": {
     "placeholders": {
-      "cleared": {"type": "int"},
-      "total": {"type": "int"}
+      "cleared": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "levelFilterAll": "Todos",
@@ -799,13 +724,17 @@
   "levelProgressCardMessage": "Empieza hoy con puzles de {levelName}",
   "@levelProgressCardMessage": {
     "placeholders": {
-      "levelName": {"type": "String"}
+      "levelName": {
+        "type": "String"
+      }
     }
   },
   "levelProgressCompleted": "/ {total} completados",
   "@levelProgressCompleted": {
     "placeholders": {
-      "total": {"type": "int"}
+      "total": {
+        "type": "int"
+      }
     }
   },
   "levelRecentBadge": "Reciente",
@@ -817,13 +746,17 @@
   "levelInProgressLimitTitle": "{maxCount} puzles en curso",
   "@levelInProgressLimitTitle": {
     "placeholders": {
-      "maxCount": {"type": "int"}
+      "maxCount": {
+        "type": "int"
+      }
     }
   },
   "levelInProgressLimitBody": "Puedes mantener hasta {maxCount} puzles a la vez.\nElige uno abajo para continuar.",
   "@levelInProgressLimitBody": {
     "placeholders": {
-      "maxCount": {"type": "int"}
+      "maxCount": {
+        "type": "int"
+      }
     }
   },
   "levelInProgressLimitLater": "Más tarde",
@@ -852,7 +785,114 @@
   "savedGamesSortProgress": "Progreso",
   "savedGamesSortPlayTime": "Tiempo jugado",
   "savedGamesEmpty": "No hay partidas guardadas que coincidan con este filtro.",
-  "challengeMetricBasisTitle": "Base de las métricas del desafío",
-  "challengeMetricBasisWeekly": "Progreso semanal: se basa en las victorias de los últimos 7 días.",
-  "challengeMetricBasisStreak": "Racha: se basa en los días consecutivos en que completaste el desafío diario."
+  "savedGamesDeleteFailed": "No se pudo eliminar este puzzle. Inténtalo de nuevo.",
+  "recordsMyRecordTitle": "Mi historial",
+  "recordsSummaryTotalCleared": "Total completado",
+  "recordsSummaryPerfectClears": "Completados perfectos",
+  "challengeMonthlyDescription": "Elige una fecha para volver a jugar un reto anterior.",
+  "challengeTodayEyebrow": "Hoy",
+  "gamePausedTitle": "En pausa",
+  "gamePausedBody": "El tiempo está detenido y el tablero, oculto.",
+  "homeStreakChip": "{count, plural, =1{1 día} other{{count} días}}",
+  "homeStreakActive": "{count, plural, =1{Completaste un puzle hoy} other{Llevas {count} días seguidos completando puzles}}",
+  "homeStreakAtRisk": "{count, plural, =1{Racha de 1 día. Completa un puzle hoy para mantenerla.} other{Racha de {count} días. Completa un puzle hoy para mantenerla.}}",
+  "hintStepLookTitle": "Pista · Dónde mirar",
+  "hintLookCell": "Mira la fila, la columna y el bloque de la casilla resaltada.",
+  "hintLookBox": "Busca dónde va el {value} en el bloque resaltado.",
+  "hintLookRow": "Busca dónde va el {value} en la fila resaltada.",
+  "hintLookCol": "Busca dónde va el {value} en la columna resaltada.",
+  "hintMovedFromSelection": "Hay una casilla más fácil para resolver primero.",
+  "hintTechniqueNakedSingle": "Candidato único",
+  "hintTechniqueHiddenSingle": "Único oculto",
+  "hintTechniqueReveal": "Respuesta",
+  "hintExplainNakedSingle": "La fila, la columna y el bloque de esta casilla ya tienen los otros ocho números, así que solo cabe el {value}.",
+  "hintExplainHiddenSingleBox": "En este bloque, el {value} solo puede ir aquí. Las demás casillas vacías comparten fila o columna con un {value} resaltado.",
+  "hintExplainHiddenSingleRow": "En esta fila, el {value} solo puede ir aquí. Las demás casillas vacías comparten columna o bloque con un {value} resaltado.",
+  "hintExplainHiddenSingleCol": "En esta columna, el {value} solo puede ir aquí. Las demás casillas vacías comparten fila o bloque con un {value} resaltado.",
+  "hintExplainReveal": "Esta casilla necesita una técnica más avanzada. Puedes poner la respuesta con el botón de abajo.",
+  "hintNextStep": "Más detalles",
+  "hintFillAnswer": "Poner respuesta",
+  "hintClose": "Cerrar pista",
+  "notificationOptInTitle": "¿Quieres un recordatorio diario?",
+  "notificationOptInBody": "Si a las 8 de la tarde aún no has resuelto un puzle, te lo recordaremos. Puedes desactivarlo cuando quieras en Ajustes.",
+  "notificationOptInAccept": "Activar recordatorios",
+  "notificationOptInLater": "Ahora no",
+  "notificationOptInDenied": "No se permiten las notificaciones. Actívalas en los ajustes del dispositivo y luego enciende los recordatorios en Ajustes.",
+  "notificationSetupFailed": "No pudimos configurar los recordatorios. Inténtalo de nuevo más tarde en Ajustes.",
+  "beginnerTutorialPromptTitle": "¿Eres nuevo en el sudoku?",
+  "beginnerTutorialPromptBody": "Prueba una breve práctica guiada antes de empezar a resolver. Solo toma un minuto.",
+  "beginnerTutorialStart": "Iniciar la guía",
+  "beginnerTutorialSkip": "Omitir",
+  "beginnerTutorialStepIndicator": "Paso {current} de {total}",
+  "@beginnerTutorialStepIndicator": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "beginnerTutorialStepRowTitle": "Regla: filas",
+  "beginnerTutorialStepRowBody": "Cada fila debe contener los números del 1 al 9, sin repetir.",
+  "beginnerTutorialStepColumnTitle": "Regla: columnas",
+  "beginnerTutorialStepColumnBody": "Cada columna también debe contener los números del 1 al 9, sin repetir.",
+  "beginnerTutorialStepBoxTitle": "Regla: cuadros de 3×3",
+  "beginnerTutorialStepBoxBody": "Cada cuadro de 3×3 debe contener los números del 1 al 9, sin repetir.",
+  "beginnerTutorialStepInputTitle": "Introduce un número",
+  "beginnerTutorialStepInputBody": "Solo un número puede ir en esta casilla resaltada. Tócala y luego toca el número correcto.",
+  "beginnerTutorialStepInputWrongHint": "Ese número ya se usa en esta fila, columna o cuadro. Prueba con otro número.",
+  "beginnerTutorialStepMemoTitle": "Notas y borrado",
+  "beginnerTutorialStepMemoAddBody": "Activa las notas, toca esta casilla y luego toca un número candidato para anotarlo.",
+  "beginnerTutorialStepMemoEraseBody": "Ahora toca ese mismo número otra vez para borrar la nota.",
+  "beginnerTutorialStepHintTitle": "Pistas",
+  "beginnerTutorialStepHintBody": "Toca Pista para ver dónde mirar y por qué, sin gastar una pista real.",
+  "beginnerTutorialStepHintButton": "Abrir pista",
+  "beginnerTutorialStepDoneTitle": "¡Listo!",
+  "beginnerTutorialStepDoneBody": "Aprendiste lo básico: filas, columnas, cuadros, cómo introducir números, notas y pistas.",
+  "beginnerTutorialFirstPuzzleButton": "Empezar mi primer puzzle",
+  "beginnerTutorialNextButton": "Siguiente",
+  "beginnerTutorialCloseButton": "Listo",
+  "settingsHowToPlayTitle": "Cómo jugar",
+  "settingsHowToPlaySubtitle": "Repetir el tutorial guiado",
+  "autoNotesConfirmTitle": "¿Volver a rellenar todas las notas?",
+  "autoNotesConfirmBody": "Esto reemplaza las notas de cada casilla vacía con los candidatos actuales. Los candidatos que borraste a mano podrían reaparecer.",
+  "autoNotesConfirmApply": "Rellenar notas",
+  "autoNotesContradictionMessage": "Algunas casillas se quedaron sin ningún número posible, así que no se rellenaron las notas. Revisa tus entradas e inténtalo de nuevo.",
+  "autoNotesTipMessage": "Consejo: mantén pulsado Notas para rellenar todos los candidatos a la vez.",
+  "gameMemoLongPressHint": "Toca para alternar Notas. Mantén pulsado para rellenar candidatos automáticamente.",
+  "challengeMonthlyTitle": "Historial de retos",
+  "challengePreviousMonth": "Mes anterior",
+  "challengeBackToCurrentMonth": "Este mes",
+  "challengeStatusNotCompleted": "No completado",
+  "challengeStatusInProgress": "En curso",
+  "challengeStatusCompleted": "Completado",
+  "challengeStatusPerfect": "Victoria perfecta",
+  "challengeStatusFuture": "Aún no disponible",
+  "challengeMonthComplete": "Mes completado",
+  "challengeStartPastChallenge": "Iniciar reto pasado",
+  "challengeResumePastChallenge": "Reanudar reto anterior",
+  "challengeRetryPastChallenge": "Repetir reto pasado",
+  "challengePuzzleLoadFailed": "No se pudo cargar este puzzle.",
+  "challengeCalendarLoadError": "No se pudo cargar el calendario de retos.",
+  "challengeStreakExcludedNote": "Completar un reto anterior no cuenta para tu racha",
+  "challengeDayCellSemantics": "{date}, {status}",
+  "@challengeDayCellSemantics": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "homeGreetingMorning": "Empieza con un puzle ligero.",
+  "homeGreetingAfternoon": "Es un buen momento para concentrarte.",
+  "homeGreetingEvening": "Relájate con un puzle tranquilo.",
+  "levelNoPuzzlesAvailable": "No hay puzles disponibles para este nivel.",
+  "levelLastPlayedToday": "Hoy",
+  "levelLastPlayedYesterday": "Ayer",
+  "levelLastPlayedDaysAgo": "Hace {count, plural, =1{1 día} other{{count} días}}"
 }

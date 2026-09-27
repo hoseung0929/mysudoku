@@ -18,6 +18,9 @@ class GameSessionSnapshot {
     required this.hintsRemaining,
     required this.hintCells,
     this.challengeDate,
+    this.initialHints,
+    this.autoNotesUsed = false,
+    this.userFilledCells = 0,
   });
 
   final List<List<int>> board;
@@ -30,6 +33,16 @@ class GameSessionSnapshot {
   final int hintsRemaining;
   final Set<String> hintCells;
   final String? challengeDate;
+
+  /// 이 게임 난이도의 최대 힌트 수(힌트 사용 여부 판정용으로 함께 저장).
+  final int? initialHints;
+
+  /// 이 시도에서 자동 메모 채우기를 한 번이라도 사용했는지.
+  final bool autoNotesUsed;
+
+  /// 고정 칸을 제외하고 사용자가 채운 숫자 칸 수(월간 달력의 "진행 중"
+  /// 판정용).
+  final int userFilledCells;
 }
 
 class GameSessionBootstrap {
@@ -164,6 +177,9 @@ class GameSessionController {
       isGameComplete: snapshot.isGameComplete,
       isGameOver: snapshot.isGameOver,
       challengeDate: snapshot.challengeDate,
+      initialHints: snapshot.initialHints,
+      autoNotesUsed: snapshot.autoNotesUsed,
+      userFilledCells: snapshot.userFilledCells,
     );
     _lastSavedSignatureByGame[key] = signature;
   }
@@ -203,6 +219,10 @@ class GameSessionController {
       ..write(snapshot.isGameComplete ? 1 : 0)
       ..write('|')
       ..write(snapshot.isGameOver ? 1 : 0)
+      ..write('|')
+      ..write(snapshot.autoNotesUsed ? 1 : 0)
+      ..write('|')
+      ..write(snapshot.userFilledCells)
       ..write('|');
 
     for (final row in snapshot.board) {

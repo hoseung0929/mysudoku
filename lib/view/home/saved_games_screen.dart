@@ -30,10 +30,18 @@ class SavedGamesScreen extends StatefulWidget {
 }
 
 class _SavedGamesScreenState extends State<SavedGamesScreen> {
+  static const _removeDuration = Duration(milliseconds: 170);
+
   late List<ContinueGameSummary> _savedGames = List.of(widget.initialGames);
-  bool _isDeleting = false;
+  // 삭제 요청이 진행 중인 행(확인 대화상자 대기 포함). 이 행에만 로딩 표시.
+  String? _deletingKey;
+  // 삭제가 확정돼 사라지는 애니메이션 중인 행.
+  String? _removingKey;
   _SavedGameSort _selectedSort = _SavedGameSort.recent;
   String? _selectedLevelName;
+
+  String _keyFor(ContinueGameSummary summary) =>
+      '${summary.level.name}#${summary.game.gameNumber}';
 
   AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
@@ -73,22 +81,48 @@ class _SavedGamesScreenState extends State<SavedGamesScreen> {
   }
 
   Future<void> _delete(ContinueGameSummary summary) async {
+    final key = _keyFor(summary);
     setState(() {
-      _isDeleting = true;
+      _deletingKey = key;
     });
     try {
       final refreshedGames = await widget.onDelete(summary);
       if (!mounted) return;
-      setState(() {
-        _savedGames = List.of(refreshedGames);
-      });
-      if (_savedGames.isEmpty) {
+      // onDelete 안의 확인 대화상자에서 취소하면 대상이 그대로 남아 돌아온다.
+      final cancelled = refreshedGames.any((g) => _keyFor(g) == key);
+      if (cancelled) {
+        return;
+      }
+      if (MediaQuery.disableAnimationsOf(context)) {
+        setState(() {
+          _savedGames = List.of(refreshedGames);
+        });
+      } else {
+        setState(() {
+          _removingKey = key;
+        });
+        await Future<void>.delayed(_removeDuration);
+        if (!mounted) return;
+        setState(() {
+          _savedGames = List.of(refreshedGames);
+          _removingKey = null;
+        });
+      }
+      if (_savedGames.isEmpty && mounted) {
         Navigator.of(context).pop();
+      }
+    } catch (e) {
+      // 삭제 실패: 대상 행은 그대로 두고 실패를 알린다. 화면은 닫지 않는다.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_l10n.savedGamesDeleteFailed)),
+        );
       }
     } finally {
       if (mounted) {
         setState(() {
-          _isDeleting = false;
+          _deletingKey = null;
+          _removingKey = null;
         });
       }
     }
@@ -177,13 +211,39 @@ class _SavedGamesScreenState extends State<SavedGamesScreen> {
                     separatorBuilder: (_, __) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {
                       final summary = _visibleGames[index];
-                      return _SavedGameListTile(
+                      final key = _keyFor(summary);
+                      final isDeleting = _deletingKey == key;
+                      final isRemoving = _removingKey == key;
+                      final tile = _SavedGameListTile(
                         title: widget.itemTitleBuilder(summary),
                         subtitle: widget.itemSubtitleBuilder(summary),
-                        isBusy: _isDeleting,
+                        isLoading: isDeleting,
+                        // 다른 삭제(확인 대기 포함)가 진행 중이면 동시 삭제를
+                        // 막기 위해 모든 삭제 버튼을 잠근다. 열기는 막지 않는다.
+                        deleteEnabled: _deletingKey == null,
+                        tapEnabled: !isDeleting && !isRemoving,
                         deleteTooltip: widget.deleteTooltip,
                         onTap: () => Navigator.of(context).pop(summary),
                         onDelete: () => _delete(summary),
+                      );
+                      if (!isRemoving) {
+                        return KeyedSubtree(key: ValueKey(key), child: tile);
+                      }
+                      return KeyedSubtree(
+                        key: ValueKey(key),
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 1, end: 0),
+                          duration: _removeDuration,
+                          curve: Curves.easeOutCubic,
+                          builder: (context, t, child) => ClipRect(
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              heightFactor: t,
+                              child: Opacity(opacity: t, child: child),
+                            ),
+                          ),
+                          child: tile,
+                        ),
                       );
                     },
                   ),
@@ -219,7 +279,9 @@ class _SavedGameListTile extends StatelessWidget {
   const _SavedGameListTile({
     required this.title,
     required this.subtitle,
-    required this.isBusy,
+    required this.isLoading,
+    required this.deleteEnabled,
+    required this.tapEnabled,
     required this.deleteTooltip,
     required this.onTap,
     required this.onDelete,
@@ -227,7 +289,9 @@ class _SavedGameListTile extends StatelessWidget {
 
   final String title;
   final String subtitle;
-  final bool isBusy;
+  final bool isLoading;
+  final bool deleteEnabled;
+  final bool tapEnabled;
   final String deleteTooltip;
   final VoidCallback onTap;
   final VoidCallback onDelete;
@@ -239,7 +303,7 @@ class _SavedGameListTile extends StatelessWidget {
       color: colorScheme.surface,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
-        onTap: isBusy ? null : onTap,
+        onTap: tapEnabled ? onTap : null,
         borderRadius: BorderRadius.circular(18),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -284,14 +348,24 @@ class _SavedGameListTile extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(
-                onPressed: isBusy ? null : onDelete,
-                tooltip: deleteTooltip,
-                icon: Icon(
-                  Icons.delete_outline,
-                  color: colorScheme.error,
+              if (isLoading)
+                const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              else
+                IconButton(
+                  onPressed: deleteEnabled ? onDelete : null,
+                  tooltip: deleteTooltip,
+                  icon: Icon(
+                    Icons.delete_outline,
+                    color: colorScheme.error,
+                  ),
                 ),
-              ),
               Icon(
                 Icons.chevron_right,
                 color: colorScheme.onSurfaceVariant,

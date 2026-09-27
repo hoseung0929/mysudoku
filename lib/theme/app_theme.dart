@@ -265,22 +265,50 @@ class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: dark.background,
       canvasColor: dark.background,
-      textTheme: GoogleFonts.notoSansTextTheme(ThemeData.dark().textTheme).copyWith(
-        displayLarge: GoogleFonts.notoSans(fontSize: 32, fontWeight: FontWeight.bold, color: dark.textPrimary),
-        displayMedium: GoogleFonts.notoSans(fontSize: 28, fontWeight: FontWeight.bold, color: dark.textPrimary),
-        displaySmall: GoogleFonts.notoSans(fontSize: 24, fontWeight: FontWeight.bold, color: dark.textPrimary),
-        headlineLarge: GoogleFonts.notoSans(fontSize: 22, fontWeight: FontWeight.w600, color: dark.textPrimary),
-        headlineMedium: GoogleFonts.notoSans(fontSize: 20, fontWeight: FontWeight.w600, color: dark.textPrimary),
-        headlineSmall: GoogleFonts.notoSans(fontSize: 18, fontWeight: FontWeight.w600, color: dark.textPrimary),
-        titleLarge: GoogleFonts.notoSans(fontSize: 16, fontWeight: FontWeight.w600, color: dark.textPrimary),
-        titleMedium: GoogleFonts.notoSans(fontSize: 14, fontWeight: FontWeight.w500, color: dark.textPrimary),
-        titleSmall: GoogleFonts.notoSans(fontSize: 12, fontWeight: FontWeight.w500, color: dark.textSecondary),
-        bodyLarge: GoogleFonts.notoSans(fontSize: 16, fontWeight: FontWeight.normal, color: dark.textPrimary),
-        bodyMedium: GoogleFonts.notoSans(fontSize: 14, fontWeight: FontWeight.normal, color: dark.textPrimary),
-        bodySmall: GoogleFonts.notoSans(fontSize: 12, fontWeight: FontWeight.normal, color: dark.textSecondary),
-        labelLarge: GoogleFonts.notoSans(fontSize: 14, fontWeight: FontWeight.w500, color: dark.textPrimary),
-        labelMedium: GoogleFonts.notoSans(fontSize: 12, fontWeight: FontWeight.w500, color: dark.textSecondary),
-        labelSmall: GoogleFonts.notoSans(fontSize: 10, fontWeight: FontWeight.w500, color: dark.textSecondary),
+      textTheme:
+          GoogleFonts.notoSansTextTheme(ThemeData.dark().textTheme).copyWith(
+        displayLarge: GoogleFonts.notoSans(
+            fontSize: 32, fontWeight: FontWeight.bold, color: dark.textPrimary),
+        displayMedium: GoogleFonts.notoSans(
+            fontSize: 28, fontWeight: FontWeight.bold, color: dark.textPrimary),
+        displaySmall: GoogleFonts.notoSans(
+            fontSize: 24, fontWeight: FontWeight.bold, color: dark.textPrimary),
+        headlineLarge: GoogleFonts.notoSans(
+            fontSize: 22, fontWeight: FontWeight.w600, color: dark.textPrimary),
+        headlineMedium: GoogleFonts.notoSans(
+            fontSize: 20, fontWeight: FontWeight.w600, color: dark.textPrimary),
+        headlineSmall: GoogleFonts.notoSans(
+            fontSize: 18, fontWeight: FontWeight.w600, color: dark.textPrimary),
+        titleLarge: GoogleFonts.notoSans(
+            fontSize: 16, fontWeight: FontWeight.w600, color: dark.textPrimary),
+        titleMedium: GoogleFonts.notoSans(
+            fontSize: 14, fontWeight: FontWeight.w500, color: dark.textPrimary),
+        titleSmall: GoogleFonts.notoSans(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: dark.textSecondary),
+        bodyLarge: GoogleFonts.notoSans(
+            fontSize: 16,
+            fontWeight: FontWeight.normal,
+            color: dark.textPrimary),
+        bodyMedium: GoogleFonts.notoSans(
+            fontSize: 14,
+            fontWeight: FontWeight.normal,
+            color: dark.textPrimary),
+        bodySmall: GoogleFonts.notoSans(
+            fontSize: 12,
+            fontWeight: FontWeight.normal,
+            color: dark.textSecondary),
+        labelLarge: GoogleFonts.notoSans(
+            fontSize: 14, fontWeight: FontWeight.w500, color: dark.textPrimary),
+        labelMedium: GoogleFonts.notoSans(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: dark.textSecondary),
+        labelSmall: GoogleFonts.notoSans(
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: dark.textSecondary),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: dark.surface,
@@ -288,7 +316,8 @@ class AppTheme {
         elevation: 0,
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-        titleTextStyle: GoogleFonts.notoSans(fontSize: 20, fontWeight: FontWeight.w600, color: dark.textPrimary),
+        titleTextStyle: GoogleFonts.notoSans(
+            fontSize: 20, fontWeight: FontWeight.w600, color: dark.textPrimary),
       ),
       cardTheme: CardThemeData(
         color: dark.surface,
@@ -306,17 +335,21 @@ class AppTheme {
           foregroundColor: dark.background,
           elevation: 0,
           shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-          textStyle: GoogleFonts.notoSans(fontSize: 16, fontWeight: FontWeight.w600),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          textStyle:
+              GoogleFonts.notoSans(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(elevation: 0, shadowColor: Colors.transparent),
+        style: FilledButton.styleFrom(
+            elevation: 0, shadowColor: Colors.transparent),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: dark.textSecondary,
-          textStyle: GoogleFonts.notoSans(fontSize: 16, fontWeight: FontWeight.w500),
+          textStyle:
+              GoogleFonts.notoSans(fontSize: 16, fontWeight: FontWeight.w500),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(

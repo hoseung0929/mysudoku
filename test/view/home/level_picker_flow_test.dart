@@ -129,7 +129,9 @@ void main() {
     await settle(tester);
   }
 
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() => SharedPreferences.setMockInitialValues({
+        'beginner_tutorial_state_v1': 'completed',
+      }));
 
   testWidgets('A/B: new puzzle → notes only → back → in progress → restored',
       (tester) async {

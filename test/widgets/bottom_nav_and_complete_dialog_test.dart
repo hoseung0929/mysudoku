@@ -26,7 +26,8 @@ Widget _app(Widget child, {double textScale = 1.0, Locale? locale}) {
 
 void main() {
   group('BottomNavBar', () {
-    testWidgets('shows tab names and exposes one selected semantic node each',
+    testWidgets(
+        'shows home, records and settings tabs, one selected semantic node each',
         (tester) async {
       final handle = tester.ensureSemantics();
       var tapped = -1;
@@ -40,6 +41,10 @@ void main() {
 
       expect(find.text('Home'), findsOneWidget);
       expect(find.text('Records'), findsOneWidget);
+      expect(find.text('Settings'), findsOneWidget);
+      expect(find.byIcon(Icons.home_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.bar_chart_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
 
       expect(
         tester.getSemantics(find.bySemanticsLabel('Home')),
@@ -49,11 +54,33 @@ void main() {
         tester.getSemantics(find.bySemanticsLabel('Records')),
         isNot(isSemantics(isSelected: true)),
       );
+      expect(
+        tester.getSemantics(find.bySemanticsLabel('Settings')),
+        isNot(isSemantics(isSelected: true)),
+      );
       // 이름이 중복 낭독되지 않도록 라벨당 노드는 하나.
       expect(find.bySemanticsLabel('Home'), findsOneWidget);
 
       await tester.tap(find.text('Records'));
       expect(tapped, 1);
+      await tester.tap(find.text('Settings'));
+      expect(tapped, 2);
+      handle.dispose();
+    });
+
+    testWidgets('each tab has a tappable area at least 44x44', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(_app(
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: BottomNavBar(selectedIndex: 0, onItemTapped: (_) {}),
+        ),
+      ));
+      for (final label in ['Home', 'Records', 'Settings']) {
+        final size = tester.getSize(find.bySemanticsLabel(label));
+        expect(size.width, greaterThanOrEqualTo(44));
+        expect(size.height, greaterThanOrEqualTo(44));
+      }
       handle.dispose();
     });
 
@@ -73,6 +100,26 @@ void main() {
       ));
       expect(tester.takeException(), isNull);
       expect(find.textContaining('OVERFLOWED'), findsNothing);
+    });
+
+    testWidgets('tablet width keeps three evenly spaced items, no overflow',
+        (tester) async {
+      tester.view.physicalSize = const Size(1024, 768);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(_app(
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: BottomNavBar(selectedIndex: 2, onItemTapped: (_) {}),
+        ),
+      ));
+      expect(tester.takeException(), isNull);
+      final homeLeft = tester.getTopLeft(find.text('Home')).dx;
+      final recordsLeft = tester.getTopLeft(find.text('Records')).dx;
+      final settingsLeft = tester.getTopLeft(find.text('Settings')).dx;
+      expect(homeLeft, lessThan(recordsLeft));
+      expect(recordsLeft, lessThan(settingsLeft));
     });
   });
 

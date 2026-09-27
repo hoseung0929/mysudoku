@@ -121,10 +121,25 @@ class MyPaceService {
     final orderedLevels = _activeLevels;
     if (orderedLevels.isEmpty) return null;
 
-    final sameLevel = orderedLevels.firstWhere(
-      (item) => item.name == levelName,
-      orElse: () => orderedLevels.first,
-    );
+    final activeLevelIndex =
+        orderedLevels.indexWhere((item) => item.name == levelName);
+
+    // 마지막 기록의 난이도가 활성 난이도가 아니면(마스터, 삭제되거나 이름이
+    // 바뀐 난이도, 알 수 없는 문자열 등) 그 문제 번호를 다른 난이도의 기준
+    // 번호로 재사용하지 않는다 — 그 번호는 이제 존재하지 않는 난이도에서
+    // 나온 것이라 의미가 없다. 첫 활성 난이도부터 새로 탐색한다.
+    if (activeLevelIndex < 0) {
+      for (final level in orderedLevels) {
+        final firstUncleared = await _findFirstUnclearedGameNumber(level.name);
+        if (firstUncleared == null) continue;
+        final target =
+            await _targetFor(level: level, gameNumber: firstUncleared);
+        if (target != null) return target;
+      }
+      return null;
+    }
+
+    final sameLevel = orderedLevels[activeLevelIndex];
 
     final nextInSameLevel = await _findFirstUnclearedGameNumberAfter(
       sameLevel.name,
@@ -134,6 +149,20 @@ class MyPaceService {
       final target = await _targetFor(
         level: sameLevel,
         gameNumber: nextInSameLevel,
+      );
+      if (target != null) return target;
+    }
+
+    // 마지막 완료 번호보다 큰 미완료 문제가 없거나(또는 로드에 실패했다면),
+    // 다음 난이도로 넘어가기 전에 같은 난이도에 남은 더 낮은 번호의 미완료
+    // 문제부터 확인한다 — 실제로 플레이할 수 있는 문제를 두고 다음 난이도로
+    // 건너뛰거나 null을 반환하지 않기 위함이다.
+    final firstInSameLevel =
+        await _findFirstUnclearedGameNumber(sameLevel.name);
+    if (firstInSameLevel != null) {
+      final target = await _targetFor(
+        level: sameLevel,
+        gameNumber: firstInSameLevel,
       );
       if (target != null) return target;
     }

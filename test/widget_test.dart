@@ -7,7 +7,7 @@ import 'package:sudoku159/widgets/bottom_nav_bar.dart';
 void main() {
   AppLogger.setMuted(true);
 
-  testWidgets('BottomNavBar renders two labeled tabs',
+  testWidgets('BottomNavBar renders three labeled tabs',
       (WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -23,9 +23,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.cottage_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.home_rounded), findsOneWidget);
     expect(find.byIcon(Icons.bar_chart_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
     expect(find.text('Home'), findsOneWidget);
     expect(find.text('Records'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
   });
 }

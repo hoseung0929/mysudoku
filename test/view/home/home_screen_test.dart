@@ -12,13 +12,12 @@ import 'package:sudoku159/services/challenge/achievement_service.dart';
 import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
 import 'package:sudoku159/services/home/home_dashboard_service.dart';
 import 'package:sudoku159/services/home/level_progress_service.dart';
+import 'package:sudoku159/navigation/root_nav_scope.dart';
 import 'package:sudoku159/theme/app_theme.dart';
+import 'package:sudoku159/theme/level_status_colors.dart';
 import 'package:sudoku159/utils/app_logger.dart';
 import 'package:sudoku159/view/home/home_screen.dart';
-import 'package:sudoku159/view/settings/settings_screen.dart';
 import 'package:sudoku159/view/home/saved_games_screen.dart';
-import 'package:sudoku159/widgets/mascot_image.dart';
-import 'package:sudoku159/widgets/profile_glass_header.dart';
 import 'package:sudoku159/widgets/sudoku_motif.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_game_screen.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -75,11 +74,14 @@ class _FakeDashboard extends HomeDashboardService {
   _FakeDashboard(this.produce);
   final Future<HomeDashboardData> Function() produce;
   List<ContinueGameSummary> all = const [];
+  int loadCount = 0;
 
   @override
   Future<HomeDashboardData> load(AppLocalizations l10n,
-          {int continueGamesLimit = 3}) =>
-      produce();
+      {int continueGamesLimit = 3}) {
+    loadCount++;
+    return produce();
+  }
 
   @override
   Future<List<ContinueGameSummary>> loadContinueGames({int? limit}) async =>
@@ -141,6 +143,8 @@ void main() {
     double textScale = 1.0,
     ThemeData? theme,
     Locale? locale,
+    bool reduceMotion = false,
+    ValueChanged<int>? onGoToTab,
   }) async {
     SharedPreferences.setMockInitialValues({});
     tester.view.physicalSize = size;
@@ -154,18 +158,23 @@ void main() {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context)
-              .copyWith(textScaler: TextScaler.linear(textScale)),
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(textScale),
+            disableAnimations: reduceMotion,
+          ),
           child: child!,
         ),
-        home: Scaffold(
-          body: HomeScreen(
-            key: UniqueKey(),
-            homeDashboardService: dashboard,
-            levelProgressService: LevelProgressService(
-              loadClearedGameCount: (_) async => 12,
+        home: RootNavScope(
+          goToTab: onGoToTab ?? (_) {},
+          child: Scaffold(
+            body: HomeScreen(
+              key: UniqueKey(),
+              homeDashboardService: dashboard,
+              levelProgressService: LevelProgressService(
+                loadClearedGameCount: (_) async => 12,
+              ),
+              databaseHelper: _FakeDb(),
             ),
-            databaseHelper: _FakeDb(),
           ),
         ),
       ),
@@ -211,6 +220,17 @@ void main() {
     expect(find.text("Today's challenge"), findsOneWidget);
     expect(find.text('Beginner · #007'), findsOneWidget);
     expect(find.text("Start today's challenge"), findsOneWidget);
+  });
+
+  testWidgets(
+      "no 'view past challenges' button on the today's-challenge card "
+      '(removed)', (tester) async {
+    await pumpHome(
+      tester,
+      _FakeDashboard(() async => _data(continues: [_summary(12)])),
+    );
+    expect(find.text('View past challenges'), findsNothing);
+    expect(find.byIcon(Icons.calendar_month_outlined), findsNothing);
   });
 
   testWidgets('notes-only game is described, several games link to the list',
@@ -441,6 +461,30 @@ void main() {
     });
   }
 
+  for (final entry in {
+    // 폭이 600을 넘으면(가로 모드 폰 포함) 기존 관례대로 태블릿 레이아웃을
+    // 쓰므로, 히어로 높이도 태블릿 값(300)이 적용된다.
+    'phone portrait': (const Size(390, 844), 236.0),
+    'phone landscape': (const Size(844, 390), 276.0),
+    'tablet portrait': (const Size(768, 1024), 276.0),
+    'tablet landscape': (const Size(1024, 768), 276.0),
+  }.entries) {
+    testWidgets(
+        'hero header keeps its fixed height with no overflow: ${entry.key}',
+        (tester) async {
+      final (size, expectedHeight) = entry.value;
+      await pumpHome(
+        tester,
+        _FakeDashboard(() async => _data()),
+        size: size,
+      );
+      final headerSize =
+          tester.getSize(find.byKey(const Key('home_hero_header')));
+      expect(headerSize.height, expectedHeight);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   for (final lang in ['ko', 'ja', 'es', 'zh']) {
     testWidgets('long translations do not overflow at 2x text: $lang',
         (tester) async {
@@ -461,10 +505,13 @@ void main() {
   }
 
   group('decorative images', () {
-    testWidgets('start card shows the mascot; challenge card shows the motif',
+    testWidgets(
+        'start card has no mascot (avoids duplicating the hero header character); challenge card shows the motif',
         (tester) async {
       await pumpHome(tester, _FakeDashboard(() async => _data()));
-      expect(find.byType(MascotImage), findsWidgets);
+      // 캐릭터는 최상단 히어로 이미지에 이미 나오므로, 시작 카드에는 더 이상
+      // 별도 마스코트를 넣지 않는다(캐릭터 중복 제거).
+      expect(find.text('Start your first puzzle'), findsOneWidget);
       expect(find.byType(SudokuMotif), findsOneWidget);
       // 장식은 스크린 리더에서 제외된다.
       expect(
@@ -473,41 +520,6 @@ void main() {
           matching: find.byType(ExcludeSemantics),
         ),
         findsWidgets,
-      );
-    });
-
-    testWidgets('above 1.3x text the welcome decoration is dropped',
-        (tester) async {
-      await pumpHome(
-        tester,
-        _FakeDashboard(() async => _data()),
-        size: const Size(390, 844),
-        textScale: 1.6,
-      );
-      expect(find.byType(MascotImage), findsNothing);
-      // 장식이 사라져도 제목·설명·버튼은 그대로 있다.
-      expect(find.text('Start your first puzzle'), findsOneWidget);
-      expect(
-        find.text('Choose a level. Your progress is saved automatically.'),
-        findsOneWidget,
-      );
-      expect(find.text('Choose a level'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
-
-    testWidgets('narrow width at normal text keeps a smaller mascot on top',
-        (tester) async {
-      await pumpHome(
-        tester,
-        _FakeDashboard(() async => _data()),
-        size: const Size(320, 568),
-      );
-      final mascot = tester.getTopLeft(find.byType(MascotImage).first).dy;
-      final title = tester.getTopLeft(find.text('Start your first puzzle')).dy;
-      expect(mascot, lessThan(title));
-      expect(
-        tester.getSize(find.byType(MascotImage).first).height,
-        lessThanOrEqualTo(80),
       );
     });
 
@@ -533,6 +545,99 @@ void main() {
     });
   });
 
+  group('difficulty list', () {
+    testWidgets(
+        'shows the 4 released difficulty levels; Master stays hidden for now',
+        (tester) async {
+      await pumpHome(tester, _FakeDashboard(() async => _data()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Beginner'), findsOneWidget);
+      expect(find.text('Intermediate'), findsOneWidget);
+      expect(find.text('Advanced'), findsOneWidget);
+      expect(find.text('Expert'), findsOneWidget);
+      // 마스터는 아직 준비 중이라 홈 화면에서는 우선 숨긴다.
+      expect(find.text('Master'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('content padding (hero stays full width)', () {
+    testWidgets('mobile body content has 16px horizontal padding',
+        (tester) async {
+      await pumpHome(tester, _FakeDashboard(() async => _data()));
+      await tester.pumpAndSettle();
+
+      final heroLeft =
+          tester.getTopLeft(find.byKey(const Key('home_hero_header'))).dx;
+      final heroWidth =
+          tester.getSize(find.byKey(const Key('home_hero_header'))).width;
+      // 히어로는 좌우 여백 없이 화면 전체 너비를 그대로 쓴다.
+      expect(heroLeft, 0);
+      expect(heroWidth, 390);
+
+      final sectionTitleLeft =
+          tester.getTopLeft(find.text('New game · choose a level')).dx;
+      expect(sectionTitleLeft, 16);
+    });
+
+    testWidgets('tablet body content has 24px horizontal padding',
+        (tester) async {
+      await pumpHome(
+        tester,
+        _FakeDashboard(() async => _data()),
+        size: const Size(768, 1024),
+      );
+      await tester.pumpAndSettle();
+
+      final heroLeft =
+          tester.getTopLeft(find.byKey(const Key('home_hero_header'))).dx;
+      final heroWidth =
+          tester.getSize(find.byKey(const Key('home_hero_header'))).width;
+      expect(heroLeft, 0);
+      expect(heroWidth, 768);
+
+      final sectionTitleLeft =
+          tester.getTopLeft(find.text('New game · choose a level')).dx;
+      expect(sectionTitleLeft, 24);
+    });
+  });
+
+  group('collapsing app bar', () {
+    testWidgets(
+        'hero scrolls away with the body instead of staying pinned; app bar collapses once the hero passes',
+        (tester) async {
+      await pumpHome(
+        tester,
+        _FakeDashboard(() async => _data()),
+        size: const Size(390, 700),
+      );
+
+      // 처음에는 히어로가 사진 위 투명 오버레이(흰 글자)로 겹쳐 있다.
+      Text nameText() => tester.widget<Text>(find.text('Traveler'));
+      expect((nameText().style?.color), Colors.white);
+
+      // 히어로 높이(236)를 완전히 넘어갈 만큼 스크롤한다 -> 더 이상 고정되어
+      // 있지 않고 본문과 함께 위로 스크롤되어 사라져야 한다.
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, -400));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final heroRect =
+          tester.getRect(find.byKey(const Key('home_hero_header')));
+      expect(heroRect.bottom, lessThanOrEqualTo(0));
+
+      // 축소 앱바는 이제 불투명 배경 + 테마 글자색으로 전환된다.
+      expect((nameText().style?.color), isNot(Colors.white));
+
+      // 다시 맨 위로 스크롤하면 투명 오버레이 상태로 되돌아온다.
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, 400));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect((nameText().style?.color), Colors.white);
+    });
+  });
+
   group('header and start action', () {
     testWidgets('first card is never hidden behind the pinned header',
         (tester) async {
@@ -544,7 +649,7 @@ void main() {
         );
         await tester.pump(const Duration(milliseconds: 100));
         final headerBottom =
-            tester.getRect(find.byType(ProfileGlassHeader)).bottom;
+            tester.getRect(find.byKey(const Key('home_hero_header'))).bottom;
         final cardTop =
             tester.getTopLeft(find.text('Start your first puzzle')).dy;
         expect(cardTop, greaterThanOrEqualTo(headerBottom), reason: '$scale');
@@ -562,7 +667,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
       final headerBottom =
-          tester.getRect(find.byType(ProfileGlassHeader)).bottom;
+          tester.getRect(find.byKey(const Key('home_hero_header'))).bottom;
       final title =
           tester.getTopLeft(find.text('New game · choose a level')).dy;
       expect(title, greaterThanOrEqualTo(headerBottom));
@@ -570,31 +675,167 @@ void main() {
       expect(find.byType(SudokuGameScreen), findsNothing);
     });
 
-    testWidgets('settings and profile buttons still work', (tester) async {
+    testWidgets('no settings button in the header (moved to bottom tab)',
+        (tester) async {
       await pumpHome(tester, _FakeDashboard(() async => _data()));
-      await tester.tap(find.byTooltip('Settings'));
+      expect(find.byIcon(Icons.settings_outlined), findsNothing);
+      expect(find.byTooltip('Settings'), findsNothing);
+    });
+
+    testWidgets(
+        'reduce motion: "Choose a level" jumps to the level section instantly',
+        (tester) async {
+      await pumpHome(
+        tester,
+        _FakeDashboard(() async => _data()),
+        size: const Size(390, 700),
+        reduceMotion: true,
+      );
+      await tester.tap(find.text('Choose a level'));
+      // 동작 줄이기에서는 jumpTo()라 한 프레임만으로 최종 위치에 도달한다.
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(find.byType(SettingsScreen), findsOneWidget);
+      final headerBottom =
+          tester.getRect(find.byKey(const Key('home_hero_header'))).bottom;
+      final title =
+          tester.getTopLeft(find.text('New game · choose a level')).dy;
+      expect(title, greaterThanOrEqualTo(headerBottom));
+      expect(title, lessThan(700));
+    });
+
+    testWidgets(
+        'without reduce motion: "Choose a level" still animates over time',
+        (tester) async {
+      await pumpHome(
+        tester,
+        _FakeDashboard(() async => _data()),
+        size: const Size(390, 700),
+      );
+      await tester.tap(find.text('Choose a level'));
+      // animateTo() 직후 첫 프레임에서는 아직 이동이 끝나지 않은 상태다.
+      await tester.pump();
+      final titleRightAfterTap =
+          tester.getTopLeft(find.text('New game · choose a level')).dy;
+
+      await tester.pump(const Duration(milliseconds: 500));
+      final headerBottom =
+          tester.getRect(find.byKey(const Key('home_hero_header'))).bottom;
+      final titleSettled =
+          tester.getTopLeft(find.text('New game · choose a level')).dy;
+      expect(titleSettled, greaterThanOrEqualTo(headerBottom));
+      expect(titleSettled, lessThan(700));
+      // 애니메이션이 진행 중이었다면 첫 프레임과 정착 위치가 달라야 한다.
+      expect(titleRightAfterTap, isNot(closeTo(titleSettled, 0.5)));
+    });
+
+    testWidgets('difficulty card opacity transition follows reduce motion',
+        (tester) async {
+      await pumpHome(tester, _FakeDashboard(() async => _data()));
+      AnimatedOpacity cardOpacity() => tester.widget<AnimatedOpacity>(
+            find.ancestor(
+              of: find.text('Beginner'),
+              matching: find.byType(AnimatedOpacity),
+            ),
+          );
+      expect(cardOpacity().duration, const Duration(milliseconds: 140));
+
+      await pumpHome(
+        tester,
+        _FakeDashboard(() async => _data()),
+        reduceMotion: true,
+      );
+      expect(cardOpacity().duration, Duration.zero);
+    });
+
+    testWidgets(
+        'level list scroll area reserves extra bottom space so the last card clears the floating bottom nav',
+        (tester) async {
+      await pumpHome(tester, _FakeDashboard(() async => _data()));
+      final scrollView = tester
+          .widget<SingleChildScrollView>(find.byType(SingleChildScrollView));
+      final bottomPad = scrollView.padding!.resolve(TextDirection.ltr).bottom;
+      // 이 화면 단독 테스트에는 실제 플로팅 하단 탭이 없어 겹침 자체를 직접
+      // 재현할 수는 없지만, 예약된 하단 여백이 실측 탭 높이(약 86)보다
+      // 넉넉한지는 확인할 수 있다.
+      expect(bottomPad, greaterThanOrEqualTo(100));
+    });
+
+    testWidgets(
+        "'Choose a level' stays the solid black primary button; 'Start today's challenge' becomes a light-purple secondary button",
+        (tester) async {
+      await pumpHome(tester, _FakeDashboard(() async => _data()));
+
+      final chooseLevelButton = tester
+          .widget<FilledButton>(
+            find.ancestor(
+              of: find.text('Choose a level'),
+              matching: find.byType(FilledButton),
+            ),
+          )
+          .style;
+      final todayChallengeButton = tester
+          .widget<FilledButton>(
+            find.ancestor(
+              of: find.text("Start today's challenge"),
+              matching: find.byType(FilledButton),
+            ),
+          )
+          .style;
+
+      final palette = LevelStatusPalette.of(tester.element(
+        find.text("Start today's challenge"),
+      ));
+      // '난이도 선택'은 배경색을 따로 지정하지 않아 테마 기본(검은색 계열)을
+      // 그대로 쓰고, '오늘의 도전 시작'만 연한 보라색 배경으로 구분한다.
+      expect(chooseLevelButton?.backgroundColor?.resolve({}), isNull);
+      expect(
+        todayChallengeButton?.backgroundColor?.resolve({}),
+        palette.completedBackground,
+      );
+      expect(
+        todayChallengeButton?.foregroundColor?.resolve({}),
+        palette.primaryPurple,
+      );
     });
 
     for (final dark in [false, true]) {
-      testWidgets('status bar style follows the theme (dark=$dark)',
+      testWidgets(
+          'status bar icons stay light over the hero, then follow the theme once collapsed (dark=$dark)',
           (tester) async {
         await pumpHome(
           tester,
           _FakeDashboard(() async => _data()),
           theme: dark ? AppTheme.darkTheme() : AppTheme.lightTheme(),
+          size: const Size(390, 700),
         );
-        final style = tester
+
+        SystemUiOverlayStyle currentStyle() => tester
             .widget<AnnotatedRegion<SystemUiOverlayStyle>>(
               find.byType(AnnotatedRegion<SystemUiOverlayStyle>),
             )
             .value;
-        expect(style.statusBarIconBrightness,
-            dark ? Brightness.light : Brightness.dark);
-        expect(style.statusBarBrightness,
-            dark ? Brightness.dark : Brightness.light);
+
+        // 히어로가 보이는 동안은 앱 테마의 밝기와 무관하게 항상 밝은 상태바
+        // 아이콘을 강제한다(사진 위라 가독성을 위해).
+        expect(currentStyle().statusBarIconBrightness, Brightness.light);
+        expect(currentStyle().statusBarBrightness, Brightness.dark);
+
+        // 히어로 높이를 완전히 넘어 축소 앱바로 바뀌면 현재 테마를 따른다:
+        // 라이트 모드는 검은색 아이콘, 다크 모드는 흰색 아이콘.
+        await tester.drag(
+          find.byType(Scrollable).first,
+          const Offset(0, -400),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+
+        expect(
+          currentStyle().statusBarIconBrightness,
+          dark ? Brightness.light : Brightness.dark,
+        );
+        expect(
+          currentStyle().statusBarBrightness,
+          dark ? Brightness.dark : Brightness.light,
+        );
       });
     }
   });

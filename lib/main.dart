@@ -24,10 +24,9 @@ import 'package:sudoku159/view/home/force_update_gate.dart';
 import 'package:sudoku159/view/home/home_screen.dart';
 import 'package:sudoku159/view/home/startup_catalog_preparing_gate.dart';
 import 'package:sudoku159/view/records/records_statistics_screen.dart';
+import 'package:sudoku159/view/settings/settings_screen.dart';
 import 'package:sudoku159/widgets/bottom_nav_bar.dart';
 import 'package:sudoku159/utils/app_logger.dart';
-
-const String _prefsLocaleKey = 'app_locale';
 
 void main() async {
   final binding = WidgetsFlutterBinding.ensureInitialized();
@@ -50,7 +49,8 @@ void main() async {
   unawaited(InstallIdService().getOrCreate());
 
   try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform);
   } catch (e) {
     if (kDebugMode) {
       AppLogger.debug('Firebase 초기화 실패: $e');
@@ -98,7 +98,7 @@ class _Sudoku159AppState extends State<Sudoku159App> {
 
   Future<void> _loadSavedPreferences() async {
     final prefs = await SharedPreferences.getInstance();
-    final code = prefs.getString(_prefsLocaleKey);
+    final code = prefs.getString(AppSettingsService.localeKey);
     final themeModeIndex = prefs.getInt(AppSettingsService.themeModeKey);
     if (!mounted) return;
     setState(() {
@@ -108,7 +108,8 @@ class _Sudoku159AppState extends State<Sudoku159App> {
         _localeOverride = Locale(code);
       }
       if (themeModeIndex != null) {
-        _themeMode = ThemeMode.values[themeModeIndex.clamp(0, ThemeMode.values.length - 1)];
+        _themeMode = ThemeMode
+            .values[themeModeIndex.clamp(0, ThemeMode.values.length - 1)];
       }
       _prefsLoaded = true;
     });
@@ -125,12 +126,9 @@ class _Sudoku159AppState extends State<Sudoku159App> {
 
   Future<void> _bootstrapNotificationState() async {
     try {
-      await _notificationService.initialize();
-      // 권한 UI 토글이 없으므로(하드코딩 ON) 여기서 직접 요청한다. iOS/Android 모두
-      // 사용자가 이미 응답한 뒤엔 재호출해도 시스템 프롬프트가 다시 뜨지 않고
-      // 현재 상태만 반환하므로, 매 실행마다 불러도 안전하다.
-      await _notificationService.requestPermissions();
-      await _notificationService.syncReminders();
+      await _notificationService.bootstrapOnLaunch(
+        isIos: defaultTargetPlatform == TargetPlatform.iOS,
+      );
     } catch (e) {
       if (kDebugMode) {
         AppLogger.debug('알림 초기화 실패: $e');
@@ -141,12 +139,24 @@ class _Sudoku159AppState extends State<Sudoku159App> {
   Future<void> _setAppLocale(Locale? locale) async {
     final prefs = await SharedPreferences.getInstance();
     if (locale == null) {
-      await prefs.remove(_prefsLocaleKey);
+      await prefs.remove(AppSettingsService.localeKey);
     } else {
-      await prefs.setString(_prefsLocaleKey, locale.languageCode);
+      await prefs.setString(AppSettingsService.localeKey, locale.languageCode);
     }
     if (!mounted) return;
     setState(() => _localeOverride = locale);
+    // 이미 예약된 알림도 앱에서 방금 선택한 언어로 다시 맞춘다.
+    unawaited(_resyncNotificationsAfterLocaleChange());
+  }
+
+  Future<void> _resyncNotificationsAfterLocaleChange() async {
+    try {
+      await _notificationService.syncReminders();
+    } catch (e) {
+      if (kDebugMode) {
+        AppLogger.debug('언어 변경 후 알림 재동기화 실패: $e');
+      }
+    }
   }
 
   @override
@@ -207,6 +217,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
   bool _recordsTabLoaded = false;
+  bool _settingsTabLoaded = false;
   bool _isBottom = false;
 
   void _onItemTapped(int index) {
@@ -218,6 +229,8 @@ class _MyHomePageState extends State<MyHomePage> {
       _selectedIndex = index;
       if (index == 1) {
         _recordsTabLoaded = true;
+      } else if (index == 2) {
+        _settingsTabLoaded = true;
       }
     });
     if (index == 1) {
@@ -249,6 +262,9 @@ class _MyHomePageState extends State<MyHomePage> {
               const HomeScreen(),
               _recordsTabLoaded
                   ? const RecordsStatisticsScreen()
+                  : const SizedBox.shrink(),
+              _settingsTabLoaded
+                  ? const SettingsScreen()
                   : const SizedBox.shrink(),
             ],
           ),

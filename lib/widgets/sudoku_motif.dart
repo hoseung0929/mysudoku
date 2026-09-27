@@ -48,19 +48,19 @@ class SudokuMotif extends StatelessWidget {
                     enabled: animateCheck,
                     onEnd: onCheckAnimated,
                     child: Container(
-                    width: size * 0.42,
-                    height: size * 0.42,
-                    decoration: BoxDecoration(
-                      color: purple,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: cs.surface, width: 2),
+                      width: size * 0.42,
+                      height: size * 0.42,
+                      decoration: BoxDecoration(
+                        color: purple,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: cs.surface, width: 2),
+                      ),
+                      child: Icon(
+                        Icons.check_rounded,
+                        size: size * 0.28,
+                        color: Colors.white,
+                      ),
                     ),
-                    child: Icon(
-                      Icons.check_rounded,
-                      size: size * 0.28,
-                      color: Colors.white,
-                    ),
-                  ),
                   ),
                 ),
             ],
@@ -150,8 +150,7 @@ class FadeInOnce extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeOut,
       onEnd: onEnd,
-      builder: (context, value, child) =>
-          Opacity(opacity: value, child: child),
+      builder: (context, value, child) => Opacity(opacity: value, child: child),
       child: child,
     );
   }

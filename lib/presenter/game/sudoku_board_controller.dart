@@ -155,6 +155,22 @@ class SudokuBoardController {
     return _noteNumbers[row][col].contains(value);
   }
 
+  /// 되돌리기용: 보드 값과 메모를 저장해 둔 상태로 통째로 교체한다.
+  /// 고정 칸 값은 항상 원래 퍼즐 값을 유지한다.
+  void restoreBoardAndNotes(
+    List<List<int>> board,
+    List<List<Set<int>>> notes,
+  ) {
+    _board = List.generate(9, (row) {
+      return List.generate(9, (col) {
+        return _fixedNumbers[row][col]
+            ? _initialBoard[row][col]
+            : board[row][col];
+      });
+    });
+    restoreNotes(notes);
+  }
+
   int getCorrectValue(int row, int col) {
     ensureSolution();
     return _solution[row][col];
@@ -254,6 +270,49 @@ class SudokuBoardController {
     }
 
     return false;
+  }
+
+  /// 현재 보드 상태만으로(정답 solution을 보지 않고) 행·열·3x3박스에 이미 있는
+  /// 숫자만 제외해 각 빈 칸의 후보를 계산한다. 고정 칸과 이미 채워진 칸(힌트
+  /// 포함)은 대상에서 뺀다. 모순으로 후보가 0개인 빈 칸이 하나라도 있으면
+  /// 통째로 null을 반환한다(호출부가 아무것도 바꾸지 않는다는 신호로 쓴다).
+  Map<String, Set<int>>? computeBasicCandidates() {
+    final result = <String, Set<int>>{};
+    for (var row = 0; row < 9; row++) {
+      for (var col = 0; col < 9; col++) {
+        if (_fixedNumbers[row][col] || _board[row][col] != 0) continue;
+
+        final candidates = {for (var n = 1; n <= 9; n++) n};
+        for (var c = 0; c < 9; c++) {
+          candidates.remove(_board[row][c]);
+        }
+        for (var r = 0; r < 9; r++) {
+          candidates.remove(_board[r][col]);
+        }
+        final startRow = (row ~/ 3) * 3;
+        final startCol = (col ~/ 3) * 3;
+        for (var r = startRow; r < startRow + 3; r++) {
+          for (var c = startCol; c < startCol + 3; c++) {
+            candidates.remove(_board[r][c]);
+          }
+        }
+
+        if (candidates.isEmpty) return null;
+        result['$row,$col'] = candidates;
+      }
+    }
+    return result;
+  }
+
+  /// [computeBasicCandidates]가 돌려준 칸들의 메모를 통째로 교체한다(병합이
+  /// 아니라 대체). 대상이 아닌 칸(고정·이미 채워진 칸)의 메모는 건드리지 않는다.
+  void applyCandidateNotes(Map<String, Set<int>> candidatesByCell) {
+    candidatesByCell.forEach((key, candidates) {
+      final parts = key.split(',');
+      final row = int.parse(parts[0]);
+      final col = int.parse(parts[1]);
+      _noteNumbers[row][col] = Set<int>.from(candidates);
+    });
   }
 
   void _clearRelatedNotes(int row, int col, int value) {

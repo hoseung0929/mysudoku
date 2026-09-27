@@ -113,9 +113,6 @@ class _StartupCatalogPreparingGateState
 
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    final retryLabel = Localizations.localeOf(context).languageCode == 'ko'
-        ? '다시 시도'
-        : 'Retry';
     final total = _status.totalTarget;
     final generated = _status.totalGenerated.clamp(0, total);
     final remaining = (total - generated).clamp(0, total);
@@ -181,7 +178,7 @@ class _StartupCatalogPreparingGateState
                     const SizedBox(height: 10),
                     FilledButton(
                       onPressed: _isPreparing ? null : _prepareCatalog,
-                      child: Text(retryLabel),
+                      child: Text(l10n.recordsRetry),
                     ),
                   ],
                   if (_error == null) ...[

@@ -5,6 +5,21 @@ import 'package:sudoku159/utils/sudoku_generator.dart';
 import 'package:sudoku159/presenter/game/game_timer_controller.dart';
 import 'package:sudoku159/presenter/game/sudoku_board_controller.dart';
 
+/// [SudokuGamePresenter.applyAutoNotes] 결과.
+enum AutoNotesResult {
+  /// 모든 빈 칸의 메모를 새로 채웠다.
+  applied,
+
+  /// 모순(후보가 0개인 빈 칸)이 있어 아무것도 바꾸지 않았다.
+  contradiction,
+
+  /// 채울 빈 칸이 아예 없었다(변경 없음, 실패는 아님).
+  noBlankCells,
+
+  /// 완료·게임오버·일시정지 상태라 실행하지 않았다.
+  blocked,
+}
+
 /// 스도쿠 게임의 비즈니스 로직을 처리하는 Presenter 클래스
 /// MVP 패턴에서 View와 Model 사이의 중재자 역할을 수행
 class SudokuGamePresenter {
@@ -30,6 +45,12 @@ class SudokuGamePresenter {
   bool _isMemoMode = false;
   late int _hintsRemaining;
   final Set<String> _hintCells = {};
+  bool _autoNotesUsed = false;
+
+  /// 되돌리기 기록(숫자 입력·메모·지우기 직전 상태). 실수 횟수와 힌트 사용은
+  /// 기록하지 않으므로 되돌려도 줄어들지 않는다. 앱 세션 안에서만 유지한다.
+  final List<_UndoEntry> _undoStack = [];
+  static const int _maxUndoDepth = 200;
   late final GameTimerController _timerController;
   late final SudokuBoardController _boardController;
 
@@ -67,6 +88,7 @@ class SudokuGamePresenter {
     List<List<Set<int>>>? initialNotes,
     int? initialHintsRemaining,
     Set<String> initialHintCells = const {},
+    bool initialAutoNotesUsed = false,
   }) {
     _timerController = GameTimerController(
       onTick: onTimeChanged,
@@ -79,6 +101,7 @@ class SudokuGamePresenter {
     );
     _initializeBoard(initialBoard, puzzleBoard);
     _hintsRemaining = maxHints;
+    _autoNotesUsed = initialAutoNotesUsed;
     _restoreSessionState(
       elapsedSeconds: initialElapsedSeconds,
       wrongCount: initialWrongCount,
@@ -246,6 +269,7 @@ class SudokuGamePresenter {
 
   void _resetSessionState() {
     _stopTimer();
+    _undoStack.clear();
     _isPaused = false;
     _isGameComplete = false;
     _isGameOver = false;
@@ -253,6 +277,7 @@ class SudokuGamePresenter {
     _wrongCount = 0;
     _hintsRemaining = maxHints;
     _hintCells.clear();
+    _autoNotesUsed = false;
     _boardController.clearSelection();
 
     _timerController.reset();
@@ -327,6 +352,7 @@ class SudokuGamePresenter {
   bool get isMemoMode => _isMemoMode;
   int get wrongCount => _wrongCount;
   int get hintsRemaining => _hintsRemaining;
+  bool get autoNotesUsed => _autoNotesUsed;
   Set<String> get hintCells => Set<String>.unmodifiable(_hintCells);
   int? get selectedRow => _boardController.selectedRow;
   int? get selectedCol => _boardController.selectedCol;
@@ -366,6 +392,7 @@ class SudokuGamePresenter {
     if (_boardController.getCellValue(row, col) == 0) return;
     _boardController.setCellValue(row, col, 0);
     _boardController.recomputeWrongStatus();
+    _pruneNoOpUndoEntries();
     onBoardChanged(_boardController.board);
     onWrongNumbersChanged(_boardController.wrongNumbers);
   }
@@ -390,6 +417,7 @@ class SudokuGamePresenter {
     if (!canEraseSelectedCell) return;
     final row = _boardController.selectedRow!;
     final col = _boardController.selectedCol!;
+    _recordUndoSnapshot();
     if (_boardController.getCellValue(row, col) != 0) {
       _boardController.setCellValue(row, col, 0);
       _boardController.recomputeWrongStatus();
@@ -401,21 +429,61 @@ class SudokuGamePresenter {
     }
   }
 
-  void useHint() {
-    if (_isGameComplete || _isPaused || _isGameOver) return;
-    if (_hintsRemaining <= 0) return;
+  /// 현재 보드의 행·열·박스 규칙만으로 모든 빈 칸의 기본 후보를 한 번에
+  /// 메모로 채운다. 정답(solution)은 보지 않는다. 모순으로 후보가 0개인 빈
+  /// 칸이 하나라도 있으면 아무것도 바꾸지 않고 [AutoNotesResult.contradiction]을
+  /// 반환한다. 변경 전체가 되돌리기 한 단계로 기록되며, 남은 힌트·실수 횟수는
+  /// 건드리지 않는다.
+  AutoNotesResult applyAutoNotes() {
+    if (_isGameComplete || _isGameOver || _isPaused) {
+      return AutoNotesResult.blocked;
+    }
+    final candidates = _boardController.computeBasicCandidates();
+    if (candidates == null) {
+      return AutoNotesResult.contradiction;
+    }
+    if (candidates.isEmpty) {
+      return AutoNotesResult.noBlankCells;
+    }
+    _recordUndoSnapshot();
+    _boardController.applyCandidateNotes(candidates);
+    _pruneNoOpUndoEntries();
+    _autoNotesUsed = true;
+    onBoardChanged(_boardController.board);
+    return AutoNotesResult.applied;
+  }
 
+  void useHint() {
     final row = _boardController.selectedRow;
     final col = _boardController.selectedCol;
     if (row == null || col == null) return;
     if (_boardController.isCellFixed(row, col)) return;
     if (_boardController.getCellValue(row, col) != 0) return;
+    if (!consumeHint()) return;
+    revealHintAt(row, col);
+  }
+
+  /// 힌트 1회를 사용한다. 설명을 여는 순간 차감하고, 같은 힌트 안에서 정답을
+  /// 넣는 것([revealHintAt])은 추가로 차감하지 않는다.
+  bool consumeHint() {
+    if (_isGameComplete || _isPaused || _isGameOver) return false;
+    if (_hintsRemaining <= 0) return false;
+    _hintsRemaining--;
+    onBoardChanged(_boardController.board);
+    return true;
+  }
+
+  /// 힌트 대상 칸에 정답을 넣고 힌트 칸으로 고정한다(남은 힌트는 줄이지 않음).
+  void revealHintAt(int row, int col) {
+    if (_isGameComplete || _isPaused || _isGameOver) return;
+    if (_boardController.isCellFixed(row, col)) return;
+    if (_hintCells.contains('$row,$col')) return;
 
     final correctValue = _boardController.getCorrectValue(row, col);
 
     _boardController.setCellValue(row, col, correctValue, isHint: true);
     _hintCells.add('$row,$col');
-    _hintsRemaining--;
+    _pruneNoOpUndoEntries();
 
     onBoardChanged(_boardController.board);
     _boardController.recomputeWrongStatus();
@@ -426,6 +494,18 @@ class SudokuGamePresenter {
     }
 
     _checkGameComplete();
+  }
+
+  /// 힌트 설명을 만들 때 쓰는 현재 보드와 정답(복사본).
+  List<List<int>> get boardSnapshot =>
+      List.generate(9, (row) => List<int>.from(_boardController.board[row]));
+
+  List<List<int>> get solutionSnapshot {
+    _boardController.ensureSolution();
+    return List.generate(
+      9,
+      (row) => List<int>.from(_boardController.solution[row]),
+    );
   }
 
   /// 개발/디버그 전용: 선택된 셀에 즉시 정답을 입력한다.
@@ -540,14 +620,17 @@ class SudokuGamePresenter {
     if (_boardController.isCellFixed(row, col)) return;
     if (_hintCells.contains('$row,$col')) return;
     final previousValue = _boardController.getCellValue(row, col);
+    _recordUndoSnapshot();
 
     if (_isMemoMode) {
       _boardController.toggleNote(row, col, value);
+      _pruneNoOpUndoEntries();
       onBoardChanged(_boardController.board);
       return;
     }
 
     _boardController.setCellValue(row, col, value);
+    _pruneNoOpUndoEntries();
     onBoardChanged(_boardController.board);
     _checkWrongNumbers();
 
@@ -602,9 +685,122 @@ class SudokuGamePresenter {
     onPauseStateChanged(_isPaused);
   }
 
+  /// 되돌릴 입력이 있고 게임이 진행 중일 때만 true.
+  bool get canUndo =>
+      !_isGameComplete && !_isGameOver && !_isPaused && _undoStack.isNotEmpty;
+
+  (int, int)? _lastUndoCell;
+
+  /// 가장 최근 undo()가 실제로 바꾼 대표 칸. 그 undo()가 아무것도 바꾸지
+  /// 못했으면(이론상 빈 스택 소진) null. 화면이 이 칸만 짧게 강조한다.
+  (int, int)? get lastUndoCell => _lastUndoCell;
+
+  /// 마지막 숫자 입력·메모·지우기를 되돌린다. 실수 횟수·남은 힌트는 그대로이고,
+  /// 힌트로 채운 칸은 되돌려도 유지된다. 되돌린 칸을 선택해 위치를 보여 준다.
+  void undo() {
+    if (!canUndo) return;
+    _lastUndoCell = null;
+    final before = _currentUndoEntry();
+    _UndoEntry? target;
+    while (_undoStack.isNotEmpty) {
+      final candidate = _withHintCellsApplied(_undoStack.removeLast());
+      if (!candidate.sameAs(before)) {
+        target = candidate;
+        break;
+      }
+    }
+    if (target == null) return;
+
+    _boardController.restoreBoardAndNotes(target.board, target.notes);
+    final changedCell = before.firstDifferentCell(target);
+    _lastUndoCell = changedCell;
+    if (changedCell != null) {
+      _boardController.selectCell(changedCell.$1, changedCell.$2);
+    }
+    _boardController.recomputeWrongStatus();
+    onBoardChanged(_boardController.board);
+    onWrongNumbersChanged(_boardController.wrongNumbers);
+  }
+
+  _UndoEntry _currentUndoEntry() {
+    return _UndoEntry(
+      board: List.generate(
+          9, (row) => List<int>.from(_boardController.board[row])),
+      notes: _boardController.getAllCellNotes(),
+    );
+  }
+
+  void _recordUndoSnapshot() {
+    _undoStack.add(_currentUndoEntry());
+    if (_undoStack.length > _maxUndoDepth) {
+      _undoStack.removeAt(0);
+    }
+  }
+
+  /// 변화가 없었던 기록(같은 값 재입력, 자동으로 지워진 오답 등)은 버튼을
+  /// 눌러도 아무 일이 없으므로 맨 위에서부터 걷어낸다.
+  void _pruneNoOpUndoEntries() {
+    final current = _currentUndoEntry();
+    while (_undoStack.isNotEmpty &&
+        _withHintCellsApplied(_undoStack.last).sameAs(current)) {
+      _undoStack.removeLast();
+    }
+  }
+
+  /// 힌트 칸은 되돌리기 대상이 아니므로, 기록 시점 이후에 받은 힌트도
+  /// 현재 값 그대로 얹는다(숫자 입력과 같은 규칙으로 주변 메모도 정리).
+  _UndoEntry _withHintCellsApplied(_UndoEntry entry) {
+    final board = List.generate(9, (row) => List<int>.from(entry.board[row]));
+    final notes = List.generate(
+      9,
+      (row) => List.generate(9, (col) => Set<int>.from(entry.notes[row][col])),
+    );
+    for (final cellKey in _hintCells) {
+      final parts = cellKey.split(',');
+      final row = int.parse(parts[0]);
+      final col = int.parse(parts[1]);
+      final value = _boardController.getCorrectValue(row, col);
+      board[row][col] = value;
+      notes[row][col].clear();
+      for (int i = 0; i < 9; i++) {
+        notes[row][i].remove(value);
+        notes[i][col].remove(value);
+      }
+      final startRow = (row ~/ 3) * 3;
+      final startCol = (col ~/ 3) * 3;
+      for (int r = startRow; r < startRow + 3; r++) {
+        for (int c = startCol; c < startCol + 3; c++) {
+          notes[r][c].remove(value);
+        }
+      }
+    }
+    return _UndoEntry(board: board, notes: notes);
+  }
+
   void _clearSelectionForLockedState() {
     _boardController.clearSelection();
     onBoardChanged(_boardController.board);
     onWrongNumbersChanged(_boardController.wrongNumbers);
+  }
+}
+
+class _UndoEntry {
+  const _UndoEntry({required this.board, required this.notes});
+
+  final List<List<int>> board;
+  final List<List<Set<int>>> notes;
+
+  bool sameAs(_UndoEntry other) => firstDifferentCell(other) == null;
+
+  (int, int)? firstDifferentCell(_UndoEntry other) {
+    for (int row = 0; row < 9; row++) {
+      for (int col = 0; col < 9; col++) {
+        if (board[row][col] != other.board[row][col]) return (row, col);
+        final a = notes[row][col];
+        final b = other.notes[row][col];
+        if (a.length != b.length || !a.containsAll(b)) return (row, col);
+      }
+    }
+    return null;
   }
 }

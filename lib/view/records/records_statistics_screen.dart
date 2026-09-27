@@ -1,23 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:sudoku159/constants/records_level_filter.dart';
+import 'package:sudoku159/database/database_helper.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/l10n/sudoku_level_l10n.dart';
+import 'package:sudoku159/model/sudoku_game.dart';
+import 'package:sudoku159/model/sudoku_level.dart';
 import 'package:sudoku159/navigation/root_nav_scope.dart';
+import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
+import 'package:sudoku159/services/home/home_dashboard_service.dart';
 import 'package:sudoku159/services/records/game_record_notifier.dart';
 import 'package:sudoku159/services/records/records_statistics_service.dart';
-import 'package:sudoku159/theme/app_theme.dart';
+import 'package:sudoku159/theme/level_status_colors.dart';
+import 'package:sudoku159/theme/system_ui_style.dart';
 import 'package:sudoku159/utils/time_format.dart';
+import 'package:sudoku159/view/challenge/challenge_monthly_calendar_card.dart';
+import 'package:sudoku159/view/sudoku_game/sudoku_game_screen.dart';
+import 'package:sudoku159/widgets/loading_skeleton.dart';
 import 'package:sudoku159/widgets/mascot_image.dart';
+import 'package:sudoku159/widgets/press_scale.dart';
 import 'package:sudoku159/widgets/sudoku_motif.dart';
-import 'package:sudoku159/view/challenge/achievement_collection_screen.dart';
-import 'package:sudoku159/view/settings/settings_screen.dart';
 
 class RecordsStatisticsScreen extends StatefulWidget {
-  const RecordsStatisticsScreen({super.key, this.statisticsService});
+  const RecordsStatisticsScreen({
+    super.key,
+    this.statisticsService,
+    this.challengeProgressService,
+    this.homeDashboardService,
+    this.databaseHelper,
+  });
 
   /// 테스트에서 저장소를 대체하기 위한 선택적 주입. 기본값은 실제 구현.
   final RecordsStatisticsService? statisticsService;
+  final ChallengeProgressService? challengeProgressService;
+  final HomeDashboardService? homeDashboardService;
+  final DatabaseHelper? databaseHelper;
 
   @override
   State<RecordsStatisticsScreen> createState() =>
@@ -31,8 +49,18 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   /// 활동 달력이 보여주는 주 수(서비스 호출과 제목 표기를 함께 쓴다).
   static const int _kHeatmapWeeks = 26;
 
+  /// 기록 최상단 히어로 이미지(제목·부제 포함)의 고정 높이(상태바 제외).
+  static const double _kRecordsHeroHeightPhone = 185;
+  static const double _kRecordsHeroHeightTablet = 220;
+
   late final RecordsStatisticsService _statisticsService =
       widget.statisticsService ?? RecordsStatisticsService();
+  late final ChallengeProgressService _challengeProgressService =
+      widget.challengeProgressService ?? ChallengeProgressService();
+  late final HomeDashboardService _homeDashboardService =
+      widget.homeDashboardService ?? HomeDashboardService();
+  late final DatabaseHelper _databaseHelper =
+      widget.databaseHelper ?? DatabaseHelper();
   final ScrollController _scrollController = ScrollController();
   final ScrollController _heatmapScrollController = ScrollController();
   bool _isLoading = true;
@@ -41,6 +69,14 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   String? _loadErrorMessage;
   String? _selectedWeekDate;
   String? _selectedLevelName;
+  String? _selectedHeatmapDateKey;
+  int _challengeStreakDays = 0;
+  bool _isOpeningTodayChallenge = false;
+  bool _isOpeningPastChallenge = false;
+
+  /// 히어로 이미지가 스크롤로 완전히 가려지기 전(true)인지 후(false)인지.
+  /// 상태 표시줄 아이콘 색을 밝게(사진 위)/테마 기준으로 전환하는 데 쓴다.
+  bool _isTop = true;
 
   Map<String, dynamic> _overall = {};
   List<Map<String, dynamic>> _levels = [];
@@ -52,27 +88,167 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   void initState() {
     super.initState();
     _loadStats();
+    _loadChallengeStreak();
     GameRecordNotifier.instance.version.addListener(_handleRecordsChanged);
+    _scrollController.addListener(_handleScrollForStatusBar);
   }
 
   @override
   void dispose() {
     GameRecordNotifier.instance.version.removeListener(_handleRecordsChanged);
+    _scrollController.removeListener(_handleScrollForStatusBar);
     _scrollController.dispose();
     _heatmapScrollController.dispose();
     super.dispose();
   }
 
+  double _currentHeroHeight(BuildContext context) =>
+      MediaQuery.sizeOf(context).width > 600
+          ? _kRecordsHeroHeightTablet
+          : _kRecordsHeroHeightPhone;
+
+  /// 히어로가 상태바 영역 뒤로 완전히 넘어가면 밝은(사진 위) 아이콘에서
+  /// 테마 기준 아이콘으로 전환한다. [HomeScreen]과 같은 방식.
+  void _handleScrollForStatusBar() {
+    if (!mounted) return;
+    final topInset = MediaQuery.paddingOf(context).top;
+    final threshold = _currentHeroHeight(context) - topInset;
+    final collapsed = _scrollController.offset >= threshold;
+    if (collapsed == _isTop) {
+      setState(() => _isTop = !collapsed);
+    }
+  }
+
   void _handleRecordsChanged() {
     if (!mounted) return;
     _loadStats();
+    _loadChallengeStreak();
   }
 
-  Future<void> _openSettings() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const SettingsScreen()),
-    );
+  /// 도전 연속은 일반 기록 통계와 별개로 불러온다 — 한쪽이 실패해도 다른
+  /// 쪽 표시에 영향을 주지 않게 하기 위함.
+  Future<void> _loadChallengeStreak() async {
+    try {
+      final summary = await _challengeProgressService.load();
+      if (!mounted) return;
+      setState(() => _challengeStreakDays = summary.streakDays);
+    } catch (_) {
+      // 도전 연속 조회 실패는 조용히 무시한다(0으로 유지).
+    }
+  }
+
+  SudokuLevel? _levelForName(String levelName) {
+    for (final level in SudokuLevel.levels) {
+      if (level.name == levelName) return level;
+    }
+    return null;
+  }
+
+  /// 오늘 날짜를 골랐을 때: 탭 시점에 스냅샷을 새로 불러와 오늘의 도전을
+  /// 연다. 이어서 날짜가 바뀌었으면 임의로 다른 문제를 열지 않고 새로고침만
+  /// 안내한다(`HomeScreen._openTodayChallenge()`와 같은 정책).
+  Future<void> _openTodayChallenge() async {
+    if (_isOpeningTodayChallenge) return;
+    _isOpeningTodayChallenge = true;
+    try {
+      final l10n = AppLocalizations.of(context)!;
+      final data = await _homeDashboardService.load(l10n);
+      if (!mounted) return;
+      final game = data.todayChallenge;
+      final challengeDate = data.challengeProgress.challengeDate;
+      final level = game == null ? null : _levelForName(game.levelName);
+      if (game == null || challengeDate == null || level == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.homeTodayChallengeLoadError)),
+        );
+        return;
+      }
+      if (challengeDate !=
+          ChallengeProgressService.formatLocalDate(DateTime.now())) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.homeTodayChallengeDateChanged)),
+        );
+        return;
+      }
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => SudokuGameScreen(
+            game: game,
+            level: level,
+            restoreSavedSession: data.todayChallengeHasSession,
+            challengeDate: challengeDate,
+          ),
+        ),
+      );
+      if (mounted) {
+        _loadStats();
+        _loadChallengeStreak();
+      }
+    } finally {
+      _isOpeningTodayChallenge = false;
+    }
+  }
+
+  /// 월간 달력에서 미래가 아닌 날짜를 눌렀을 때. 오늘 날짜는 오늘의 도전
+  /// 흐름을 그대로 쓴다. 과거 날짜는 그 날짜의 실제 타깃 문제를 불러와 열고,
+  /// 연속 일수에는 반영되지 않게 표시한다(달력 완료 표시에는 반영됨).
+  Future<void> _openChallengeForDate(DateTime date) async {
+    final todayStr = ChallengeProgressService.formatLocalDate(DateTime.now());
+    final dateStr = ChallengeProgressService.formatLocalDate(date);
+    if (dateStr == todayStr) {
+      await _openTodayChallenge();
+      return;
+    }
+    if (_isOpeningPastChallenge) return;
+    _isOpeningPastChallenge = true;
+    try {
+      final l10n = AppLocalizations.of(context)!;
+      final target = await _challengeProgressService
+          .getChallengeTargetForCalendarDay(date);
+      final level = _levelForName(target.levelName);
+      if (!mounted) return;
+      if (level == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.challengePuzzleLoadFailed)),
+        );
+        return;
+      }
+      final entry = await _databaseHelper.getGameEntry(
+        target.levelName,
+        target.gameNumber,
+      );
+      if (!mounted) return;
+      if (entry == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.challengePuzzleLoadFailed)),
+        );
+        return;
+      }
+      final game = SudokuGame(
+        board: entry['board'] as List<List<int>>,
+        solution: entry['solution'] as List<List<int>>,
+        emptyCells: level.emptyCells,
+        levelName: target.levelName,
+        gameNumber: target.gameNumber,
+      );
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => SudokuGameScreen(
+            game: game,
+            level: level,
+            restoreSavedSession: true,
+            challengeDate: dateStr,
+            challengeCountsForStreak: false,
+          ),
+        ),
+      );
+      if (mounted) {
+        _loadStats();
+        _loadChallengeStreak();
+      }
+    } finally {
+      _isOpeningPastChallenge = false;
+    }
   }
 
   Future<void> _loadStats() async {
@@ -120,14 +296,32 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     }
   }
 
-  /// 마스터 레벨은 홈에서 숨겨져 있으므로 기록에서도 제외한다.
+  /// 아직 공개하지 않은 마스터 난이도는 기록 화면에서도 노출하지 않는다.
   List<Map<String, dynamic>> get _displayLevelStats {
-    final stats = _statisticsService.buildLevelStats(
-      levels: _levels,
-      recent: _recent,
-      selectedLevel: RecordsLevelFilter.allLevels,
-    );
-    return stats.where((stat) => stat['level_name'] != '마스터').toList();
+    return _statisticsService
+        .buildLevelStats(
+          levels: _levels,
+          recent: _recent,
+          selectedLevel: RecordsLevelFilter.allLevels,
+        )
+        .where((stat) => stat['level_name'] != '마스터')
+        .toList(growable: false);
+  }
+
+  /// 레벨 목록/피커 화면과 동일한 이미지 에셋으로 아이덴티티를 통일한다.
+  String? _levelIdentityImage(String levelName) {
+    switch (levelName) {
+      case '초급':
+        return 'assets/images/level1.png';
+      case '중급':
+        return 'assets/images/level2.png';
+      case '고급':
+        return 'assets/images/level3.png';
+      case '전문가':
+        return 'assets/images/level4.png';
+      default:
+        return null;
+    }
   }
 
   // ─── Build ────────────────────────────────────────────────────────────────
@@ -137,100 +331,199 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
     final topInset = MediaQuery.paddingOf(context).top;
+    final isTablet = MediaQuery.sizeOf(context).width > 600;
+    final horizontalPad = isTablet ? 24.0 : 16.0;
+
+    final sectionGap = isTablet ? 24.0 : 20.0;
 
     Widget content;
     if (!_hasLoaded && _loadErrorMessage != null) {
-      content = _buildLoadError(l10n, _loadErrorMessage!);
-    } else if (!_hasLoaded) {
-      content = const Padding(
-        padding: EdgeInsets.symmetric(vertical: 64),
-        child: Center(
-          child: CircularProgressIndicator(color: AppTheme.statisticsAccent),
-        ),
+      // 통계 조회 실패는 도전 기록과 별개의 오류다. 통계만 오류로 대체하고
+      // 도전 달력은 그대로 쓸 수 있게 둔다.
+      content = _buildStatsUnavailableBody(
+        l10n,
+        _buildLoadError(l10n, _loadErrorMessage!),
+        sectionGap,
       );
+    } else if (!_hasLoaded) {
+      content = _buildInitialLoadingSkeleton(l10n, sectionGap);
     } else if (_recent.isEmpty) {
-      content = _buildNoRecords(l10n);
+      content = _buildStatsUnavailableBody(
+        l10n,
+        _buildNoRecords(l10n),
+        sectionGap,
+      );
     } else {
       content = _buildSections(l10n);
     }
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      // 히어로가 보이는 동안(_isTop)은 사진 위라 밝은 상태바 아이콘을
+      // 강제하고, 스크롤로 넘어가면 현재 테마 기준으로 전환한다.
+      value: systemOverlayStyleFor(
+        _isTop ? Brightness.dark : Theme.of(context).brightness,
       ),
-      child: Stack(
-        children: [
-          RefreshIndicator(
-            onRefresh: _loadStats,
-            color: Theme.of(context).colorScheme.onSurface,
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            child: ListView(
-              controller: _scrollController,
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(
-                20,
-                topInset + 12,
-                20,
-                _kScrollBottomPad + bottomInset,
-              ),
-              children: [
-                Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 960),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildHeader(l10n),
-                        const SizedBox(height: 16),
-                        if (_hasLoaded && _loadErrorMessage != null) ...[
-                          _buildLoadError(l10n, _loadErrorMessage!),
-                          const SizedBox(height: 16),
-                        ],
-                        content,
-                      ],
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+        ),
+        child: Stack(
+          children: [
+            RefreshIndicator(
+              onRefresh: _loadStats,
+              color: Theme.of(context).colorScheme.onSurface,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              child: ListView(
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.only(
+                  bottom: _kScrollBottomPad + bottomInset,
+                ),
+                children: [
+                  _buildHeaderBanner(l10n, horizontalPad, topInset, isTablet),
+                  Padding(
+                    key: const Key('records_content_padding'),
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPad,
+                      isTablet ? 24 : 16,
+                      horizontalPad,
+                      0,
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 960),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (_hasLoaded && _loadErrorMessage != null) ...[
+                              _buildLoadError(l10n, _loadErrorMessage!),
+                              SizedBox(height: isTablet ? 24 : 16),
+                            ],
+                            if (_hasLoaded &&
+                                _loadErrorMessage == null &&
+                                _recent.isNotEmpty) ...[
+                              _buildSummaryCard(l10n),
+                              SizedBox(height: sectionGap),
+                            ],
+                            content,
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          if (_isLoading)
-            const Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: LinearProgressIndicator(minHeight: 2),
-            ),
-        ],
+            if (_isLoading)
+              const Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: LinearProgressIndicator(minHeight: 2),
+              ),
+          ],
+        ),
       ),
     );
   }
 
-  /// 화면 제목 '기록'과 설정 진입. (프로필 편집은 홈에서 접근하므로 여기서는
-  /// 강조하지 않는다.)
-  Widget _buildHeader(AppLocalizations l10n) {
-    return Row(
-      children: [
-        Expanded(
-          child: Semantics(
-            header: true,
-            child: Text(
-              l10n.navRecords,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                color: Theme.of(context).colorScheme.onSurface,
+  /// 기록 최상단 히어로 이미지: 보관실에서 완료 기록을 살펴보는 캐릭터
+  /// 일러스트 위에 '기록' 제목과 부제를 겹쳐 보여준다. 상태바 영역까지
+  /// 이미지를 확장하고, 본문과 함께 스크롤된다.
+  Widget _buildHeaderBanner(
+    AppLocalizations l10n,
+    double horizontalPad,
+    double topInset,
+    bool isTablet,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final contentHeight = _currentHeroHeight(context);
+    final height = topInset + contentHeight;
+
+    return SizedBox(
+      key: const Key('records_hero_header'),
+      height: height,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          ExcludeSemantics(
+            child: Image.asset(
+              'assets/images/records_hero.webp',
+              fit: BoxFit.cover,
+              alignment: Alignment.centerRight,
+            ),
+          ),
+          // 상태 표시줄 가독성을 위한 위쪽 어두운 그라데이션. 다크 모드에서는
+          // 오버레이를 10~15%p 더 진하게 적용한다.
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: isDark ? 0.58 : 0.45),
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.42],
               ),
             ),
           ),
-        ),
-        IconButton(
-          onPressed: _openSettings,
-          tooltip: l10n.navSettings,
-          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-          icon: const Icon(Icons.settings_outlined),
-        ),
-      ],
+          // 제목·부제 가독성을 위한 좌측 어두운 그라데이션.
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  Colors.black.withValues(alpha: isDark ? 0.55 : 0.42),
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.68],
+              ),
+            ),
+          ),
+          // 하단은 화면 배경색으로 자연스럽게 이어진다.
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              height: contentHeight * 0.34,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Theme.of(context).scaffoldBackgroundColor,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: horizontalPad,
+            right: isTablet ? 260 : 150,
+            bottom: 20,
+            child: Semantics(
+              header: true,
+              child: Text(
+                l10n.recordsHeroImageSubtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  height: 1.3,
+                  fontWeight: FontWeight.w800,
+                  shadows: [Shadow(color: Colors.black45, blurRadius: 6)],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -242,41 +535,33 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     );
     final week = _buildWeekSection(l10n, heatmap);
     final levels = _buildLevelSection(l10n);
+    final challenge = _buildChallengeSection(l10n);
     final calendar = _buildCalendarSection(l10n, heatmap);
-    final achievements = _buildAchievementRow(l10n);
-    final overall = _buildOverallNote(l10n);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         // 넓은 화면에서만 2칼럼. 좁아지면 단일 칼럼으로 돌아간다.
         if (constraints.maxWidth >= 860) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [week, const SizedBox(height: 24), levels],
-                    ),
-                  ),
-                  const SizedBox(width: 24),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        calendar,
-                        const SizedBox(height: 24),
-                        achievements,
-                      ],
-                    ),
-                  ),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [week, const SizedBox(height: 24), levels],
+                ),
               ),
-              const SizedBox(height: 24),
-              overall,
+              const SizedBox(width: 24),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    challenge,
+                    const SizedBox(height: 24),
+                    calendar,
+                  ],
+                ),
+              ),
             ],
           );
         }
@@ -284,54 +569,399 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             week,
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             levels,
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
+            challenge,
+            const SizedBox(height: 20),
             calendar,
-            const SizedBox(height: 24),
-            achievements,
-            const SizedBox(height: 24),
-            overall,
           ],
         );
       },
     );
   }
 
-  // ─── 공통 조각 ────────────────────────────────────────────────────────────
+  /// 통계(요약·이번 주·난이도별·플레이 활동)를 보여줄 수 없는 상태에서도
+  /// 도전 기록은 그대로 쓸 수 있게 둔다.
+  Widget _buildStatsUnavailableBody(
+    AppLocalizations l10n,
+    Widget statsBody,
+    double sectionGap,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        statsBody,
+        SizedBox(height: sectionGap),
+        _buildChallengeSection(l10n),
+      ],
+    );
+  }
 
-  Widget _sectionTitle(String text, {String? trailing}) {
-    final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.baseline,
-        textBaseline: TextBaseline.alphabetic,
-        children: [
-          Flexible(
-            child: Semantics(
-              header: true,
-              child: Text(
-                text,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: cs.onSurface,
-                ),
-              ),
-            ),
+  Widget _buildInitialLoadingSkeleton(
+    AppLocalizations l10n,
+    double sectionGap,
+  ) {
+    return Column(
+      key: const Key('records_initial_skeleton'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LoadingSkeletonPulse(
+          key: const Key('records_skeleton_pulse'),
+          builder: (context, color) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildSummarySkeleton(color),
+              SizedBox(height: sectionGap),
+              _buildWeekSkeleton(color),
+              SizedBox(height: sectionGap),
+              _buildSectionSkeleton(color, rows: 3),
+            ],
           ),
-          if (trailing != null) ...[
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                trailing,
-                style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+        ),
+        SizedBox(height: sectionGap),
+        _buildChallengeSection(l10n),
+        SizedBox(height: sectionGap),
+        LoadingSkeletonPulse(
+          builder: (context, color) => _buildSectionSkeleton(color, rows: 4),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummarySkeleton(Color color) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              SkeletonBox(color: color, width: 96, height: 18),
+              const Spacer(),
+              SkeletonBox(
+                key: const Key('records_skeleton_sample'),
+                color: color,
+                width: 56,
+                height: 56,
+                borderRadius: 28,
               ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              for (var i = 0; i < 3; i++) ...[
+                if (i > 0) const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SkeletonBox(color: color, width: 48, height: 24),
+                      const SizedBox(height: 6),
+                      SkeletonBox(color: color, height: 12),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// '이번 주' 카드와 같은 모양(헤더 + 요일 7개)의 스켈레톤.
+  Widget _buildWeekSkeleton(Color color) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(child: SkeletonBox(color: color, width: 96, height: 18)),
+              const SizedBox(width: 12),
+              SkeletonBox(
+                  color: color, width: 64, height: 56, borderRadius: 10),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              for (var i = 0; i < 7; i++) ...[
+                if (i > 0) const SizedBox(width: 4),
+                Expanded(
+                  child: SkeletonBox(
+                    color: color,
+                    height: 30,
+                    borderRadius: 15,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 실제 카드(제목·안내 문구·우측 아이콘이 카드 안에 있는 구조)와 같은
+  /// 자리에 제목·설명·아이콘 스켈레톤을 두어, 로딩이 끝나도 제목과 카드가
+  /// 크게 움직이지 않게 한다.
+  Widget _buildSectionSkeleton(Color color, {required int rows}) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: SkeletonBox(color: color, width: 116, height: 18),
+              ),
+              const SizedBox(width: 12),
+              SkeletonBox(color: color, width: 20, height: 20, borderRadius: 6),
+            ],
+          ),
+          const SizedBox(height: 4),
+          SkeletonBox(color: color, width: 180, height: 14),
+          const SizedBox(height: 16),
+          for (var i = 0; i < rows; i++) ...[
+            if (i > 0) const SizedBox(height: 12),
+            Row(
+              children: [
+                SkeletonBox(color: color, width: 32, height: 32),
+                const SizedBox(width: 12),
+                Expanded(child: SkeletonBox(color: color, height: 14)),
+              ],
             ),
           ],
         ],
       ),
+    );
+  }
+
+  /// '도전 기록' 섹션: 재사용된 [ChallengeMonthlyCalendarCard] + 도전
+  /// 연속만 보여준다(일반 퍼즐 연속 기록과 구분). 제목·이미지는 카드 바깥에
+  /// 중복 표시하지 않고 카드 내부 헤더로 넣는다.
+  Widget _buildChallengeSection(AppLocalizations l10n) {
+    return ChallengeMonthlyCalendarCard(
+      challengeProgressService: _challengeProgressService,
+      onOpenDate: _openChallengeForDate,
+      headerImage: _sectionIcon(
+        Icons.calendar_month_rounded,
+        const Key('records_challenge_artwork'),
+      ),
+      footerText: '${l10n.recordsChallengeStreakLabel} '
+          '${l10n.recordsActivityDayCount(_challengeStreakDays)}',
+    );
+  }
+
+  /// "나의 기록" 요약 카드: 홈 히어로와 다른 화풍의 캐릭터를 반복하지 않고,
+  /// 테마 색상을 따르는 스도쿠·체크 모티프로 기록 화면의 성격을 보여준다.
+  Widget _buildSummaryCard(AppLocalizations l10n) {
+    final cs = Theme.of(context).colorScheme;
+    final palette = LevelStatusPalette.of(context);
+    final isTablet = MediaQuery.sizeOf(context).width > 600;
+    final totalCleared = (_overall['total_cleared'] as num?)?.toInt() ?? 0;
+    final perfectClears = (_overall['perfect_clears'] as num?)?.toInt() ?? 0;
+    final currentStreak =
+        (_activitySummary['current_streak_days'] as num?)?.toInt() ?? 0;
+
+    final stats = [
+      (
+        l10n.recordsSummaryTotalCleared,
+        '$totalCleared',
+        Icons.done_all_rounded,
+      ),
+      (
+        l10n.recordsSummaryPerfectClears,
+        '$perfectClears',
+        Icons.star_rounded,
+      ),
+      (
+        l10n.recordsActivityCurrentStreakLabel,
+        l10n.recordsActivityDayCount(currentStreak),
+        Icons.event_available_rounded,
+      ),
+    ];
+    final title = Text(
+      l10n.recordsMyRecordTitle,
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        color: cs.onSurface,
+      ),
+    );
+
+    return Container(
+      key: const Key('records_summary_card'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: palette.completedBackground,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: palette.completedBorder),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+          final stackStats = textScale > 1.3 || constraints.maxWidth < 300;
+          final reduceMotion = MediaQuery.disableAnimationsOf(context);
+          final motifSize = isTablet ? 48.0 : 40.0;
+          final motif = Opacity(
+            opacity: 0.72,
+            child: SudokuMotif(
+              key: const Key('records_summary_motif'),
+              size: motifSize,
+              checked: true,
+            ),
+          );
+          final valueStyle = TextStyle(
+            fontSize: isTablet ? 28 : 24,
+            fontWeight: FontWeight.w800,
+            color: palette.primaryPurple,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          );
+          final labelStyle = TextStyle(
+            fontSize: 12.5,
+            height: 1.3,
+            color: cs.onSurfaceVariant,
+          );
+
+          // 실제 값이 바뀔 때만(ValueKey가 달라질 때만) 150ms 페이드한다.
+          // 숫자 카운트업은 쓰지 않는다.
+          Widget value(String text) => AnimatedSwitcher(
+                duration: reduceMotion
+                    ? Duration.zero
+                    : const Duration(milliseconds: 150),
+                switchInCurve: Curves.easeOut,
+                switchOutCurve: Curves.easeOut,
+                transitionBuilder: (child, animation) =>
+                    FadeTransition(opacity: animation, child: child),
+                child: Text(
+                  text,
+                  key: ValueKey(text),
+                  style: valueStyle,
+                ),
+              );
+          Widget label(String text, IconData icon) => Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ExcludeSemantics(
+                    child: Icon(icon, size: 16, color: cs.onSurfaceVariant),
+                  ),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      text,
+                      maxLines: 2,
+                      overflow: TextOverflow.visible,
+                      style: labelStyle,
+                    ),
+                  ),
+                ],
+              );
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(child: title),
+                  const SizedBox(width: 12),
+                  motif,
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (stackStats)
+                for (var i = 0; i < stats.length; i++) ...[
+                  if (i > 0) const SizedBox(height: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      value(stats[i].$2),
+                      const SizedBox(height: 2),
+                      label(stats[i].$1, stats[i].$3),
+                    ],
+                  ),
+                ]
+              else
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (var i = 0; i < stats.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            value(stats[i].$2),
+                            const SizedBox(height: 2),
+                            label(stats[i].$1, stats[i].$3),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  // ─── 공통 조각 ────────────────────────────────────────────────────────────
+
+  /// 히어로에 이미 캐릭터가 있으므로, 섹션 제목 옆에는 캐릭터를 반복하지
+  /// 않고 성격을 나타내는 아이콘만 20px로 보여준다.
+  Widget _sectionIcon(IconData icon, Key key) {
+    return ExcludeSemantics(
+      key: key,
+      child: Icon(
+        icon,
+        size: 20,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
+
+  /// 동작 줄이기에서는 AnimatedSize 자체를 쓰지 않는다(지속 시간 0인
+  /// AnimatedSize 안에 지속 시간 0인 AnimatedSwitcher/TweenAnimationBuilder를
+  /// 중첩하면, 레이아웃 단계에서 자기 자신을 다시 더럽히는 Flutter의
+  /// 재진입 오류가 난다 — 애니메이션이 없을 땐 감쌀 이유도 없다).
+  Widget _maybeAnimatedSize({
+    required bool reduceMotion,
+    required Duration duration,
+    required Widget child,
+  }) {
+    if (reduceMotion) return child;
+    return AnimatedSize(
+      duration: duration,
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topLeft,
+      child: child,
     );
   }
 
@@ -356,6 +986,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     Map<String, dynamic> heatmap,
   ) {
     final cs = Theme.of(context).colorScheme;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final weeks = (heatmap['weeks'] as List<dynamic>? ?? const <dynamic>[])
         .cast<List<Map<String, dynamic>>>();
     // 마지막 열이 이번 주(월~일).
@@ -380,60 +1011,79 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           })()
         : null;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _sectionTitle(l10n.recordsPlayInsightsTitle),
-        _card(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    return _card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _RecordCardHeader(
+            title: l10n.recordsPlayInsightsTitle,
+            subtitle: l10n.recordsWeekSubtitle,
+            trailing: _sectionIcon(
+              Icons.query_stats_rounded,
+              const Key('records_week_artwork'),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
             children: [
-              Row(
-                children: [
-                  for (final day in days)
-                    Expanded(child: _buildWeekDay(l10n, day, locale)),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Divider(height: 1, color: cs.outlineVariant),
-              const SizedBox(height: 12),
-              if (summary != null)
-                Text(
-                  summary,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: cs.onSurface,
-                  ),
-                )
-              else
-                Wrap(
-                  alignment: WrapAlignment.spaceBetween,
-                  spacing: 16,
-                  runSpacing: 4,
-                  children: [
-                    Text(
-                      l10n.recordsWeekActiveDays(activeDays),
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: cs.onSurface,
-                      ),
-                    ),
-                    Text(
-                      l10n.recordsWeekCompletions(completions),
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: cs.onSurface,
-                      ),
-                    ),
-                  ],
+              for (final day in days)
+                Expanded(
+                  child: _buildWeekDay(l10n, day, locale, reduceMotion),
                 ),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: 12),
+          Divider(height: 1, color: cs.outlineVariant),
+          const SizedBox(height: 12),
+          _maybeAnimatedSize(
+            reduceMotion: reduceMotion,
+            duration: const Duration(milliseconds: 180),
+            child: AnimatedSwitcher(
+              duration: reduceMotion
+                  ? Duration.zero
+                  : const Duration(milliseconds: 170),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeOutCubic,
+              transitionBuilder: (child, animation) =>
+                  FadeTransition(opacity: animation, child: child),
+              child: summary != null
+                  ? Text(
+                      summary,
+                      key: ValueKey('week-summary-$_selectedWeekDate'),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: cs.onSurface,
+                      ),
+                    )
+                  : Wrap(
+                      key: const ValueKey('week-summary-overall'),
+                      alignment: WrapAlignment.spaceBetween,
+                      spacing: 16,
+                      runSpacing: 4,
+                      children: [
+                        Text(
+                          l10n.recordsWeekActiveDays(activeDays),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: cs.onSurface,
+                          ),
+                        ),
+                        Text(
+                          l10n.recordsWeekCompletions(completions),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: cs.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -441,8 +1091,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     AppLocalizations l10n,
     Map<String, dynamic> day,
     String locale,
+    bool reduceMotion,
   ) {
-    final cs = Theme.of(context).colorScheme;
     final date = day['date'] as DateTime;
     final clears = day['clears'] as int? ?? 0;
     final isToday = day['is_today'] == true;
@@ -456,77 +1106,52 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       if (isToday) l10n.recordsTrendTodayLabel,
     ].join(', ');
 
-    return Semantics(
-      button: true,
-      selected: isSelected,
-      label: semantics,
-      excludeSemantics: true,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => setState(() {
-          _selectedWeekDate = isSelected ? null : day['date_key'] as String?;
-        }),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 76),
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? cs.surfaceContainerHighest.withValues(alpha: 0.6)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                DateFormat.E(locale).format(date),
-                maxLines: 1,
-                style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
-              ),
-              const SizedBox(height: 6),
-              // 오늘은 테두리, 완료 여부는 채움+체크 아이콘(색만으로 구분하지 않음).
-              Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: done ? AppTheme.statisticsAccent : Colors.transparent,
-                  border: Border.all(
-                    color: isToday
-                        ? cs.onSurface
-                        : done
-                            ? AppTheme.statisticsAccent
-                            : cs.outlineVariant,
-                    width: isToday ? 2 : 1,
-                  ),
-                ),
-                child: done
-                    ? const Icon(Icons.check_rounded,
-                        size: 18, color: Colors.white)
-                    : null,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                isToday ? l10n.recordsTrendTodayLabel : '',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: cs.onSurface,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return _WeekDayCell(
+      date: date,
+      locale: locale,
+      isToday: isToday,
+      isSelected: isSelected,
+      done: done,
+      reduceMotion: reduceMotion,
+      semanticsLabel: semantics,
+      todayLabel: l10n.recordsTrendTodayLabel,
+      onTap: () => setState(() {
+        _selectedWeekDate = isSelected ? null : day['date_key'] as String?;
+      }),
     );
   }
 
   // ─── 난이도별 기록 ────────────────────────────────────────────────────────
 
+  Widget _buildLevelChip(
+    AppLocalizations l10n, {
+    required String levelName,
+    required bool isSelected,
+    required LevelStatusPalette palette,
+    required ColorScheme cs,
+  }) {
+    return ChoiceChip(
+      label: Text(levelName.localizedSudokuLevelName(l10n)),
+      labelStyle: TextStyle(
+        color: isSelected ? palette.primaryPurple : cs.onSurfaceVariant,
+      ),
+      selected: isSelected,
+      checkmarkColor: palette.primaryPurple,
+      backgroundColor: cs.surface,
+      selectedColor: palette.completedBackground,
+      side: BorderSide(
+        color: isSelected ? palette.completedBorder : cs.outlineVariant,
+      ),
+      onSelected: (_) => setState(() => _selectedLevelName = levelName),
+    );
+  }
+
   Widget _buildLevelSection(AppLocalizations l10n) {
     final cs = Theme.of(context).colorScheme;
+    final palette = LevelStatusPalette.of(context);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final statTransitionDuration =
+        reduceMotion ? Duration.zero : const Duration(milliseconds: 170);
     final stats = _displayLevelStats;
     if (stats.isEmpty) return const SizedBox.shrink();
     final selectedName = stats.any((s) => s['level_name'] == _selectedLevelName)
@@ -550,11 +1175,15 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           )
         : '—';
 
-    Widget row(String label, String value) => Padding(
-          padding: const EdgeInsets.only(top: 14),
+    Widget row(IconData icon, String label, String value) => Padding(
+          padding: const EdgeInsets.only(top: 12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              ExcludeSemantics(
+                child: Icon(icon, size: 18, color: cs.onSurfaceVariant),
+              ),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   label,
@@ -565,109 +1194,190 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               Text(
                 value,
                 textAlign: TextAlign.right,
-                style: const TextStyle(
+                // 평균 실수는 경고색이 아니라 다른 값과 같은 중립색을 쓴다.
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  fontFeatures: [FontFeature.tabularFigures()],
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                  color: cs.onSurface,
                 ),
               ),
             ],
           ),
         );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _sectionTitle(l10n.recordsByLevelTitle),
-        // 긴 번역에서는 가로 스크롤.
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              for (final s in stats) ...[
-                ChoiceChip(
-                  label: Text(
-                    (s['level_name'] as String).localizedSudokuLevelName(l10n),
-                  ),
-                  selected: s['level_name'] == selectedName,
-                  onSelected: (_) => setState(
-                    () => _selectedLevelName = s['level_name'] as String,
-                  ),
-                ),
-                const SizedBox(width: 8),
-              ],
-            ],
+    return _card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _RecordCardHeader(
+            title: l10n.recordsByLevelTitle,
+            subtitle: l10n.recordsByLevelSubtitle,
+            trailing: _sectionIcon(
+              Icons.leaderboard_rounded,
+              const Key('records_level_artwork'),
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        _card(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                selectedName.localizedSudokuLevelName(l10n),
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: cs.onSurface,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l10n.recordsMetricClearRate,
-                      style:
-                          TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
-                    ),
+          const SizedBox(height: 16),
+          // 긴 번역에서는 가로 스크롤.
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final s in stats) ...[
+                  _buildLevelChip(
+                    l10n,
+                    levelName: s['level_name'] as String,
+                    isSelected: s['level_name'] == selectedName,
+                    palette: palette,
+                    cs: cs,
                   ),
-                  Text(
-                    '$cleared / $total',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      fontFeatures: [FontFeature.tabularFigures()],
-                    ),
-                  ),
+                  const SizedBox(width: 8),
                 ],
-              ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: LinearProgressIndicator(
-                  minHeight: 6,
-                  value: total > 0 ? (cleared / total).clamp(0.0, 1.0) : 0,
-                  backgroundColor: cs.surfaceContainerHighest,
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                    AppTheme.statisticsAccent,
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Divider(height: 1, color: cs.outlineVariant),
+          const SizedBox(height: 16),
+          _maybeAnimatedSize(
+            reduceMotion: reduceMotion,
+            duration: statTransitionDuration,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 난이도 이름·완료/전체 수만 크로스페이드한다. 진행률 바는
+                // 아래에서 별도로(재생성 없이) 이전 값→새 값 채움 전환한다.
+                AnimatedSwitcher(
+                  duration: statTransitionDuration,
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeOutCubic,
+                  transitionBuilder: (child, animation) =>
+                      FadeTransition(opacity: animation, child: child),
+                  child: Column(
+                    key: ValueKey('level-stat-header-$selectedName'),
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          if (_levelIdentityImage(selectedName) != null)
+                            Image.asset(
+                              _levelIdentityImage(selectedName)!,
+                              width: 30,
+                              height: 30,
+                            )
+                          else
+                            Icon(
+                              Icons.emoji_events_rounded,
+                              size: 26,
+                              color: palette.primaryPurple,
+                            ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              selectedName.localizedSudokuLevelName(l10n),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: cs.onSurface,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              l10n.recordsMetricClearRate,
+                              style: TextStyle(
+                                  fontSize: 14, color: cs.onSurfaceVariant),
+                            ),
+                          ),
+                          Text(
+                            '$cleared / $total',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              fontFeatures: [FontFeature.tabularFigures()],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              if (!hasRecords) ...[
-                const SizedBox(height: 12),
-                Text(
-                  l10n.recordsLevelEmpty,
-                  style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  // 크로스페이드 블록 밖의 안정된 위젯이라, 재생성 없이
+                  // 난이도를 바꿀 때마다 이전 값에서 새 값으로 채움이
+                  // 부드럽게 전환된다(숫자 카운트업은 쓰지 않음).
+                  child: TweenAnimationBuilder<double>(
+                    duration: reduceMotion
+                        ? Duration.zero
+                        : const Duration(milliseconds: 250),
+                    curve: Curves.easeOutCubic,
+                    tween: Tween<double>(
+                      end: total > 0 ? (cleared / total).clamp(0.0, 1.0) : 0,
+                    ),
+                    builder: (context, value, _) => LinearProgressIndicator(
+                      minHeight: 6,
+                      value: value,
+                      backgroundColor: cs.surfaceContainerHighest,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        palette.primaryPurple,
+                      ),
+                    ),
+                  ),
+                ),
+                AnimatedSwitcher(
+                  duration: statTransitionDuration,
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeOutCubic,
+                  transitionBuilder: (child, animation) =>
+                      FadeTransition(opacity: animation, child: child),
+                  child: Column(
+                    key: ValueKey('level-stat-rows-$selectedName'),
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (!hasRecords) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          l10n.recordsLevelEmpty,
+                          style: TextStyle(
+                              fontSize: 14, color: cs.onSurfaceVariant),
+                        ),
+                      ],
+                      row(Icons.emoji_events_outlined, l10n.recordsRowBestTime,
+                          time(stat['best_time'] as num?)),
+                      row(Icons.timer_outlined, l10n.recordsMetricAvgTime,
+                          time(stat['average_time'] as num?)),
+                      row(Icons.rule_rounded, l10n.recordsMetricAvgWrong,
+                          avgWrongLabel),
+                      const SizedBox(height: 14),
+                      Text(
+                        l10n.recordsAverageBasisNote,
+                        style: TextStyle(
+                          fontSize: 12,
+                          height: 1.35,
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
-              row(l10n.recordsRowBestTime, time(stat['best_time'] as num?)),
-              row(l10n.recordsMetricAvgTime,
-                  time(stat['average_time'] as num?)),
-              row(l10n.recordsMetricAvgWrong, avgWrongLabel),
-              const SizedBox(height: 14),
-              Text(
-                l10n.recordsAverageBasisNote,
-                style: TextStyle(
-                  fontSize: 12,
-                  height: 1.35,
-                  color: cs.onSurfaceVariant,
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -678,99 +1388,116 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     Map<String, dynamic> heatmap,
   ) {
     final cs = Theme.of(context).colorScheme;
-    final current = _activitySummary['current_streak_days'] as int? ?? 0;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final best = _activitySummary['best_streak_days'] as int? ?? 0;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _sectionTitle(
-          l10n.recordsCalendarTitle,
-          trailing: l10n.recordsCalendarPeriod(_kHeatmapWeeks),
-        ),
-        _card(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildActivityHeatmap(l10n, heatmap),
-              const SizedBox(height: 12),
-              Divider(height: 1, color: cs.outlineVariant),
-              const SizedBox(height: 12),
-              // 연속 기록은 달력 아래 작은 요약 행으로.
-              Wrap(
-                spacing: 16,
-                runSpacing: 4,
-                children: [
-                  Text(
-                    '${l10n.recordsActivityCurrentStreakLabel} ${l10n.recordsActivityDayCount(current)}',
+    final weeks = (heatmap['weeks'] as List<dynamic>? ?? const <dynamic>[])
+        .cast<List<Map<String, dynamic>>>();
+    Map<String, dynamic>? selectedDay;
+    for (final week in weeks) {
+      for (final d in week) {
+        if (d['date_key'] == _selectedHeatmapDateKey) selectedDay = d;
+      }
+    }
+    final locale = Localizations.localeOf(context).toString();
+    final selectionText = selectedDay == null
+        ? null
+        : '${_formatHeatmapTooltipDate(selectedDay['date'] as DateTime)} · '
+            '${l10n.recordsActivityClearCount(selectedDay['clears'] as int? ?? 0)}';
+
+    return _card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _RecordCardHeader(
+            title: l10n.recordsCalendarTitle,
+            subtitle: l10n.recordsCalendarSubtitle,
+            trailing: _sectionIcon(
+              Icons.grid_view_rounded,
+              const Key('records_calendar_artwork'),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.recordsCalendarPeriod(_kHeatmapWeeks),
+            style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: 16),
+          _buildActivityHeatmap(l10n, heatmap),
+          const SizedBox(height: 10),
+          _buildHeatmapLegend(l10n),
+          const SizedBox(height: 12),
+          Divider(height: 1, color: cs.outlineVariant),
+          const SizedBox(height: 12),
+          AnimatedSwitcher(
+            duration: reduceMotion
+                ? Duration.zero
+                : const Duration(milliseconds: 150),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeOutCubic,
+            transitionBuilder: (child, animation) =>
+                FadeTransition(opacity: animation, child: child),
+            child: selectionText != null
+                ? Text(
+                    selectionText,
+                    key: ValueKey('heatmap-selection-$locale-'
+                        '$_selectedHeatmapDateKey'),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurface,
+                    ),
+                  )
+                // 현재 연속은 위쪽 요약 카드에 이미 있으므로, 여기는 최고
+                // 연속만.
+                : Text(
+                    '${l10n.recordsActivityBestStreakLabel} '
+                    '${l10n.recordsActivityDayCount(best)}',
+                    key: const ValueKey('heatmap-selection-none'),
                     style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
                   ),
-                  Text(
-                    '${l10n.recordsActivityBestStreakLabel} ${l10n.recordsActivityDayCount(best)}',
-                    style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
-                  ),
-                ],
-              ),
-            ],
           ),
-        ),
-      ],
-    );
-  }
-
-  // ─── 업적 / 전체 요약 ─────────────────────────────────────────────────────
-
-  Widget _buildAchievementRow(AppLocalizations l10n) {
-    final cs = Theme.of(context).colorScheme;
-    return Semantics(
-      button: true,
-      label: l10n.recordsViewAchievements,
-      excludeSemantics: true,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const AchievementCollectionScreen(),
-          ),
-        ),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 52),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: cs.outlineVariant),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l10n.recordsViewAchievements,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: cs.onSurface,
-                  ),
-                ),
-              ),
-              Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }
 
-  /// 별도 대형 요약 카드 대신 하단 보조 문장 한 줄.
-  Widget _buildOverallNote(AppLocalizations l10n) {
-    final cleared = (_overall['total_cleared'] as num?)?.toInt() ?? 0;
-    final total = (_overall['total_games'] as num?)?.toInt() ?? 0;
-    return Text(
-      l10n.recordsOverallNote(cleared, total),
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        fontSize: 12,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
+  /// 완료 횟수별 색상 범례. 0(없음)부터 4+(가장 많음)까지 다섯 단계를
+  /// 실제 셀과 같은 색으로 보여준다.
+  Widget _buildHeatmapLegend(AppLocalizations l10n) {
+    final cs = Theme.of(context).colorScheme;
+    Widget swatch(int intensity, String label) {
+      final color = _activityHeatColorForIntensity(intensity);
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(3),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+          ),
+        ],
+      );
+    }
+
+    return ExcludeSemantics(
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 4,
+        children: [
+          swatch(0, '0'),
+          swatch(1, '1'),
+          swatch(2, '2'),
+          swatch(3, '3'),
+          swatch(4, '4+'),
+        ],
       ),
     );
   }
@@ -1021,44 +1748,57 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     final theme = Theme.of(context);
     final clears = day['clears'] as int? ?? 0;
     final isToday = day['is_today'] == true;
+    final isFuture = day['is_future'] == true;
+    final dateKey = day['date_key'] as String?;
+    final isSelected = dateKey != null && dateKey == _selectedHeatmapDateKey;
+    final label = '${_formatHeatmapTooltipDate(day['date'] as DateTime)} · '
+        '${l10n.recordsActivityClearCount(clears)}';
+
     return Tooltip(
-      message: '${_formatHeatmapTooltipDate(day['date'] as DateTime)} · '
-          '${l10n.recordsActivityClearCount(clears)}',
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: _activityHeatColor(day),
-          borderRadius: BorderRadius.circular(4),
-          border: isToday
-              ? Border.all(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
-                  width: 1,
-                )
-              : null,
+      message: label,
+      child: Semantics(
+        button: !isFuture,
+        enabled: !isFuture,
+        selected: isSelected,
+        label: label,
+        excludeSemantics: true,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: isFuture
+              ? null
+              : () => setState(() {
+                    _selectedHeatmapDateKey = isSelected ? null : dateKey;
+                  }),
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              color: _activityHeatColor(day),
+              borderRadius: BorderRadius.circular(4),
+              border: isSelected
+                  ? Border.all(
+                      color: LevelStatusPalette.of(context).primaryPurple,
+                      width: 1.5,
+                    )
+                  : isToday
+                      ? Border.all(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.45),
+                          width: 1,
+                        )
+                      : null,
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Color _activityHeatColor(Map<String, dynamic> day) {
+  /// 0(없음)~4+(가장 많음) 강도별 색. 범례와 실제 셀이 같은 색을 쓴다.
+  Color _activityHeatColorForIntensity(int intensity) {
     final theme = Theme.of(context);
-    if (day['is_future'] == true) {
-      return theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.14);
-    }
-
-    // 다크 배경에서 저채도 보라(statisticsAccent)를 낮은 알파로 겹치면 카드와
-    // 거의 같은 밝기로 뭉개져 안 보이므로, 다크모드에서는 더 밝은 보라를 쓴다.
     final isDark = theme.brightness == Brightness.dark;
-    final accent = isDark ? const Color(0xFF9C90E8) : AppTheme.statisticsAccent;
-
-    final intensity = day['intensity'] as int? ?? 0;
-    if (day['is_today'] == true) {
-      if (intensity <= 0) {
-        return accent.withValues(alpha: isDark ? 0.30 : 0.20);
-      }
-      return accent.withValues(alpha: 0.9);
-    }
+    final accent = LevelStatusPalette.of(context).primaryPurple;
     switch (intensity) {
       case 1:
         return accent.withValues(alpha: isDark ? 0.32 : 0.22);
@@ -1072,6 +1812,25 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         return theme.colorScheme.surfaceContainerHighest
             .withValues(alpha: 0.38);
     }
+  }
+
+  Color _activityHeatColor(Map<String, dynamic> day) {
+    final theme = Theme.of(context);
+    if (day['is_future'] == true) {
+      return theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.14);
+    }
+
+    final isDark = theme.brightness == Brightness.dark;
+    final accent = LevelStatusPalette.of(context).primaryPurple;
+
+    final intensity = day['intensity'] as int? ?? 0;
+    if (day['is_today'] == true) {
+      if (intensity <= 0) {
+        return accent.withValues(alpha: isDark ? 0.30 : 0.20);
+      }
+      return accent.withValues(alpha: 0.9);
+    }
+    return _activityHeatColorForIntensity(intensity);
   }
 
   /// 히트맵 요일 레이블 (월~일, index 0=월 … 6=일)
@@ -1119,5 +1878,178 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   String _formatHeatmapTooltipDate(DateTime date) {
     return DateFormat.yMMMd(Localizations.localeOf(context).toString())
         .format(date);
+  }
+}
+
+/// 기록 화면 카드 공통 헤더(제목 + 안내 문구 + 우측 장식 아이콘). 기록
+/// 페이지 안에서만 쓰는 용도로, 다른 화면에서 재사용할 범용 컴포넌트로
+/// 확장하지 않는다.
+class _RecordCardHeader extends StatelessWidget {
+  const _RecordCardHeader({
+    required this.title,
+    this.subtitle,
+    this.trailing,
+  });
+
+  final String title;
+  final String? subtitle;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Semantics(
+                header: true,
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: cs.onSurface,
+                  ),
+                ),
+              ),
+            ),
+            if (trailing != null) ...[
+              const SizedBox(width: 12),
+              trailing!,
+            ],
+          ],
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            subtitle!,
+            style: TextStyle(fontSize: 12.5, color: cs.onSurfaceVariant),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// '이번 주' 요일 칸. 누르는 동안만 살짝 줄어들고(PressScale), 놓으면
+/// 복원된다 — 요일 자체는 애니메이션 없는 정적 이미지가 아니라 눌림
+/// 피드백만 준다.
+class _WeekDayCell extends StatefulWidget {
+  const _WeekDayCell({
+    required this.date,
+    required this.locale,
+    required this.isToday,
+    required this.isSelected,
+    required this.done,
+    required this.reduceMotion,
+    required this.semanticsLabel,
+    required this.todayLabel,
+    required this.onTap,
+  });
+
+  final DateTime date;
+  final String locale;
+  final bool isToday;
+  final bool isSelected;
+  final bool done;
+  final bool reduceMotion;
+  final String semanticsLabel;
+  final String todayLabel;
+  final VoidCallback onTap;
+
+  @override
+  State<_WeekDayCell> createState() => _WeekDayCellState();
+}
+
+class _WeekDayCellState extends State<_WeekDayCell> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (_pressed == value) return;
+    setState(() => _pressed = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final accent = LevelStatusPalette.of(context).primaryPurple;
+
+    return Semantics(
+      button: true,
+      selected: widget.isSelected,
+      label: widget.semanticsLabel,
+      excludeSemantics: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) => _setPressed(true),
+        onTapUp: (_) => _setPressed(false),
+        onTapCancel: () => _setPressed(false),
+        onTap: widget.onTap,
+        child: PressScale(
+          pressed: _pressed,
+          child: AnimatedContainer(
+            duration: widget.reduceMotion
+                ? Duration.zero
+                : const Duration(milliseconds: 130),
+            curve: Curves.easeOutCubic,
+            constraints: const BoxConstraints(minHeight: 76),
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            decoration: BoxDecoration(
+              color: widget.isSelected
+                  ? LevelStatusPalette.of(context).completedBackground
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  DateFormat.E(widget.locale).format(widget.date),
+                  maxLines: 1,
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                ),
+                const SizedBox(height: 6),
+                // 오늘은 테두리, 완료 여부는 채움+체크 아이콘(색만으로 구분하지 않음).
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: widget.done ? accent : Colors.transparent,
+                    border: Border.all(
+                      color: widget.isToday
+                          ? cs.onSurface
+                          : widget.done
+                              ? accent
+                              : cs.outlineVariant,
+                      width: widget.isToday ? 2 : 1,
+                    ),
+                  ),
+                  child: widget.done
+                      ? const Icon(Icons.check_rounded,
+                          size: 18, color: Colors.white)
+                      : null,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  widget.isToday ? widget.todayLabel : '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: cs.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

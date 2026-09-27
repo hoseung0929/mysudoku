@@ -24,10 +24,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get navSettings => '설정';
 
   @override
-  String get recordsScreenTitle => '기록 · 통계';
+  String get recordsHeroImageSubtitle => '차곡차곡 쌓이는 나의 기록';
 
   @override
-  String get challengeScreenTitle => '챌린지';
+  String get settingsHeroSubtitle => '나에게 맞게 설정해요';
+
+  @override
+  String get recordsScreenTitle => '기록 · 통계';
 
   @override
   String get settingsTitle => '설정';
@@ -469,7 +472,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsHeroBadgeFlow => '흐름';
 
   @override
-  String get recordsHeroTitle => '차분하게 쌓인 흐름을\n먼저 살펴보세요.';
+  String get recordsHeroTitle => '차분하게 쌓인 흐름을 먼저 살펴보세요.';
 
   @override
   String get recordsHeroSubtitle =>
@@ -498,6 +501,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get recordsPlayInsightsTitle => '이번 주 기록';
+
+  @override
+  String get recordsWeekSubtitle => '요일을 눌러 기록을 확인하세요';
 
   @override
   String get recordsPlayCalendarTitle => '요일별';
@@ -568,6 +574,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsByLevelTitle => '난이도별 기록';
 
   @override
+  String get recordsByLevelSubtitle => '난이도를 눌러 상세 기록을 확인하세요';
+
+  @override
   String get recordsByLevelEmpty => '표시할 레벨 통계가 없습니다.';
 
   @override
@@ -608,7 +617,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsAverageBasisNote => '평균은 모든 플레이가 아니라 퍼즐별 최고 기록을 기준으로 해요.';
 
   @override
-  String get recordsCalendarTitle => '활동 달력';
+  String get recordsCalendarTitle => '플레이 활동';
+
+  @override
+  String get recordsCalendarSubtitle => '최근 1년간의 플레이 기록';
 
   @override
   String recordsCalendarPeriod(int weeks) {
@@ -671,6 +683,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsActivityBestStreakLabel => '최장 연속 완료 일수';
 
   @override
+  String get recordsChallengeStreakLabel => '도전 연속';
+
+  @override
   String recordsActivityDayCount(int count) {
     return '$count일';
   }
@@ -724,7 +739,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsStatsHeroEyebrow => '최근 7일 스도쿠 기록';
 
   @override
-  String get recordsStatsHeroHeadline => '최근 7일 스도쿠 기록을\n한눈에 확인하세요.';
+  String get recordsStatsHeroHeadline => '최근 7일 스도쿠 기록을 한눈에 확인하세요.';
 
   @override
   String recordsTrendA11yMaxClears(int count) {
@@ -806,9 +821,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsGoToChallengeTab => '챌린지 탭으로 이동';
 
   @override
-  String get challengeLoadError => '챌린지 정보를 불러올 수 없습니다.';
-
-  @override
   String get challengeTodaysChallengeTitle => '오늘의 도전';
 
   @override
@@ -828,14 +840,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get myPaceNoPlayableMessage => '전체 레벨에서 새로 플레이할 퍼즐이 없어요.';
-
-  @override
-  String get challengeWeeklyGoalReachedTitle => '이번 주 목표를 달성했어요';
-
-  @override
-  String challengeWeeklyGoalRemainingTitle(int count) {
-    return '주간 목표까지 $count판 남았어요';
-  }
 
   @override
   String get challengeWeeklyGoalReachedBody =>
@@ -860,70 +864,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get challengePerfectZeroBody => '메모 기능을 활용하면 오답 없는 클리어에 훨씬 가까워집니다.';
 
   @override
-  String get challengeWeeklyGoalHeading => '주간 목표';
-
-  @override
-  String challengeWeeklyClearsLine(int count) {
-    return '이번 주 $count판 클리어';
-  }
-
-  @override
-  String challengeWeeklyProgressShort(int done, int target) {
-    return '$done/$target 완료';
-  }
-
-  @override
-  String challengeWeeklyPerfectShort(int count) {
-    return '퍼펙트 $count회';
-  }
-
-  @override
-  String get challengeWeeklyCongratsFooter =>
-      '이번 주 목표를 달성했습니다. 기록을 더 멋지게 쌓아보세요.';
-
-  @override
-  String challengeWeeklyAlmostFooter(int count) {
-    return '지금 흐름이면 이번 주 목표까지 $count판 남았습니다.';
-  }
-
-  @override
-  String get challengeAchievementsHeading => '업적 · 배지';
-
-  @override
-  String challengeBadgesCollected(int unlocked, int total) {
-    return '획득 $unlocked/$total';
-  }
-
-  @override
-  String get challengeViewAllBadges => '전체 보기';
-
-  @override
-  String get challengeEarnedBadgesHeading => '획득한 배지';
-
-  @override
-  String get challengeNextBadgeTargets => '다음 목표';
-
-  @override
-  String challengeBadgeProgressLine(String desc, String progress) {
-    return '$desc 현재 진행: $progress';
-  }
-
-  @override
-  String challengeStreakDays(int days) {
-    return '$days일 연속 클리어';
-  }
-
-  @override
-  String get challengeStreakStartToday => '오늘 첫 클리어 도전';
-
-  @override
-  String get challengeTabHeroHeadline => '오늘의 퍼즐과 주간 리듬을\n한곳에서 살펴보세요.';
-
-  @override
-  String get challengeHeroPendingDetail => '플레이는 홈 상단 카드에서 시작할 수 있어요.';
-
-  @override
-  String get challengeHeroDoneDetail => '오늘 도전은 끝났어요. 배지와 주간 진행은 이 탭에 모아두었어요.';
+  String get challengeTabHeroHeadline => '오늘의 퍼즐과 주간 리듬을 한곳에서 살펴보세요.';
 
   @override
   String get challengeOpenTodayOnHomeButton => '홈에서 오늘 퍼즐 열기';
@@ -1452,12 +1393,310 @@ class AppLocalizationsKo extends AppLocalizations {
   String get savedGamesEmpty => '선택한 조건에 맞는 저장 게임이 없어요.';
 
   @override
-  String get challengeMetricBasisTitle => '챌린지 지표 기준';
+  String get savedGamesDeleteFailed => '삭제하지 못했어요. 다시 시도해 주세요.';
 
   @override
-  String get challengeMetricBasisWeekly =>
-      '주간 진행도: 최근 7일의 완료 이벤트 수를 기준으로 계산됩니다.';
+  String get recordsMyRecordTitle => '나의 기록';
 
   @override
-  String get challengeMetricBasisStreak => '연속 기록: 오늘의 도전을 완료한 날짜 연속성으로 계산됩니다.';
+  String get recordsSummaryTotalCleared => '총 완료';
+
+  @override
+  String get recordsSummaryPerfectClears => '완벽 완료';
+
+  @override
+  String get challengeMonthlyDescription => '날짜를 선택해 지난 도전을 다시 풀 수 있어요.';
+
+  @override
+  String get challengeTodayEyebrow => '오늘의 흐름';
+
+  @override
+  String get gamePausedTitle => '일시정지됨';
+
+  @override
+  String get gamePausedBody => '타이머가 멈추고 보드는 잠시 가려져요.';
+
+  @override
+  String homeStreakChip(int count) {
+    return '$count일';
+  }
+
+  @override
+  String homeStreakActive(int count) {
+    return '$count일 연속 퍼즐을 완료했어요';
+  }
+
+  @override
+  String homeStreakAtRisk(int count) {
+    return '$count일 연속 중이에요. 오늘 한 판을 완료하면 이어져요.';
+  }
+
+  @override
+  String get hintStepLookTitle => '힌트 · 살펴볼 곳';
+
+  @override
+  String get hintLookCell => '강조된 칸의 가로줄·세로줄·박스를 살펴보세요.';
+
+  @override
+  String hintLookBox(int value) {
+    return '강조된 박스에서 숫자 $value의 자리를 찾아보세요.';
+  }
+
+  @override
+  String hintLookRow(int value) {
+    return '강조된 가로줄에서 숫자 $value의 자리를 찾아보세요.';
+  }
+
+  @override
+  String hintLookCol(int value) {
+    return '강조된 세로줄에서 숫자 $value의 자리를 찾아보세요.';
+  }
+
+  @override
+  String get hintMovedFromSelection => '선택한 칸보다 먼저 풀 수 있는 곳이 있어요.';
+
+  @override
+  String get hintTechniqueNakedSingle => '네이키드 싱글';
+
+  @override
+  String get hintTechniqueHiddenSingle => '히든 싱글';
+
+  @override
+  String get hintTechniqueReveal => '정답 알려주기';
+
+  @override
+  String hintExplainNakedSingle(int value) {
+    return '이 칸의 가로줄·세로줄·박스에 다른 숫자 8개가 모두 있어요. 들어갈 수 있는 숫자는 $value뿐이에요.';
+  }
+
+  @override
+  String hintExplainHiddenSingleBox(int value) {
+    return '이 박스에서 숫자 $value의 자리는 이 칸뿐이에요. 다른 빈칸은 모두 표시된 칸과 같은 가로줄이나 세로줄에 있어요.';
+  }
+
+  @override
+  String hintExplainHiddenSingleRow(int value) {
+    return '이 가로줄에서 숫자 $value의 자리는 이 칸뿐이에요. 다른 빈칸은 모두 표시된 칸과 같은 세로줄이나 박스에 있어요.';
+  }
+
+  @override
+  String hintExplainHiddenSingleCol(int value) {
+    return '이 세로줄에서 숫자 $value의 자리는 이 칸뿐이에요. 다른 빈칸은 모두 표시된 칸과 같은 가로줄이나 박스에 있어요.';
+  }
+
+  @override
+  String get hintExplainReveal => '이 칸은 더 어려운 기법이 필요해요. 아래 버튼으로 정답을 넣을 수 있어요.';
+
+  @override
+  String get hintNextStep => '더 알려주기';
+
+  @override
+  String get hintFillAnswer => '정답 넣기';
+
+  @override
+  String get hintClose => '힌트 닫기';
+
+  @override
+  String get notificationOptInTitle => '매일 한 판을 알려드릴까요?';
+
+  @override
+  String get notificationOptInBody =>
+      '매일 저녁 8시에 아직 퍼즐을 풀지 않았다면 알려드려요. 설정에서 언제든 끌 수 있어요.';
+
+  @override
+  String get notificationOptInAccept => '알림 받기';
+
+  @override
+  String get notificationOptInLater => '나중에';
+
+  @override
+  String get notificationOptInDenied =>
+      '알림 권한이 허용되지 않았어요. 기기 설정에서 허용한 뒤 설정에서 알림을 켤 수 있어요.';
+
+  @override
+  String get notificationSetupFailed => '알림을 설정하지 못했어요. 잠시 후 설정에서 다시 시도해 주세요.';
+
+  @override
+  String get beginnerTutorialPromptTitle => '스도쿠가 처음이신가요?';
+
+  @override
+  String get beginnerTutorialPromptBody =>
+      '문제를 풀기 전에 짧은 안내 연습을 해볼까요? 1분이면 충분해요.';
+
+  @override
+  String get beginnerTutorialStart => '가이드 시작';
+
+  @override
+  String get beginnerTutorialSkip => '건너뛰기';
+
+  @override
+  String beginnerTutorialStepIndicator(int current, int total) {
+    return '$current / $total 단계';
+  }
+
+  @override
+  String get beginnerTutorialStepRowTitle => '규칙: 가로줄';
+
+  @override
+  String get beginnerTutorialStepRowBody => '한 가로줄에는 1부터 9까지 숫자가 한 번씩만 들어가요.';
+
+  @override
+  String get beginnerTutorialStepColumnTitle => '규칙: 세로줄';
+
+  @override
+  String get beginnerTutorialStepColumnBody =>
+      '세로줄도 마찬가지로 1부터 9까지 숫자가 한 번씩만 들어가요.';
+
+  @override
+  String get beginnerTutorialStepBoxTitle => '규칙: 3×3 박스';
+
+  @override
+  String get beginnerTutorialStepBoxBody =>
+      '3×3 박스 안에도 1부터 9까지 숫자가 한 번씩만 들어가요.';
+
+  @override
+  String get beginnerTutorialStepInputTitle => '숫자 입력하기';
+
+  @override
+  String get beginnerTutorialStepInputBody =>
+      '강조된 칸에는 들어갈 수 있는 숫자가 하나뿐이에요. 칸을 누르고 정답 숫자를 눌러보세요.';
+
+  @override
+  String get beginnerTutorialStepInputWrongHint =>
+      '그 숫자는 이미 같은 줄이나 박스에 있어요. 다른 숫자를 눌러보세요.';
+
+  @override
+  String get beginnerTutorialStepMemoTitle => '메모와 지우기';
+
+  @override
+  String get beginnerTutorialStepMemoAddBody =>
+      '메모 모드를 켜고 이 칸을 누른 뒤 후보 숫자를 눌러 메모해보세요.';
+
+  @override
+  String get beginnerTutorialStepMemoEraseBody => '이번엔 같은 숫자를 다시 눌러 메모를 지워보세요.';
+
+  @override
+  String get beginnerTutorialStepHintTitle => '힌트';
+
+  @override
+  String get beginnerTutorialStepHintBody =>
+      '힌트를 누르면 실제 힌트를 차감하지 않고 어디를 봐야 하는지 알려줘요.';
+
+  @override
+  String get beginnerTutorialStepHintButton => '힌트 열기';
+
+  @override
+  String get beginnerTutorialStepDoneTitle => '준비 완료!';
+
+  @override
+  String get beginnerTutorialStepDoneBody =>
+      '가로줄, 세로줄, 박스 규칙과 숫자 입력, 메모, 힌트까지 모두 배웠어요.';
+
+  @override
+  String get beginnerTutorialFirstPuzzleButton => '첫 문제 시작';
+
+  @override
+  String get beginnerTutorialNextButton => '다음';
+
+  @override
+  String get beginnerTutorialCloseButton => '완료';
+
+  @override
+  String get settingsHowToPlayTitle => '게임 방법';
+
+  @override
+  String get settingsHowToPlaySubtitle => '안내 튜토리얼 다시 보기';
+
+  @override
+  String get autoNotesConfirmTitle => '모든 메모를 다시 채울까요?';
+
+  @override
+  String get autoNotesConfirmBody =>
+      '빈 칸의 메모가 현재 후보 숫자로 모두 바뀌어요. 직접 지운 후보도 다시 나타날 수 있어요.';
+
+  @override
+  String get autoNotesConfirmApply => '메모 다시 채우기';
+
+  @override
+  String get autoNotesContradictionMessage =>
+      '후보가 하나도 남지 않는 칸이 있어 메모를 채우지 못했어요. 입력을 확인하고 다시 시도해 주세요.';
+
+  @override
+  String get autoNotesTipMessage => '팁: 메모를 길게 누르면 후보 숫자를 한 번에 채워줘요.';
+
+  @override
+  String get gameMemoLongPressHint => '탭하여 메모 모드 전환, 길게 눌러 자동 메모.';
+
+  @override
+  String get challengeMonthlyTitle => '도전 기록';
+
+  @override
+  String get challengePreviousMonth => '이전 달';
+
+  @override
+  String get challengeBackToCurrentMonth => '이번 달';
+
+  @override
+  String get challengeStatusNotCompleted => '미완료';
+
+  @override
+  String get challengeStatusInProgress => '진행 중';
+
+  @override
+  String get challengeStatusCompleted => '완료';
+
+  @override
+  String get challengeStatusPerfect => '완벽 클리어';
+
+  @override
+  String get challengeStatusFuture => '아직 이용할 수 없음';
+
+  @override
+  String get challengeMonthComplete => '월간 완료';
+
+  @override
+  String get challengeStartPastChallenge => '지난 도전 시작';
+
+  @override
+  String get challengeResumePastChallenge => '지난 도전 이어하기';
+
+  @override
+  String get challengeRetryPastChallenge => '지난 도전 다시 풀기';
+
+  @override
+  String get challengePuzzleLoadFailed => '이 문제를 불러오지 못했어요.';
+
+  @override
+  String get challengeCalendarLoadError => '도전 달력을 불러올 수 없습니다.';
+
+  @override
+  String get challengeStreakExcludedNote => '과거 도전 완료는 연속 기록에 포함되지 않아요';
+
+  @override
+  String challengeDayCellSemantics(String date, String status) {
+    return '$date, $status';
+  }
+
+  @override
+  String get homeGreetingMorning => '가볍게 한 판 시작해볼까요?';
+
+  @override
+  String get homeGreetingAfternoon => '집중 퍼즐 한 판, 딱 좋아요.';
+
+  @override
+  String get homeGreetingEvening => '차분하게 퍼즐로 마무리해요.';
+
+  @override
+  String get levelNoPuzzlesAvailable => '이 난이도에는 선택 가능한 퍼즐이 없어요.';
+
+  @override
+  String get levelLastPlayedToday => '오늘';
+
+  @override
+  String get levelLastPlayedYesterday => '어제';
+
+  @override
+  String levelLastPlayedDaysAgo(int count) {
+    return '$count일 전';
+  }
 }

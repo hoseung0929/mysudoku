@@ -52,7 +52,9 @@ class GameCompletionCoordinator {
     required int clearTimeSeconds,
     required int wrongCount,
     required int hintsUsed,
+    bool autoNotesUsed = false,
     String? challengeDate,
+    bool challengeCountsForStreak = true,
   }) async {
     final beforeAchievements = await _achievementService.load(l10n);
     await _databaseHelper.saveClearEvent(
@@ -61,13 +63,15 @@ class GameCompletionCoordinator {
       clearTime: clearTimeSeconds,
       wrongCount: wrongCount,
       hintsUsed: hintsUsed,
+      autoNotesUsed: autoNotesUsed,
     );
-    final isNewBestRecord = await _gameRecordService.saveClearRecordIfBest(
+    final recordResult = await _gameRecordService.saveClearRecordIfBest(
       levelName: level.name,
       gameNumber: game.gameNumber,
       clearTime: clearTimeSeconds,
       wrongCount: wrongCount,
       hintsUsed: hintsUsed,
+      autoNotesUsed: autoNotesUsed,
     );
     final attributionDay = await _challengeProgressService.resolveCompletionDay(
       levelName: level.name,
@@ -80,8 +84,17 @@ class GameCompletionCoordinator {
           !await _databaseHelper.hasDailyChallengeCompletionForDate(
         ChallengeProgressService.formatLocalDate(attributionDay),
       );
-      // 같은 날 중복은 저장소(PK)에서 무시된다.
-      await _databaseHelper.recordDailyChallengeCompletion(attributionDay);
+      // 같은 날짜의 재도전은 더 좋은 결과일 때만 세부 기록을 갱신한다.
+      await _databaseHelper.recordDailyChallengeCompletion(
+        attributionDay,
+        levelName: level.name,
+        gameNumber: game.gameNumber,
+        clearTime: clearTimeSeconds,
+        wrongCount: wrongCount,
+        hintsUsed: hintsUsed,
+        autoNotesUsed: autoNotesUsed,
+        streakEligible: challengeCountsForStreak,
+      );
     }
     final afterAchievements = await _achievementService.load(l10n);
     final newlyUnlockedBadges = _achievementService.getNewlyUnlockedBadges(
@@ -120,7 +133,7 @@ class GameCompletionCoordinator {
     }
 
     return GameCompletionData(
-      isNewBestRecord: isNewBestRecord,
+      isNewBestRecord: recordResult.improvedPrevious,
       newlyUnlockedBadges: newlyUnlockedBadges,
       challengeMessage:
           isNewDailyCompletion ? l10n.challengeCompletedToday : null,

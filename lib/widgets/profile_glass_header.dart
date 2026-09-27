@@ -18,6 +18,8 @@ class ProfileGlassHeader extends StatelessWidget {
     this.onTapEditProfile,
     this.compact = false,
     this.showSubtitle = false,
+    this.streakDays = 0,
+    this.streakPlayedToday = false,
   });
 
   final bool isTop;
@@ -36,20 +38,26 @@ class ProfileGlassHeader extends StatelessWidget {
   /// 기능은 그대로이며 여기서만 생략한다.
   final bool showSubtitle;
 
+  /// 하루 1판 이상 완료한 날의 연속 일수(기록 화면과 같은 기준). 0이면 숨긴다.
+  final int streakDays;
+
+  /// 오늘 이미 한 판을 완료했는지. 아니면 연속이 끊길 수 있음을 옅게 표시한다.
+  final bool streakPlayedToday;
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final topInset = MediaQuery.paddingOf(context).top;
     final hasProfileImage =
         profileImagePath != null && File(profileImagePath!).existsSync();
     final trimmedName = profileName?.trim() ?? '';
     final hasName = trimmedName.isNotEmpty;
     final displayName = titleOverride ?? (hasName ? trimmedName : guestTitle);
-    final languageCode = Localizations.localeOf(context).languageCode;
     final subtitleText = showSubtitle
         ? (subtitleOverride ??
-            _buildGreetingMessage(
-              languageCode: languageCode,
+            greetingMessage(
+              l10n: l10n,
               hour: DateTime.now().hour,
             ))
         : null;
@@ -151,6 +159,13 @@ class ProfileGlassHeader extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (streakDays > 0) ...[
+                  const SizedBox(width: 4),
+                  _StreakChip(
+                    days: streakDays,
+                    playedToday: streakPlayedToday,
+                  ),
+                ],
                 const SizedBox(width: 4),
                 Tooltip(
                   message: AppLocalizations.of(context)!.settingsTitle,
@@ -179,34 +194,23 @@ class ProfileGlassHeader extends StatelessWidget {
     );
   }
 
-  String _buildGreetingMessage({
-    required String languageCode,
+  /// 시간대별 환영 문구. 홈 헤더 부제와 홈 상단 히어로 배너가 함께 쓴다.
+  static String greetingMessage({
+    required AppLocalizations l10n,
     required int hour,
   }) {
     final period = _timePeriod(hour);
     switch (period) {
       case _GreetingTimePeriod.morning:
-        if (languageCode == 'ko') return '가볍게 한 판 시작해볼까요?';
-        if (languageCode == 'ja') return 'さあ、一局始めましょう。';
-        if (languageCode == 'zh') return '从一局轻松的谜题开始吧。';
-        if (languageCode == 'es') return 'Empieza con un puzle ligero.';
-        return 'Start with a light puzzle.';
+        return l10n.homeGreetingMorning;
       case _GreetingTimePeriod.afternoon:
-        if (languageCode == 'ko') return '집중 퍼즐 한 판, 딱 좋아요.';
-        if (languageCode == 'ja') return '集中して一局、いかがですか。';
-        if (languageCode == 'zh') return '现在适合专注解一局。';
-        if (languageCode == 'es') return 'Un puzle de concentración te sienta bien ahora.';
-        return 'A focused puzzle fits now.';
+        return l10n.homeGreetingAfternoon;
       case _GreetingTimePeriod.evening:
-        if (languageCode == 'ko') return '차분하게 퍼즐로 마무리해요.';
-        if (languageCode == 'ja') return '静かにパズルで締めくくりましょう。';
-        if (languageCode == 'zh') return '静下心来，用一局谜题收尾吧。';
-        if (languageCode == 'es') return 'Relájate con un puzle tranquilo.';
-        return 'Wind down with a calm puzzle.';
+        return l10n.homeGreetingEvening;
     }
   }
 
-  _GreetingTimePeriod _timePeriod(int hour) {
+  static _GreetingTimePeriod _timePeriod(int hour) {
     if (hour >= 5 && hour < 12) return _GreetingTimePeriod.morning;
     if (hour >= 12 && hour < 18) return _GreetingTimePeriod.afternoon;
     return _GreetingTimePeriod.evening;
@@ -214,3 +218,85 @@ class ProfileGlassHeader extends StatelessWidget {
 }
 
 enum _GreetingTimePeriod { morning, afternoon, evening }
+
+/// 헤더의 연속 일수 칩. 오늘 완료했으면 채운 불꽃, 아직이면 테두리만 둔
+/// 옅은 불꽃으로 "오늘 한 판이면 이어진다"는 상태를 구분한다.
+class _StreakChip extends StatelessWidget {
+  const _StreakChip({required this.days, required this.playedToday});
+
+  final int days;
+  final bool playedToday;
+
+  static const _flameColor = Color(0xFFE8833A);
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final message =
+        playedToday ? l10n.homeStreakActive(days) : l10n.homeStreakAtRisk(days);
+    return Tooltip(
+      message: message,
+      triggerMode: TooltipTriggerMode.tap,
+      child: Semantics(
+        container: true,
+        label: message,
+        excludeSemantics: true,
+        // 칩은 이름·설정 버튼과 한 줄을 나눠 쓰므로 큰 글씨에서는 1.3배까지만
+        // 키운다(전체 내용은 툴팁·스크린 리더 문장으로 전달된다).
+        child: MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1.3,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 44),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  key: const ValueKey('home-streak-chip'),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: playedToday
+                        ? _flameColor.withValues(alpha: 0.14)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: playedToday
+                          ? Colors.transparent
+                          : colorScheme.outlineVariant,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.local_fire_department_rounded,
+                        size: 18,
+                        color: playedToday
+                            ? _flameColor
+                            : colorScheme.onSurfaceVariant
+                                .withValues(alpha: 0.7),
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        l10n.homeStreakChip(days),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: playedToday
+                              ? colorScheme.onSurface
+                              : colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

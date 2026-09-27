@@ -148,7 +148,8 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
       textDisabled: Color.lerp(textDisabled, other.textDisabled, t)!,
       boardUserNumber: Color.lerp(boardUserNumber, other.boardUserNumber, t)!,
       attention: Color.lerp(attention, other.attention, t)!,
-      attentionSurface: Color.lerp(attentionSurface, other.attentionSurface, t)!,
+      attentionSurface:
+          Color.lerp(attentionSurface, other.attentionSurface, t)!,
     );
   }
 }

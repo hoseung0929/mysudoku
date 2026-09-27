@@ -34,6 +34,9 @@ class GameSessionState {
     required this.isGameComplete,
     required this.isGameOver,
     this.challengeDate,
+    this.initialHints,
+    this.autoNotesUsed = false,
+    this.userFilledCells = 0,
   });
 
   final List<List<int>> board;
@@ -46,10 +49,32 @@ class GameSessionState {
   final bool isGameComplete;
   final bool isGameOver;
 
+  /// 고정(원본) 칸을 제외하고 사용자가 직접 채운 숫자 칸 수. 저장 시점에
+  /// 원본 퍼즐을 아는 화면(SudokuGameScreen)에서 계산해 저장한다. 원본
+  /// 퍼즐이 없는 소비자(예: 오늘의 도전 월간 달력)도 "진행 중" 여부를
+  /// 정확히 판정할 수 있게 하기 위함이다. 이 필드가 없는 기존 저장 데이터는
+  /// 기본값 0으로 읽는다(정답만 채우고 나간 옛 세션은 진행 중으로 다시
+  /// 잡히지 않을 수 있으나, 메모·오답·힌트 흔적이 있으면 여전히 잡힌다).
+  final int userFilledCells;
+
+  /// 이 시도에서 자동 메모 채우기를 한 번이라도 사용했는지. 되돌리기로 메모를
+  /// 되돌려도 이 값은 유지된다(사용 이력 자체는 지우지 않음). 이 필드가 없는
+  /// 기존 저장 데이터는 기본값 false로 읽는다.
+  final bool autoNotesUsed;
+
   /// 오늘의 도전으로 시작한 게임이면 그 도전의 날짜(YYYY-MM-DD). 이어하기로
   /// 다시 열어도 완료가 시작한 날짜에 귀속되도록 세션과 함께 보존한다.
   /// 이 필드가 없는 기존 저장 데이터는 null(일반 게임)로 읽는다.
   final String? challengeDate;
+
+  /// 저장 시점 난이도 정책의 최대 힌트 수. [hintsRemaining]과 비교해 힌트를
+  /// 썼는지 판단한다. 이 필드가 없는 기존 저장 데이터는 null이며, 힌트 사용
+  /// 여부를 추정하지 않는다(과거 기본값 3이 현재 정책과 달라 오판할 수 있음).
+  final int? initialHints;
+
+  /// 힌트를 1회 이상 차감한 세션인지. 정답을 넣지 않고 패널만 연 경우도 포함한다.
+  bool get hasUsedHint =>
+      initialHints != null && hintsRemaining < initialHints!;
 }
 
 extension GameSessionResumability on GameSessionState {
@@ -59,7 +84,8 @@ extension GameSessionResumability on GameSessionState {
   ///
   /// - 완료/게임오버/실수 한도 도달 세션은 제외한다.
   /// - 플레이어가 채운 칸이 전부라면(완료 직전 잔여물) 제외한다.
-  /// - 플레이어 흔적(채운 숫자, 후보 메모, 실수 기록)이 하나라도 있어야 한다.
+  /// - 플레이어 흔적(채운 숫자, 후보 메모, 실수 기록, 힌트 사용)이 하나라도
+  ///   있어야 한다.
   ///   타이머 경과나 열어보기만 한 세션, 입력 후 모두 지워 초기 상태로 돌아온
   ///   세션은 "새 퍼즐"로 본다.
   bool isResumable({
@@ -71,7 +97,7 @@ extension GameSessionResumability on GameSessionState {
       return false;
     }
     if (emptyCells > 0 && userFilledCells >= emptyCells) return false;
-    return userFilledCells > 0 || hasNotes || wrongCount > 0;
+    return userFilledCells > 0 || hasNotes || wrongCount > 0 || hasUsedHint;
   }
 }
 
@@ -102,6 +128,9 @@ class GameStateService {
     bool isGameComplete = false,
     bool isGameOver = false,
     String? challengeDate,
+    int? initialHints,
+    bool autoNotesUsed = false,
+    int userFilledCells = 0,
   }) async {
     final updatedAtMillis = DateTime.now().millisecondsSinceEpoch;
     await _persistLocalSession(
@@ -117,6 +146,9 @@ class GameStateService {
       isGameComplete: isGameComplete,
       isGameOver: isGameOver,
       challengeDate: challengeDate,
+      initialHints: initialHints,
+      autoNotesUsed: autoNotesUsed,
+      userFilledCells: userFilledCells,
       updatedAtMillis: updatedAtMillis,
     );
   }
@@ -134,6 +166,9 @@ class GameStateService {
     required bool isGameComplete,
     required bool isGameOver,
     required String? challengeDate,
+    required int? initialHints,
+    required bool autoNotesUsed,
+    required int userFilledCells,
     required int updatedAtMillis,
   }) async {
     final prefs = await SharedPreferences.getInstance();
@@ -155,6 +190,9 @@ class GameStateService {
       'isGameComplete': isGameComplete,
       'isGameOver': isGameOver,
       if (challengeDate != null) 'challengeDate': challengeDate,
+      if (initialHints != null) 'initialHints': initialHints,
+      'autoNotesUsed': autoNotesUsed,
+      'userFilledCells': userFilledCells,
     });
 
     await prefs.setString(key, payload);
@@ -341,6 +379,9 @@ class GameStateService {
       isGameComplete: json['isGameComplete'] as bool? ?? false,
       isGameOver: json['isGameOver'] as bool? ?? false,
       challengeDate: json['challengeDate'] as String?,
+      initialHints: json['initialHints'] as int?,
+      autoNotesUsed: json['autoNotesUsed'] as bool? ?? false,
+      userFilledCells: json['userFilledCells'] as int? ?? 0,
     );
   }
 

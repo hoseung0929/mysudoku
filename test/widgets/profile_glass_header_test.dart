@@ -84,4 +84,63 @@ void main() {
       }
     });
   }
+
+  group('streak chip', () {
+    ProfileGlassHeader streakHeader(int days, {bool today = true}) =>
+        ProfileGlassHeader(
+          isTop: true,
+          profileName: 'A very long traveler nickname that will not fit',
+          guestTitle: 'Traveler',
+          profileImagePath: null,
+          onTapSettings: () {},
+          streakDays: days,
+          streakPlayedToday: today,
+        );
+    const chip = ValueKey('home-streak-chip');
+
+    testWidgets('hidden without a streak', (tester) async {
+      await tester.pumpWidget(_app(streakHeader(0)));
+      expect(find.byKey(chip), findsNothing);
+    });
+
+    testWidgets('shows days and keeps the header one row', (tester) async {
+      await tester.pumpWidget(_app(streakHeader(3)));
+      expect(find.byKey(chip), findsOneWidget);
+      expect(find.text('3 days'), findsOneWidget);
+      expect(
+        tester.getSize(find.byType(ProfileGlassHeader)).height,
+        inInclusiveRange(60, 68),
+      );
+      final handle = tester.ensureSemantics();
+      expect(
+        find.bySemanticsLabel('Solved a puzzle 3 days in a row'),
+        findsOneWidget,
+      );
+      handle.dispose();
+    });
+
+    testWidgets('at-risk streak explains how to keep it', (tester) async {
+      await tester.pumpWidget(_app(streakHeader(5, today: false)));
+      final handle = tester.ensureSemantics();
+      expect(
+        find.bySemanticsLabel(
+          '5-day streak. Finish a puzzle today to keep it going.',
+        ),
+        findsOneWidget,
+      );
+      handle.dispose();
+    });
+
+    for (final width in [320.0, 390.0]) {
+      testWidgets('no overflow at ${width}pt with large text', (tester) async {
+        tester.view.physicalSize = Size(width, 700);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await tester.pumpWidget(_app(streakHeader(128), textScale: 2.0));
+        expect(tester.takeException(), isNull);
+        expect(find.byTooltip('Settings'), findsOneWidget);
+      });
+    }
+  });
 }

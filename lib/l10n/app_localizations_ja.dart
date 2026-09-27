@@ -24,10 +24,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get navSettings => '設定';
 
   @override
-  String get recordsScreenTitle => '記録 · 統計';
+  String get recordsHeroImageSubtitle => '積み重なる解答の記録';
 
   @override
-  String get challengeScreenTitle => 'チャレンジ';
+  String get settingsHeroSubtitle => '自分らしく整えましょう';
+
+  @override
+  String get recordsScreenTitle => '記録 · 統計';
 
   @override
   String get settingsTitle => '設定';
@@ -469,7 +472,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsHeroBadgeFlow => 'フロー';
 
   @override
-  String get recordsHeroTitle => '積み上げてきた流れを\n落ち着いて眺めてみましょう。';
+  String get recordsHeroTitle => '積み上げてきた流れを 落ち着いて眺めてみましょう。';
 
   @override
   String get recordsHeroSubtitle =>
@@ -497,6 +500,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get recordsPlayInsightsTitle => '今週の記録';
+
+  @override
+  String get recordsWeekSubtitle => '曜日をタップして記録を確認';
 
   @override
   String get recordsPlayCalendarTitle => '曜日別';
@@ -567,6 +573,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsByLevelTitle => 'レベル別の記録';
 
   @override
+  String get recordsByLevelSubtitle => '難易度をタップして詳細を確認しましょう';
+
+  @override
   String get recordsByLevelEmpty => '表示するレベル統計がありません。';
 
   @override
@@ -606,7 +615,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsAverageBasisNote => '平均はすべてのプレイではなく、パズルごとのベスト記録を基にしています。';
 
   @override
-  String get recordsCalendarTitle => '活動カレンダー';
+  String get recordsCalendarTitle => 'プレイ活動';
+
+  @override
+  String get recordsCalendarSubtitle => '直近1年間のプレイ記録';
 
   @override
   String recordsCalendarPeriod(int weeks) {
@@ -657,16 +669,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsActivityHeatmapTitle => '最近のアクティビティ';
 
   @override
-  String get recordsActivityHeatmapCaption => '色が濃いほどその日の完了回数が多いです。';
+  String get recordsActivityHeatmapCaption => '完了したすべてのパズルの活動記録です。';
 
   @override
   String get recordsActivityTotalClearsLabel => '累計クリア回数';
 
   @override
-  String get recordsActivityCurrentStreakLabel => '現在の連続日数';
+  String get recordsActivityCurrentStreakLabel => '現在の連続';
 
   @override
   String get recordsActivityBestStreakLabel => '最長の連続日数';
+
+  @override
+  String get recordsChallengeStreakLabel => 'チャレンジ連続';
 
   @override
   String recordsActivityDayCount(int count) {
@@ -722,7 +737,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsStatsHeroEyebrow => '直近7日間の数独記録';
 
   @override
-  String get recordsStatsHeroHeadline => '直近7日間の数独記録を\n一目で確認しましょう。';
+  String get recordsStatsHeroHeadline => '直近7日間の数独記録を 一目で確認しましょう。';
 
   @override
   String recordsTrendA11yMaxClears(int count) {
@@ -803,9 +818,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsGoToChallengeTab => 'チャレンジタブへ';
 
   @override
-  String get challengeLoadError => 'チャレンジ情報を読み込めません。';
-
-  @override
   String get challengeTodaysChallengeTitle => '今日のチャレンジ';
 
   @override
@@ -825,14 +837,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get myPaceNoPlayableMessage => '全レベルで新しくプレイできるパズルがありません。';
-
-  @override
-  String get challengeWeeklyGoalReachedTitle => '今週の目標を達成しました';
-
-  @override
-  String challengeWeeklyGoalRemainingTitle(int count) {
-    return '週間目標まであと $count回';
-  }
 
   @override
   String get challengeWeeklyGoalReachedBody =>
@@ -856,70 +860,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get challengePerfectZeroBody => 'メモ機能を使うとミスなしクリアにぐっと近づけます。';
 
   @override
-  String get challengeWeeklyGoalHeading => '週間目標';
-
-  @override
-  String challengeWeeklyClearsLine(int count) {
-    return '今週 $count回クリア';
-  }
-
-  @override
-  String challengeWeeklyProgressShort(int done, int target) {
-    return '$done/$target 完了';
-  }
-
-  @override
-  String challengeWeeklyPerfectShort(int count) {
-    return 'パーフェクト $count回';
-  }
-
-  @override
-  String get challengeWeeklyCongratsFooter => '週間目標達成！引き続き記録を積み上げましょう！';
-
-  @override
-  String challengeWeeklyAlmostFooter(int count) {
-    return '週間目標まであと $count回です。';
-  }
-
-  @override
-  String get challengeAchievementsHeading => '実績 · バッジ';
-
-  @override
-  String challengeBadgesCollected(int unlocked, int total) {
-    return '獲得 $unlocked/$total';
-  }
-
-  @override
-  String get challengeViewAllBadges => '全て見る';
-
-  @override
-  String get challengeEarnedBadgesHeading => '獲得したバッジ';
-
-  @override
-  String get challengeNextBadgeTargets => '次の目標';
-
-  @override
-  String challengeBadgeProgressLine(String desc, String progress) {
-    return '$desc 進捗: $progress';
-  }
-
-  @override
-  String challengeStreakDays(int days) {
-    return '$days日連続クリア';
-  }
-
-  @override
-  String get challengeStreakStartToday => '今日の初クリアに挑戦';
-
-  @override
-  String get challengeTabHeroHeadline => '今日のパズルと週間リズムを\nひとつの画面で。';
-
-  @override
-  String get challengeHeroPendingDetail => 'ホームのカードからプレイを始められます。';
-
-  @override
-  String get challengeHeroDoneDetail =>
-      '今日のチャレンジは完了しました。バッジと週間進捗はこのタブにまとめてあります。';
+  String get challengeTabHeroHeadline => '今日のパズルと週間リズムを ひとつの画面で。';
 
   @override
   String get challengeOpenTodayOnHomeButton => 'ホームで今日のパズルを開く';
@@ -1446,12 +1387,307 @@ class AppLocalizationsJa extends AppLocalizations {
   String get savedGamesEmpty => 'この条件に一致する保存済みゲームはありません。';
 
   @override
-  String get challengeMetricBasisTitle => 'チャレンジ指標の基準';
+  String get savedGamesDeleteFailed => '削除できませんでした。もう一度お試しください。';
 
   @override
-  String get challengeMetricBasisWeekly => '週間進捗：直近7日間のクリアイベント数をもとに計算されます。';
+  String get recordsMyRecordTitle => '私の記録';
 
   @override
-  String get challengeMetricBasisStreak =>
-      'ストリーク：デイリーチャレンジを完了した連続日数をもとに計算されます。';
+  String get recordsSummaryTotalCleared => '累計クリア';
+
+  @override
+  String get recordsSummaryPerfectClears => 'パーフェクトクリア';
+
+  @override
+  String get challengeMonthlyDescription => '日付を選んで過去のチャレンジをもう一度プレイできます。';
+
+  @override
+  String get challengeTodayEyebrow => '今日の流れ';
+
+  @override
+  String get gamePausedTitle => '一時停止中';
+
+  @override
+  String get gamePausedBody => 'タイマーを止めて、盤面を隠しています。';
+
+  @override
+  String homeStreakChip(int count) {
+    return '$count日';
+  }
+
+  @override
+  String homeStreakActive(int count) {
+    return '$count日連続でパズルをクリアしました';
+  }
+
+  @override
+  String homeStreakAtRisk(int count) {
+    return '$count日連続中です。今日1局クリアすると記録が続きます。';
+  }
+
+  @override
+  String get hintStepLookTitle => 'ヒント・注目する場所';
+
+  @override
+  String get hintLookCell => '強調されたマスの行・列・ブロックを見てください。';
+
+  @override
+  String hintLookBox(int value) {
+    return '強調されたブロックで $value が入る場所を探してください。';
+  }
+
+  @override
+  String hintLookRow(int value) {
+    return '強調された行で $value が入る場所を探してください。';
+  }
+
+  @override
+  String hintLookCol(int value) {
+    return '強調された列で $value が入る場所を探してください。';
+  }
+
+  @override
+  String get hintMovedFromSelection => '選んだマスより先に解ける場所があります。';
+
+  @override
+  String get hintTechniqueNakedSingle => 'ネイキッドシングル';
+
+  @override
+  String get hintTechniqueHiddenSingle => 'ヒドゥンシングル';
+
+  @override
+  String get hintTechniqueReveal => '答え';
+
+  @override
+  String hintExplainNakedSingle(int value) {
+    return 'このマスの行・列・ブロックには他の8つの数字がすべてあります。入るのは $value だけです。';
+  }
+
+  @override
+  String hintExplainHiddenSingleBox(int value) {
+    return 'このブロックで $value が入るのはこのマスだけです。他の空きマスは、強調された $value と同じ行か列にあります。';
+  }
+
+  @override
+  String hintExplainHiddenSingleRow(int value) {
+    return 'この行で $value が入るのはこのマスだけです。他の空きマスは、強調された $value と同じ列かブロックにあります。';
+  }
+
+  @override
+  String hintExplainHiddenSingleCol(int value) {
+    return 'この列で $value が入るのはこのマスだけです。他の空きマスは、強調された $value と同じ行かブロックにあります。';
+  }
+
+  @override
+  String get hintExplainReveal => 'このマスにはより高度な手筋が必要です。下のボタンで答えを入れられます。';
+
+  @override
+  String get hintNextStep => 'もっと詳しく';
+
+  @override
+  String get hintFillAnswer => '答えを入れる';
+
+  @override
+  String get hintClose => 'ヒントを閉じる';
+
+  @override
+  String get notificationOptInTitle => '毎日1局をお知らせしましょうか？';
+
+  @override
+  String get notificationOptInBody =>
+      '毎晩8時にまだパズルを解いていなければお知らせします。設定でいつでもオフにできます。';
+
+  @override
+  String get notificationOptInAccept => '通知を受け取る';
+
+  @override
+  String get notificationOptInLater => 'あとで';
+
+  @override
+  String get notificationOptInDenied =>
+      '通知が許可されていません。端末の設定で許可してから、設定で通知をオンにできます。';
+
+  @override
+  String get notificationSetupFailed => '通知を設定できませんでした。しばらくしてから設定でもう一度お試しください。';
+
+  @override
+  String get beginnerTutorialPromptTitle => '数独は初めてですか?';
+
+  @override
+  String get beginnerTutorialPromptBody => '問題を解く前に短いガイド練習をしてみましょう。１分で終わります。';
+
+  @override
+  String get beginnerTutorialStart => 'ガイドを始める';
+
+  @override
+  String get beginnerTutorialSkip => 'スキップ';
+
+  @override
+  String beginnerTutorialStepIndicator(int current, int total) {
+    return 'ステップ $current/$total';
+  }
+
+  @override
+  String get beginnerTutorialStepRowTitle => 'ルール: 横の列';
+
+  @override
+  String get beginnerTutorialStepRowBody => '各横の列には1から9までの数字が1回ずつ入ります。';
+
+  @override
+  String get beginnerTutorialStepColumnTitle => 'ルール: 縦の列';
+
+  @override
+  String get beginnerTutorialStepColumnBody => '縦の列にも1から9までの数字が1回ずつ入ります。';
+
+  @override
+  String get beginnerTutorialStepBoxTitle => 'ルール: 3×3のブロック';
+
+  @override
+  String get beginnerTutorialStepBoxBody => '3×3のブロックにも1から9までの数字が1回ずつ入ります。';
+
+  @override
+  String get beginnerTutorialStepInputTitle => '数字を入力する';
+
+  @override
+  String get beginnerTutorialStepInputBody =>
+      '強調されたマスに入る数字は1つだけです。マスをタップしてから正しい数字をタップしましょう。';
+
+  @override
+  String get beginnerTutorialStepInputWrongHint =>
+      'その数字は同じ列やブロックにすでにあります。別の数字を試してください。';
+
+  @override
+  String get beginnerTutorialStepMemoTitle => 'メモと消去';
+
+  @override
+  String get beginnerTutorialStepMemoAddBody =>
+      'メモモードをオンにしてこのマスをタップし、候補の数字をタップしてメモしましょう。';
+
+  @override
+  String get beginnerTutorialStepMemoEraseBody => '同じ数字をもう一度タップしてメモを消しましょう。';
+
+  @override
+  String get beginnerTutorialStepHintTitle => 'ヒント';
+
+  @override
+  String get beginnerTutorialStepHintBody =>
+      'ヒントをタップすると、実際のヒント回数を消費せずに、どこを見るべきか教えてくれます。';
+
+  @override
+  String get beginnerTutorialStepHintButton => 'ヒントを開く';
+
+  @override
+  String get beginnerTutorialStepDoneTitle => '準備完了!';
+
+  @override
+  String get beginnerTutorialStepDoneBody =>
+      '行・列・ブロックのルール、数字の入力、メモ、ヒントの基本を学びました。';
+
+  @override
+  String get beginnerTutorialFirstPuzzleButton => '最初の問題を始める';
+
+  @override
+  String get beginnerTutorialNextButton => '次へ';
+
+  @override
+  String get beginnerTutorialCloseButton => '完了';
+
+  @override
+  String get settingsHowToPlayTitle => '遊び方';
+
+  @override
+  String get settingsHowToPlaySubtitle => 'ガイドチュートリアルをもう一度見る';
+
+  @override
+  String get autoNotesConfirmTitle => 'すべてのメモを再計算しますか?';
+
+  @override
+  String get autoNotesConfirmBody =>
+      '空白マスのメモが現在の候補ですべて置き換わります。手で削除した候補も再び表示されることがあります。';
+
+  @override
+  String get autoNotesConfirmApply => 'メモを再計算';
+
+  @override
+  String get autoNotesContradictionMessage =>
+      '候補が一つも残らないマスがあるため、メモを入力できませんでした。入力内容を確認してもう一度試してください。';
+
+  @override
+  String get autoNotesTipMessage => 'ヒント: メモを長押しすると候補数字を一括で入力できます。';
+
+  @override
+  String get gameMemoLongPressHint => 'タップでメモモード切り替え、長押しで自動メモ。';
+
+  @override
+  String get challengeMonthlyTitle => 'チャレンジ履歴';
+
+  @override
+  String get challengePreviousMonth => '前の月';
+
+  @override
+  String get challengeBackToCurrentMonth => '今月';
+
+  @override
+  String get challengeStatusNotCompleted => '未完了';
+
+  @override
+  String get challengeStatusInProgress => '進行中';
+
+  @override
+  String get challengeStatusCompleted => '完了';
+
+  @override
+  String get challengeStatusPerfect => 'パーフェクトクリア';
+
+  @override
+  String get challengeStatusFuture => 'まだ利用できません';
+
+  @override
+  String get challengeMonthComplete => '月間完了';
+
+  @override
+  String get challengeStartPastChallenge => '過去のチャレンジを始める';
+
+  @override
+  String get challengeResumePastChallenge => '過去のチャレンジを再開';
+
+  @override
+  String get challengeRetryPastChallenge => '過去のチャレンジをもう一度解く';
+
+  @override
+  String get challengePuzzleLoadFailed => 'この問題を読み込めませんでした。';
+
+  @override
+  String get challengeCalendarLoadError => 'チャレンジカレンダーを読み込めません。';
+
+  @override
+  String get challengeStreakExcludedNote => '過去のチャレンジ完了は連続記録に含まれません';
+
+  @override
+  String challengeDayCellSemantics(String date, String status) {
+    return '$date、$status';
+  }
+
+  @override
+  String get homeGreetingMorning => 'さあ、一局始めましょう。';
+
+  @override
+  String get homeGreetingAfternoon => '集中して一局、いかがですか。';
+
+  @override
+  String get homeGreetingEvening => '静かにパズルで締めくくりましょう。';
+
+  @override
+  String get levelNoPuzzlesAvailable => 'このレベルのパズルはありません。';
+
+  @override
+  String get levelLastPlayedToday => '今日';
+
+  @override
+  String get levelLastPlayedYesterday => '昨日';
+
+  @override
+  String levelLastPlayedDaysAgo(int count) {
+    return '$count日前';
+  }
 }

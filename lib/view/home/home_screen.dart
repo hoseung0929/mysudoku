@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
@@ -19,12 +21,10 @@ import 'package:sudoku159/navigation/app_page_route.dart';
 import 'package:sudoku159/utils/app_logger.dart';
 import 'package:sudoku159/view/home/level_picker_screen.dart';
 import 'package:sudoku159/view/home/saved_games_screen.dart';
-import 'package:sudoku159/view/settings/settings_screen.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_game_screen.dart';
 import 'package:sudoku159/widgets/profile_editor_sheet.dart';
 import 'package:sudoku159/theme/level_status_colors.dart';
 import 'package:sudoku159/theme/system_ui_style.dart';
-import 'package:sudoku159/widgets/mascot_image.dart';
 import 'package:sudoku159/widgets/profile_glass_header.dart';
 import 'package:sudoku159/widgets/sudoku_motif.dart';
 
@@ -48,11 +48,17 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  /// 프로필 헤더 아래와 스크롤 본문(히어로) 사이 여백.
-  static const double _kBelowProfileHeaderGap = 14;
+  /// `extendBody` + 플로팅 하단 탭(패딩·알약 배경 포함 실측 약 86) + 여유 공간.
+  /// 난이도 목록 마지막 카드가 하단 탭에 가리지 않도록 여유를 더 둔다.
+  static const double _kHomeScrollBottomPad = 104;
 
-  /// `extendBody` + 플로팅 하단 탭 높이(68) + 여유 공간.
-  static const double _kHomeScrollBottomPad = 80;
+  /// 홈 최상단 히어로 이미지(환영 문구 포함, 프로필 행 제외)의 고정 높이.
+  /// 핵심 콘텐츠(시작 카드)가 더 빨리 보이도록 기존 값에서 24 줄였다.
+  static const double _kHomeHeroHeightPhone = 236;
+  static const double _kHomeHeroHeightTablet = 276;
+
+  /// 프로필·설정을 담은 축소 앱바의 콘텐츠 높이(상태바 높이 제외).
+  static const double _kCollapsedAppBarContentHeight = 60;
 
   final DatabaseManager _databaseManager = DatabaseManager();
   late final LevelProgressService _levelProgressService =
@@ -64,6 +70,9 @@ class _HomeScreenState extends State<HomeScreen> {
   final ProfileStateController _profileState = ProfileStateController.instance;
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _levelSectionKey = GlobalKey();
+
+  /// 히어로 이미지가 스크롤로 완전히 가려지기 전(true)인지 후(false)인지.
+  /// 축소 앱바가 투명(사진 위 오버레이)인지 불투명(작은 앱바)인지를 정한다.
   bool _isTop = true;
 
   /// 첫 로딩이 끝났는지 / 마지막 로딩이 실패했는지. 로딩 중에는 '진행 중 없음'을
@@ -97,17 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _databaseManager.catalogStatus.addListener(_handleCatalogStatusChanged);
     GameRecordNotifier.instance.version.addListener(_handleRecordsChanged);
     _profileState.addListener(_handleProfileStateChanged);
-    _scrollController.addListener(() {
-      if (_scrollController.offset <= 0 && !_isTop) {
-        setState(() {
-          _isTop = true;
-        });
-      } else if (_scrollController.offset > 0 && _isTop) {
-        setState(() {
-          _isTop = false;
-        });
-      }
-    });
+    _scrollController.addListener(_handleScrollForCollapsingAppBar);
     _loadLevelTotals();
     _refreshLevels();
     _loadProfile();
@@ -189,17 +188,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _openSettings() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const SettingsScreen(),
-      ),
-    );
-    if (!mounted) return;
-    await _loadProfile();
-  }
-
   Future<void> _loadHomeDashboard() async {
     if (!mounted) return;
     // 늦게 끝난 이전 요청이 최신 결과를 덮어쓰지 않도록 요청 번호로 구분한다.
@@ -255,6 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _databaseManager.catalogStatus.removeListener(_handleCatalogStatusChanged);
     GameRecordNotifier.instance.version.removeListener(_handleRecordsChanged);
     _profileState.removeListener(_handleProfileStateChanged);
+    _scrollController.removeListener(_handleScrollForCollapsingAppBar);
     _scrollController.dispose();
     super.dispose();
   }
@@ -459,6 +448,28 @@ class _HomeScreenState extends State<HomeScreen> {
     return _homeDashboardService.loadContinueGames();
   }
 
+  /// 히어로 이미지도 이제 본문과 함께 스크롤되고, 프로필·설정을 담은 축소
+  /// 앱바만 화면 위에 고정되어 스크롤 콘텐츠 맨 위를 항상 가린다.
+  double _collapsedAppBarHeight(BuildContext context) =>
+      MediaQuery.paddingOf(context).top + _kCollapsedAppBarContentHeight;
+
+  double _currentHeroHeight(BuildContext context) =>
+      MediaQuery.sizeOf(context).width > 600
+          ? _kHomeHeroHeightTablet
+          : _kHomeHeroHeightPhone;
+
+  /// 히어로가 축소 앱바 뒤로 완전히 넘어가면 앱바를 사진 위 오버레이(투명)에서
+  /// 작은 불투명 앱바로 전환한다.
+  void _handleScrollForCollapsingAppBar() {
+    if (!mounted) return;
+    final threshold =
+        _currentHeroHeight(context) - _collapsedAppBarHeight(context);
+    final collapsed = _scrollController.offset >= threshold;
+    if (collapsed == _isTop) {
+      setState(() => _isTop = !collapsed);
+    }
+  }
+
   /// "새 게임 시작": 난이도 선택 영역으로 이동한다.
   void _scrollToLevels() {
     final ctx = _levelSectionKey.currentContext;
@@ -467,14 +478,16 @@ class _HomeScreenState extends State<HomeScreen> {
     if (box == null) return;
     final viewport = RenderAbstractViewport.maybeOf(box);
     if (viewport == null) return;
-    // 태블릿 레이아웃은 본문이 고정 헤더 뒤로 스크롤되므로 헤더 높이만큼 비운다.
-    // (모바일은 스크롤 영역이 헤더 아래에서 시작한다.)
-    final obscured = MediaQuery.sizeOf(context).width > 600
-        ? _headerHeight(MediaQuery.paddingOf(context).top)
-        : 0.0;
+    // 히어로가 본문과 함께 스크롤되고 축소 앱바만 고정되어 콘텐츠 위를
+    // 가리므로, 그 높이만큼 비워서 목표 위치를 계산한다.
+    final obscured = _collapsedAppBarHeight(context);
     final position = _scrollController.position;
     final target = (viewport.getOffsetToReveal(box, 0.0).offset - obscured - 8)
         .clamp(position.minScrollExtent, position.maxScrollExtent);
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _scrollController.jumpTo(target);
+      return;
+    }
     _scrollController.animateTo(
       target,
       duration: const Duration(milliseconds: 250),
@@ -523,7 +536,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final topInset = MediaQuery.paddingOf(context).top;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: systemOverlayStyleFor(Theme.of(context).brightness),
+      // 히어로가 보이는 동안(_isTop)은 사진 위라 앱 테마와 무관하게 밝은
+      // 상태바 아이콘을 강제하고, 축소 앱바로 바뀌면 현재 테마를 따른다.
+      // 다른 화면은 여전히 테마 기준(systemOverlayStyleFor)을 그대로 쓴다.
+      value: systemOverlayStyleFor(
+        _isTop ? Brightness.dark : Theme.of(context).brightness,
+      ),
       child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -563,18 +581,28 @@ class _HomeScreenState extends State<HomeScreen> {
         Positioned.fill(
           child: SingleChildScrollView(
             controller: _scrollController,
-            padding: EdgeInsets.fromLTRB(
-              24,
-              _headerHeight(topInset) + _kBelowProfileHeaderGap,
-              24,
-              _kHomeScrollBottomPad + bottomInset,
-            ),
+            padding:
+                EdgeInsets.only(bottom: _kHomeScrollBottomPad + bottomInset),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildHomeHero(isTablet: true),
-                const SizedBox(height: 20),
-                _buildLevelExplorer(isTablet: true, isLandscape: isLandscape),
+                // 히어로 이미지는 본문과 함께 스크롤되고, 전체 너비를 유지하도록
+                // 좌우 패딩 밖에 둔다.
+                _buildHomeHeroImage(isTablet: true),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHomeHero(isTablet: true),
+                      const SizedBox(height: 20),
+                      _buildLevelExplorer(
+                        isTablet: true,
+                        isLandscape: isLandscape,
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -583,7 +611,7 @@ class _HomeScreenState extends State<HomeScreen> {
           top: 0,
           left: 0,
           right: 0,
-          child: _buildGlassProfileHeader(),
+          child: _buildCollapsingAppBar(isTablet: true),
         ),
       ],
     );
@@ -596,43 +624,38 @@ class _HomeScreenState extends State<HomeScreen> {
       clipBehavior: Clip.none,
       children: [
         Positioned.fill(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              16,
-              _headerHeight(topInset) + _kBelowProfileHeaderGap,
-              16,
-              0,
-            ),
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            padding:
+                EdgeInsets.only(bottom: _kHomeScrollBottomPad + bottomInset),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                ValueListenableBuilder<PuzzleCatalogStatus>(
-                  valueListenable: _databaseManager.catalogStatus,
-                  builder: (context, status, child) {
-                    if (!status.isRunning) return const SizedBox.shrink();
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _CatalogProgressBanner(
-                        status: status,
-                        l10n: AppLocalizations.of(context)!,
+                // 히어로 이미지는 본문과 함께 스크롤되고, 전체 너비를 유지하도록
+                // 좌우 패딩 밖에 둔다.
+                _buildHomeHeroImage(isTablet: false),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ValueListenableBuilder<PuzzleCatalogStatus>(
+                        valueListenable: _databaseManager.catalogStatus,
+                        builder: (context, status, child) {
+                          if (!status.isRunning) return const SizedBox.shrink();
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _CatalogProgressBanner(
+                              status: status,
+                              l10n: AppLocalizations.of(context)!,
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    padding: EdgeInsets.only(
-                      bottom: _kHomeScrollBottomPad + bottomInset,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildHomeHero(),
-                        const SizedBox(height: 8),
-                        _buildLevelExplorer(),
-                      ],
-                    ),
+                      _buildHomeHero(),
+                      const SizedBox(height: 8),
+                      _buildLevelExplorer(),
+                    ],
                   ),
                 ),
               ],
@@ -643,49 +666,215 @@ class _HomeScreenState extends State<HomeScreen> {
           top: 0,
           left: 0,
           right: 0,
-          child: _buildGlassProfileHeader(),
+          child: _buildCollapsingAppBar(isTablet: false),
         ),
       ],
     );
   }
 
-  /// 스크롤 콘텐츠가 아래로 지나갈 때 블러로 비치는 상단 프로필 바 (상태바 영역까지 동일 글래스)
-  Widget _buildGlassProfileHeader() {
-    final l10n = AppLocalizations.of(context)!;
-    _measureHeader();
-    return KeyedSubtree(
-      key: _headerKey,
-      child: ProfileGlassHeader(
-        isTop: _isTop,
-        profileName: _profileName,
-        guestTitle: l10n.homeGuestTitle,
-        profileImagePath: _profileImagePath,
-        onTapSettings: _openSettings,
-        onTapEditProfile: _openProfileEditor,
+  /// 홈 최상단 히어로 이미지: 저녁 책상에서 스도쿠를 푸는 캐릭터 일러스트
+  /// 위에 시간대별 환영 문구만 겹쳐 보여준다(프로필·설정은 별도의 축소
+  /// 앱바로 분리됨). 이제 고정되지 않고 본문과 함께 스크롤된다.
+  Widget _buildHomeHeroImage({required bool isTablet}) {
+    final height = isTablet ? _kHomeHeroHeightTablet : _kHomeHeroHeightPhone;
+    final greeting = ProfileGlassHeader.greetingMessage(
+      l10n: AppLocalizations.of(context)!,
+      hour: DateTime.now().hour,
+    );
+
+    return SizedBox(
+      key: const Key('home_hero_header'),
+      height: height,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // 폭이 이미지 비율(2:1)보다 좁은 화면(폰 세로 등)에서는 좌우로
+          // 크롭되는데, alignment를 살짝 오른쪽으로 밀어 보이는 영역 자체를
+          // 오른쪽으로 옮겨서 그 안의 펭귄이 프레임 안에서 왼쪽으로(약
+          // 12~20px) 이동해 보이게 한다.
+          Image.asset(
+            'assets/images/home_hero.webp',
+            fit: BoxFit.cover,
+            alignment: const Alignment(0.4, 0),
+          ),
+          // 축소 앱바가 사진 위에 겹칠 때 가독성을 위한 위쪽 어두운 그라데이션.
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xB3000000), Colors.transparent],
+                stops: [0.0, 0.42],
+              ),
+            ),
+          ),
+          // 환영 문구 가독성을 위한 좌측 어두운 그라데이션.
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [Color(0x99000000), Colors.transparent],
+                stops: [0.0, 0.7],
+              ),
+            ),
+          ),
+          // 하단은 화면 배경색으로 자연스럽게 이어진다.
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              height: height * 0.3,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Theme.of(context).scaffoldBackgroundColor,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 20,
+            right: isTablet ? 240 : 130,
+            bottom: 18,
+            child: Text(
+              greeting,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                height: 1.3,
+                shadows: [
+                  Shadow(color: Colors.black45, blurRadius: 6),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  /// 헤더의 실제 높이. 헤더는 Stack 위에 떠 있고 본문 시작 위치는 이 값으로
-  /// 예약하므로, 추정 상수 대신 렌더링된 높이를 그대로 쓴다(큰 글씨·긴 이름 대응).
-  double? _measuredHeaderHeight;
-  final GlobalKey _headerKey = GlobalKey();
+  /// 프로필(아바타·이름)·연속 기록·설정 버튼을 담은 축소 앱바. 화면 위에
+  /// 항상 고정되며, 히어로 이미지가 보이는 동안은 사진 위 투명 오버레이(흰
+  /// 글자)로, 히어로가 스크롤로 넘어가면 작은 불투명 앱바(테마 글자색)로
+  /// 전환된다.
+  Widget _buildCollapsingAppBar({required bool isTablet}) {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final hasProfileImage =
+        _profileImagePath != null && File(_profileImagePath!).existsSync();
+    final trimmedName = _profileName?.trim() ?? '';
+    final displayName =
+        trimmedName.isNotEmpty ? trimmedName : l10n.homeGuestTitle;
+    final streakDays = _challengeProgress?.activityStreakDays ?? 0;
+    final streakPlayedToday = _challengeProgress?.lastClearDate ==
+        ChallengeProgressService.formatLocalDate(DateTime.now());
+    final onPhoto = _isTop;
+    final contentColor = onPhoto ? Colors.white : colorScheme.onSurface;
+    final textShadows =
+        onPhoto ? const [Shadow(color: Colors.black45, blurRadius: 6)] : null;
 
-  /// 첫 프레임 전에는 기본 글씨 기준 추정값(상태바 + 64).
-  double _headerHeight(double topInset) =>
-      _measuredHeaderHeight ?? topInset + 64;
-
-  void _measureHeader() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final box = _headerKey.currentContext?.findRenderObject() as RenderBox?;
-      if (box == null || !box.hasSize) return;
-      final height = box.size.height;
-      if (_measuredHeaderHeight == null ||
-          (_measuredHeaderHeight! - height).abs() > 0.5) {
-        setState(() => _measuredHeaderHeight = height);
-      }
-    });
+    return AnimatedContainer(
+      key: const Key('home_collapsing_app_bar'),
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+      decoration: BoxDecoration(
+        color: onPhoto ? Colors.transparent : colorScheme.surface,
+        boxShadow: onPhoto
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: MediaQuery.withClampedTextScaling(
+            maxScaleFactor: 1.3,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _openProfileEditor,
+                      borderRadius: BorderRadius.circular(14),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 44),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: onPhoto
+                                      ? Colors.white.withValues(alpha: 0.85)
+                                      : colorScheme.outlineVariant,
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: CircleAvatar(
+                                radius: 19,
+                                backgroundColor: onPhoto
+                                    ? Colors.white.withValues(alpha: 0.25)
+                                    : colorScheme.primaryContainer,
+                                backgroundImage: hasProfileImage
+                                    ? FileImage(File(_profileImagePath!))
+                                    : const AssetImage(
+                                        'assets/images/character.png',
+                                      ) as ImageProvider,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                displayName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 17,
+                                  color: contentColor,
+                                  shadows: textShadows,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                if (streakDays > 0) ...[
+                  const SizedBox(width: 4),
+                  _HeroStreakBadge(
+                    days: streakDays,
+                    playedToday: streakPlayedToday,
+                    l10n: l10n,
+                    onPhoto: onPhoto,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildHomeHero({bool isTablet = false}) {
@@ -800,53 +989,25 @@ class _HomeScreenState extends State<HomeScreen> {
       return Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: _homeCard(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final textScale = MediaQuery.textScalerOf(context).scale(1.0);
-              // 큰 글씨: 장식(펭귄·원)을 생략해 공간을 텍스트와 버튼에 쓴다.
-              // 기본 글씨: 넓으면 오른쪽 104, 좁으면 위쪽 72.
-              final _MascotLayout layout = textScale > 1.3
-                  ? _MascotLayout.none
-                  : (constraints.maxWidth >= 300
-                      ? _MascotLayout.side
-                      : _MascotLayout.top);
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  switch (layout) {
-                    _MascotLayout.side => Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(child: textBlock),
-                          const SizedBox(width: 14),
-                          const _WelcomeMascot(size: 104),
-                        ],
-                      ),
-                    _MascotLayout.top => Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const Center(child: _WelcomeMascot(size: 72)),
-                          const SizedBox(height: 8),
-                          textBlock,
-                        ],
-                      ),
-                    _MascotLayout.none => textBlock,
-                  },
-                  const SizedBox(height: 14),
-                  // 실제로 게임을 시작하지 않고 아래 난이도 선택 영역으로 이동한다.
-                  FilledButton(
-                    onPressed: _scrollToLevels,
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(50),
-                    ),
-                    child: Text(
-                      l10n.homeChooseLevelButton,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
-              );
-            },
+          // 캐릭터는 최상단 히어로 이미지에 이미 나오므로, 캐릭터 중복을
+          // 줄이기 위해 이 카드에서는 마스코트 장식 없이 문구만 보여준다.
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              textBlock,
+              const SizedBox(height: 14),
+              // 실제로 게임을 시작하지 않고 아래 난이도 선택 영역으로 이동한다.
+              FilledButton(
+                onPressed: _scrollToLevels,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                ),
+                child: Text(
+                  l10n.homeChooseLevelButton,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -1063,9 +1224,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Text(buttonLabel, textAlign: TextAlign.center),
               )
             else
-              FilledButton.tonal(
+              // '난이도 선택'(주 버튼, 검은색)과 위계를 구분하기 위해 연한
+              // 보라색 배경의 보조 버튼으로 표시한다.
+              FilledButton(
                 onPressed: busy ? null : _openTodayChallenge,
                 style: FilledButton.styleFrom(
+                  backgroundColor:
+                      LevelStatusPalette.of(context).completedBackground,
+                  foregroundColor: LevelStatusPalette.of(context).primaryPurple,
                   minimumSize: const Size.fromHeight(46),
                 ),
                 child: Text(buttonLabel, textAlign: TextAlign.center),
@@ -1281,12 +1447,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildLevelCards({bool isTablet = false, bool isLandscape = false}) {
+    // 마스터는 아직 준비 중이라 우선 홈 화면에서만 숨긴다(기록/필터 등 다른
+    // 화면은 이미 마스터를 노출하지 않는 기존 관례를 그대로 따름).
+    final levelCount = _levels.length > 4 ? 4 : _levels.length;
     if (!isLandscape) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: List.generate(4, (index) {
+        children: List.generate(levelCount, (index) {
           return Padding(
-            padding: EdgeInsets.only(bottom: index == 3 ? 0 : 12),
+            padding: EdgeInsets.only(bottom: index == levelCount - 1 ? 0 : 12),
             child: _buildLevelCard(index, isTablet: isTablet),
           );
         }),
@@ -1303,7 +1472,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return Wrap(
           spacing: columnGap,
           runSpacing: rowGap,
-          children: List.generate(4, (index) {
+          children: List.generate(levelCount, (index) {
             return SizedBox(
               width: cardWidth,
               child: _buildLevelCard(index, isTablet: isTablet),
@@ -1356,7 +1525,9 @@ class _HomeScreenState extends State<HomeScreen> {
       color: colors[index],
       badgeColor: badgeColors[index],
       badgeIcon: badges[index],
-      badgeImage: levelImages[index],
+      // 마스터(index 4)는 이미지 에셋이 없어 기존 트로피 아이콘(badgeIcon)으로
+      // 대체한다.
+      badgeImage: index < levelImages.length ? levelImages[index] : null,
       badgeSize: badgeSizes[index],
       title: level.localizedName(l10n),
       description: l10n.homeLevelBlankCells(level.emptyCells),
@@ -1520,10 +1691,12 @@ class _LevelCardState extends State<_LevelCard> {
     final loadingSize = isTablet ? 24.0 : 20.0;
     final loadingStrokeWidth = isTablet ? 2.4 : 2.1;
     final chevronSize = isTablet ? 32.0 : 28.0;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return IgnorePointer(
       ignoring: !widget.isEnabled,
       child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 140),
+        duration:
+            reduceMotion ? Duration.zero : const Duration(milliseconds: 140),
         curve: Curves.easeOutCubic,
         opacity: widget.isEnabled ? 1.0 : 0.78,
         child: GestureDetector(
@@ -1533,120 +1706,120 @@ class _LevelCardState extends State<_LevelCard> {
           child: PressScale(
             pressed: _pressed,
             child: Container(
-            constraints: BoxConstraints(minHeight: cardMinHeight),
-            padding: EdgeInsets.symmetric(
-              horizontal: 22,
-              vertical: cardVerticalPadding,
-            ),
-            decoration: BoxDecoration(
-              color: _pressed
-                  ? colorScheme.surfaceContainerLow
-                  : colorScheme.surface,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: colorScheme.outlineVariant,
-                width: 1,
+              constraints: BoxConstraints(minHeight: cardMinHeight),
+              padding: EdgeInsets.symmetric(
+                horizontal: 22,
+                vertical: cardVerticalPadding,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.055),
-                  blurRadius: 12,
-                  offset: const Offset(0, 3),
+              decoration: BoxDecoration(
+                color: _pressed
+                    ? colorScheme.surfaceContainerLow
+                    : colorScheme.surface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: colorScheme.outlineVariant,
+                  width: 1,
                 ),
-              ],
-            ),
-            child: Row(
-              children: [
-                _DifficultyIcon(
-                  color: widget.color,
-                  badgeIcon: widget.badgeIcon,
-                  badgeImage: widget.badgeImage,
-                  badgeColor: widget.badgeColor,
-                  badgeSize: widget.badgeSize,
-                  isTablet: isTablet,
-                ),
-                SizedBox(width: iconGap),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 2,
-                        crossAxisAlignment: WrapCrossAlignment.end,
-                        children: [
-                          Text(
-                            widget.title,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: titleFontSize,
-                              color: colorScheme.onSurface,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            progressLabel,
-                            style: TextStyle(
-                              color: colorScheme.onSurfaceVariant,
-                              fontSize: progressLabelFontSize,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: afterTitleGap),
-                      Text(
-                        widget.description,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: colorScheme.onSurfaceVariant,
-                          fontSize: progressLabelFontSize - 1,
-                        ),
-                      ),
-                      SizedBox(height: afterTitleGap),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(3),
-                        child: LinearProgressIndicator(
-                          value: total > 0 ? widget.completed / total : 0,
-                          minHeight: progressBarHeight,
-                          backgroundColor: colorScheme.outlineVariant,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            widget.badgeColor ?? const Color(0xFF4A3F99),
-                          ),
-                        ),
-                      ),
-                    ],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.055),
+                    blurRadius: 12,
+                    offset: const Offset(0, 3),
                   ),
-                ),
-                SizedBox(width: beforeChevronGap),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 160),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  child: widget.isTransitioning
-                      ? SizedBox(
-                          key: const ValueKey('loading'),
-                          width: loadingSize,
-                          height: loadingSize,
-                          child: CircularProgressIndicator(
-                            strokeWidth: loadingStrokeWidth,
+                ],
+              ),
+              child: Row(
+                children: [
+                  _DifficultyIcon(
+                    color: widget.color,
+                    badgeIcon: widget.badgeIcon,
+                    badgeImage: widget.badgeImage,
+                    badgeColor: widget.badgeColor,
+                    badgeSize: widget.badgeSize,
+                    isTablet: isTablet,
+                  ),
+                  SizedBox(width: iconGap),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 2,
+                          crossAxisAlignment: WrapCrossAlignment.end,
+                          children: [
+                            Text(
+                              widget.title,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: titleFontSize,
+                                color: colorScheme.onSurface,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              progressLabel,
+                              style: TextStyle(
+                                color: colorScheme.onSurfaceVariant,
+                                fontSize: progressLabelFontSize,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: afterTitleGap),
+                        Text(
+                          widget.description,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: colorScheme.onSurfaceVariant,
+                            fontSize: progressLabelFontSize - 1,
+                          ),
+                        ),
+                        SizedBox(height: afterTitleGap),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(3),
+                          child: LinearProgressIndicator(
+                            value: total > 0 ? widget.completed / total : 0,
+                            minHeight: progressBarHeight,
+                            backgroundColor: colorScheme.outlineVariant,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              colorScheme.primary,
+                              widget.badgeColor ?? const Color(0xFF4A3F99),
                             ),
                           ),
-                        )
-                      : Icon(
-                          key: const ValueKey('chevron'),
-                          Icons.chevron_right_rounded,
-                          size: chevronSize,
-                          color: colorScheme.onSurfaceVariant,
                         ),
-                ),
-              ],
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: beforeChevronGap),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 160),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    child: widget.isTransitioning
+                        ? SizedBox(
+                            key: const ValueKey('loading'),
+                            width: loadingSize,
+                            height: loadingSize,
+                            child: CircularProgressIndicator(
+                              strokeWidth: loadingStrokeWidth,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                colorScheme.primary,
+                              ),
+                            ),
+                          )
+                        : Icon(
+                            key: const ValueKey('chevron'),
+                            Icons.chevron_right_rounded,
+                            size: chevronSize,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                  ),
+                ],
+              ),
             ),
-          ),
           ),
         ),
       ),
@@ -1697,33 +1870,85 @@ class _DifficultyIcon extends StatelessWidget {
   }
 }
 
-enum _MascotLayout { side, top, none }
+/// 홈 히어로 배너용 연속 기록 배지. `ProfileGlassHeader`의 연속 기록 칩과
+/// 같은 데이터(연속 일수/오늘 완료 여부)를 쓰지만, 밝은 카드 배경이 아니라
+/// 사진 위에 올라가므로 반투명 검정 배경 + 흰 글자로 색만 다르게 맞춘다.
+class _HeroStreakBadge extends StatelessWidget {
+  const _HeroStreakBadge({
+    required this.days,
+    required this.playedToday,
+    required this.l10n,
+    required this.onPhoto,
+  });
 
-/// 시작 안내 카드의 마스코트: 옅은 보라 원 위에 웃으며 손 흔드는 펭귄.
-class _WelcomeMascot extends StatelessWidget {
-  const _WelcomeMascot({required this.size});
+  final int days;
+  final bool playedToday;
+  final AppLocalizations l10n;
 
-  final double size;
+  /// true면 히어로 사진 위(반투명 검정 알약 + 흰 글자), false면 축소된
+  /// 불투명 앱바 위(테마 색 알약 + 테마 글자)에 맞춘 배색을 쓴다.
+  final bool onPhoto;
+
+  static const _flameColor = Color(0xFFE8833A);
 
   @override
   Widget build(BuildContext context) {
-    final purple = LevelStatusPalette.of(context).primaryPurple;
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            width: size * 0.86,
-            height: size * 0.86,
+    final colorScheme = Theme.of(context).colorScheme;
+    final message =
+        playedToday ? l10n.homeStreakActive(days) : l10n.homeStreakAtRisk(days);
+    final pillColor = onPhoto
+        ? Colors.black.withValues(alpha: 0.38)
+        : (playedToday
+            ? _flameColor.withValues(alpha: 0.14)
+            : Colors.transparent);
+    final borderColor = onPhoto
+        ? Colors.white.withValues(alpha: 0.4)
+        : (playedToday ? Colors.transparent : colorScheme.outlineVariant);
+    final textColor = onPhoto
+        ? Colors.white
+        : (playedToday ? colorScheme.onSurface : colorScheme.onSurfaceVariant);
+    final iconColor = onPhoto
+        ? (playedToday ? _flameColor : Colors.white70)
+        : (playedToday
+            ? _flameColor
+            : colorScheme.onSurfaceVariant.withValues(alpha: 0.7));
+    return Tooltip(
+      message: message,
+      triggerMode: TooltipTriggerMode.tap,
+      child: Semantics(
+        container: true,
+        label: message,
+        excludeSemantics: true,
+        child: MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1.3,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: purple.withValues(alpha: 0.12),
+              color: pillColor,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: borderColor),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.local_fire_department_rounded,
+                  size: 16,
+                  color: iconColor,
+                ),
+                const SizedBox(width: 3),
+                Text(
+                  l10n.homeStreakChip(days),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: textColor,
+                  ),
+                ),
+              ],
             ),
           ),
-          MascotImage(asset: MascotImage.welcome, size: size * 0.94),
-        ],
+        ),
       ),
     );
   }

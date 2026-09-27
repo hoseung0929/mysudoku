@@ -12,7 +12,8 @@ class SudokuGenerator {
     _fillDiagonal(solutionBoard, random);
     _solveSudoku(solutionBoard, random: random);
 
-    final puzzle = List.generate(9, (row) => List<int>.from(solutionBoard[row]));
+    final puzzle =
+        List.generate(9, (row) => List<int>.from(solutionBoard[row]));
     final positions = List.generate(81, (index) => index)..shuffle(random);
 
     int removed = 0;

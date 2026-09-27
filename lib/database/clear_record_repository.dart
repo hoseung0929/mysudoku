@@ -14,6 +14,7 @@ class ClearRecordRepository {
     required int clearTime,
     required int wrongCount,
     required int hintsUsed,
+    bool autoNotesUsed = false,
   }) async {
     final db = await _dbManager.database;
     final now = DateTime.now();
@@ -29,6 +30,7 @@ class ClearRecordRepository {
         'wrong_count': wrongCount,
         'clear_date': clearDate,
         'hints_used': hintsUsed,
+        'auto_notes_used': autoNotesUsed ? 1 : 0,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -47,6 +49,7 @@ class ClearRecordRepository {
     required int clearTime,
     required int wrongCount,
     required int hintsUsed,
+    bool autoNotesUsed = false,
     DateTime? clearedAtLocal,
   }) async {
     final db = await _dbManager.database;
@@ -61,6 +64,7 @@ class ClearRecordRepository {
       'wrong_count': wrongCount,
       'clear_date': clearDate,
       'hints_used': hintsUsed,
+      'auto_notes_used': autoNotesUsed ? 1 : 0,
     });
   }
 

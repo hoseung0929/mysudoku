@@ -97,15 +97,16 @@ void main() {
         );
 
     double opacity(WidgetTester tester) => tester
-        .widget<FadeTransition>(find.descendant(
-          of: find.byType(GameCompleteDialog),
-          matching: find.byType(FadeTransition),
-        ).first)
+        .widget<FadeTransition>(find
+            .descendant(
+              of: find.byType(GameCompleteDialog),
+              matching: find.byType(FadeTransition),
+            )
+            .first)
         .opacity
         .value;
 
-    testWidgets('mascot fades and scales in once over ~280ms',
-        (tester) async {
+    testWidgets('mascot fades and scales in once over ~280ms', (tester) async {
       await tester.pumpWidget(_app(dialog(onNext: () {})));
       expect(opacity(tester), lessThan(0.2));
       await tester.pump(const Duration(milliseconds: 140));

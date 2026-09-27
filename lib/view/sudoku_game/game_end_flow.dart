@@ -1,19 +1,26 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/l10n/sudoku_level_l10n.dart';
 import 'package:sudoku159/model/sudoku_game.dart';
 import 'package:sudoku159/model/sudoku_level.dart';
+import 'package:sudoku159/utils/app_logger.dart';
 import 'package:sudoku159/view/sudoku_game/game_completion_coordinator.dart';
 import 'package:sudoku159/view/sudoku_game/game_over_flow.dart';
+import 'package:sudoku159/view/sudoku_game/notification_opt_in_flow.dart';
 import 'package:sudoku159/widgets/game_complete_dialog.dart';
 
 class GameEndFlow {
   GameEndFlow({
     GameCompletionCoordinator? completionCoordinator,
-  }) : _completionCoordinator =
-            completionCoordinator ?? GameCompletionCoordinator();
+    NotificationOptInFlow? notificationOptInFlow,
+  })  : _completionCoordinator =
+            completionCoordinator ?? GameCompletionCoordinator(),
+        _notificationOptInFlow =
+            notificationOptInFlow ?? NotificationOptInFlow();
 
   final GameCompletionCoordinator _completionCoordinator;
+  final NotificationOptInFlow _notificationOptInFlow;
 
   Future<void> showCompletion({
     required BuildContext context,
@@ -22,7 +29,9 @@ class GameEndFlow {
     required int clearTimeSeconds,
     required int wrongCount,
     required int hintsUsed,
+    bool autoNotesUsed = false,
     String? challengeDate,
+    bool challengeCountsForStreak = true,
     required Future<void> Function() onRestart,
     required Future<void> Function() onGoToLevelSelection,
     required Future<void> Function(SudokuGame nextGame) onNextPuzzle,
@@ -35,9 +44,29 @@ class GameEndFlow {
       clearTimeSeconds: clearTimeSeconds,
       wrongCount: wrongCount,
       hintsUsed: hintsUsed,
+      autoNotesUsed: autoNotesUsed,
       challengeDate: challengeDate,
+      challengeCountsForStreak: challengeCountsForStreak,
     );
     if (!context.mounted) return;
+
+    // 완료 기록은 위에서 이미 저장됐다. 결과창을 닫은 뒤, 다음 화면으로
+    // 이동하기 전에 첫 완료 알림 안내를 한 번만 보여 준다. 알림 처리가
+    // 실패해도 사용자가 고른 이동은 반드시 실행한다.
+    Future<void> closeResultThen(Future<void> Function() action) async {
+      try {
+        await Future<void>.delayed(Duration.zero);
+        if (context.mounted) {
+          await _notificationOptInFlow.maybeShow(context);
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          AppLogger.debug('완료 후 알림 안내 실패(이동은 계속): $e');
+        }
+      } finally {
+        await action();
+      }
+    }
 
     showDialog<void>(
       context: context,
@@ -55,16 +84,17 @@ class GameEndFlow {
               ? null
               : () async {
                   Navigator.of(dialogContext).pop();
-                  await Future<void>.delayed(Duration.zero);
-                  await onNextPuzzle(completionData.nextGame!);
+                  await closeResultThen(
+                    () => onNextPuzzle(completionData.nextGame!),
+                  );
                 },
           onRestart: () async {
             Navigator.of(dialogContext).pop();
-            await onRestart();
+            await closeResultThen(onRestart);
           },
           onGoToLevelSelection: () async {
             Navigator.of(dialogContext).pop();
-            await onGoToLevelSelection();
+            await closeResultThen(onGoToLevelSelection);
           },
         );
       },

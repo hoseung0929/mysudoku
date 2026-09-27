@@ -35,12 +35,14 @@ void main() {
   });
 
   testWidgets('renders an input field when a cell is selected', (tester) async {
-    await pumpOverlay(tester, selectedRow: 2, selectedCol: 3, onDigitEntered: (_) {});
+    await pumpOverlay(tester,
+        selectedRow: 2, selectedCol: 3, onDigitEntered: (_) {});
 
     expect(find.byType(TextField), findsOneWidget);
   });
 
-  testWidgets('reports the recognized digit and clears the field', (tester) async {
+  testWidgets('reports the recognized digit and clears the field',
+      (tester) async {
     final recognized = <int>[];
     await pumpOverlay(
       tester,
@@ -53,7 +55,8 @@ void main() {
     await tester.pump();
 
     expect(recognized, [5]);
-    expect(tester.widget<TextField>(find.byType(TextField)).controller!.text, '');
+    expect(
+        tester.widget<TextField>(find.byType(TextField)).controller!.text, '');
   });
 
   testWidgets('extracts the first digit out of mixed recognized text',

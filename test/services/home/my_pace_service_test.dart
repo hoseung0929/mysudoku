@@ -108,25 +108,23 @@ void main() {
     );
 
     test('wraps to beginner when last cleared level is master', () async {
-      final requestedLevels = <String>[];
+      // 마스터는 홈에서 숨겨진 비활성 난이도라 이어하기 순회 대상에 없다.
+      // 앵커 레벨(마지막 클리어 레벨)이 마스터면 그 100번이라는 문제 번호는
+      // 초급에 아무 의미가 없으므로(실제 DB의 AFTER 조회는 "100보다 큰
+      // 번호"만 반환할 수 있어 초급 1~99번을 모두 건너뛰게 된다),
+      // findFirstUnclearedGameNumberAfter를 아예 부르지 않고 초급을
+      // findFirstUnclearedGameNumber로 처음부터 새로 탐색해야 한다.
       final service = MyPaceService(
         loadRecentClearEvents: ({int limit = 1}) async => const [
           {'level_name': '마스터', 'game_number': 100},
         ],
         findFirstUnclearedGameNumberAfter: (levelName, after) async {
-          expect(levelName, '마스터');
-          expect(after, 100);
-          return null;
+          fail('비활성 난이도(마스터)의 문제 번호를 다른 난이도의 after 기준으로 '
+              '쓰면 안 됩니다: level=$levelName, after=$after');
         },
         findFirstUnclearedGameNumber: (levelName) async {
-          requestedLevels.add(levelName);
-          if (levelName == '마스터') {
-            return null;
-          }
-          if (levelName == '초급') {
-            return 3;
-          }
-          return null;
+          expect(levelName, '초급');
+          return 3;
         },
         loadGameEntry: (levelName, gameNumber) async {
           if (levelName == '초급' && gameNumber == 3) {
@@ -138,12 +136,195 @@ void main() {
 
       final target = await service.resolveTarget();
 
-      // 같은 레벨에서 "다음 번호"가 없으면 다음 레벨(초급)부터 탐색한다.
-      expect(requestedLevels, orderedEquals(const ['초급']));
       expect(target, isNotNull);
       expect(target!.level.name, '초급');
       expect(target.game.gameNumber, 3);
       expect(target.restoreSavedSession, isFalse);
+    });
+
+    test(
+        'master record with no beginner puzzles left recommends the first '
+        'intermediate puzzle', () async {
+      final requestedLevels = <String>[];
+      final service = MyPaceService(
+        loadRecentClearEvents: ({int limit = 1}) async => const [
+          {'level_name': '마스터', 'game_number': 100},
+        ],
+        findFirstUnclearedGameNumberAfter: (levelName, after) async {
+          fail('비활성 난이도(마스터)의 문제 번호를 다른 난이도의 after 기준으로 '
+              '쓰면 안 됩니다: level=$levelName, after=$after');
+        },
+        findFirstUnclearedGameNumber: (levelName) async {
+          requestedLevels.add(levelName);
+          if (levelName == '중급') return 5;
+          return null; // 초급은 플레이 가능한 문제가 없음
+        },
+        loadGameEntry: (levelName, gameNumber) async {
+          if (levelName == '중급' && gameNumber == 5) {
+            return _entry(gameNumber: gameNumber);
+          }
+          return null;
+        },
+      );
+
+      final target = await service.resolveTarget();
+
+      expect(requestedLevels, orderedEquals(const ['초급', '중급']));
+      expect(target, isNotNull);
+      expect(target!.level.name, '중급');
+      expect(target.game.gameNumber, 5);
+      expect(target.restoreSavedSession, isFalse);
+    });
+
+    test(
+        'an unknown/removed level name in the last record starts from '
+        'beginner', () async {
+      final service = MyPaceService(
+        loadRecentClearEvents: ({int limit = 1}) async => const [
+          {'level_name': '삭제된난이도', 'game_number': 42},
+        ],
+        findFirstUnclearedGameNumberAfter: (levelName, after) async {
+          fail('비활성/알 수 없는 난이도의 문제 번호를 다른 난이도의 after 기준으로 '
+              '쓰면 안 됩니다: level=$levelName, after=$after');
+        },
+        findFirstUnclearedGameNumber: (levelName) async {
+          expect(levelName, '초급');
+          return 1;
+        },
+        loadGameEntry: (levelName, gameNumber) async {
+          if (levelName == '초급' && gameNumber == 1) {
+            return _entry(gameNumber: gameNumber);
+          }
+          return null;
+        },
+      );
+
+      final target = await service.resolveTarget();
+
+      expect(target, isNotNull);
+      expect(target!.level.name, '초급');
+      expect(target.game.gameNumber, 1);
+    });
+
+    test(
+        'an active-level record (beginner #15) still searches after that '
+        'number in the same level', () async {
+      final service = MyPaceService(
+        loadRecentClearEvents: ({int limit = 1}) async => const [
+          {'level_name': '초급', 'game_number': 15},
+        ],
+        findFirstUnclearedGameNumberAfter: (levelName, after) async {
+          expect(levelName, '초급');
+          expect(after, 15);
+          return 16;
+        },
+        findFirstUnclearedGameNumber: (levelName) async {
+          fail('같은 활성 난이도에서 after(...)로 충분할 때 다른 조회는 생략되어야 함');
+        },
+        loadGameEntry: (levelName, gameNumber) async {
+          if (levelName == '초급' && gameNumber == 16) {
+            return _entry(gameNumber: gameNumber);
+          }
+          return null;
+        },
+      );
+
+      final target = await service.resolveTarget();
+
+      expect(target, isNotNull);
+      expect(target!.level.name, '초급');
+      expect(target.game.gameNumber, 16);
+    });
+
+    test(
+        'an active-level record with nothing higher wraps to a lower-numbered '
+        'uncleared puzzle in the same level before trying the next level',
+        () async {
+      final calls = <String>[];
+      final service = MyPaceService(
+        loadRecentClearEvents: ({int limit = 1}) async => const [
+          {'level_name': '초급', 'game_number': 159},
+        ],
+        findFirstUnclearedGameNumberAfter: (levelName, after) async {
+          calls.add('after:$levelName:$after');
+          expect(levelName, '초급');
+          expect(after, 159);
+          return null;
+        },
+        findFirstUnclearedGameNumber: (levelName) async {
+          calls.add('first:$levelName');
+          if (levelName == '초급') return 3;
+          fail('초급 3번을 로드하기 전에 다른 난이도를 조회하면 안 됩니다: $levelName');
+        },
+        loadGameEntry: (levelName, gameNumber) async {
+          if (levelName == '초급' && gameNumber == 3) {
+            return _entry(gameNumber: gameNumber);
+          }
+          return null;
+        },
+      );
+
+      final target = await service.resolveTarget();
+
+      expect(calls, orderedEquals(const ['after:초급:159', 'first:초급']));
+      expect(target, isNotNull);
+      expect(target!.level.name, '초급');
+      expect(target.game.gameNumber, 3);
+      expect(target.restoreSavedSession, isFalse);
+    });
+
+    test(
+        'an active-level record fully cleared (no higher, no lower puzzle) '
+        'moves on to the next active level', () async {
+      final calls = <String>[];
+      final service = MyPaceService(
+        loadRecentClearEvents: ({int limit = 1}) async => const [
+          {'level_name': '초급', 'game_number': 159},
+        ],
+        findFirstUnclearedGameNumberAfter: (levelName, after) async {
+          calls.add('after:$levelName:$after');
+          return null;
+        },
+        findFirstUnclearedGameNumber: (levelName) async {
+          calls.add('first:$levelName');
+          if (levelName == '중급') return 5;
+          return null;
+        },
+        loadGameEntry: (levelName, gameNumber) async {
+          if (levelName == '중급' && gameNumber == 5) {
+            return _entry(gameNumber: gameNumber);
+          }
+          return null;
+        },
+      );
+
+      final target = await service.resolveTarget();
+
+      // 초급의 낮은 번호 미완료 여부를 먼저 확인한 뒤에만 중급으로 넘어간다.
+      expect(
+          calls, orderedEquals(const ['after:초급:159', 'first:초급', 'first:중급']));
+      expect(target, isNotNull);
+      expect(target!.level.name, '중급');
+      expect(target.game.gameNumber, 5);
+    });
+
+    test(
+        'an active-level record fully cleared and no other active level has '
+        'a puzzle returns null', () async {
+      final service = MyPaceService(
+        loadRecentClearEvents: ({int limit = 1}) async => const [
+          {'level_name': '초급', 'game_number': 159},
+        ],
+        findFirstUnclearedGameNumberAfter: (levelName, after) async => null,
+        findFirstUnclearedGameNumber: (levelName) async => null,
+        loadGameEntry: (levelName, gameNumber) async {
+          fail('찾은 문제 번호가 없으므로 게임 엔트리를 조회하면 안 됩니다.');
+        },
+      );
+
+      final target = await service.resolveTarget();
+
+      expect(target, isNull);
     });
 
     test('returns null when there is no playable puzzle across all levels',
@@ -166,9 +347,12 @@ void main() {
       final target = await service.resolveTarget();
 
       expect(target, isNull);
+      // 마스터는 홈에서 숨겨진 비활성 난이도라 순회 대상이 아니다.
       expect(
         requestedLevels,
-        orderedEquals(SudokuLevel.levels.map((level) => level.name)),
+        orderedEquals(SudokuLevel.levels
+            .where((level) => !level.isMasterLevel)
+            .map((level) => level.name)),
       );
       expect(requestedEntries, isEmpty);
     });

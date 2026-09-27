@@ -82,8 +82,7 @@ class DatabaseManager {
         for (final level in SudokuLevel.levels) level.name: 0,
       },
       targetCounts: {
-        for (final level in SudokuLevel.levels)
-          level.name: _levelTarget(level),
+        for (final level in SudokuLevel.levels) level.name: _levelTarget(level),
       },
     ),
   );
@@ -135,7 +134,7 @@ class DatabaseManager {
 
     return await openDatabase(
       path,
-      version: 7,
+      version: 9,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onOpen: (db) async {
@@ -179,13 +178,21 @@ class DatabaseManager {
         wrong_count INTEGER NOT NULL,
         clear_date TEXT NOT NULL,
         hints_used INTEGER NOT NULL DEFAULT 0,
+        auto_notes_used INTEGER NOT NULL DEFAULT 0,
         UNIQUE(level_name, game_number)
       )
     ''');
 
     await db.execute('''
       CREATE TABLE IF NOT EXISTS daily_challenge_completions(
-        completion_date TEXT PRIMARY KEY NOT NULL
+        completion_date TEXT PRIMARY KEY NOT NULL,
+        level_name TEXT,
+        game_number INTEGER,
+        clear_time INTEGER,
+        wrong_count INTEGER,
+        hints_used INTEGER,
+        auto_notes_used INTEGER NOT NULL DEFAULT 0,
+        streak_eligible INTEGER NOT NULL DEFAULT 1
       )
     ''');
 
@@ -197,7 +204,8 @@ class DatabaseManager {
         clear_time INTEGER NOT NULL,
         wrong_count INTEGER NOT NULL,
         clear_date TEXT NOT NULL,
-        hints_used INTEGER NOT NULL DEFAULT 0
+        hints_used INTEGER NOT NULL DEFAULT 0,
+        auto_notes_used INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -265,6 +273,41 @@ class DatabaseManager {
       );
       await db.execute(
         'ALTER TABLE clear_events ADD COLUMN hints_used INTEGER NOT NULL DEFAULT 0',
+      );
+    }
+    if (oldVersion < 8) {
+      // 자동 메모 채우기 사용 여부. 기존 행은 사용하지 않은 것으로 처리한다.
+      await db.execute(
+        'ALTER TABLE clear_records ADD COLUMN auto_notes_used INTEGER NOT NULL DEFAULT 0',
+      );
+      await db.execute(
+        'ALTER TABLE clear_events ADD COLUMN auto_notes_used INTEGER NOT NULL DEFAULT 0',
+      );
+    }
+    if (oldVersion < 9) {
+      // 오늘의 도전 월간 달력용 세부 기록. 기존 행(날짜만 있던 완료)은
+      // 세부 정보 없이 "일반 완료"로 표시되고, streak_eligible은 기존 동작을
+      // 보존하도록 true(기본값)로 채워진다.
+      await db.execute(
+        'ALTER TABLE daily_challenge_completions ADD COLUMN level_name TEXT',
+      );
+      await db.execute(
+        'ALTER TABLE daily_challenge_completions ADD COLUMN game_number INTEGER',
+      );
+      await db.execute(
+        'ALTER TABLE daily_challenge_completions ADD COLUMN clear_time INTEGER',
+      );
+      await db.execute(
+        'ALTER TABLE daily_challenge_completions ADD COLUMN wrong_count INTEGER',
+      );
+      await db.execute(
+        'ALTER TABLE daily_challenge_completions ADD COLUMN hints_used INTEGER',
+      );
+      await db.execute(
+        'ALTER TABLE daily_challenge_completions ADD COLUMN auto_notes_used INTEGER NOT NULL DEFAULT 0',
+      );
+      await db.execute(
+        'ALTER TABLE daily_challenge_completions ADD COLUMN streak_eligible INTEGER NOT NULL DEFAULT 1',
       );
     }
   }
@@ -709,8 +752,7 @@ class DatabaseManager {
       isRunning: isRunning,
       generatedCounts: counts,
       targetCounts: {
-        for (final level in SudokuLevel.levels)
-          level.name: _levelTarget(level),
+        for (final level in SudokuLevel.levels) level.name: _levelTarget(level),
       },
     );
   }

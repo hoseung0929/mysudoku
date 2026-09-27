@@ -134,17 +134,23 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get navSettings;
 
+  /// No description provided for @recordsHeroImageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My growing record of solving'**
+  String get recordsHeroImageSubtitle;
+
+  /// No description provided for @settingsHeroSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Make it yours'**
+  String get settingsHeroSubtitle;
+
   /// No description provided for @recordsScreenTitle.
   ///
   /// In en, this message translates to:
   /// **'Records & stats'**
   String get recordsScreenTitle;
-
-  /// No description provided for @challengeScreenTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Challenge'**
-  String get challengeScreenTitle;
 
   /// No description provided for @settingsTitle.
   ///
@@ -965,7 +971,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordsHeroTitle.
   ///
   /// In en, this message translates to:
-  /// **'Start with the gentle\nshape of your progress.'**
+  /// **'Start with the gentle shape of your progress.'**
   String get recordsHeroTitle;
 
   /// No description provided for @recordsHeroSubtitle.
@@ -1015,6 +1021,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This week'**
   String get recordsPlayInsightsTitle;
+
+  /// No description provided for @recordsWeekSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a day to see your record'**
+  String get recordsWeekSubtitle;
 
   /// No description provided for @recordsPlayCalendarTitle.
   ///
@@ -1142,6 +1154,12 @@ abstract class AppLocalizations {
   /// **'Records by level'**
   String get recordsByLevelTitle;
 
+  /// No description provided for @recordsByLevelSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a difficulty to see its details'**
+  String get recordsByLevelSubtitle;
+
   /// No description provided for @recordsByLevelEmpty.
   ///
   /// In en, this message translates to:
@@ -1223,8 +1241,14 @@ abstract class AppLocalizations {
   /// No description provided for @recordsCalendarTitle.
   ///
   /// In en, this message translates to:
-  /// **'Activity calendar'**
+  /// **'Play activity'**
   String get recordsCalendarTitle;
+
+  /// No description provided for @recordsCalendarSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your play history from the last year'**
+  String get recordsCalendarSubtitle;
 
   /// No description provided for @recordsCalendarPeriod.
   ///
@@ -1301,7 +1325,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordsActivityHeatmapCaption.
   ///
   /// In en, this message translates to:
-  /// **'Darker cells mean more completions on that day.'**
+  /// **'Activity for every puzzle you\'ve completed.'**
   String get recordsActivityHeatmapCaption;
 
   /// No description provided for @recordsActivityTotalClearsLabel.
@@ -1313,7 +1337,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordsActivityCurrentStreakLabel.
   ///
   /// In en, this message translates to:
-  /// **'Current daily streak'**
+  /// **'Current streak'**
   String get recordsActivityCurrentStreakLabel;
 
   /// No description provided for @recordsActivityBestStreakLabel.
@@ -1321,6 +1345,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Best daily streak'**
   String get recordsActivityBestStreakLabel;
+
+  /// No description provided for @recordsChallengeStreakLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge streak'**
+  String get recordsChallengeStreakLabel;
 
   /// No description provided for @recordsActivityDayCount.
   ///
@@ -1415,7 +1445,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordsStatsHeroHeadline.
   ///
   /// In en, this message translates to:
-  /// **'See your last 7 days of\nSudoku at a glance.'**
+  /// **'See your last 7 days of Sudoku at a glance.'**
   String get recordsStatsHeroHeadline;
 
   /// No description provided for @recordsTrendA11yMaxClears.
@@ -1550,12 +1580,6 @@ abstract class AppLocalizations {
   /// **'Open Challenge tab'**
   String get recordsGoToChallengeTab;
 
-  /// No description provided for @challengeLoadError.
-  ///
-  /// In en, this message translates to:
-  /// **'Couldn\'t load challenge data.'**
-  String get challengeLoadError;
-
   /// No description provided for @challengeTodaysChallengeTitle.
   ///
   /// In en, this message translates to:
@@ -1598,18 +1622,6 @@ abstract class AppLocalizations {
   /// **'There are no new puzzles left to play across all levels.'**
   String get myPaceNoPlayableMessage;
 
-  /// No description provided for @challengeWeeklyGoalReachedTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Weekly goal reached'**
-  String get challengeWeeklyGoalReachedTitle;
-
-  /// No description provided for @challengeWeeklyGoalRemainingTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} more clears to hit your weekly goal'**
-  String challengeWeeklyGoalRemainingTitle(int count);
-
   /// No description provided for @challengeWeeklyGoalReachedBody.
   ///
   /// In en, this message translates to:
@@ -1646,107 +1658,11 @@ abstract class AppLocalizations {
   /// **'Memo mode gets you much closer to mistake-free clears.'**
   String get challengePerfectZeroBody;
 
-  /// No description provided for @challengeWeeklyGoalHeading.
-  ///
-  /// In en, this message translates to:
-  /// **'Weekly goal'**
-  String get challengeWeeklyGoalHeading;
-
-  /// No description provided for @challengeWeeklyClearsLine.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} clears this week'**
-  String challengeWeeklyClearsLine(int count);
-
-  /// No description provided for @challengeWeeklyProgressShort.
-  ///
-  /// In en, this message translates to:
-  /// **'{done} / {target} done'**
-  String challengeWeeklyProgressShort(int done, int target);
-
-  /// No description provided for @challengeWeeklyPerfectShort.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} perfect'**
-  String challengeWeeklyPerfectShort(int count);
-
-  /// No description provided for @challengeWeeklyCongratsFooter.
-  ///
-  /// In en, this message translates to:
-  /// **'Weekly goal complete—keep stacking great records!'**
-  String get challengeWeeklyCongratsFooter;
-
-  /// No description provided for @challengeWeeklyAlmostFooter.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} more clears to finish the week.'**
-  String challengeWeeklyAlmostFooter(int count);
-
-  /// No description provided for @challengeAchievementsHeading.
-  ///
-  /// In en, this message translates to:
-  /// **'Achievements · badges'**
-  String get challengeAchievementsHeading;
-
-  /// No description provided for @challengeBadgesCollected.
-  ///
-  /// In en, this message translates to:
-  /// **'{unlocked} / {total} earned'**
-  String challengeBadgesCollected(int unlocked, int total);
-
-  /// No description provided for @challengeViewAllBadges.
-  ///
-  /// In en, this message translates to:
-  /// **'View all'**
-  String get challengeViewAllBadges;
-
-  /// No description provided for @challengeEarnedBadgesHeading.
-  ///
-  /// In en, this message translates to:
-  /// **'Earned badges'**
-  String get challengeEarnedBadgesHeading;
-
-  /// No description provided for @challengeNextBadgeTargets.
-  ///
-  /// In en, this message translates to:
-  /// **'Next targets'**
-  String get challengeNextBadgeTargets;
-
-  /// No description provided for @challengeBadgeProgressLine.
-  ///
-  /// In en, this message translates to:
-  /// **'{desc} · Progress: {progress}'**
-  String challengeBadgeProgressLine(String desc, String progress);
-
-  /// No description provided for @challengeStreakDays.
-  ///
-  /// In en, this message translates to:
-  /// **'{days}-day streak'**
-  String challengeStreakDays(int days);
-
-  /// No description provided for @challengeStreakStartToday.
-  ///
-  /// In en, this message translates to:
-  /// **'Chase your first clear today'**
-  String get challengeStreakStartToday;
-
   /// No description provided for @challengeTabHeroHeadline.
   ///
   /// In en, this message translates to:
-  /// **'Today\'s puzzle and weekly rhythm,\nin one calm view.'**
+  /// **'Today\'s puzzle and weekly rhythm, in one calm view.'**
   String get challengeTabHeroHeadline;
-
-  /// No description provided for @challengeHeroPendingDetail.
-  ///
-  /// In en, this message translates to:
-  /// **'Start playing from Home, or use the button below.'**
-  String get challengeHeroPendingDetail;
-
-  /// No description provided for @challengeHeroDoneDetail.
-  ///
-  /// In en, this message translates to:
-  /// **'Today\'s challenge is complete. Badges and weekly progress stay on this tab.'**
-  String get challengeHeroDoneDetail;
 
   /// No description provided for @challengeOpenTodayOnHomeButton.
   ///
@@ -2690,23 +2606,545 @@ abstract class AppLocalizations {
   /// **'No saved games match this filter.'**
   String get savedGamesEmpty;
 
-  /// No description provided for @challengeMetricBasisTitle.
+  /// No description provided for @savedGamesDeleteFailed.
   ///
   /// In en, this message translates to:
-  /// **'Challenge metric basis'**
-  String get challengeMetricBasisTitle;
+  /// **'Couldn\'t delete this puzzle. Please try again.'**
+  String get savedGamesDeleteFailed;
 
-  /// No description provided for @challengeMetricBasisWeekly.
+  /// No description provided for @recordsMyRecordTitle.
   ///
   /// In en, this message translates to:
-  /// **'Weekly progress: based on clear events from the last 7 days.'**
-  String get challengeMetricBasisWeekly;
+  /// **'My record'**
+  String get recordsMyRecordTitle;
 
-  /// No description provided for @challengeMetricBasisStreak.
+  /// No description provided for @recordsSummaryTotalCleared.
   ///
   /// In en, this message translates to:
-  /// **'Streak: based on consecutive dates when the daily challenge was completed.'**
-  String get challengeMetricBasisStreak;
+  /// **'Total cleared'**
+  String get recordsSummaryTotalCleared;
+
+  /// No description provided for @recordsSummaryPerfectClears.
+  ///
+  /// In en, this message translates to:
+  /// **'Perfect clears'**
+  String get recordsSummaryPerfectClears;
+
+  /// No description provided for @challengeMonthlyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a date to replay a past challenge.'**
+  String get challengeMonthlyDescription;
+
+  /// No description provided for @challengeTodayEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get challengeTodayEyebrow;
+
+  /// No description provided for @gamePausedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get gamePausedTitle;
+
+  /// No description provided for @gamePausedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The timer is stopped and the board is hidden.'**
+  String get gamePausedBody;
+
+  /// Compact streak chip in the home header (consecutive days with at least one cleared puzzle).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String homeStreakChip(int count);
+
+  /// No description provided for @homeStreakActive.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Solved a puzzle today} other{Solved a puzzle {count} days in a row}}'**
+  String homeStreakActive(int count);
+
+  /// No description provided for @homeStreakAtRisk.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1-day streak. Finish a puzzle today to keep it going.} other{{count}-day streak. Finish a puzzle today to keep it going.}}'**
+  String homeStreakAtRisk(int count);
+
+  /// No description provided for @hintStepLookTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hint · Where to look'**
+  String get hintStepLookTitle;
+
+  /// No description provided for @hintLookCell.
+  ///
+  /// In en, this message translates to:
+  /// **'Look at the row, column, and box of the highlighted cell.'**
+  String get hintLookCell;
+
+  /// No description provided for @hintLookBox.
+  ///
+  /// In en, this message translates to:
+  /// **'Find where {value} goes in the highlighted box.'**
+  String hintLookBox(int value);
+
+  /// No description provided for @hintLookRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Find where {value} goes in the highlighted row.'**
+  String hintLookRow(int value);
+
+  /// No description provided for @hintLookCol.
+  ///
+  /// In en, this message translates to:
+  /// **'Find where {value} goes in the highlighted column.'**
+  String hintLookCol(int value);
+
+  /// No description provided for @hintMovedFromSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'There\'s an easier cell to solve first.'**
+  String get hintMovedFromSelection;
+
+  /// No description provided for @hintTechniqueNakedSingle.
+  ///
+  /// In en, this message translates to:
+  /// **'Naked single'**
+  String get hintTechniqueNakedSingle;
+
+  /// No description provided for @hintTechniqueHiddenSingle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden single'**
+  String get hintTechniqueHiddenSingle;
+
+  /// No description provided for @hintTechniqueReveal.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer'**
+  String get hintTechniqueReveal;
+
+  /// No description provided for @hintExplainNakedSingle.
+  ///
+  /// In en, this message translates to:
+  /// **'The row, column, and box of this cell already hold the other eight numbers, so only {value} fits.'**
+  String hintExplainNakedSingle(int value);
+
+  /// No description provided for @hintExplainHiddenSingleBox.
+  ///
+  /// In en, this message translates to:
+  /// **'In this box, {value} can only go here. Every other empty cell shares a row or column with a highlighted {value}.'**
+  String hintExplainHiddenSingleBox(int value);
+
+  /// No description provided for @hintExplainHiddenSingleRow.
+  ///
+  /// In en, this message translates to:
+  /// **'In this row, {value} can only go here. Every other empty cell shares a column or box with a highlighted {value}.'**
+  String hintExplainHiddenSingleRow(int value);
+
+  /// No description provided for @hintExplainHiddenSingleCol.
+  ///
+  /// In en, this message translates to:
+  /// **'In this column, {value} can only go here. Every other empty cell shares a row or box with a highlighted {value}.'**
+  String hintExplainHiddenSingleCol(int value);
+
+  /// No description provided for @hintExplainReveal.
+  ///
+  /// In en, this message translates to:
+  /// **'This cell needs a more advanced technique. You can fill in the answer below.'**
+  String get hintExplainReveal;
+
+  /// No description provided for @hintNextStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell me more'**
+  String get hintNextStep;
+
+  /// No description provided for @hintFillAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in answer'**
+  String get hintFillAnswer;
+
+  /// No description provided for @hintClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close hint'**
+  String get hintClose;
+
+  /// No description provided for @notificationOptInTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Want a daily puzzle reminder?'**
+  String get notificationOptInTitle;
+
+  /// No description provided for @notificationOptInBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If you haven\'t solved a puzzle by 8 PM, we\'ll remind you. You can turn this off anytime in Settings.'**
+  String get notificationOptInBody;
+
+  /// No description provided for @notificationOptInAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on reminders'**
+  String get notificationOptInAccept;
+
+  /// No description provided for @notificationOptInLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get notificationOptInLater;
+
+  /// No description provided for @notificationOptInDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications aren\'t allowed. Allow them in your device settings, then turn reminders on in Settings.'**
+  String get notificationOptInDenied;
+
+  /// No description provided for @notificationSetupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t set up reminders. Please try again later in Settings.'**
+  String get notificationSetupFailed;
+
+  /// No description provided for @beginnerTutorialPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New to Sudoku?'**
+  String get beginnerTutorialPromptTitle;
+
+  /// No description provided for @beginnerTutorialPromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a quick, guided practice puzzle before you start solving — it only takes a minute.'**
+  String get beginnerTutorialPromptBody;
+
+  /// No description provided for @beginnerTutorialStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the guide'**
+  String get beginnerTutorialStart;
+
+  /// No description provided for @beginnerTutorialSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get beginnerTutorialSkip;
+
+  /// No description provided for @beginnerTutorialStepIndicator.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {current} of {total}'**
+  String beginnerTutorialStepIndicator(int current, int total);
+
+  /// No description provided for @beginnerTutorialStepRowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rule: rows'**
+  String get beginnerTutorialStepRowTitle;
+
+  /// No description provided for @beginnerTutorialStepRowBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Each row must contain every number from 1 to 9, with no repeats.'**
+  String get beginnerTutorialStepRowBody;
+
+  /// No description provided for @beginnerTutorialStepColumnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rule: columns'**
+  String get beginnerTutorialStepColumnTitle;
+
+  /// No description provided for @beginnerTutorialStepColumnBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Each column must also contain every number from 1 to 9, with no repeats.'**
+  String get beginnerTutorialStepColumnBody;
+
+  /// No description provided for @beginnerTutorialStepBoxTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rule: 3×3 boxes'**
+  String get beginnerTutorialStepBoxTitle;
+
+  /// No description provided for @beginnerTutorialStepBoxBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Each 3×3 box must contain every number from 1 to 9, with no repeats.'**
+  String get beginnerTutorialStepBoxBody;
+
+  /// No description provided for @beginnerTutorialStepInputTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number'**
+  String get beginnerTutorialStepInputTitle;
+
+  /// No description provided for @beginnerTutorialStepInputBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Only one number can go in this highlighted cell. Tap the cell, then tap the correct number.'**
+  String get beginnerTutorialStepInputBody;
+
+  /// No description provided for @beginnerTutorialStepInputWrongHint.
+  ///
+  /// In en, this message translates to:
+  /// **'That number is already used in this row, column, or box. Try another number.'**
+  String get beginnerTutorialStepInputWrongHint;
+
+  /// No description provided for @beginnerTutorialStepMemoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes and erasing'**
+  String get beginnerTutorialStepMemoTitle;
+
+  /// No description provided for @beginnerTutorialStepMemoAddBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Notes, tap this cell, then tap a candidate number to jot it down.'**
+  String get beginnerTutorialStepMemoAddBody;
+
+  /// No description provided for @beginnerTutorialStepMemoEraseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Now tap that same number again to erase the note.'**
+  String get beginnerTutorialStepMemoEraseBody;
+
+  /// No description provided for @beginnerTutorialStepHintTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hints'**
+  String get beginnerTutorialStepHintTitle;
+
+  /// No description provided for @beginnerTutorialStepHintBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Hint to see where to look and why, without spending one of your real hints.'**
+  String get beginnerTutorialStepHintBody;
+
+  /// No description provided for @beginnerTutorialStepHintButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Open hint'**
+  String get beginnerTutorialStepHintButton;
+
+  /// No description provided for @beginnerTutorialStepDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re ready!'**
+  String get beginnerTutorialStepDoneTitle;
+
+  /// No description provided for @beginnerTutorialStepDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve learned the basics: rows, columns, boxes, entering numbers, notes, and hints.'**
+  String get beginnerTutorialStepDoneBody;
+
+  /// No description provided for @beginnerTutorialFirstPuzzleButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Start my first puzzle'**
+  String get beginnerTutorialFirstPuzzleButton;
+
+  /// No description provided for @beginnerTutorialNextButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get beginnerTutorialNextButton;
+
+  /// No description provided for @beginnerTutorialCloseButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get beginnerTutorialCloseButton;
+
+  /// No description provided for @settingsHowToPlayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How to play'**
+  String get settingsHowToPlayTitle;
+
+  /// No description provided for @settingsHowToPlaySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay the guided tutorial'**
+  String get settingsHowToPlaySubtitle;
+
+  /// No description provided for @autoNotesConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Refill all notes?'**
+  String get autoNotesConfirmTitle;
+
+  /// No description provided for @autoNotesConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This replaces every blank cell\'s notes with the current candidates. Candidates you removed by hand may reappear.'**
+  String get autoNotesConfirmBody;
+
+  /// No description provided for @autoNotesConfirmApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Refill notes'**
+  String get autoNotesConfirmApply;
+
+  /// No description provided for @autoNotesContradictionMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Some cells have no possible number left, so notes were not filled in. Check your entries and try again.'**
+  String get autoNotesContradictionMessage;
+
+  /// No description provided for @autoNotesTipMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: long-press Notes to fill in all candidate numbers at once.'**
+  String get autoNotesTipMessage;
+
+  /// No description provided for @gameMemoLongPressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to toggle Notes. Long-press to auto-fill candidate notes.'**
+  String get gameMemoLongPressHint;
+
+  /// No description provided for @challengeMonthlyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge history'**
+  String get challengeMonthlyTitle;
+
+  /// No description provided for @challengePreviousMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous month'**
+  String get challengePreviousMonth;
+
+  /// No description provided for @challengeBackToCurrentMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get challengeBackToCurrentMonth;
+
+  /// No description provided for @challengeStatusNotCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Not completed'**
+  String get challengeStatusNotCompleted;
+
+  /// No description provided for @challengeStatusInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get challengeStatusInProgress;
+
+  /// No description provided for @challengeStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get challengeStatusCompleted;
+
+  /// No description provided for @challengeStatusPerfect.
+  ///
+  /// In en, this message translates to:
+  /// **'Perfect clear'**
+  String get challengeStatusPerfect;
+
+  /// No description provided for @challengeStatusFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available yet'**
+  String get challengeStatusFuture;
+
+  /// No description provided for @challengeMonthComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly complete'**
+  String get challengeMonthComplete;
+
+  /// No description provided for @challengeStartPastChallenge.
+  ///
+  /// In en, this message translates to:
+  /// **'Start past challenge'**
+  String get challengeStartPastChallenge;
+
+  /// No description provided for @challengeResumePastChallenge.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume past challenge'**
+  String get challengeResumePastChallenge;
+
+  /// No description provided for @challengeRetryPastChallenge.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry past challenge'**
+  String get challengeRetryPastChallenge;
+
+  /// No description provided for @challengePuzzleLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this puzzle.'**
+  String get challengePuzzleLoadFailed;
+
+  /// No description provided for @challengeCalendarLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load the challenge calendar.'**
+  String get challengeCalendarLoadError;
+
+  /// No description provided for @challengeStreakExcludedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Completing a past challenge doesn\'t count toward your streak'**
+  String get challengeStreakExcludedNote;
+
+  /// No description provided for @challengeDayCellSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{date}, {status}'**
+  String challengeDayCellSemantics(String date, String status);
+
+  /// No description provided for @homeGreetingMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with a light puzzle.'**
+  String get homeGreetingMorning;
+
+  /// No description provided for @homeGreetingAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'A focused puzzle fits now.'**
+  String get homeGreetingAfternoon;
+
+  /// No description provided for @homeGreetingEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Wind down with a calm puzzle.'**
+  String get homeGreetingEvening;
+
+  /// No description provided for @levelNoPuzzlesAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No puzzles are available for this level.'**
+  String get levelNoPuzzlesAvailable;
+
+  /// No description provided for @levelLastPlayedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get levelLastPlayedToday;
+
+  /// No description provided for @levelLastPlayedYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get levelLastPlayedYesterday;
+
+  /// No description provided for @levelLastPlayedDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day ago} other{{count} days ago}}'**
+  String levelLastPlayedDaysAgo(int count);
 }
 
 class _AppLocalizationsDelegate
