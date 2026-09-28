@@ -312,10 +312,10 @@
   "recordsMetricClearRate": "Puzzle completion",
   "recordsMetricPerfectRate": "Mistake-free share",
   "recordsSummaryMetricsFootnote": "Each puzzle counts once, using its best record, and follows your active filters. Completion compares those puzzles with the total number of puzzles in the same scope.",
-  "recordsMetricAvgTime": "Avg. best time",
-  "recordsMetricAvgWrong": "Avg. mistakes (best runs)",
+  "recordsMetricAvgTime": "Avg. clear time",
+  "recordsMetricAvgWrong": "Avg. mistakes",
   "recordsByLevelTitle": "Records by level",
-  "recordsByLevelSubtitle": "Tap a difficulty to see its details",
+  "recordsByLevelSubtitle": "Select a difficulty to compare records",
   "recordsByLevelEmpty": "No stats for this filter.",
   "recordsByLevelSectionSubtitle": "See which levels are starting to feel more comfortable.",
   "recordsLevelInfographicClearRate": "Puzzle completion",
@@ -328,9 +328,9 @@
   "recordsEmptyAction": "Start a puzzle",
   "recordsLevelEmpty": "No completed puzzles at this level yet.",
   "recordsRowBestTime": "Best time",
-  "recordsAverageBasisNote": "Averages use each puzzle's best record, not every play.",
-  "recordsCalendarTitle": "Play activity",
-  "recordsCalendarSubtitle": "Your play history from the last year",
+  "recordsAverageBasisNote": "Averages are based on each puzzle's best record.",
+  "recordsCalendarTitle": "All puzzle activity",
+  "recordsCalendarSubtitle": "See which days you cleared puzzles and how often you played",
   "recordsCalendarPeriod": "Last {weeks} weeks",
   "@recordsCalendarPeriod": {
     "placeholders": {
@@ -393,9 +393,9 @@
   "recordsActivityHeatmapTitle": "Recent activity",
   "recordsActivityHeatmapCaption": "Activity for every puzzle you've completed.",
   "recordsActivityTotalClearsLabel": "Total completions",
-  "recordsActivityCurrentStreakLabel": "Current streak",
-  "recordsActivityBestStreakLabel": "Best daily streak",
-  "recordsChallengeStreakLabel": "Challenge streak",
+  "recordsActivityCurrentStreakLabel": "Clear streak",
+  "recordsActivityBestStreakLabel": "Longest clear streak",
+  "recordsChallengeStreakLabel": "Today's challenge streak",
   "recordsActivityDayCount": "{count, plural, one{{count} day} other{{count} days}}",
   "@recordsActivityDayCount": {
     "placeholders": {
@@ -826,6 +826,14 @@
       }
     }
   },
+  "levelPuzzleListTitle": "Puzzles · {count}",
+  "@levelPuzzleListTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "levelRecentBadge": "Recent",
   "levelStatusInProgress": "In progress",
   "levelNoResults": "No results.",
@@ -907,8 +915,8 @@
   "savedGamesEmpty": "No saved games match this filter.",
   "savedGamesDeleteFailed": "Couldn't delete this puzzle. Please try again.",
   "recordsMyRecordTitle": "My record",
-  "recordsSummaryTotalCleared": "Total cleared",
-  "recordsSummaryPerfectClears": "Perfect clears",
+  "recordsSummaryTotalCleared": "Puzzles cleared",
+  "recordsSummaryPerfectClears": "Mistake-free clears",
   "challengeMonthlyDescription": "Pick a date to replay a past challenge.",
   "challengeTodayEyebrow": "Today",
   "gamePausedTitle": "Paused",

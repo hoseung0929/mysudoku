@@ -8,6 +8,7 @@ import 'package:sudoku159/l10n/sudoku_level_l10n.dart';
 import 'package:sudoku159/model/sudoku_game.dart';
 import 'package:sudoku159/model/sudoku_level.dart';
 import 'package:sudoku159/navigation/root_nav_scope.dart';
+import 'package:sudoku159/navigation/tab_scroll_controller.dart';
 import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
 import 'package:sudoku159/services/home/home_dashboard_service.dart';
 import 'package:sudoku159/services/records/game_record_notifier.dart';
@@ -17,6 +18,7 @@ import 'package:sudoku159/theme/system_ui_style.dart';
 import 'package:sudoku159/utils/time_format.dart';
 import 'package:sudoku159/view/challenge/challenge_monthly_calendar_card.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_game_screen.dart';
+import 'package:sudoku159/widgets/app_snackbar.dart';
 import 'package:sudoku159/widgets/loading_skeleton.dart';
 import 'package:sudoku159/widgets/mascot_image.dart';
 import 'package:sudoku159/widgets/press_scale.dart';
@@ -29,6 +31,7 @@ class RecordsStatisticsScreen extends StatefulWidget {
     this.challengeProgressService,
     this.homeDashboardService,
     this.databaseHelper,
+    this.tabScrollController,
   });
 
   /// 테스트에서 저장소를 대체하기 위한 선택적 주입. 기본값은 실제 구현.
@@ -36,6 +39,10 @@ class RecordsStatisticsScreen extends StatefulWidget {
   final ChallengeProgressService? challengeProgressService;
   final HomeDashboardService? homeDashboardService;
   final DatabaseHelper? databaseHelper;
+
+  /// 하단 기록 탭을 다시 눌렀을 때 이 화면을 최상단으로 스크롤하도록
+  /// 연결하는 콜백 창구. [MyHomePage]가 탭별로 하나씩 만들어 전달한다.
+  final TabScrollController? tabScrollController;
 
   @override
   State<RecordsStatisticsScreen> createState() =>
@@ -71,6 +78,10 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   String? _selectedLevelName;
   String? _selectedHeatmapDateKey;
   int _challengeStreakDays = 0;
+
+  /// 지금까지 완료한 도전이 하나라도 있는지. 일반 퍼즐 기록이 없을 때
+  /// 도전 달력을 보여줄지 판단하는 데 쓴다.
+  bool _hasChallengeHistory = false;
   bool _isOpeningTodayChallenge = false;
   bool _isOpeningPastChallenge = false;
 
@@ -91,15 +102,35 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     _loadChallengeStreak();
     GameRecordNotifier.instance.version.addListener(_handleRecordsChanged);
     _scrollController.addListener(_handleScrollForStatusBar);
+    widget.tabScrollController?.attach(_scrollToTop);
   }
 
   @override
   void dispose() {
     GameRecordNotifier.instance.version.removeListener(_handleRecordsChanged);
     _scrollController.removeListener(_handleScrollForStatusBar);
+    widget.tabScrollController?.detach(_scrollToTop);
     _scrollController.dispose();
     _heatmapScrollController.dispose();
     super.dispose();
+  }
+
+  /// 기록 탭을 다시 눌렀을 때 호출된다. 이미 최상단이면 아무 것도 하지
+  /// 않고, '동작 줄이기'가 켜져 있으면 애니메이션 없이 바로 이동한다.
+  Future<void> _scrollToTop() async {
+    if (!_scrollController.hasClients) return;
+    if (_scrollController.offset <= 0) return;
+
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _scrollController.jumpTo(0);
+      return;
+    }
+
+    await _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   double _currentHeroHeight(BuildContext context) =>
@@ -130,8 +161,13 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   Future<void> _loadChallengeStreak() async {
     try {
       final summary = await _challengeProgressService.load();
+      final hasHistory =
+          await _challengeProgressService.hasCompletedAnyChallenge();
       if (!mounted) return;
-      setState(() => _challengeStreakDays = summary.streakDays);
+      setState(() {
+        _challengeStreakDays = summary.streakDays;
+        _hasChallengeHistory = hasHistory;
+      });
     } catch (_) {
       // 도전 연속 조회 실패는 조용히 무시한다(0으로 유지).
     }
@@ -158,16 +194,12 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       final challengeDate = data.challengeProgress.challengeDate;
       final level = game == null ? null : _levelForName(game.levelName);
       if (game == null || challengeDate == null || level == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.homeTodayChallengeLoadError)),
-        );
+        showAppSnackBar(context, l10n.homeTodayChallengeLoadError);
         return;
       }
       if (challengeDate !=
           ChallengeProgressService.formatLocalDate(DateTime.now())) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.homeTodayChallengeDateChanged)),
-        );
+        showAppSnackBar(context, l10n.homeTodayChallengeDateChanged);
         return;
       }
       await Navigator.of(context).push(
@@ -208,9 +240,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       final level = _levelForName(target.levelName);
       if (!mounted) return;
       if (level == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.challengePuzzleLoadFailed)),
-        );
+        showAppSnackBar(context, l10n.challengePuzzleLoadFailed);
         return;
       }
       final entry = await _databaseHelper.getGameEntry(
@@ -219,9 +249,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       );
       if (!mounted) return;
       if (entry == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.challengePuzzleLoadFailed)),
-        );
+        showAppSnackBar(context, l10n.challengePuzzleLoadFailed);
         return;
       }
       final game = SudokuGame(
@@ -308,22 +336,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         .toList(growable: false);
   }
 
-  /// 레벨 목록/피커 화면과 동일한 이미지 에셋으로 아이덴티티를 통일한다.
-  String? _levelIdentityImage(String levelName) {
-    switch (levelName) {
-      case '초급':
-        return 'assets/images/level1.png';
-      case '중급':
-        return 'assets/images/level2.png';
-      case '고급':
-        return 'assets/images/level3.png';
-      case '전문가':
-        return 'assets/images/level4.png';
-      default:
-        return null;
-    }
-  }
-
   // ─── Build ────────────────────────────────────────────────────────────────
 
   @override
@@ -348,11 +360,11 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     } else if (!_hasLoaded) {
       content = _buildInitialLoadingSkeleton(l10n, sectionGap);
     } else if (_recent.isEmpty) {
-      content = _buildStatsUnavailableBody(
-        l10n,
-        _buildNoRecords(l10n),
-        sectionGap,
-      );
+      // 일반 퍼즐 기록은 없어도 과거에 완료한 도전이 있으면, "기록 없음"
+      // 안내 아래에 도전 달력을 이어서 보여준다. 둘 다 없으면 안내 카드만.
+      content = _hasChallengeHistory
+          ? _buildStatsUnavailableBody(l10n, _buildNoRecords(l10n), sectionGap)
+          : _buildNoRecords(l10n);
     } else {
       content = _buildSections(l10n);
     }
@@ -369,52 +381,51 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         ),
         child: Stack(
           children: [
-            RefreshIndicator(
-              onRefresh: _loadStats,
-              color: Theme.of(context).colorScheme.onSurface,
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              child: ListView(
-                controller: _scrollController,
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.only(
-                  bottom: _kScrollBottomPad + bottomInset,
-                ),
-                children: [
-                  _buildHeaderBanner(l10n, horizontalPad, topInset, isTablet),
-                  Padding(
-                    key: const Key('records_content_padding'),
-                    padding: EdgeInsets.fromLTRB(
-                      horizontalPad,
-                      isTablet ? 24 : 16,
-                      horizontalPad,
-                      0,
-                    ),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 960),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (_hasLoaded && _loadErrorMessage != null) ...[
-                              _buildLoadError(l10n, _loadErrorMessage!),
-                              SizedBox(height: isTablet ? 24 : 16),
-                            ],
-                            if (_hasLoaded &&
-                                _loadErrorMessage == null &&
-                                _recent.isNotEmpty) ...[
-                              _buildSummaryCard(l10n),
-                              SizedBox(height: sectionGap),
-                            ],
-                            content,
+            ListView(
+              controller: _scrollController,
+              // iOS 탄성 스크롤로 최상단에서 히어로 이미지가 아래로 밀려
+              // 보이지 않게 클램핑 물리를 쓴다. 당겨서 새로고침은 없애도
+              // 되는데, 기록 탭 진입·게임 완료·도전 화면 복귀·기록 변경
+              // 알림 경로로 이미 항상 최신 상태를 불러오기 때문이다.
+              physics: const ClampingScrollPhysics(),
+              padding: EdgeInsets.only(
+                bottom: _kScrollBottomPad + bottomInset,
+              ),
+              children: [
+                _buildHeaderBanner(l10n, horizontalPad, topInset, isTablet),
+                Padding(
+                  key: const Key('records_content_padding'),
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPad,
+                    isTablet ? 24 : 16,
+                    horizontalPad,
+                    0,
+                  ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 960),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (_hasLoaded && _loadErrorMessage != null) ...[
+                            _buildLoadError(l10n, _loadErrorMessage!),
+                            SizedBox(height: isTablet ? 24 : 16),
                           ],
-                        ),
+                          if (_hasLoaded &&
+                              _loadErrorMessage == null &&
+                              _recent.isNotEmpty) ...[
+                            _buildSummaryCard(l10n),
+                            SizedBox(height: sectionGap),
+                          ],
+                          content,
+                        ],
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            if (_isLoading)
+            if (_isLoading && _hasLoaded)
               const Positioned(
                 top: 0,
                 left: 0,
@@ -514,7 +525,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 18,
+                  fontSize: 20,
                   height: 1.3,
                   fontWeight: FontWeight.w800,
                   shadows: [Shadow(color: Colors.black45, blurRadius: 6)],
@@ -808,7 +819,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     final title = Text(
       l10n.recordsMyRecordTitle,
       style: TextStyle(
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: FontWeight.w700,
         color: cs.onSurface,
       ),
@@ -1112,6 +1123,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       isToday: isToday,
       isSelected: isSelected,
       done: done,
+      clears: clears,
       reduceMotion: reduceMotion,
       semanticsLabel: semantics,
       todayLabel: l10n.recordsTrendTodayLabel,
@@ -1260,36 +1272,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Row(
-                        children: [
-                          if (_levelIdentityImage(selectedName) != null)
-                            Image.asset(
-                              _levelIdentityImage(selectedName)!,
-                              width: 30,
-                              height: 30,
-                            )
-                          else
-                            Icon(
-                              Icons.emoji_events_rounded,
-                              size: 26,
-                              color: palette.primaryPurple,
-                            ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              selectedName.localizedSudokuLevelName(l10n),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: cs.onSurface,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
                       Row(
                         children: [
                           Expanded(
@@ -1504,60 +1486,57 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
 
   // ─── 상태 화면 ────────────────────────────────────────────────────────────
 
-  /// 전체 완료 기록이 하나도 없을 때: 0 수치·빈 카드 대신 문구와 시작 행동.
+  /// 전체 완료 기록이 하나도 없을 때: 화면 중앙에 떠 있는 큰 블록 대신,
+  /// 다른 섹션과 같은 카드 하나로 줄여서 보여준다.
   Widget _buildNoRecords(AppLocalizations l10n) {
     final cs = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 32),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 320),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 펭귄 옆에 작은 스도쿠 종이: 첫 기록을 기다리는 장면(장식).
-              ExcludeSemantics(
-                child: SizedBox(
-                  width: 156,
-                  height: 128,
-                  child: Stack(
-                    children: [
-                      const Positioned(
-                        left: 0,
-                        bottom: 0,
-                        child: MascotImage(
-                          asset: MascotImage.welcome,
-                          size: 116,
-                        ),
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: _card(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 펭귄 옆에 작은 스도쿠 종이: 첫 기록을 기다리는 장면(장식).
+            ExcludeSemantics(
+              child: SizedBox(
+                width: 110,
+                height: 90,
+                child: Stack(
+                  children: [
+                    const Positioned(
+                      left: 0,
+                      bottom: 0,
+                      child: MascotImage(
+                        asset: MascotImage.welcome,
+                        size: 82,
                       ),
-                      Positioned(
-                        right: 0,
-                        bottom: 6,
-                        child: Transform.rotate(
-                          angle: 0.09,
-                          child: const SudokuMotif(size: 48),
-                        ),
+                    ),
+                    Positioned(
+                      right: 0,
+                      bottom: 4,
+                      child: Transform.rotate(
+                        angle: 0.09,
+                        child: const SudokuMotif(size: 34),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.recordsEmptyTitle,
-                textAlign: TextAlign.center,
-                style:
-                    TextStyle(fontSize: 16, height: 1.4, color: cs.onSurface),
-              ),
-              const SizedBox(height: 20),
-              FilledButton(
-                // 홈의 실제 게임 시작 경로(홈 탭)로 이동한다.
-                onPressed: () => RootNavScope.maybeOf(context)?.goToTab(0),
-                style: FilledButton.styleFrom(minimumSize: const Size(200, 48)),
-                child: Text(l10n.recordsEmptyAction),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              l10n.recordsEmptyTitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 15, height: 1.4, color: cs.onSurface),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              // 홈의 실제 게임 시작 경로(홈 탭)로 이동한다.
+              onPressed: () => RootNavScope.maybeOf(context)?.goToTab(0),
+              style: FilledButton.styleFrom(minimumSize: const Size(200, 48)),
+              child: Text(l10n.recordsEmptyAction),
+            ),
+          ],
         ),
       ),
     );
@@ -1927,7 +1906,7 @@ class _RecordCardHeader extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             subtitle!,
-            style: TextStyle(fontSize: 12.5, color: cs.onSurfaceVariant),
+            style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
           ),
         ],
       ],
@@ -1945,6 +1924,7 @@ class _WeekDayCell extends StatefulWidget {
     required this.isToday,
     required this.isSelected,
     required this.done,
+    required this.clears,
     required this.reduceMotion,
     required this.semanticsLabel,
     required this.todayLabel,
@@ -1956,6 +1936,7 @@ class _WeekDayCell extends StatefulWidget {
   final bool isToday;
   final bool isSelected;
   final bool done;
+  final int clears;
   final bool reduceMotion;
   final String semanticsLabel;
   final String todayLabel;
@@ -2014,25 +1995,58 @@ class _WeekDayCellState extends State<_WeekDayCell> {
                 ),
                 const SizedBox(height: 6),
                 // 오늘은 테두리, 완료 여부는 채움+체크 아이콘(색만으로 구분하지 않음).
-                Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: widget.done ? accent : Colors.transparent,
-                    border: Border.all(
-                      color: widget.isToday
-                          ? cs.onSurface
-                          : widget.done
-                              ? accent
-                              : cs.outlineVariant,
-                      width: widget.isToday ? 2 : 1,
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: widget.done ? accent : Colors.transparent,
+                        border: Border.all(
+                          color: widget.isToday
+                              ? cs.onSurface
+                              : widget.done
+                                  ? accent
+                                  : cs.outlineVariant,
+                          width: widget.isToday ? 2 : 1,
+                        ),
+                      ),
+                      child: widget.done
+                          ? const Icon(Icons.check_rounded,
+                              size: 18, color: Colors.white)
+                          : null,
                     ),
-                  ),
-                  child: widget.done
-                      ? const Icon(Icons.check_rounded,
-                          size: 18, color: Colors.white)
-                      : null,
+                    // 하루 2회 이상 완료한 날만 횟수 배지를 붙인다.
+                    if (widget.clears >= 2)
+                      Positioned(
+                        top: -5,
+                        right: -7,
+                        child: Container(
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 3),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: cs.surface,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: accent, width: 1),
+                          ),
+                          child: Text(
+                            '${widget.clears}',
+                            style: TextStyle(
+                              fontSize: 10,
+                              height: 1.1,
+                              fontWeight: FontWeight.w800,
+                              color: accent,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Text(

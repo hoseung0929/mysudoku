@@ -285,10 +285,10 @@
   "recordsMetricClearRate": "Puzles completados",
   "recordsMetricPerfectRate": "Sin errores",
   "recordsSummaryMetricsFootnote": "Cada puzle cuenta una vez, con su mejor registro, y sigue tus filtros activos. El progreso compara esos puzles con el total del mismo ámbito.",
-  "recordsMetricAvgTime": "Media de mejores tiempos",
-  "recordsMetricAvgWrong": "Errores medios (mejores)",
+  "recordsMetricAvgTime": "Tiempo medio",
+  "recordsMetricAvgWrong": "Errores medios",
   "recordsByLevelTitle": "Registros por nivel",
-  "recordsByLevelSubtitle": "Toca una dificultad para ver los detalles",
+  "recordsByLevelSubtitle": "Selecciona una dificultad para comparar registros",
   "recordsByLevelEmpty": "No hay estadísticas para este filtro.",
   "recordsByLevelSectionSubtitle": "Descubre en qué niveles te sientes cada vez más cómodo.",
   "recordsLevelInfographicClearRate": "Puzles completados",
@@ -301,9 +301,9 @@
   "recordsEmptyAction": "Empezar un puzle",
   "recordsLevelEmpty": "Aún no hay puzles completados en este nivel.",
   "recordsRowBestTime": "Mejor tiempo",
-  "recordsAverageBasisNote": "Los promedios usan el mejor registro de cada puzle, no todas las partidas.",
-  "recordsCalendarTitle": "Actividad de juego",
-  "recordsCalendarSubtitle": "Tu historial de juego del último año",
+  "recordsAverageBasisNote": "Los promedios se basan en el mejor registro de cada puzle.",
+  "recordsCalendarTitle": "Actividad de todos los puzles",
+  "recordsCalendarSubtitle": "Consulta los días que completaste y tu frecuencia de juego",
   "recordsCalendarPeriod": "Últimas {weeks} semanas",
   "recordsViewAchievements": "Ver logros",
   "recordsOverallNote": "{cleared} de {total} puzles completados en todos los niveles.",
@@ -318,9 +318,9 @@
   "recordsActivityHeatmapTitle": "Actividad reciente",
   "recordsActivityHeatmapCaption": "Actividad de todos los puzles que completaste.",
   "recordsActivityTotalClearsLabel": "Completados en total",
-  "recordsActivityCurrentStreakLabel": "Racha actual",
-  "recordsActivityBestStreakLabel": "Mejor racha diaria",
-  "recordsChallengeStreakLabel": "Racha de desafíos",
+  "recordsActivityCurrentStreakLabel": "Racha de completados",
+  "recordsActivityBestStreakLabel": "Mayor racha de completados",
+  "recordsChallengeStreakLabel": "Racha del desafío de hoy",
   "recordsActivityDayCount": "{count, plural, one{{count} día} other{{count} días}}",
   "@recordsActivityDayCount": {
     "placeholders": {
@@ -737,6 +737,14 @@
       }
     }
   },
+  "levelPuzzleListTitle": "Rompecabezas · {count}",
+  "@levelPuzzleListTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "levelRecentBadge": "Reciente",
   "levelStatusInProgress": "En curso",
   "levelNoResults": "Sin resultados.",
@@ -787,8 +795,8 @@
   "savedGamesEmpty": "No hay partidas guardadas que coincidan con este filtro.",
   "savedGamesDeleteFailed": "No se pudo eliminar este puzzle. Inténtalo de nuevo.",
   "recordsMyRecordTitle": "Mi historial",
-  "recordsSummaryTotalCleared": "Total completado",
-  "recordsSummaryPerfectClears": "Completados perfectos",
+  "recordsSummaryTotalCleared": "Puzles completados",
+  "recordsSummaryPerfectClears": "Sin errores",
   "challengeMonthlyDescription": "Elige una fecha para volver a jugar un reto anterior.",
   "challengeTodayEyebrow": "Hoy",
   "gamePausedTitle": "En pausa",

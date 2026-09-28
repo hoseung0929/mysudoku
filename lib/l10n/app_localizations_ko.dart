@@ -565,16 +565,16 @@ class AppLocalizationsKo extends AppLocalizations {
       '퍼즐마다 최고 기록 한 건만 세고, 기간·난이도 필터를 반영해요. 완료 현황은 같은 범위의 전체 퍼즐 수와 비교한 값이에요.';
 
   @override
-  String get recordsMetricAvgTime => '최고 기록 평균';
+  String get recordsMetricAvgTime => '평균 클리어 시간';
 
   @override
-  String get recordsMetricAvgWrong => '최고 기록의 평균 오답';
+  String get recordsMetricAvgWrong => '평균 오답';
 
   @override
   String get recordsByLevelTitle => '난이도별 기록';
 
   @override
-  String get recordsByLevelSubtitle => '난이도를 눌러 상세 기록을 확인하세요';
+  String get recordsByLevelSubtitle => '난이도를 선택해 기록을 비교해보세요';
 
   @override
   String get recordsByLevelEmpty => '표시할 레벨 통계가 없습니다.';
@@ -614,13 +614,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsRowBestTime => '최고 기록';
 
   @override
-  String get recordsAverageBasisNote => '평균은 모든 플레이가 아니라 퍼즐별 최고 기록을 기준으로 해요.';
+  String get recordsAverageBasisNote => '평균은 퍼즐별 최고 기록 기준이에요.';
 
   @override
-  String get recordsCalendarTitle => '플레이 활동';
+  String get recordsCalendarTitle => '전체 퍼즐 활동';
 
   @override
-  String get recordsCalendarSubtitle => '최근 1년간의 플레이 기록';
+  String get recordsCalendarSubtitle => '완료한 날짜와 플레이 빈도를 확인하세요';
 
   @override
   String recordsCalendarPeriod(int weeks) {
@@ -677,13 +677,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsActivityTotalClearsLabel => '누적 완료 횟수';
 
   @override
-  String get recordsActivityCurrentStreakLabel => '현재 연속 완료 일수';
+  String get recordsActivityCurrentStreakLabel => '클리어 연속';
 
   @override
-  String get recordsActivityBestStreakLabel => '최장 연속 완료 일수';
+  String get recordsActivityBestStreakLabel => '최장 클리어 연속';
 
   @override
-  String get recordsChallengeStreakLabel => '도전 연속';
+  String get recordsChallengeStreakLabel => '오늘의 도전 연속';
 
   @override
   String recordsActivityDayCount(int count) {
@@ -1278,6 +1278,11 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String levelPuzzleListTitle(int count) {
+    return '퍼즐 목록 · $count';
+  }
+
+  @override
   String get levelRecentBadge => '최근';
 
   @override
@@ -1399,10 +1404,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsMyRecordTitle => '나의 기록';
 
   @override
-  String get recordsSummaryTotalCleared => '총 완료';
+  String get recordsSummaryTotalCleared => '완료한 퍼즐';
 
   @override
-  String get recordsSummaryPerfectClears => '완벽 완료';
+  String get recordsSummaryPerfectClears => '무오답 완료';
 
   @override
   String get challengeMonthlyDescription => '날짜를 선택해 지난 도전을 다시 풀 수 있어요.';

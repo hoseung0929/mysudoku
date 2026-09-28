@@ -20,6 +20,7 @@ import 'package:sudoku159/services/settings/notification_service.dart';
 import 'package:sudoku159/theme/app_theme.dart';
 import 'package:sudoku159/theme/app_theme_scope.dart';
 import 'package:sudoku159/navigation/root_nav_scope.dart';
+import 'package:sudoku159/navigation/tab_scroll_controller.dart';
 import 'package:sudoku159/view/home/force_update_gate.dart';
 import 'package:sudoku159/view/home/home_screen.dart';
 import 'package:sudoku159/view/home/startup_catalog_preparing_gate.dart';
@@ -220,9 +221,16 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _settingsTabLoaded = false;
   bool _isBottom = false;
 
+  /// 탭별 최상단 이동 콜백. 각 탭 화면이 자신의 ScrollController를 직접
+  /// 노출하지 않고 이 컨트롤러에 콜백만 연결한다.
+  final List<TabScrollController> _tabScrollControllers = List.generate(
+    3,
+    (_) => TabScrollController(),
+  );
+
   void _onItemTapped(int index) {
-    final isChanged = _selectedIndex != index;
-    if (!isChanged) {
+    if (_selectedIndex == index) {
+      _tabScrollControllers[index].scrollToTop();
       return;
     }
     setState(() {
@@ -259,12 +267,16 @@ class _MyHomePageState extends State<MyHomePage> {
           child: IndexedStack(
             index: _selectedIndex,
             children: [
-              const HomeScreen(),
+              HomeScreen(tabScrollController: _tabScrollControllers[0]),
               _recordsTabLoaded
-                  ? const RecordsStatisticsScreen()
+                  ? RecordsStatisticsScreen(
+                      tabScrollController: _tabScrollControllers[1],
+                    )
                   : const SizedBox.shrink(),
               _settingsTabLoaded
-                  ? const SettingsScreen()
+                  ? SettingsScreen(
+                      tabScrollController: _tabScrollControllers[2],
+                    )
                   : const SizedBox.shrink(),
             ],
           ),

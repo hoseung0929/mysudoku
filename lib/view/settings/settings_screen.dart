@@ -5,6 +5,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:sudoku159/constants/app_config.dart';
 import 'package:sudoku159/l10n/app_locale_scope.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
+import 'package:sudoku159/navigation/tab_scroll_controller.dart';
 import 'package:sudoku159/presenter/settings/settings_controller.dart';
 import 'package:sudoku159/services/onboarding/beginner_tutorial_service.dart';
 import 'package:sudoku159/services/settings/notification_service.dart';
@@ -13,6 +14,7 @@ import 'package:sudoku159/theme/app_theme_scope.dart';
 import 'package:sudoku159/theme/level_status_colors.dart';
 import 'package:sudoku159/theme/system_ui_style.dart';
 import 'package:sudoku159/view/onboarding/beginner_tutorial_screen.dart';
+import 'package:sudoku159/widgets/app_snackbar.dart';
 import 'package:sudoku159/widgets/waddling_penguin_icon.dart';
 import 'package:sudoku159/utils/app_logger.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -22,11 +24,16 @@ class SettingsScreen extends StatefulWidget {
     super.key,
     this.notificationService,
     this.tutorialService,
+    this.tabScrollController,
   });
 
   /// 테스트에서 OS 권한·실제 예약 없이 주입하기 위한 값. 기본은 실제 서비스.
   final NotificationService? notificationService;
   final BeginnerTutorialService? tutorialService;
+
+  /// 하단 설정 탭을 다시 눌렀을 때 이 화면을 최상단으로 스크롤하도록
+  /// 연결하는 콜백 창구. [MyHomePage]가 탭별로 하나씩 만들어 전달한다.
+  final TabScrollController? tabScrollController;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -59,13 +66,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
     _loadSettings();
     _scrollController.addListener(_handleScrollForStatusBar);
+    widget.tabScrollController?.attach(_scrollToTop);
   }
 
   @override
   void dispose() {
     _scrollController.removeListener(_handleScrollForStatusBar);
+    widget.tabScrollController?.detach(_scrollToTop);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  /// 설정 탭을 다시 눌렀을 때 호출된다. 이미 최상단이면 아무 것도 하지
+  /// 않고, '동작 줄이기'가 켜져 있으면 애니메이션 없이 바로 이동한다.
+  Future<void> _scrollToTop() async {
+    if (!_scrollController.hasClients) return;
+    if (_scrollController.offset <= 0) return;
+
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _scrollController.jumpTo(0);
+      return;
+    }
+
+    await _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   double _currentHeroHeight(BuildContext context) =>
@@ -136,14 +163,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (result == null || result == ReminderEnableResult.enabled) return;
     final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          result == ReminderEnableResult.denied
-              ? l10n.settingsNotificationsPermissionDenied
-              : l10n.notificationSetupFailed,
-        ),
-      ),
+    showAppSnackBar(
+      context,
+      result == ReminderEnableResult.denied
+          ? l10n.settingsNotificationsPermissionDenied
+          : l10n.notificationSetupFailed,
     );
   }
 
@@ -399,6 +423,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: ListView(
           controller: _scrollController,
+          // iOS 탄성 스크롤로 최상단에서 히어로 이미지가 아래로 밀려
+          // 보이지 않게 클램핑 물리를 쓴다.
+          physics: const ClampingScrollPhysics(),
           padding: EdgeInsets.only(bottom: _kScrollBottomPad + bottomInset),
           children: [
             _buildHeroHeader(l10n, horizontalPad, topInset, isTablet),

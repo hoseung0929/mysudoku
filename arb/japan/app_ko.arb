@@ -285,10 +285,10 @@
   "recordsMetricClearRate": "퍼즐 완료 현황",
   "recordsMetricPerfectRate": "무오답 완료 비율",
   "recordsSummaryMetricsFootnote": "퍼즐마다 최고 기록 한 건만 세고, 기간·난이도 필터를 반영해요. 완료 현황은 같은 범위의 전체 퍼즐 수와 비교한 값이에요.",
-  "recordsMetricAvgTime": "최고 기록 평균",
-  "recordsMetricAvgWrong": "최고 기록의 평균 오답",
+  "recordsMetricAvgTime": "평균 클리어 시간",
+  "recordsMetricAvgWrong": "평균 오답",
   "recordsByLevelTitle": "난이도별 기록",
-  "recordsByLevelSubtitle": "난이도를 눌러 상세 기록을 확인하세요",
+  "recordsByLevelSubtitle": "난이도를 선택해 기록을 비교해보세요",
   "recordsByLevelEmpty": "표시할 레벨 통계가 없습니다.",
   "recordsByLevelSectionSubtitle": "난이도별로 어느 구간에서 가장 편안해졌는지 볼 수 있어요.",
   "recordsLevelInfographicClearRate": "퍼즐 완료 현황",
@@ -301,9 +301,9 @@
   "recordsEmptyAction": "퍼즐 시작하기",
   "recordsLevelEmpty": "아직 완료한 기록이 없어요.",
   "recordsRowBestTime": "최고 기록",
-  "recordsAverageBasisNote": "평균은 모든 플레이가 아니라 퍼즐별 최고 기록을 기준으로 해요.",
-  "recordsCalendarTitle": "플레이 활동",
-  "recordsCalendarSubtitle": "최근 1년간의 플레이 기록",
+  "recordsAverageBasisNote": "평균은 퍼즐별 최고 기록 기준이에요.",
+  "recordsCalendarTitle": "전체 퍼즐 활동",
+  "recordsCalendarSubtitle": "완료한 날짜와 플레이 빈도를 확인하세요",
   "recordsCalendarPeriod": "최근 {weeks}주",
   "recordsViewAchievements": "업적 보기",
   "recordsOverallNote": "전체 난이도에서 {total}개 중 {cleared}개를 완료했어요.",
@@ -318,9 +318,9 @@
   "recordsActivityHeatmapTitle": "최근 활동 히트맵",
   "recordsActivityHeatmapCaption": "완료한 모든 퍼즐의 활동 기록이에요.",
   "recordsActivityTotalClearsLabel": "누적 완료 횟수",
-  "recordsActivityCurrentStreakLabel": "현재 연속",
-  "recordsActivityBestStreakLabel": "최장 연속 완료 일수",
-  "recordsChallengeStreakLabel": "도전 연속",
+  "recordsActivityCurrentStreakLabel": "클리어 연속",
+  "recordsActivityBestStreakLabel": "최장 클리어 연속",
+  "recordsChallengeStreakLabel": "오늘의 도전 연속",
   "recordsActivityDayCount": "{count}일",
   "@recordsActivityDayCount": {
     "placeholders": {
@@ -737,6 +737,14 @@
       }
     }
   },
+  "levelPuzzleListTitle": "퍼즐 목록 · {count}",
+  "@levelPuzzleListTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "levelRecentBadge": "최근",
   "levelStatusInProgress": "진행 중",
   "levelNoResults": "해당 항목이 없습니다.",
@@ -787,8 +795,8 @@
   "savedGamesEmpty": "선택한 조건에 맞는 저장 게임이 없어요.",
   "savedGamesDeleteFailed": "삭제하지 못했어요. 다시 시도해 주세요.",
   "recordsMyRecordTitle": "나의 기록",
-  "recordsSummaryTotalCleared": "총 완료",
-  "recordsSummaryPerfectClears": "완벽 완료",
+  "recordsSummaryTotalCleared": "완료한 퍼즐",
+  "recordsSummaryPerfectClears": "무오답 완료",
   "challengeMonthlyDescription": "날짜를 선택해 지난 도전을 다시 풀 수 있어요.",
   "challengeTodayEyebrow": "오늘의 흐름",
   "gamePausedTitle": "일시정지됨",

@@ -730,61 +730,110 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
 
   // ─── Summary / continue / start ───────────────────────────────────────────
 
+  String _levelProgressBackground(SudokuLevel level) {
+    switch (level.difficulty) {
+      case 1:
+        return 'assets/images/level_beginner_progress_card_bg.png';
+      case 2:
+        return 'assets/images/level_intermediate_progress_card_bg.png';
+      case 3:
+        return 'assets/images/level_advanced_progress_card_bg.png';
+      case 4:
+        return 'assets/images/level_expert_progress_card_bg.png';
+      default:
+        return 'assets/images/level_master_progress_card_bg.png';
+    }
+  }
+
   Widget _buildSummary({required int totalCount}) {
     final level = _currentLevelInfo();
     final l10n = AppLocalizations.of(context)!;
-    final colors = LevelStatusPalette.of(context);
     final cleared = _clearedGameNumbers[level.name]?.length ?? 0;
     final progress = totalCount == 0 ? 0.0 : cleared / totalCount;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-      decoration: BoxDecoration(
-        color: colors.cardBackground,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colors.defaultBorder),
-      ),
-      child: Row(
+    final cardHeight =
+        (MediaQuery.sizeOf(context).width / 3).clamp(124.0, 160.0);
+    // 배경 이미지가 밝아서 다크 모드에서도 진한 글자색을 고정한다.
+    const textColor = Color(0xFF3F3B55);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: Stack(
         children: [
-          if (_levelImage(level) != null)
-            Image.asset(_levelImage(level)!, width: 36, height: 36)
-          else
-            Icon(_levelIcon(level), size: 36, color: _levelAccentColor(level)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text.rich(
-                  TextSpan(
-                    style: TextStyle(fontSize: 13, color: colors.secondaryText),
+          Positioned.fill(
+            child: Image.asset(
+              _levelProgressBackground(level),
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+            ),
+          ),
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    Color.fromRGBO(255, 255, 255, 0.52),
+                    Color.fromRGBO(255, 255, 255, 0.16),
+                    Color.fromRGBO(255, 255, 255, 0.0),
+                  ],
+                  stops: [0.0, 0.38, 0.65],
+                ),
+              ),
+            ),
+          ),
+          ConstrainedBox(
+            // 큰 글자 설정에서는 카드가 내용에 맞게 늘어나도록 최소 높이만 둔다.
+            constraints: BoxConstraints(minHeight: cardHeight),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: FractionallySizedBox(
+                widthFactor: 0.55,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TextSpan(
-                        text: '$cleared',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: colors.primaryPurple,
+                      Text.rich(
+                        TextSpan(
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: textColor,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: '$cleared',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF5B4FA8),
+                              ),
+                            ),
+                            TextSpan(
+                              text:
+                                  ' ${l10n.levelProgressCompleted(totalCount)}',
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ],
                         ),
                       ),
-                      TextSpan(
-                        text: ' ${l10n.levelProgressCompleted(totalCount)}',
-                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: LinearProgressIndicator(
+                          minHeight: 6,
+                          value: progress,
+                          backgroundColor:
+                              const Color.fromRGBO(83, 69, 164, 0.12),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            _levelAccentColor(level),
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 7),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: LinearProgressIndicator(
-                    minHeight: 5,
-                    value: progress,
-                    backgroundColor: colors.progressTrack,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      _levelAccentColor(level),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ],
@@ -924,61 +973,172 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
 
   // ─── Filter chips ─────────────────────────────────────────────────────────
 
+  static const _filterChipTextStyle = TextStyle(
+    fontSize: 12.5,
+    fontWeight: FontWeight.w600,
+  );
+
   Widget _buildFilterChips(List<int> games) {
-    // 가로 스크롤 대신 줄바꿈: 개수·긴 번역이 붙어도 칩이 화면 밖으로 숨지 않는다.
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
+    final colors = LevelStatusPalette.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final resultCount = _filteredGamesFor(_selectedFilter, games).length;
+    const filters = _PuzzleFilter.values;
+    final counts = [
+      for (final f in filters) _filteredGamesFor(f, games).length,
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final filter in _PuzzleFilter.values)
-          _buildFilterChip(filter, _filteredGamesFor(filter, games).length),
+        Container(
+          padding: const EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            color: colors.filterSelectedBackground,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              const gap = 4.0;
+              final slotWidth =
+                  (constraints.maxWidth - gap * (filters.length - 1)) /
+                      filters.length;
+              // 모든 라벨이 같은 폭 칸에 한 줄로 들어갈 때만 하이라이트가
+              // 이동한다. 긴 번역·큰 글자에서는 줄바꿈 Wrap으로 되돌린다.
+              final scaler = MediaQuery.textScalerOf(context);
+              var fits = true;
+              for (var i = 0; i < filters.length; i++) {
+                final painter = TextPainter(
+                  text: TextSpan(
+                    text: '${_filterLabel(filters[i])} ${counts[i]}',
+                    style: _filterChipTextStyle,
+                  ),
+                  textDirection: Directionality.of(context),
+                  textScaler: scaler,
+                  maxLines: 1,
+                )..layout();
+                if (painter.width + 12 > slotWidth) fits = false;
+                painter.dispose();
+              }
+              if (!fits) {
+                return Wrap(
+                  spacing: gap,
+                  runSpacing: gap,
+                  children: [
+                    for (var i = 0; i < filters.length; i++)
+                      _buildFilterChip(filters[i], counts[i], slide: false),
+                  ],
+                );
+              }
+              final selectedIndex = filters.indexOf(_selectedFilter);
+              final duration = MediaQuery.disableAnimationsOf(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 220);
+              return Stack(
+                children: [
+                  AnimatedPositioned(
+                    duration: duration,
+                    curve: Curves.easeOutCubic,
+                    left: selectedIndex * (slotWidth + gap),
+                    width: slotWidth,
+                    top: 0,
+                    bottom: 0,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: colors.cardBackground,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x1A000000),
+                            blurRadius: 4,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      for (var i = 0; i < filters.length; i++) ...[
+                        if (i > 0) const SizedBox(width: gap),
+                        Expanded(
+                          child: _buildFilterChip(
+                            filters[i],
+                            counts[i],
+                            slide: true,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 14),
+        Text(
+          l10n.levelPuzzleListTitle(resultCount),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: colors.secondaryText,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildFilterChip(_PuzzleFilter filter, int count) {
+  Widget _buildFilterChip(
+    _PuzzleFilter filter,
+    int count, {
+    required bool slide,
+  }) {
     final isSelected = _selectedFilter == filter;
     final colors = LevelStatusPalette.of(context);
     final label = '${_filterLabel(filter)} $count';
+    final duration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 150);
+    final textStyle = _filterChipTextStyle.copyWith(
+      color: isSelected ? colors.primaryPurple : colors.filterUnselectedText,
+    );
+    final text = slide
+        ? AnimatedDefaultTextStyle(
+            duration: duration,
+            style: textStyle,
+            child: Text(label, maxLines: 1, textAlign: TextAlign.center),
+          )
+        : Text(label, maxLines: 1, style: textStyle);
     return Semantics(
       button: true,
       selected: isSelected,
       label: label,
       excludeSemantics: true,
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () => _selectFilter(filter),
         child: AnimatedContainer(
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 150),
-          constraints: const BoxConstraints(minHeight: 44),
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? colors.filterSelectedBackground
-                : colors.cardBackground,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: isSelected
-                  ? colors.filterSelectedBorder
-                  : colors.defaultBorder,
-              width: 1,
-            ),
-          ),
+          duration: duration,
+          constraints: const BoxConstraints(minHeight: 48),
+          padding: EdgeInsets.symmetric(horizontal: slide ? 6 : 14),
+          decoration: slide
+              ? null
+              : BoxDecoration(
+                  color:
+                      isSelected ? colors.cardBackground : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: isSelected
+                      ? const [
+                          BoxShadow(
+                            color: Color(0x1A000000),
+                            blurRadius: 4,
+                            offset: Offset(0, 1),
+                          ),
+                        ]
+                      : null,
+                ),
           child: Center(
-            // 칩이 줄 전체 폭으로 늘어나지 않고 글자 폭에 맞게 줄바꿈되도록 한다.
-            widthFactor: 1,
-            child: Text(
-              label,
-              maxLines: 1,
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-                color: isSelected
-                    ? colors.primaryPurple
-                    : colors.filterUnselectedText,
-              ),
-            ),
+            widthFactor: slide ? null : 1,
+            child: text,
           ),
         ),
       ),
@@ -1306,23 +1466,6 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
   // 마스코트 이미지가 레벨과 무관하게 항상 보라색이라, 화면 전체 accent도 통일.
   Color _levelAccentColor(SudokuLevel level) {
     return LevelStatusPalette.of(context).primaryPurple;
-  }
-
-  IconData _levelIcon(SudokuLevel level) {
-    switch (level.difficulty) {
-      case 1:
-        return Icons.eco_rounded;
-      case 2:
-        return Icons.local_fire_department_rounded;
-      case 3:
-        return Icons.star_rounded;
-      case 4:
-        return Icons.diamond_rounded;
-      case 5:
-        return Icons.emoji_events_rounded;
-      default:
-        return Icons.eco_rounded;
-    }
   }
 
   String? _levelImage(SudokuLevel level) {

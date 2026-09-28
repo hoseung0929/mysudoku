@@ -285,10 +285,10 @@
   "recordsMetricClearRate": "谜题完成情况",
   "recordsMetricPerfectRate": "无失误占比",
   "recordsSummaryMetricsFootnote": "每道谜题只按其最佳记录计一次，并遵循当前筛选。完成情况是与同一范围内谜题总数的比较。",
-  "recordsMetricAvgTime": "最佳用时平均",
-  "recordsMetricAvgWrong": "最佳记录平均失误",
+  "recordsMetricAvgTime": "平均通关用时",
+  "recordsMetricAvgWrong": "平均失误",
   "recordsByLevelTitle": "按难度的记录",
-  "recordsByLevelSubtitle": "点击难度查看详细记录",
+  "recordsByLevelSubtitle": "选择难度来比较记录",
   "recordsByLevelEmpty": "该筛选条件下暂无统计数据。",
   "recordsByLevelSectionSubtitle": "查看你在哪些难度上越来越得心应手。",
   "recordsLevelInfographicClearRate": "谜题完成情况",
@@ -301,9 +301,9 @@
   "recordsEmptyAction": "开始解题",
   "recordsLevelEmpty": "该难度还没有完成记录。",
   "recordsRowBestTime": "最佳用时",
-  "recordsAverageBasisNote": "平均值基于每道谜题的最佳记录，而不是每一次游玩。",
-  "recordsCalendarTitle": "游玩活动",
-  "recordsCalendarSubtitle": "最近一年的游玩记录",
+  "recordsAverageBasisNote": "平均值以每道谜题的最佳记录为准。",
+  "recordsCalendarTitle": "全部谜题活动",
+  "recordsCalendarSubtitle": "查看完成日期和游玩频率",
   "recordsCalendarPeriod": "最近 {weeks} 周",
   "recordsViewAchievements": "查看成就",
   "recordsOverallNote": "所有难度共 {total} 道谜题，已完成 {cleared} 道。",
@@ -318,9 +318,9 @@
   "recordsActivityHeatmapTitle": "近期活动",
   "recordsActivityHeatmapCaption": "已完成的所有拼图的活动记录。",
   "recordsActivityTotalClearsLabel": "累计完成次数",
-  "recordsActivityCurrentStreakLabel": "当前连续",
-  "recordsActivityBestStreakLabel": "最长连续天数",
-  "recordsChallengeStreakLabel": "挑战连续",
+  "recordsActivityCurrentStreakLabel": "连续通关",
+  "recordsActivityBestStreakLabel": "最长连续通关",
+  "recordsChallengeStreakLabel": "今日挑战连续",
   "recordsActivityDayCount": "{count} 天",
   "@recordsActivityDayCount": {
     "placeholders": {
@@ -737,6 +737,14 @@
       }
     }
   },
+  "levelPuzzleListTitle": "谜题列表 · {count}",
+  "@levelPuzzleListTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "levelRecentBadge": "最近",
   "levelStatusInProgress": "进行中",
   "levelNoResults": "暂无结果。",
@@ -787,8 +795,8 @@
   "savedGamesEmpty": "没有符合该筛选条件的存档。",
   "savedGamesDeleteFailed": "删除失败,请重试。",
   "recordsMyRecordTitle": "我的记录",
-  "recordsSummaryTotalCleared": "总完成数",
-  "recordsSummaryPerfectClears": "完美通关",
+  "recordsSummaryTotalCleared": "已完成谜题",
+  "recordsSummaryPerfectClears": "无失误通关",
   "challengeMonthlyDescription": "选择日期即可重新挑战过去的题目。",
   "challengeTodayEyebrow": "今日动态",
   "gamePausedTitle": "已暂停",

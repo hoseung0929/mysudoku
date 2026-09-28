@@ -599,17 +599,17 @@ class AppLocalizationsEs extends AppLocalizations {
       'Cada puzle cuenta una vez, con su mejor registro, y sigue tus filtros activos. El progreso compara esos puzles con el total del mismo ámbito.';
 
   @override
-  String get recordsMetricAvgTime => 'Media de mejores tiempos';
+  String get recordsMetricAvgTime => 'Tiempo medio';
 
   @override
-  String get recordsMetricAvgWrong => 'Errores medios (mejores)';
+  String get recordsMetricAvgWrong => 'Errores medios';
 
   @override
   String get recordsByLevelTitle => 'Registros por nivel';
 
   @override
   String get recordsByLevelSubtitle =>
-      'Toca una dificultad para ver los detalles';
+      'Selecciona una dificultad para comparar registros';
 
   @override
   String get recordsByLevelEmpty => 'No hay estadísticas para este filtro.';
@@ -653,13 +653,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get recordsAverageBasisNote =>
-      'Los promedios usan el mejor registro de cada puzle, no todas las partidas.';
+      'Los promedios se basan en el mejor registro de cada puzle.';
 
   @override
-  String get recordsCalendarTitle => 'Actividad de juego';
+  String get recordsCalendarTitle => 'Actividad de todos los puzles';
 
   @override
-  String get recordsCalendarSubtitle => 'Tu historial de juego del último año';
+  String get recordsCalendarSubtitle =>
+      'Consulta los días que completaste y tu frecuencia de juego';
 
   @override
   String recordsCalendarPeriod(int weeks) {
@@ -718,13 +719,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recordsActivityTotalClearsLabel => 'Completados en total';
 
   @override
-  String get recordsActivityCurrentStreakLabel => 'Racha actual';
+  String get recordsActivityCurrentStreakLabel => 'Racha de completados';
 
   @override
-  String get recordsActivityBestStreakLabel => 'Mejor racha diaria';
+  String get recordsActivityBestStreakLabel => 'Mayor racha de completados';
 
   @override
-  String get recordsChallengeStreakLabel => 'Racha de desafíos';
+  String get recordsChallengeStreakLabel => 'Racha del desafío de hoy';
 
   @override
   String recordsActivityDayCount(int count) {
@@ -1375,6 +1376,11 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String levelPuzzleListTitle(int count) {
+    return 'Rompecabezas · $count';
+  }
+
+  @override
   String get levelRecentBadge => 'Reciente';
 
   @override
@@ -1501,10 +1507,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recordsMyRecordTitle => 'Mi historial';
 
   @override
-  String get recordsSummaryTotalCleared => 'Total completado';
+  String get recordsSummaryTotalCleared => 'Puzles completados';
 
   @override
-  String get recordsSummaryPerfectClears => 'Completados perfectos';
+  String get recordsSummaryPerfectClears => 'Sin errores';
 
   @override
   String get challengeMonthlyDescription =>

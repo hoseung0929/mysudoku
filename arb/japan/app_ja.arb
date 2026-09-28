@@ -285,10 +285,10 @@
   "recordsMetricClearRate": "パズル完了状況",
   "recordsMetricPerfectRate": "ミスなし完了の割合",
   "recordsSummaryMetricsFootnote": "パズルごとにベスト記録1件だけを数え、期間・レベルのフィルターを反映します。完了状況は同じ範囲の全パズル数との比較です。",
-  "recordsMetricAvgTime": "ベスト記録の平均",
-  "recordsMetricAvgWrong": "ベスト記録の平均ミス",
+  "recordsMetricAvgTime": "平均クリア時間",
+  "recordsMetricAvgWrong": "平均ミス",
   "recordsByLevelTitle": "レベル別の記録",
-  "recordsByLevelSubtitle": "難易度をタップして詳細を確認しましょう",
+  "recordsByLevelSubtitle": "難易度を選んで記録を比べてみましょう",
   "recordsByLevelEmpty": "表示するレベル統計がありません。",
   "recordsByLevelSectionSubtitle": "難易度別にどのレベルで成長を感じているか確認できます。",
   "recordsLevelInfographicClearRate": "パズル完了状況",
@@ -301,9 +301,9 @@
   "recordsEmptyAction": "パズルを始める",
   "recordsLevelEmpty": "このレベルの完了記録はまだありません。",
   "recordsRowBestTime": "ベスト記録",
-  "recordsAverageBasisNote": "平均はすべてのプレイではなく、パズルごとのベスト記録を基にしています。",
-  "recordsCalendarTitle": "プレイ活動",
-  "recordsCalendarSubtitle": "直近1年間のプレイ記録",
+  "recordsAverageBasisNote": "平均はパズルごとのベスト記録が基準です。",
+  "recordsCalendarTitle": "全パズルの活動",
+  "recordsCalendarSubtitle": "クリアした日とプレイ頻度を確認しましょう",
   "recordsCalendarPeriod": "直近{weeks}週",
   "recordsViewAchievements": "実績を見る",
   "recordsOverallNote": "全レベルで{total}問中{cleared}問を完了しました。",
@@ -318,9 +318,9 @@
   "recordsActivityHeatmapTitle": "最近のアクティビティ",
   "recordsActivityHeatmapCaption": "完了したすべてのパズルの活動記録です。",
   "recordsActivityTotalClearsLabel": "累計クリア回数",
-  "recordsActivityCurrentStreakLabel": "現在の連続",
-  "recordsActivityBestStreakLabel": "最長の連続日数",
-  "recordsChallengeStreakLabel": "チャレンジ連続",
+  "recordsActivityCurrentStreakLabel": "クリア連続",
+  "recordsActivityBestStreakLabel": "最長クリア連続",
+  "recordsChallengeStreakLabel": "今日のチャレンジ連続",
   "recordsActivityDayCount": "{count}日",
   "@recordsActivityDayCount": {
     "placeholders": {
@@ -737,6 +737,14 @@
       }
     }
   },
+  "levelPuzzleListTitle": "パズル一覧 · {count}",
+  "@levelPuzzleListTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "levelRecentBadge": "最近",
   "levelStatusInProgress": "進行中",
   "levelNoResults": "該当なし",
@@ -787,8 +795,8 @@
   "savedGamesEmpty": "この条件に一致する保存済みゲームはありません。",
   "savedGamesDeleteFailed": "削除できませんでした。もう一度お試しください。",
   "recordsMyRecordTitle": "私の記録",
-  "recordsSummaryTotalCleared": "累計クリア",
-  "recordsSummaryPerfectClears": "パーフェクトクリア",
+  "recordsSummaryTotalCleared": "クリアしたパズル",
+  "recordsSummaryPerfectClears": "ミスなしクリア",
   "challengeMonthlyDescription": "日付を選んで過去のチャレンジをもう一度プレイできます。",
   "challengeTodayEyebrow": "今日の流れ",
   "gamePausedTitle": "一時停止中",

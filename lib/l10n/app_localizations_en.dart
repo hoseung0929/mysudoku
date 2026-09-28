@@ -598,16 +598,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Each puzzle counts once, using its best record, and follows your active filters. Completion compares those puzzles with the total number of puzzles in the same scope.';
 
   @override
-  String get recordsMetricAvgTime => 'Avg. best time';
+  String get recordsMetricAvgTime => 'Avg. clear time';
 
   @override
-  String get recordsMetricAvgWrong => 'Avg. mistakes (best runs)';
+  String get recordsMetricAvgWrong => 'Avg. mistakes';
 
   @override
   String get recordsByLevelTitle => 'Records by level';
 
   @override
-  String get recordsByLevelSubtitle => 'Tap a difficulty to see its details';
+  String get recordsByLevelSubtitle => 'Select a difficulty to compare records';
 
   @override
   String get recordsByLevelEmpty => 'No stats for this filter.';
@@ -650,13 +650,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recordsAverageBasisNote =>
-      'Averages use each puzzle\'s best record, not every play.';
+      'Averages are based on each puzzle\'s best record.';
 
   @override
-  String get recordsCalendarTitle => 'Play activity';
+  String get recordsCalendarTitle => 'All puzzle activity';
 
   @override
-  String get recordsCalendarSubtitle => 'Your play history from the last year';
+  String get recordsCalendarSubtitle =>
+      'See which days you cleared puzzles and how often you played';
 
   @override
   String recordsCalendarPeriod(int weeks) {
@@ -714,13 +715,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsActivityTotalClearsLabel => 'Total completions';
 
   @override
-  String get recordsActivityCurrentStreakLabel => 'Current streak';
+  String get recordsActivityCurrentStreakLabel => 'Clear streak';
 
   @override
-  String get recordsActivityBestStreakLabel => 'Best daily streak';
+  String get recordsActivityBestStreakLabel => 'Longest clear streak';
 
   @override
-  String get recordsChallengeStreakLabel => 'Challenge streak';
+  String get recordsChallengeStreakLabel => 'Today\'s challenge streak';
 
   @override
   String recordsActivityDayCount(int count) {
@@ -1363,6 +1364,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String levelPuzzleListTitle(int count) {
+    return 'Puzzles · $count';
+  }
+
+  @override
   String get levelRecentBadge => 'Recent';
 
   @override
@@ -1488,10 +1494,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsMyRecordTitle => 'My record';
 
   @override
-  String get recordsSummaryTotalCleared => 'Total cleared';
+  String get recordsSummaryTotalCleared => 'Puzzles cleared';
 
   @override
-  String get recordsSummaryPerfectClears => 'Perfect clears';
+  String get recordsSummaryPerfectClears => 'Mistake-free clears';
 
   @override
   String get challengeMonthlyDescription =>

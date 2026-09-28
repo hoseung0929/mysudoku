@@ -135,4 +135,73 @@ void main() {
     );
     expect(identical(recordsStateBefore, recordsStateAfter), isTrue);
   });
+
+  // 화면 하위의 스크롤 가능한 위젯(ListView/SingleChildScrollView 등)을 찾는다.
+  Finder scrollableIn(Finder screen) =>
+      find.descendant(of: screen, matching: find.byType(Scrollable)).first;
+
+  double scrollOffsetIn(WidgetTester tester, Finder screen) =>
+      tester.state<ScrollableState>(scrollableIn(screen)).position.pixels;
+
+  testWidgets(
+      're-tapping the current tab scrolls it back to the top without '
+      'recreating the screen', (tester) async {
+    await pumpApp(tester);
+    await tester.tap(settingsTab());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final settingsScreen = find.byType(SettingsScreen);
+    final stateBefore = tester.state<State<SettingsScreen>>(settingsScreen);
+
+    // 아래로 스크롤해서 최상단이 아니게 만든다.
+    await tester.drag(scrollableIn(settingsScreen), const Offset(0, -400));
+    await tester.pump();
+    expect(scrollOffsetIn(tester, settingsScreen), greaterThan(0));
+
+    // 같은 탭(설정)을 다시 누른다: 화면을 새로 만들지 않고 최상단으로만 이동.
+    await tester.tap(settingsTab());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(scrollOffsetIn(tester, settingsScreen), 0);
+    final stateAfter = tester.state<State<SettingsScreen>>(settingsScreen);
+    expect(identical(stateBefore, stateAfter), isTrue);
+  });
+
+  testWidgets(
+      're-tapping the current tab while already at the top does nothing '
+      'and raises no error', (tester) async {
+    await pumpApp(tester);
+    await tester.tap(homeTab());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    await tester.tap(homeTab());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(HomeScreen), findsOneWidget);
+  });
+
+  testWidgets('rapidly re-tapping the current tab raises no exception',
+      (tester) async {
+    await pumpApp(tester);
+    await tester.tap(recordsTab());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final recordsScreen = find.byType(RecordsStatisticsScreen);
+    await tester.drag(scrollableIn(recordsScreen), const Offset(0, -400));
+    await tester.pump();
+
+    for (var i = 0; i < 5; i++) {
+      await tester.tap(recordsTab());
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(tester.takeException(), isNull);
+  });
 }

@@ -88,9 +88,10 @@ class BottomNavBar extends StatelessWidget {
                           child: _BottomNavButton(
                             data: items[index],
                             selected: selectedIndex == index,
-                            onTap: selectedIndex == index
-                                ? null
-                                : () => onItemTapped(index),
+                            // 이미 선택된 탭도 다시 누를 수 있어야 한다 —
+                            // MyHomePage._onItemTapped가 재선택을 감지해
+                            // 해당 화면을 최상단으로 스크롤한다.
+                            onTap: () => onItemTapped(index),
                           ),
                         ),
                     ],

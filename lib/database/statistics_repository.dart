@@ -107,12 +107,19 @@ class StatisticsRepository {
     final totalAvgWrong =
         (totalAvgWrongResult.first['avg_wrong'] as num?)?.toDouble() ?? 0.0;
 
+    // 오답 없이 완료한 기록 수
+    final perfectResult = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM clear_records WHERE wrong_count = 0',
+    );
+    final perfectClears = Sqflite.firstIntValue(perfectResult) ?? 0;
+
     // 전체 클리어율
     final totalClearRate =
         totalGames > 0 ? (totalCleared / totalGames) * 100 : 0.0;
 
     return {
       'total_cleared': totalCleared,
+      'perfect_clears': perfectClears,
       'total_games': totalGames,
       'total_clear_rate': totalClearRate,
       'total_average_time': totalAvgTime,

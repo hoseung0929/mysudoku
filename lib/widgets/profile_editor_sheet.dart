@@ -79,13 +79,15 @@ class _ProfileEditorContentState extends State<_ProfileEditorContent> {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final safeBottom = MediaQuery.of(context).viewPadding.bottom;
     final isTablet = MediaQuery.of(context).size.width > 600;
 
     final hasImage = !_useDefaultProfile &&
         _draftImagePath != null &&
         File(_draftImagePath!).existsSync();
 
-    return Center(
+    return Align(
+      alignment: Alignment.bottomCenter,
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: isTablet ? 480 : double.infinity,
@@ -112,7 +114,12 @@ class _ProfileEditorContentState extends State<_ProfileEditorContent> {
               ),
               Flexible(
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(20, 8, 20, bottomInset + 20),
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    8,
+                    20,
+                    (bottomInset > 0 ? bottomInset : safeBottom) + 20,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

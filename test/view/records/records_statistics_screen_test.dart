@@ -39,6 +39,7 @@ class _FakeChallengeProgressService extends ChallengeProgressService {
     this.streakDays = 0,
     this.throwOnLoad = false,
     this.throwOnMonthCalendar = false,
+    this.hasAnyCompletion = false,
     String? targetLevel,
     int? targetGameNumber,
   })  : targetLevel = targetLevel ?? SudokuLevel.levels.first.name,
@@ -47,8 +48,12 @@ class _FakeChallengeProgressService extends ChallengeProgressService {
   final int streakDays;
   final bool throwOnLoad;
   final bool throwOnMonthCalendar;
+  final bool hasAnyCompletion;
   final String targetLevel;
   final int targetGameNumber;
+
+  @override
+  Future<bool> hasCompletedAnyChallenge() async => hasAnyCompletion;
 
   @override
   Future<ChallengeProgressSummary> load({
@@ -328,7 +333,9 @@ void main() {
         findsOneWidget);
     expect(find.text('00:00'), findsNothing);
     expect(find.text('Records by level'), findsNothing);
-    expect(find.text('Play activity'), findsNothing);
+    expect(find.text('All puzzle activity'), findsNothing);
+    // 일반 기록도, 도전 기록도 전혀 없으면 도전 달력도 함께 숨긴다.
+    expect(find.text('Challenge history'), findsNothing);
 
     await tester.tap(find.text('Start a puzzle'));
     expect(tab, 0); // 홈 탭(실제 시작 경로)
@@ -346,7 +353,7 @@ void main() {
     expect(heroY, lessThan(y('This week')));
     expect(y('This week'), lessThan(y('Records by level')));
     expect(y('Records by level'), lessThan(y('Challenge history')));
-    expect(y('Challenge history'), lessThan(y('Play activity')));
+    expect(y('Challenge history'), lessThan(y('All puzzle activity')));
     expect(find.text('View achievements'), findsNothing);
 
     // 이번 주 요약: 오늘 이벤트 2건 → 활동 1일 · 완료 2판(반복 포함 횟수)
@@ -358,12 +365,12 @@ void main() {
     expect(find.text('05:00'), findsOneWidget); // best
     expect(find.text('06:50'), findsOneWidget); // (520+300)/2 = 410s
     expect(find.text('Puzzle completion'), findsOneWidget);
-    expect(find.text('Avg. best time'), findsOneWidget);
-    expect(find.textContaining("Averages use each puzzle's best record"),
+    expect(find.text('Avg. clear time'), findsOneWidget);
+    expect(find.textContaining("Averages are based on each puzzle's best record"),
         findsOneWidget);
     // "나의 기록" 요약 카드: 총 완료·완벽 완료·연속 기록.
     expect(find.text('My record'), findsOneWidget);
-    expect(find.text('Total cleared'), findsOneWidget);
+    expect(find.text('Puzzles cleared'), findsOneWidget);
     expect(
       find.descendant(
         of: find.byKey(const Key('records_summary_card')),
@@ -371,12 +378,12 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('Perfect clears'), findsOneWidget);
+    expect(find.text('Mistake-free clears'), findsOneWidget);
     // 활동 달기 기간 표기 + 최고 연속 요약 행
     expect(find.text('Last 26 weeks'), findsOneWidget);
     // 현재 연속은 요약 카드에만, 활동 달력 하단은 최고 연속만 보여준다(중복 제거).
-    expect(find.text('Current streak'), findsOneWidget);
-    expect(find.textContaining('Best daily streak'), findsOneWidget);
+    expect(find.text('Clear streak'), findsOneWidget);
+    expect(find.textContaining('Longest clear streak'), findsOneWidget);
     expect(find.byKey(const Key('records_week_artwork')), findsOneWidget);
     expect(find.byKey(const Key('records_challenge_artwork')), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -413,7 +420,7 @@ void main() {
     expect(find.text('00:00'), findsNothing);
     // 다른 섹션은 유지
     expect(find.text('This week'), findsOneWidget);
-    expect(find.text('Play activity'), findsOneWidget);
+    expect(find.text('All puzzle activity'), findsOneWidget);
   });
 
   testWidgets('tapping a weekday shows that day; tapping again clears it',
@@ -571,7 +578,7 @@ void main() {
     final motif = find.byKey(const Key('records_summary_motif'));
     expect(tester.getSize(motif), const Size.square(40));
     expect(
-      tester.getTopLeft(find.text('Total cleared')).dy,
+      tester.getTopLeft(find.text('Puzzles cleared')).dy,
       greaterThan(tester.getBottomRight(motif).dy),
     );
   });
@@ -610,7 +617,7 @@ void main() {
     expect(
       find.descendant(
         of: find.byType(ChallengeMonthlyCalendarCard),
-        matching: find.text('Challenge streak 4 days'),
+        matching: find.text("Today's challenge streak 4 days"),
       ),
       findsOneWidget,
     );
@@ -623,8 +630,8 @@ void main() {
       tester,
       () async => _data(recent: recent, events: events),
     );
-    expect(find.text('Current streak'), findsOneWidget);
-    expect(find.textContaining('Best daily streak'), findsOneWidget);
+    expect(find.text('Clear streak'), findsOneWidget);
+    expect(find.textContaining('Longest clear streak'), findsOneWidget);
   });
 
   testWidgets('tablet landscape uses two columns capped at 960 wide',
@@ -635,9 +642,9 @@ void main() {
       size: const Size(1280, 800),
     );
     final weekLeft = tester.getTopLeft(find.text('This week')).dx;
-    final calendarLeft = tester.getTopLeft(find.text('Play activity')).dx;
+    final calendarLeft = tester.getTopLeft(find.text('All puzzle activity')).dx;
     expect(calendarLeft, greaterThan(weekLeft + 300)); // 오른쪽 칼럼
-    final width = tester.getSize(find.text('Play activity')).width;
+    final width = tester.getSize(find.text('All puzzle activity')).width;
     expect(width, lessThan(960));
     // 콘텐츠 바깥 여백이 가운데 정렬을 반영 (1280 - 960)/2 = 160
     expect(weekLeft, greaterThanOrEqualTo(160));
@@ -827,7 +834,7 @@ void main() {
       );
       final weekLeftBefore = tester.getTopLeft(find.text('This week')).dx;
       final calendarLeftBefore =
-          tester.getTopLeft(find.text('Play activity')).dx;
+          tester.getTopLeft(find.text('All puzzle activity')).dx;
 
       await tester.tap(find.text('Intermediate'));
       await tester.pump();
@@ -841,7 +848,7 @@ void main() {
 
       expect(tester.getTopLeft(find.text('This week')).dx, weekLeftBefore);
       expect(
-        tester.getTopLeft(find.text('Play activity')).dx,
+        tester.getTopLeft(find.text('All puzzle activity')).dx,
         calendarLeftBefore,
       );
       expect(tester.takeException(), isNull);
@@ -855,9 +862,23 @@ void main() {
       await tester.tap(finder);
     }
 
-    testWidgets('the challenge calendar shows even with no records at all',
-        (tester) async {
+    testWidgets(
+        'the challenge calendar stays hidden with no puzzle records and no '
+        'challenge history', (tester) async {
       await pumpRecords(tester, () async => _data());
+      expect(find.text('Challenge history'), findsNothing);
+    });
+
+    testWidgets(
+        'the challenge calendar shows with no puzzle records but past '
+        'challenge completions', (tester) async {
+      await pumpRecords(
+        tester,
+        () async => _data(),
+        challengeProgressService: _FakeChallengeProgressService(
+          hasAnyCompletion: true,
+        ),
+      );
       expect(find.text('Challenge history'), findsOneWidget);
       expect(find.text('View achievements'), findsNothing);
     });
@@ -901,7 +922,7 @@ void main() {
           streakDays: 4,
         ),
       );
-      expect(find.text('Challenge streak 4 days'), findsOneWidget);
+      expect(find.text("Today's challenge streak 4 days"), findsOneWidget);
     });
 
     testWidgets(
@@ -914,7 +935,7 @@ void main() {
           throwOnLoad: true,
         ),
       );
-      expect(find.text('Challenge streak 0 days'), findsOneWidget);
+      expect(find.text("Today's challenge streak 0 days"), findsOneWidget);
       expect(find.text('My record'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });

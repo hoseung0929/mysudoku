@@ -564,16 +564,16 @@ class AppLocalizationsJa extends AppLocalizations {
       'パズルごとにベスト記録1件だけを数え、期間・レベルのフィルターを反映します。完了状況は同じ範囲の全パズル数との比較です。';
 
   @override
-  String get recordsMetricAvgTime => 'ベスト記録の平均';
+  String get recordsMetricAvgTime => '平均クリア時間';
 
   @override
-  String get recordsMetricAvgWrong => 'ベスト記録の平均ミス';
+  String get recordsMetricAvgWrong => '平均ミス';
 
   @override
   String get recordsByLevelTitle => 'レベル別の記録';
 
   @override
-  String get recordsByLevelSubtitle => '難易度をタップして詳細を確認しましょう';
+  String get recordsByLevelSubtitle => '難易度を選んで記録を比べてみましょう';
 
   @override
   String get recordsByLevelEmpty => '表示するレベル統計がありません。';
@@ -612,13 +612,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsRowBestTime => 'ベスト記録';
 
   @override
-  String get recordsAverageBasisNote => '平均はすべてのプレイではなく、パズルごとのベスト記録を基にしています。';
+  String get recordsAverageBasisNote => '平均はパズルごとのベスト記録が基準です。';
 
   @override
-  String get recordsCalendarTitle => 'プレイ活動';
+  String get recordsCalendarTitle => '全パズルの活動';
 
   @override
-  String get recordsCalendarSubtitle => '直近1年間のプレイ記録';
+  String get recordsCalendarSubtitle => 'クリアした日とプレイ頻度を確認しましょう';
 
   @override
   String recordsCalendarPeriod(int weeks) {
@@ -675,13 +675,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsActivityTotalClearsLabel => '累計クリア回数';
 
   @override
-  String get recordsActivityCurrentStreakLabel => '現在の連続';
+  String get recordsActivityCurrentStreakLabel => 'クリア連続';
 
   @override
-  String get recordsActivityBestStreakLabel => '最長の連続日数';
+  String get recordsActivityBestStreakLabel => '最長クリア連続';
 
   @override
-  String get recordsChallengeStreakLabel => 'チャレンジ連続';
+  String get recordsChallengeStreakLabel => '今日のチャレンジ連続';
 
   @override
   String recordsActivityDayCount(int count) {
@@ -1272,6 +1272,11 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String levelPuzzleListTitle(int count) {
+    return 'パズル一覧 · $count';
+  }
+
+  @override
   String get levelRecentBadge => '最近';
 
   @override
@@ -1393,10 +1398,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsMyRecordTitle => '私の記録';
 
   @override
-  String get recordsSummaryTotalCleared => '累計クリア';
+  String get recordsSummaryTotalCleared => 'クリアしたパズル';
 
   @override
-  String get recordsSummaryPerfectClears => 'パーフェクトクリア';
+  String get recordsSummaryPerfectClears => 'ミスなしクリア';
 
   @override
   String get challengeMonthlyDescription => '日付を選んで過去のチャレンジをもう一度プレイできます。';

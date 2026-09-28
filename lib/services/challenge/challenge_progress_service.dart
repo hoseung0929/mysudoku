@@ -418,6 +418,14 @@ class ChallengeProgressService {
     return matches ? day : null;
   }
 
+  /// 지금까지 완료한 '오늘의 도전'이 하나라도 있는지. 기록 화면에서 일반
+  /// 퍼즐 기록이 없을 때 도전 달력을 보여줄지 판단하는 용도로만 쓰는
+  /// 가벼운 조회(존재 여부만 필요하므로 1건만 가져온다).
+  Future<bool> hasCompletedAnyChallenge() async {
+    final dates = await _dailyRepo.getCompletionDatesDescending(limit: 1);
+    return dates.isNotEmpty;
+  }
+
   Future<bool> isTodayChallenge({
     required String levelName,
     required int gameNumber,

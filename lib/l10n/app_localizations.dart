@@ -1139,13 +1139,13 @@ abstract class AppLocalizations {
   /// No description provided for @recordsMetricAvgTime.
   ///
   /// In en, this message translates to:
-  /// **'Avg. best time'**
+  /// **'Avg. clear time'**
   String get recordsMetricAvgTime;
 
   /// No description provided for @recordsMetricAvgWrong.
   ///
   /// In en, this message translates to:
-  /// **'Avg. mistakes (best runs)'**
+  /// **'Avg. mistakes'**
   String get recordsMetricAvgWrong;
 
   /// No description provided for @recordsByLevelTitle.
@@ -1157,7 +1157,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordsByLevelSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Tap a difficulty to see its details'**
+  /// **'Select a difficulty to compare records'**
   String get recordsByLevelSubtitle;
 
   /// No description provided for @recordsByLevelEmpty.
@@ -1235,19 +1235,19 @@ abstract class AppLocalizations {
   /// No description provided for @recordsAverageBasisNote.
   ///
   /// In en, this message translates to:
-  /// **'Averages use each puzzle\'s best record, not every play.'**
+  /// **'Averages are based on each puzzle\'s best record.'**
   String get recordsAverageBasisNote;
 
   /// No description provided for @recordsCalendarTitle.
   ///
   /// In en, this message translates to:
-  /// **'Play activity'**
+  /// **'All puzzle activity'**
   String get recordsCalendarTitle;
 
   /// No description provided for @recordsCalendarSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Your play history from the last year'**
+  /// **'See which days you cleared puzzles and how often you played'**
   String get recordsCalendarSubtitle;
 
   /// No description provided for @recordsCalendarPeriod.
@@ -1337,19 +1337,19 @@ abstract class AppLocalizations {
   /// No description provided for @recordsActivityCurrentStreakLabel.
   ///
   /// In en, this message translates to:
-  /// **'Current streak'**
+  /// **'Clear streak'**
   String get recordsActivityCurrentStreakLabel;
 
   /// No description provided for @recordsActivityBestStreakLabel.
   ///
   /// In en, this message translates to:
-  /// **'Best daily streak'**
+  /// **'Longest clear streak'**
   String get recordsActivityBestStreakLabel;
 
   /// No description provided for @recordsChallengeStreakLabel.
   ///
   /// In en, this message translates to:
-  /// **'Challenge streak'**
+  /// **'Today\'s challenge streak'**
   String get recordsChallengeStreakLabel;
 
   /// No description provided for @recordsActivityDayCount.
@@ -2402,6 +2402,12 @@ abstract class AppLocalizations {
   /// **'/ {total} completed'**
   String levelProgressCompleted(int total);
 
+  /// No description provided for @levelPuzzleListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Puzzles · {count}'**
+  String levelPuzzleListTitle(int count);
+
   /// No description provided for @levelRecentBadge.
   ///
   /// In en, this message translates to:
@@ -2621,13 +2627,13 @@ abstract class AppLocalizations {
   /// No description provided for @recordsSummaryTotalCleared.
   ///
   /// In en, this message translates to:
-  /// **'Total cleared'**
+  /// **'Puzzles cleared'**
   String get recordsSummaryTotalCleared;
 
   /// No description provided for @recordsSummaryPerfectClears.
   ///
   /// In en, this message translates to:
-  /// **'Perfect clears'**
+  /// **'Mistake-free clears'**
   String get recordsSummaryPerfectClears;
 
   /// No description provided for @challengeMonthlyDescription.

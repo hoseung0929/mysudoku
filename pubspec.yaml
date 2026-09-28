@@ -86,15 +86,20 @@ flutter:
     - assets/images/app_logo.png
     - assets/images/character.png
     - assets/images/home_hero.webp
+    - assets/images/home_daily_challenge_card_bg.png
     - assets/images/records_hero.webp
     - assets/images/settings_hero.webp
-    - assets/images/records_week_penguin.png
-    - assets/images/records_challenge_penguin.png
     - assets/images/level1.png
     - assets/images/level2.png
     - assets/images/level3.png
     - assets/images/level4.png
     - assets/images/clear_white.png
+    - assets/images/level_filter_in_progress.png
+    - assets/images/level_beginner_progress_card_bg.png
+    - assets/images/level_intermediate_progress_card_bg.png
+    - assets/images/level_advanced_progress_card_bg.png
+    - assets/images/level_expert_progress_card_bg.png
+    - assets/images/level_master_progress_card_bg.png
     - assets/images/clear_black.png
     - assets/images/newbest_white.png
     - assets/images/newbest_black.png

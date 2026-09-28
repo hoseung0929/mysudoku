@@ -18,10 +18,12 @@ import 'package:sudoku159/services/game/game_state_service.dart';
 import 'package:sudoku159/services/home/level_progress_service.dart';
 import 'package:sudoku159/services/profile/profile_state_controller.dart';
 import 'package:sudoku159/navigation/app_page_route.dart';
+import 'package:sudoku159/navigation/tab_scroll_controller.dart';
 import 'package:sudoku159/utils/app_logger.dart';
 import 'package:sudoku159/view/home/level_picker_screen.dart';
 import 'package:sudoku159/view/home/saved_games_screen.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_game_screen.dart';
+import 'package:sudoku159/widgets/app_snackbar.dart';
 import 'package:sudoku159/widgets/profile_editor_sheet.dart';
 import 'package:sudoku159/theme/level_status_colors.dart';
 import 'package:sudoku159/theme/system_ui_style.dart';
@@ -35,6 +37,7 @@ class HomeScreen extends StatefulWidget {
     this.levelProgressService,
     this.databaseHelper,
     this.gameStateService,
+    this.tabScrollController,
   });
 
   /// 테스트에서 저장소를 대체하기 위한 선택적 주입. 기본값은 실제 구현.
@@ -42,6 +45,10 @@ class HomeScreen extends StatefulWidget {
   final LevelProgressService? levelProgressService;
   final DatabaseHelper? databaseHelper;
   final GameStateService? gameStateService;
+
+  /// 하단 홈 탭을 다시 눌렀을 때 이 화면을 최상단으로 스크롤하도록 연결하는
+  /// 콜백 창구. [MyHomePage]가 탭별로 하나씩 만들어 전달한다.
+  final TabScrollController? tabScrollController;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -107,6 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
     GameRecordNotifier.instance.version.addListener(_handleRecordsChanged);
     _profileState.addListener(_handleProfileStateChanged);
     _scrollController.addListener(_handleScrollForCollapsingAppBar);
+    widget.tabScrollController?.attach(_scrollToTop);
     _loadLevelTotals();
     _refreshLevels();
     _loadProfile();
@@ -244,8 +252,27 @@ class _HomeScreenState extends State<HomeScreen> {
     GameRecordNotifier.instance.version.removeListener(_handleRecordsChanged);
     _profileState.removeListener(_handleProfileStateChanged);
     _scrollController.removeListener(_handleScrollForCollapsingAppBar);
+    widget.tabScrollController?.detach(_scrollToTop);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  /// 홈 탭을 다시 눌렀을 때 호출된다. 이미 최상단이면 아무 것도 하지
+  /// 않고, '동작 줄이기'가 켜져 있으면 애니메이션 없이 바로 이동한다.
+  Future<void> _scrollToTop() async {
+    if (!_scrollController.hasClients) return;
+    if (_scrollController.offset <= 0) return;
+
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _scrollController.jumpTo(0);
+      return;
+    }
+
+    await _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   void _handleCatalogStatusChanged() {
@@ -509,12 +536,9 @@ class _HomeScreenState extends State<HomeScreen> {
         ChallengeProgressService.formatLocalDate(DateTime.now())) {
       await _loadHomeDashboard();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.homeTodayChallengeDateChanged,
-          ),
-        ),
+      showAppSnackBar(
+        context,
+        AppLocalizations.of(context)!.homeTodayChallengeDateChanged,
       );
       return;
     }
@@ -581,6 +605,9 @@ class _HomeScreenState extends State<HomeScreen> {
         Positioned.fill(
           child: SingleChildScrollView(
             controller: _scrollController,
+            // iOS 탄성 스크롤로 최상단에서 히어로 이미지가 아래로 밀려
+            // 보이지 않게 클램핑 물리를 쓴다.
+            physics: const ClampingScrollPhysics(),
             padding:
                 EdgeInsets.only(bottom: _kHomeScrollBottomPad + bottomInset),
             child: Column(
@@ -626,6 +653,9 @@ class _HomeScreenState extends State<HomeScreen> {
         Positioned.fill(
           child: SingleChildScrollView(
             controller: _scrollController,
+            // iOS 탄성 스크롤로 최상단에서 히어로 이미지가 아래로 밀려
+            // 보이지 않게 클램핑 물리를 쓴다.
+            physics: const ClampingScrollPhysics(),
             padding:
                 EdgeInsets.only(bottom: _kHomeScrollBottomPad + bottomInset),
             child: Column(
@@ -1119,123 +1149,187 @@ class _HomeScreenState extends State<HomeScreen> {
             : _todayChallengeHasSession
                 ? l10n.homeTodayChallengeResumeButton
                 : l10n.homeTodayChallengeStartButton;
+    final showArtwork = game != null &&
+        MediaQuery.sizeOf(context).width >= 300 &&
+        MediaQuery.textScalerOf(context).scale(1.0) <= 1.3;
+    final headingColor =
+        showArtwork ? const Color(0xFF625D69) : cs.onSurfaceVariant;
+    final titleColor = showArtwork ? const Color(0xFF27242C) : cs.onSurface;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: _homeCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Container(
+        width: double.infinity,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: cs.outlineVariant),
+        ),
+        child: Stack(
           children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                // 도전을 불러오지 못했거나, 좁거나 글씨가 크면 장식은 생략한다.
-                final showMotif = game != null &&
-                    constraints.maxWidth >= 300 &&
-                    MediaQuery.textScalerOf(context).scale(1.0) <= 1.3;
-                final textBlock = Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.calendar_today_rounded,
-                            size: 16, color: cs.onSurfaceVariant),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            l10n.challengeTodaysChallengeTitle,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
+            if (showArtwork)
+              Positioned.fill(
+                child: ExcludeSemantics(
+                  child: Image.asset(
+                    'assets/images/home_daily_challenge_card_bg.png',
+                    key: const Key('home_today_challenge_artwork'),
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
+                  ),
+                ),
+              ),
+            if (showArtwork)
+              const Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        Color.fromRGBO(255, 255, 255, 0.52),
+                        Color.fromRGBO(255, 255, 255, 0.16),
+                        Color.fromRGBO(255, 255, 255, 0),
                       ],
+                      stops: [0, 0.38, 0.65],
                     ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 2,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: cs.onSurface,
-                          ),
-                        ),
-                        if (status != null)
-                          Text.rich(
-                            TextSpan(
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: cs.onSurfaceVariant,
-                              ),
-                              children: [
-                                if (done)
-                                  WidgetSpan(
-                                    alignment: PlaceholderAlignment.middle,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(right: 4),
-                                      child: FadeInOnce(
-                                        enabled: _challengeJustCompleted,
-                                        onEnd: _finishChallengeCompleteFade,
-                                        child: Icon(Icons.check_circle_rounded,
-                                            size: 16, color: cs.primary),
-                                      ),
-                                    ),
-                                  ),
-                                TextSpan(text: status),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                );
-                return showMotif
-                    ? Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                  ),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: FractionallySizedBox(
+                      widthFactor: showArtwork ? 0.62 : 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Expanded(child: textBlock),
-                          const SizedBox(width: 12),
-                          SudokuMotif(
-                            size: 60,
-                            checked: done,
-                            animateCheck: done && _challengeJustCompleted,
-                            onCheckAnimated: _finishChallengeCompleteFade,
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today_rounded,
+                                size: 16,
+                                color: headingColor,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  l10n.challengeTodaysChallengeTitle,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: headingColor,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 2,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                title,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: titleColor,
+                                ),
+                              ),
+                              if (status != null)
+                                Text.rich(
+                                  TextSpan(
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: headingColor,
+                                    ),
+                                    children: [
+                                      if (done)
+                                        WidgetSpan(
+                                          alignment:
+                                              PlaceholderAlignment.middle,
+                                          child: Padding(
+                                            padding:
+                                                const EdgeInsets.only(right: 4),
+                                            child: FadeInOnce(
+                                              enabled: _challengeJustCompleted,
+                                              onEnd:
+                                                  _finishChallengeCompleteFade,
+                                              child: Icon(
+                                                  Icons.check_circle_rounded,
+                                                  size: 16,
+                                                  color: cs.primary),
+                                            ),
+                                          ),
+                                        ),
+                                      TextSpan(text: status),
+                                    ],
+                                  ),
+                                ),
+                            ],
                           ),
                         ],
-                      )
-                    : textBlock;
-              },
-            ),
-            const SizedBox(height: 12),
-            // 완료했다면 시작을 재촉하지 않도록 보조 버튼으로 낮춘다.
-            if (done && game != null)
-              OutlinedButton(
-                onPressed: busy ? null : _openTodayChallenge,
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(46),
-                ),
-                child: Text(buttonLabel, textAlign: TextAlign.center),
-              )
-            else
-              // '난이도 선택'(주 버튼, 검은색)과 위계를 구분하기 위해 연한
-              // 보라색 배경의 보조 버튼으로 표시한다.
-              FilledButton(
-                onPressed: busy ? null : _openTodayChallenge,
-                style: FilledButton.styleFrom(
-                  backgroundColor:
-                      LevelStatusPalette.of(context).completedBackground,
-                  foregroundColor: LevelStatusPalette.of(context).primaryPurple,
-                  minimumSize: const Size.fromHeight(46),
-                ),
-                child: Text(buttonLabel, textAlign: TextAlign.center),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // 오른쪽 그림(펭귄·편지)을 가리지 않도록 버튼 폭을 왼쪽으로 제한한다.
+                  // 좁아서 글이 잘릴 수 있으면 전체 폭으로 되돌린다.
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final narrow =
+                          showArtwork && constraints.maxWidth * 0.62 >= 180;
+                      final button = done && game != null
+                          ? OutlinedButton(
+                              onPressed: busy ? null : _openTodayChallenge,
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size.fromHeight(44),
+                              ),
+                              child: Text(buttonLabel,
+                                  textAlign: TextAlign.center),
+                            )
+                          // '난이도 선택'(주 버튼, 검은색)과 위계를 구분하기 위해 연한
+                          // 보라색 배경의 보조 버튼으로 표시한다.
+                          : FilledButton(
+                              onPressed: busy ? null : _openTodayChallenge,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: LevelStatusPalette.of(context)
+                                    .completedBackground,
+                                foregroundColor: LevelStatusPalette.of(context)
+                                    .primaryPurple,
+                                // 탭 직후 busy 상태에서도 배경이 비치지 않도록 유지한다.
+                                disabledBackgroundColor:
+                                    LevelStatusPalette.of(context)
+                                        .completedBackground,
+                                disabledForegroundColor:
+                                    LevelStatusPalette.of(context)
+                                        .primaryPurple,
+                                minimumSize: const Size.fromHeight(44),
+                              ),
+                              child: Text(buttonLabel,
+                                  textAlign: TextAlign.center),
+                            );
+                      return narrow
+                          ? Align(
+                              alignment: Alignment.centerLeft,
+                              child: FractionallySizedBox(
+                                widthFactor: 0.62,
+                                child: button,
+                              ),
+                            )
+                          : button;
+                    },
+                  ),
+                ],
               ),
+            ),
           ],
         ),
       ),

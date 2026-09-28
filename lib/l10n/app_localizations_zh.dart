@@ -561,16 +561,16 @@ class AppLocalizationsZh extends AppLocalizations {
       '每道谜题只按其最佳记录计一次，并遵循当前筛选。完成情况是与同一范围内谜题总数的比较。';
 
   @override
-  String get recordsMetricAvgTime => '最佳用时平均';
+  String get recordsMetricAvgTime => '平均通关用时';
 
   @override
-  String get recordsMetricAvgWrong => '最佳记录平均失误';
+  String get recordsMetricAvgWrong => '平均失误';
 
   @override
   String get recordsByLevelTitle => '按难度的记录';
 
   @override
-  String get recordsByLevelSubtitle => '点击难度查看详细记录';
+  String get recordsByLevelSubtitle => '选择难度来比较记录';
 
   @override
   String get recordsByLevelEmpty => '该筛选条件下暂无统计数据。';
@@ -609,13 +609,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsRowBestTime => '最佳用时';
 
   @override
-  String get recordsAverageBasisNote => '平均值基于每道谜题的最佳记录，而不是每一次游玩。';
+  String get recordsAverageBasisNote => '平均值以每道谜题的最佳记录为准。';
 
   @override
-  String get recordsCalendarTitle => '游玩活动';
+  String get recordsCalendarTitle => '全部谜题活动';
 
   @override
-  String get recordsCalendarSubtitle => '最近一年的游玩记录';
+  String get recordsCalendarSubtitle => '查看完成日期和游玩频率';
 
   @override
   String recordsCalendarPeriod(int weeks) {
@@ -672,13 +672,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsActivityTotalClearsLabel => '累计完成次数';
 
   @override
-  String get recordsActivityCurrentStreakLabel => '当前连续';
+  String get recordsActivityCurrentStreakLabel => '连续通关';
 
   @override
-  String get recordsActivityBestStreakLabel => '最长连续天数';
+  String get recordsActivityBestStreakLabel => '最长连续通关';
 
   @override
-  String get recordsChallengeStreakLabel => '挑战连续';
+  String get recordsChallengeStreakLabel => '今日挑战连续';
 
   @override
   String recordsActivityDayCount(int count) {
@@ -1266,6 +1266,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String levelPuzzleListTitle(int count) {
+    return '谜题列表 · $count';
+  }
+
+  @override
   String get levelRecentBadge => '最近';
 
   @override
@@ -1387,10 +1392,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsMyRecordTitle => '我的记录';
 
   @override
-  String get recordsSummaryTotalCleared => '总完成数';
+  String get recordsSummaryTotalCleared => '已完成谜题';
 
   @override
-  String get recordsSummaryPerfectClears => '完美通关';
+  String get recordsSummaryPerfectClears => '无失误通关';
 
   @override
   String get challengeMonthlyDescription => '选择日期即可重新挑战过去的题目。';

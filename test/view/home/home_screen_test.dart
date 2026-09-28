@@ -512,11 +512,12 @@ void main() {
       // 캐릭터는 최상단 히어로 이미지에 이미 나오므로, 시작 카드에는 더 이상
       // 별도 마스코트를 넣지 않는다(캐릭터 중복 제거).
       expect(find.text('Start your first puzzle'), findsOneWidget);
-      expect(find.byType(SudokuMotif), findsOneWidget);
+      final artwork = find.byKey(const Key('home_today_challenge_artwork'));
+      expect(artwork, findsOneWidget);
       // 장식은 스크린 리더에서 제외된다.
       expect(
-        find.descendant(
-          of: find.byType(SudokuMotif),
+        find.ancestor(
+          of: artwork,
           matching: find.byType(ExcludeSemantics),
         ),
         findsWidgets,
@@ -529,7 +530,10 @@ void main() {
         tester,
         _FakeDashboard(() async => _data(noChallenge: true)),
       );
-      expect(find.byType(SudokuMotif), findsNothing);
+      expect(
+        find.byKey(const Key('home_today_challenge_artwork')),
+        findsNothing,
+      );
     });
 
     testWidgets('merged continue+challenge card does not repeat decoration',
@@ -540,7 +544,10 @@ void main() {
           () async => _data(continues: [_summary(7)], challengeNumber: 7),
         ),
       );
-      expect(find.byType(SudokuMotif), findsNothing);
+      expect(
+        find.byKey(const Key('home_today_challenge_artwork')),
+        findsNothing,
+      );
       expect(find.text('Continue'), findsOneWidget);
     });
   });
