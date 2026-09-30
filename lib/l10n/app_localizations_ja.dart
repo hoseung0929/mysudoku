@@ -606,10 +606,17 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsEmptyAction => 'パズルを始める';
 
   @override
+  String get recordsEmptyGeneralOnlyTitle => 'パズルの記録はまだありません。';
+
+  @override
+  String get recordsEmptyGeneralOnlySubtitle =>
+      'パズルを完了すると、難易度別の統計と活動記録を確認できます。';
+
+  @override
   String get recordsLevelEmpty => 'このレベルの完了記録はまだありません。';
 
   @override
-  String get recordsRowBestTime => 'ベスト記録';
+  String get recordsRowBestTime => '最短クリア時間';
 
   @override
   String get recordsAverageBasisNote => '平均はパズルごとのベスト記録が基準です。';
@@ -675,10 +682,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsActivityTotalClearsLabel => '累計クリア回数';
 
   @override
-  String get recordsActivityCurrentStreakLabel => 'クリア連続';
+  String get recordsActivityCurrentStreakLabel => '現在の連続';
 
   @override
-  String get recordsActivityBestStreakLabel => '最長クリア連続';
+  String get recordsActivityBestStreakLabel => '最長の連続';
 
   @override
   String get recordsChallengeStreakLabel => '今日のチャレンジ連続';
@@ -1402,6 +1409,29 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get recordsSummaryPerfectClears => 'ミスなしクリア';
+
+  @override
+  String recordsSummaryHeroCount(int count) {
+    return '$count問';
+  }
+
+  @override
+  String get recordsSummaryHeroDescription => 'クリアしました';
+
+  @override
+  String recordsSummaryHeroSemanticLabel(int count) {
+    return 'パズルを$count問解きました';
+  }
+
+  @override
+  String recordsSummaryPerfectChip(int count) {
+    return 'ミスなし$count問';
+  }
+
+  @override
+  String recordsSummaryStreakChip(int count) {
+    return '現在$count日連続';
+  }
 
   @override
   String get challengeMonthlyDescription => '日付を選んで過去のチャレンジをもう一度プレイできます。';

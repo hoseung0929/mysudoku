@@ -88,6 +88,7 @@ flutter:
     - assets/images/home_hero.webp
     - assets/images/home_daily_challenge_card_bg.png
     - assets/images/records_hero.webp
+    - assets/images/records_summary_card_bg.png
     - assets/images/settings_hero.webp
     - assets/images/level1.png
     - assets/images/level2.png

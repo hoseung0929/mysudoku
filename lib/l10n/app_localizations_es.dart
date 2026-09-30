@@ -645,11 +645,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recordsEmptyAction => 'Empezar un puzle';
 
   @override
+  String get recordsEmptyGeneralOnlyTitle =>
+      'Aún no tienes registros de puzles.';
+
+  @override
+  String get recordsEmptyGeneralOnlySubtitle =>
+      'Completa un puzle para ver las estadísticas por dificultad y tu historial de actividad.';
+
+  @override
   String get recordsLevelEmpty =>
       'Aún no hay puzles completados en este nivel.';
 
   @override
-  String get recordsRowBestTime => 'Mejor tiempo';
+  String get recordsRowBestTime => 'Tiempo más rápido';
 
   @override
   String get recordsAverageBasisNote =>
@@ -719,10 +727,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recordsActivityTotalClearsLabel => 'Completados en total';
 
   @override
-  String get recordsActivityCurrentStreakLabel => 'Racha de completados';
+  String get recordsActivityCurrentStreakLabel => 'Racha actual';
 
   @override
-  String get recordsActivityBestStreakLabel => 'Mayor racha de completados';
+  String get recordsActivityBestStreakLabel => 'Mayor racha';
 
   @override
   String get recordsChallengeStreakLabel => 'Racha del desafío de hoy';
@@ -1511,6 +1519,29 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get recordsSummaryPerfectClears => 'Sin errores';
+
+  @override
+  String recordsSummaryHeroCount(int count) {
+    return '$count';
+  }
+
+  @override
+  String get recordsSummaryHeroDescription => 'puzles resueltos';
+
+  @override
+  String recordsSummaryHeroSemanticLabel(int count) {
+    return 'Resolviste $count puzles';
+  }
+
+  @override
+  String recordsSummaryPerfectChip(int count) {
+    return '$count sin errores';
+  }
+
+  @override
+  String recordsSummaryStreakChip(int count) {
+    return 'Racha actual de $count días';
+  }
 
   @override
   String get challengeMonthlyDescription =>

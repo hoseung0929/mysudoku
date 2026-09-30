@@ -212,8 +212,7 @@ class _ChallengeMonthlyCalendarCardState
           ],
           Text(
             l10n.challengeMonthlyDescription,
-            style:
-                TextStyle(fontSize: 12.5, color: colorScheme.onSurfaceVariant),
+            style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 16),
           MediaQuery.withClampedTextScaling(

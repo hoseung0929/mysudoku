@@ -299,8 +299,10 @@
   "recordsRetry": "Reintentar",
   "recordsEmptyTitle": "Tus registros aparecerán cuando termines tu primer puzle.",
   "recordsEmptyAction": "Empezar un puzle",
+  "recordsEmptyGeneralOnlyTitle": "Aún no tienes registros de puzles.",
+  "recordsEmptyGeneralOnlySubtitle": "Completa un puzle para ver las estadísticas por dificultad y tu historial de actividad.",
   "recordsLevelEmpty": "Aún no hay puzles completados en este nivel.",
-  "recordsRowBestTime": "Mejor tiempo",
+  "recordsRowBestTime": "Tiempo más rápido",
   "recordsAverageBasisNote": "Los promedios se basan en el mejor registro de cada puzle.",
   "recordsCalendarTitle": "Actividad de todos los puzles",
   "recordsCalendarSubtitle": "Consulta los días que completaste y tu frecuencia de juego",
@@ -318,8 +320,8 @@
   "recordsActivityHeatmapTitle": "Actividad reciente",
   "recordsActivityHeatmapCaption": "Actividad de todos los puzles que completaste.",
   "recordsActivityTotalClearsLabel": "Completados en total",
-  "recordsActivityCurrentStreakLabel": "Racha de completados",
-  "recordsActivityBestStreakLabel": "Mayor racha de completados",
+  "recordsActivityCurrentStreakLabel": "Racha actual",
+  "recordsActivityBestStreakLabel": "Mayor racha",
   "recordsChallengeStreakLabel": "Racha del desafío de hoy",
   "recordsActivityDayCount": "{count, plural, one{{count} día} other{{count} días}}",
   "@recordsActivityDayCount": {
@@ -797,6 +799,39 @@
   "recordsMyRecordTitle": "Mi historial",
   "recordsSummaryTotalCleared": "Puzles completados",
   "recordsSummaryPerfectClears": "Sin errores",
+  "recordsSummaryHeroCount": "{count}",
+  "@recordsSummaryHeroCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsSummaryHeroDescription": "puzles resueltos",
+  "recordsSummaryHeroSemanticLabel": "Resolviste {count} puzles",
+  "@recordsSummaryHeroSemanticLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsSummaryPerfectChip": "{count} sin errores",
+  "@recordsSummaryPerfectChip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsSummaryStreakChip": "Racha actual de {count} días",
+  "@recordsSummaryStreakChip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "challengeMonthlyDescription": "Elige una fecha para volver a jugar un reto anterior.",
   "challengeTodayEyebrow": "Hoy",
   "gamePausedTitle": "En pausa",

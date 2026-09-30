@@ -1220,6 +1220,18 @@ abstract class AppLocalizations {
   /// **'Start a puzzle'**
   String get recordsEmptyAction;
 
+  /// No description provided for @recordsEmptyGeneralOnlyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have any puzzle records yet.'**
+  String get recordsEmptyGeneralOnlyTitle;
+
+  /// No description provided for @recordsEmptyGeneralOnlySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish a puzzle to see stats by difficulty and your activity history.'**
+  String get recordsEmptyGeneralOnlySubtitle;
+
   /// No description provided for @recordsLevelEmpty.
   ///
   /// In en, this message translates to:
@@ -1229,7 +1241,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordsRowBestTime.
   ///
   /// In en, this message translates to:
-  /// **'Best time'**
+  /// **'Fastest clear time'**
   String get recordsRowBestTime;
 
   /// No description provided for @recordsAverageBasisNote.
@@ -1337,13 +1349,13 @@ abstract class AppLocalizations {
   /// No description provided for @recordsActivityCurrentStreakLabel.
   ///
   /// In en, this message translates to:
-  /// **'Clear streak'**
+  /// **'Current streak'**
   String get recordsActivityCurrentStreakLabel;
 
   /// No description provided for @recordsActivityBestStreakLabel.
   ///
   /// In en, this message translates to:
-  /// **'Longest clear streak'**
+  /// **'Longest streak'**
   String get recordsActivityBestStreakLabel;
 
   /// No description provided for @recordsChallengeStreakLabel.
@@ -2635,6 +2647,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mistake-free clears'**
   String get recordsSummaryPerfectClears;
+
+  /// No description provided for @recordsSummaryHeroCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}'**
+  String recordsSummaryHeroCount(int count);
+
+  /// No description provided for @recordsSummaryHeroDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'puzzles solved'**
+  String get recordsSummaryHeroDescription;
+
+  /// No description provided for @recordsSummaryHeroSemanticLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Solved {count} puzzles'**
+  String recordsSummaryHeroSemanticLabel(int count);
+
+  /// No description provided for @recordsSummaryPerfectChip.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} mistake-free'**
+  String recordsSummaryPerfectChip(int count);
+
+  /// No description provided for @recordsSummaryStreakChip.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}-day streak'**
+  String recordsSummaryStreakChip(int count);
 
   /// No description provided for @challengeMonthlyDescription.
   ///

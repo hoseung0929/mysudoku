@@ -608,10 +608,17 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsEmptyAction => '퍼즐 시작하기';
 
   @override
+  String get recordsEmptyGeneralOnlyTitle => '일반 퍼즐 기록은 아직 없어요.';
+
+  @override
+  String get recordsEmptyGeneralOnlySubtitle =>
+      '퍼즐을 완료하면 난이도별 통계와 활동 기록을 확인할 수 있어요.';
+
+  @override
   String get recordsLevelEmpty => '아직 완료한 기록이 없어요.';
 
   @override
-  String get recordsRowBestTime => '최고 기록';
+  String get recordsRowBestTime => '최단 클리어 시간';
 
   @override
   String get recordsAverageBasisNote => '평균은 퍼즐별 최고 기록 기준이에요.';
@@ -677,10 +684,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsActivityTotalClearsLabel => '누적 완료 횟수';
 
   @override
-  String get recordsActivityCurrentStreakLabel => '클리어 연속';
+  String get recordsActivityCurrentStreakLabel => '현재 연속';
 
   @override
-  String get recordsActivityBestStreakLabel => '최장 클리어 연속';
+  String get recordsActivityBestStreakLabel => '최장 연속';
 
   @override
   String get recordsChallengeStreakLabel => '오늘의 도전 연속';
@@ -1408,6 +1415,29 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get recordsSummaryPerfectClears => '무오답 완료';
+
+  @override
+  String recordsSummaryHeroCount(int count) {
+    return '$count개';
+  }
+
+  @override
+  String get recordsSummaryHeroDescription => '퍼즐을 풀었어요';
+
+  @override
+  String recordsSummaryHeroSemanticLabel(int count) {
+    return '퍼즐 $count개를 풀었어요';
+  }
+
+  @override
+  String recordsSummaryPerfectChip(int count) {
+    return '실수 없이 $count개';
+  }
+
+  @override
+  String recordsSummaryStreakChip(int count) {
+    return '현재 $count일 연속';
+  }
 
   @override
   String get challengeMonthlyDescription => '날짜를 선택해 지난 도전을 다시 풀 수 있어요.';

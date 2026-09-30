@@ -363,7 +363,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       // 일반 퍼즐 기록은 없어도 과거에 완료한 도전이 있으면, "기록 없음"
       // 안내 아래에 도전 달력을 이어서 보여준다. 둘 다 없으면 안내 카드만.
       content = _hasChallengeHistory
-          ? _buildStatsUnavailableBody(l10n, _buildNoRecords(l10n), sectionGap)
+          ? _buildStatsUnavailableBody(
+              l10n, _buildNoGeneralRecords(l10n), sectionGap)
           : _buildNoRecords(l10n);
     } else {
       content = _buildSections(l10n);
@@ -567,9 +568,9 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    challenge,
-                    const SizedBox(height: 24),
                     calendar,
+                    const SizedBox(height: 24),
+                    challenge,
                   ],
                 ),
               ),
@@ -583,9 +584,9 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
             const SizedBox(height: 20),
             levels,
             const SizedBox(height: 20),
-            challenge,
-            const SizedBox(height: 20),
             calendar,
+            const SizedBox(height: 20),
+            challenge,
           ],
         );
       },
@@ -793,29 +794,11 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   Widget _buildSummaryCard(AppLocalizations l10n) {
     final cs = Theme.of(context).colorScheme;
     final palette = LevelStatusPalette.of(context);
-    final isTablet = MediaQuery.sizeOf(context).width > 600;
     final totalCleared = (_overall['total_cleared'] as num?)?.toInt() ?? 0;
     final perfectClears = (_overall['perfect_clears'] as num?)?.toInt() ?? 0;
     final currentStreak =
         (_activitySummary['current_streak_days'] as num?)?.toInt() ?? 0;
 
-    final stats = [
-      (
-        l10n.recordsSummaryTotalCleared,
-        '$totalCleared',
-        Icons.done_all_rounded,
-      ),
-      (
-        l10n.recordsSummaryPerfectClears,
-        '$perfectClears',
-        Icons.star_rounded,
-      ),
-      (
-        l10n.recordsActivityCurrentStreakLabel,
-        l10n.recordsActivityDayCount(currentStreak),
-        Icons.event_available_rounded,
-      ),
-    ];
     final title = Text(
       l10n.recordsMyRecordTitle,
       style: TextStyle(
@@ -825,120 +808,168 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       ),
     );
 
-    return Container(
+    return ClipRRect(
       key: const Key('records_summary_card'),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: palette.completedBackground,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: palette.completedBorder),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final textScale = MediaQuery.textScalerOf(context).scale(1.0);
-          final stackStats = textScale > 1.3 || constraints.maxWidth < 300;
-          final reduceMotion = MediaQuery.disableAnimationsOf(context);
-          final motifSize = isTablet ? 48.0 : 40.0;
-          final motif = Opacity(
-            opacity: 0.72,
-            child: SudokuMotif(
-              key: const Key('records_summary_motif'),
-              size: motifSize,
-              checked: true,
-            ),
-          );
-          final valueStyle = TextStyle(
-            fontSize: isTablet ? 28 : 24,
-            fontWeight: FontWeight.w800,
-            color: palette.primaryPurple,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          );
-          final labelStyle = TextStyle(
-            fontSize: 12.5,
-            height: 1.3,
-            color: cs.onSurfaceVariant,
-          );
+      borderRadius: BorderRadius.circular(20),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: palette.completedBackground,
+          border: Border.all(color: palette.completedBorder),
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+            // LayoutBuilder가 카드 내부 Padding(16)보다 바깥이라, 패딩
+            // 안쪽 폭 기준 임계값과 맞추려면 양쪽 패딩만큼 뺀다.
+            final innerWidth = constraints.maxWidth - 32;
+            final stackStats = textScale > 1.3 || innerWidth < 300;
+            // 좁은 화면·큰 글자에서는 배경 이미지 없이 기존 단색 카드로.
+            final showBackgroundImage = !stackStats;
+            final reduceMotion = MediaQuery.disableAnimationsOf(context);
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final overlayColor = palette.completedBackground;
+            final overlayStops =
+                isDark ? const [0.97, 0.92, 0.88] : const [0.94, 0.86, 0.70];
+            final chipBackground =
+                cs.surface.withValues(alpha: isDark ? 0.75 : 0.65);
+            final chipTextColor = cs.onSurface.withValues(alpha: 0.85);
 
-          // 실제 값이 바뀔 때만(ValueKey가 달라질 때만) 150ms 페이드한다.
-          // 숫자 카운트업은 쓰지 않는다.
-          Widget value(String text) => AnimatedSwitcher(
-                duration: reduceMotion
-                    ? Duration.zero
-                    : const Duration(milliseconds: 150),
-                switchInCurve: Curves.easeOut,
-                switchOutCurve: Curves.easeOut,
-                transitionBuilder: (child, animation) =>
-                    FadeTransition(opacity: animation, child: child),
-                child: Text(
-                  text,
-                  key: ValueKey(text),
-                  style: valueStyle,
-                ),
-              );
-          Widget label(String text, IconData icon) => Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ExcludeSemantics(
-                    child: Icon(icon, size: 16, color: cs.onSurfaceVariant),
+            Widget chip(String text) => Container(
+                  constraints: const BoxConstraints(minHeight: 32),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: chipBackground,
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  const SizedBox(width: 4),
-                  Flexible(
-                    child: Text(
-                      text,
-                      maxLines: 2,
-                      overflow: TextOverflow.visible,
-                      style: labelStyle,
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: chipTextColor,
                     ),
                   ),
-                ],
-              );
+                );
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Expanded(child: title),
-                  const SizedBox(width: 12),
-                  motif,
-                ],
-              ),
-              const SizedBox(height: 12),
-              if (stackStats)
-                for (var i = 0; i < stats.length; i++) ...[
-                  if (i > 0) const SizedBox(height: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      value(stats[i].$2),
-                      const SizedBox(height: 2),
-                      label(stats[i].$1, stats[i].$3),
-                    ],
-                  ),
-                ]
-              else
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (var i = 0; i < stats.length; i++) ...[
-                      if (i > 0) const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            value(stats[i].$2),
-                            const SizedBox(height: 2),
-                            label(stats[i].$1, stats[i].$3),
-                          ],
+            final heroCountText = l10n.recordsSummaryHeroCount(totalCleared);
+            final heroDescText = l10n.recordsSummaryHeroDescription;
+            final perfectChipText =
+                l10n.recordsSummaryPerfectChip(perfectClears);
+            final streakChipText = l10n.recordsSummaryStreakChip(currentStreak);
+            final heroSemanticLabel =
+                l10n.recordsSummaryHeroSemanticLabel(totalCleared);
+
+            final body = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                title,
+                const SizedBox(height: 12),
+                // 대표 기록(완료한 퍼즐 수)이 가장 먼저 눈에 들어오도록 한
+                // 덩어리로 묶고, 접근성 라벨도 하나의 문장으로 합친다.
+                Semantics(
+                  label: heroSemanticLabel,
+                  child: ExcludeSemantics(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AnimatedSwitcher(
+                          duration: reduceMotion
+                              ? Duration.zero
+                              : const Duration(milliseconds: 150),
+                          switchInCurve: Curves.easeOut,
+                          switchOutCurve: Curves.easeOut,
+                          transitionBuilder: (child, animation) =>
+                              FadeTransition(opacity: animation, child: child),
+                          child: Text(
+                            heroCountText,
+                            key: ValueKey(heroCountText),
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w800,
+                              color: palette.primaryPurple,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 2),
+                        Text(
+                          heroDescText,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: cs.onSurface.withValues(alpha: 0.85),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    chip(perfectChipText),
+                    chip(streakChipText),
                   ],
                 ),
-            ],
-          );
-        },
+              ],
+            );
+
+            final content = Padding(
+              padding: const EdgeInsets.all(16),
+              child: showBackgroundImage
+                  ? Align(
+                      alignment: Alignment.centerLeft,
+                      child: FractionallySizedBox(
+                        // 오른쪽 30%는 배경 이미지(메달·노트)가 보이는
+                        // 여백으로 비워, 텍스트와 이미지가 겹치지 않게 한다.
+                        widthFactor: 0.7,
+                        child: body,
+                      ),
+                    )
+                  : body,
+            );
+
+            if (!showBackgroundImage) return content;
+
+            return Stack(
+              children: [
+                Positioned.fill(
+                  child: ExcludeSemantics(
+                    child: Image.asset(
+                      'assets/images/records_summary_card_bg.png',
+                      key: const Key('records_summary_card_bg'),
+                      fit: BoxFit.cover,
+                      alignment: Alignment.centerRight,
+                    ),
+                  ),
+                ),
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: [
+                          overlayColor.withValues(alpha: overlayStops[0]),
+                          overlayColor.withValues(alpha: overlayStops[1]),
+                          overlayColor.withValues(alpha: overlayStops[2]),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                content,
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -1401,7 +1432,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           const SizedBox(height: 4),
           Text(
             l10n.recordsCalendarPeriod(_kHeatmapWeeks),
-            style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+            style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: 16),
           _buildActivityHeatmap(l10n, heatmap),
@@ -1532,6 +1563,72 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
             const SizedBox(height: 16),
             FilledButton(
               // 홈의 실제 게임 시작 경로(홈 탭)로 이동한다.
+              onPressed: () => RootNavScope.maybeOf(context)?.goToTab(0),
+              style: FilledButton.styleFrom(minimumSize: const Size(200, 48)),
+              child: Text(l10n.recordsEmptyAction),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 일반 퍼즐 기록은 없지만 과거 도전 완료 기록은 있는 경우: "기록이 전혀
+  /// 없다"는 [_buildNoRecords]와 다른 문구를 쓰고, 아래에 도전 달력이
+  /// 이어진다는 걸 보조 문구로 알려준다.
+  Widget _buildNoGeneralRecords(AppLocalizations l10n) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: _card(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ExcludeSemantics(
+              child: SizedBox(
+                width: 110,
+                height: 90,
+                child: Stack(
+                  children: [
+                    const Positioned(
+                      left: 0,
+                      bottom: 0,
+                      child: MascotImage(
+                        asset: MascotImage.welcome,
+                        size: 82,
+                      ),
+                    ),
+                    Positioned(
+                      right: 0,
+                      bottom: 4,
+                      child: Transform.rotate(
+                        angle: 0.09,
+                        child: const SudokuMotif(size: 34),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              l10n.recordsEmptyGeneralOnlyTitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.4,
+                fontWeight: FontWeight.w600,
+                color: cs.onSurface,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              l10n.recordsEmptyGeneralOnlySubtitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
               onPressed: () => RootNavScope.maybeOf(context)?.goToTab(0),
               style: FilledButton.styleFrom(minimumSize: const Size(200, 48)),
               child: Text(l10n.recordsEmptyAction),

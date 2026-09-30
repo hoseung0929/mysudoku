@@ -299,8 +299,10 @@
   "recordsRetry": "再試行",
   "recordsEmptyTitle": "最初のパズルを完成させると記録がたまります。",
   "recordsEmptyAction": "パズルを始める",
+  "recordsEmptyGeneralOnlyTitle": "パズルの記録はまだありません。",
+  "recordsEmptyGeneralOnlySubtitle": "パズルを完了すると、難易度別の統計と活動記録を確認できます。",
   "recordsLevelEmpty": "このレベルの完了記録はまだありません。",
-  "recordsRowBestTime": "ベスト記録",
+  "recordsRowBestTime": "最短クリア時間",
   "recordsAverageBasisNote": "平均はパズルごとのベスト記録が基準です。",
   "recordsCalendarTitle": "全パズルの活動",
   "recordsCalendarSubtitle": "クリアした日とプレイ頻度を確認しましょう",
@@ -318,8 +320,8 @@
   "recordsActivityHeatmapTitle": "最近のアクティビティ",
   "recordsActivityHeatmapCaption": "完了したすべてのパズルの活動記録です。",
   "recordsActivityTotalClearsLabel": "累計クリア回数",
-  "recordsActivityCurrentStreakLabel": "クリア連続",
-  "recordsActivityBestStreakLabel": "最長クリア連続",
+  "recordsActivityCurrentStreakLabel": "現在の連続",
+  "recordsActivityBestStreakLabel": "最長の連続",
   "recordsChallengeStreakLabel": "今日のチャレンジ連続",
   "recordsActivityDayCount": "{count}日",
   "@recordsActivityDayCount": {
@@ -797,6 +799,39 @@
   "recordsMyRecordTitle": "私の記録",
   "recordsSummaryTotalCleared": "クリアしたパズル",
   "recordsSummaryPerfectClears": "ミスなしクリア",
+  "recordsSummaryHeroCount": "{count}問",
+  "@recordsSummaryHeroCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsSummaryHeroDescription": "クリアしました",
+  "recordsSummaryHeroSemanticLabel": "パズルを{count}問解きました",
+  "@recordsSummaryHeroSemanticLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsSummaryPerfectChip": "ミスなし{count}問",
+  "@recordsSummaryPerfectChip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsSummaryStreakChip": "現在{count}日連続",
+  "@recordsSummaryStreakChip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "challengeMonthlyDescription": "日付を選んで過去のチャレンジをもう一度プレイできます。",
   "challengeTodayEyebrow": "今日の流れ",
   "gamePausedTitle": "一時停止中",

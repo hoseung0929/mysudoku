@@ -643,10 +643,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsEmptyAction => 'Start a puzzle';
 
   @override
+  String get recordsEmptyGeneralOnlyTitle =>
+      'You don\'t have any puzzle records yet.';
+
+  @override
+  String get recordsEmptyGeneralOnlySubtitle =>
+      'Finish a puzzle to see stats by difficulty and your activity history.';
+
+  @override
   String get recordsLevelEmpty => 'No completed puzzles at this level yet.';
 
   @override
-  String get recordsRowBestTime => 'Best time';
+  String get recordsRowBestTime => 'Fastest clear time';
 
   @override
   String get recordsAverageBasisNote =>
@@ -715,10 +723,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsActivityTotalClearsLabel => 'Total completions';
 
   @override
-  String get recordsActivityCurrentStreakLabel => 'Clear streak';
+  String get recordsActivityCurrentStreakLabel => 'Current streak';
 
   @override
-  String get recordsActivityBestStreakLabel => 'Longest clear streak';
+  String get recordsActivityBestStreakLabel => 'Longest streak';
 
   @override
   String get recordsChallengeStreakLabel => 'Today\'s challenge streak';
@@ -1498,6 +1506,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recordsSummaryPerfectClears => 'Mistake-free clears';
+
+  @override
+  String recordsSummaryHeroCount(int count) {
+    return '$count';
+  }
+
+  @override
+  String get recordsSummaryHeroDescription => 'puzzles solved';
+
+  @override
+  String recordsSummaryHeroSemanticLabel(int count) {
+    return 'Solved $count puzzles';
+  }
+
+  @override
+  String recordsSummaryPerfectChip(int count) {
+    return '$count mistake-free';
+  }
+
+  @override
+  String recordsSummaryStreakChip(int count) {
+    return '$count-day streak';
+  }
 
   @override
   String get challengeMonthlyDescription =>

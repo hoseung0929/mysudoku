@@ -603,10 +603,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsEmptyAction => '开始解题';
 
   @override
+  String get recordsEmptyGeneralOnlyTitle => '还没有普通谜题记录。';
+
+  @override
+  String get recordsEmptyGeneralOnlySubtitle => '完成一道谜题即可查看按难度划分的统计和活动记录。';
+
+  @override
   String get recordsLevelEmpty => '该难度还没有完成记录。';
 
   @override
-  String get recordsRowBestTime => '最佳用时';
+  String get recordsRowBestTime => '最快用时';
 
   @override
   String get recordsAverageBasisNote => '平均值以每道谜题的最佳记录为准。';
@@ -672,10 +678,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsActivityTotalClearsLabel => '累计完成次数';
 
   @override
-  String get recordsActivityCurrentStreakLabel => '连续通关';
+  String get recordsActivityCurrentStreakLabel => '当前连续';
 
   @override
-  String get recordsActivityBestStreakLabel => '最长连续通关';
+  String get recordsActivityBestStreakLabel => '最长连续';
 
   @override
   String get recordsChallengeStreakLabel => '今日挑战连续';
@@ -1396,6 +1402,29 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recordsSummaryPerfectClears => '无失误通关';
+
+  @override
+  String recordsSummaryHeroCount(int count) {
+    return '$count道';
+  }
+
+  @override
+  String get recordsSummaryHeroDescription => '谜题已完成';
+
+  @override
+  String recordsSummaryHeroSemanticLabel(int count) {
+    return '已完成 $count 道谜题';
+  }
+
+  @override
+  String recordsSummaryPerfectChip(int count) {
+    return '无失误 $count 道';
+  }
+
+  @override
+  String recordsSummaryStreakChip(int count) {
+    return '当前连续 $count 天';
+  }
 
   @override
   String get challengeMonthlyDescription => '选择日期即可重新挑战过去的题目。';

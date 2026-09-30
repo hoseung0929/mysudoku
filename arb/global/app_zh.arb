@@ -299,8 +299,10 @@
   "recordsRetry": "重试",
   "recordsEmptyTitle": "完成第一道谜题后，记录就会积累起来。",
   "recordsEmptyAction": "开始解题",
+  "recordsEmptyGeneralOnlyTitle": "还没有普通谜题记录。",
+  "recordsEmptyGeneralOnlySubtitle": "完成一道谜题即可查看按难度划分的统计和活动记录。",
   "recordsLevelEmpty": "该难度还没有完成记录。",
-  "recordsRowBestTime": "最佳用时",
+  "recordsRowBestTime": "最快用时",
   "recordsAverageBasisNote": "平均值以每道谜题的最佳记录为准。",
   "recordsCalendarTitle": "全部谜题活动",
   "recordsCalendarSubtitle": "查看完成日期和游玩频率",
@@ -318,8 +320,8 @@
   "recordsActivityHeatmapTitle": "近期活动",
   "recordsActivityHeatmapCaption": "已完成的所有拼图的活动记录。",
   "recordsActivityTotalClearsLabel": "累计完成次数",
-  "recordsActivityCurrentStreakLabel": "连续通关",
-  "recordsActivityBestStreakLabel": "最长连续通关",
+  "recordsActivityCurrentStreakLabel": "当前连续",
+  "recordsActivityBestStreakLabel": "最长连续",
   "recordsChallengeStreakLabel": "今日挑战连续",
   "recordsActivityDayCount": "{count} 天",
   "@recordsActivityDayCount": {
@@ -797,6 +799,39 @@
   "recordsMyRecordTitle": "我的记录",
   "recordsSummaryTotalCleared": "已完成谜题",
   "recordsSummaryPerfectClears": "无失误通关",
+  "recordsSummaryHeroCount": "{count}道",
+  "@recordsSummaryHeroCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsSummaryHeroDescription": "谜题已完成",
+  "recordsSummaryHeroSemanticLabel": "已完成 {count} 道谜题",
+  "@recordsSummaryHeroSemanticLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsSummaryPerfectChip": "无失误 {count} 道",
+  "@recordsSummaryPerfectChip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsSummaryStreakChip": "当前连续 {count} 天",
+  "@recordsSummaryStreakChip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "challengeMonthlyDescription": "选择日期即可重新挑战过去的题目。",
   "challengeTodayEyebrow": "今日动态",
   "gamePausedTitle": "已暂停",

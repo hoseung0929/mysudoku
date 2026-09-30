@@ -352,8 +352,8 @@ void main() {
         tester.getTopLeft(find.byKey(const Key('records_hero_header'))).dy;
     expect(heroY, lessThan(y('This week')));
     expect(y('This week'), lessThan(y('Records by level')));
-    expect(y('Records by level'), lessThan(y('Challenge history')));
-    expect(y('Challenge history'), lessThan(y('All puzzle activity')));
+    expect(y('Records by level'), lessThan(y('All puzzle activity')));
+    expect(y('All puzzle activity'), lessThan(y('Challenge history')));
     expect(find.text('View achievements'), findsNothing);
 
     // 이번 주 요약: 오늘 이벤트 2건 → 활동 1일 · 완료 2판(반복 포함 횟수)
@@ -366,11 +366,12 @@ void main() {
     expect(find.text('06:50'), findsOneWidget); // (520+300)/2 = 410s
     expect(find.text('Puzzle completion'), findsOneWidget);
     expect(find.text('Avg. clear time'), findsOneWidget);
-    expect(find.textContaining("Averages are based on each puzzle's best record"),
+    expect(
+        find.textContaining("Averages are based on each puzzle's best record"),
         findsOneWidget);
-    // "나의 기록" 요약 카드: 총 완료·완벽 완료·연속 기록.
+    // "나의 기록" 요약 카드: 완료 수가 가장 큰 대표 숫자, 무오답·연속은
+    // 보조 칩으로 표시한다(recent.length=2, activitySummary 고정값들).
     expect(find.text('My record'), findsOneWidget);
-    expect(find.text('Puzzles cleared'), findsOneWidget);
     expect(
       find.descendant(
         of: find.byKey(const Key('records_summary_card')),
@@ -378,12 +379,13 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('Mistake-free clears'), findsOneWidget);
+    expect(find.text('puzzles solved'), findsOneWidget);
+    expect(find.text('0 mistake-free'), findsOneWidget);
+    expect(find.text('2-day streak'), findsOneWidget);
     // 활동 달기 기간 표기 + 최고 연속 요약 행
     expect(find.text('Last 26 weeks'), findsOneWidget);
     // 현재 연속은 요약 카드에만, 활동 달력 하단은 최고 연속만 보여준다(중복 제거).
-    expect(find.text('Clear streak'), findsOneWidget);
-    expect(find.textContaining('Longest clear streak'), findsOneWidget);
+    expect(find.textContaining('Longest streak'), findsOneWidget);
     expect(find.byKey(const Key('records_week_artwork')), findsOneWidget);
     expect(find.byKey(const Key('records_challenge_artwork')), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -412,6 +414,8 @@ void main() {
       tester,
       () async => _data(recent: recent, events: events),
     );
+    await tester.ensureVisible(find.text('Intermediate'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Intermediate'));
     await tester.pump();
     expect(
@@ -555,11 +559,11 @@ void main() {
     );
     expect(valueText.style?.color, palette.primaryPurple);
 
-    final card = tester.widget<Container>(
+    final card = tester.widget<DecoratedBox>(
       find
-          .ancestor(
-            of: find.text('My record'),
-            matching: find.byType(Container),
+          .descendant(
+            of: find.byKey(const Key('records_summary_card')),
+            matching: find.byType(DecoratedBox),
           )
           .first,
     );
@@ -568,19 +572,45 @@ void main() {
     expect((decoration.border as Border).top.color, palette.completedBorder);
   });
 
-  testWidgets('summary motif stays in the header and stats begin below it',
+  testWidgets(
+      'summary card shows its background image behind the title and stats',
       (tester) async {
     await pumpRecords(
       tester,
       () async => _data(recent: recent, events: events),
     );
 
-    final motif = find.byKey(const Key('records_summary_motif'));
-    expect(tester.getSize(motif), const Size.square(40));
     expect(
-      tester.getTopLeft(find.text('Puzzles cleared')).dy,
-      greaterThan(tester.getBottomRight(motif).dy),
+      find.descendant(
+        of: find.byKey(const Key('records_summary_card')),
+        matching: find.byKey(const Key('records_summary_card_bg')),
+      ),
+      findsOneWidget,
     );
+    expect(
+      tester.getTopLeft(find.text('puzzles solved')).dy,
+      greaterThan(tester.getTopLeft(find.text('My record')).dy),
+    );
+  });
+
+  testWidgets(
+      'summary card falls back to a plain background on narrow screens and '
+      'large text', (tester) async {
+    await pumpRecords(
+      tester,
+      () async => _data(recent: recent, events: events),
+      size: const Size(375, 700),
+      textScale: 1.4,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('records_summary_card')),
+        matching: find.byKey(const Key('records_summary_card_bg')),
+      ),
+      findsNothing,
+    );
+    expect(find.text('My record'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('first load shows skeletons, then replaces them with content',
@@ -630,8 +660,10 @@ void main() {
       tester,
       () async => _data(recent: recent, events: events),
     );
-    expect(find.text('Clear streak'), findsOneWidget);
-    expect(find.textContaining('Longest clear streak'), findsOneWidget);
+    // 현재 연속은 요약 카드의 보조 칩(2-day streak)에만 있고, 활동 달력
+    // 쪽에는 최고 연속만 별도로 표시되어 중복되지 않는다.
+    expect(find.text('2-day streak'), findsOneWidget);
+    expect(find.textContaining('Longest streak'), findsOneWidget);
   });
 
   testWidgets('tablet landscape uses two columns capped at 960 wide',
@@ -664,19 +696,20 @@ void main() {
     });
   }
 
-  testWidgets('mascot is limited to empty state; summary uses its own motif',
-      (tester) async {
+  testWidgets(
+      'mascot is limited to empty state; summary uses its own background '
+      'image', (tester) async {
     await pumpRecords(tester, () async => _data());
     expect(find.byType(MascotImage), findsOneWidget);
     expect(find.byType(SudokuMotif), findsOneWidget);
-    expect(find.byKey(const Key('records_summary_motif')), findsNothing);
+    expect(find.byKey(const Key('records_summary_card_bg')), findsNothing);
 
     await pumpRecords(
       tester,
       () async => _data(recent: recent, events: events),
     );
     expect(find.byType(MascotImage), findsNothing);
-    expect(find.byKey(const Key('records_summary_motif')), findsOneWidget);
+    expect(find.byKey(const Key('records_summary_card_bg')), findsOneWidget);
   });
 
   testWidgets('no graphic while loading or on load failure', (tester) async {
@@ -756,6 +789,8 @@ void main() {
       expect(find.text('2 / 159'), findsOneWidget);
       expect(find.text('05:00'), findsOneWidget); // best of 초급
 
+      await tester.ensureVisible(chip('Intermediate'));
+      await tester.pumpAndSettle();
       await tester.tap(chip('Intermediate'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
@@ -773,6 +808,7 @@ void main() {
         tester,
         () async => _data(recent: twoLevelRecent, events: events),
       );
+      await tester.ensureVisible(chip('Intermediate'));
       await tester.tap(chip('Intermediate'));
       await tester.pump(); // 아직 전환 중
       await tester.ensureVisible(chip('Advanced'));
@@ -794,6 +830,8 @@ void main() {
         () async => _data(recent: twoLevelRecent, events: events),
       );
       final handle = tester.ensureSemantics();
+      await tester.ensureVisible(chip('Intermediate'));
+      await tester.pumpAndSettle();
       await tester.tap(chip('Intermediate'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
@@ -815,6 +853,8 @@ void main() {
       );
       expect(find.text('2 / 159'), findsOneWidget);
 
+      await tester.ensureVisible(chip('Intermediate'));
+      await tester.pumpAndSettle();
       await tester.tap(chip('Intermediate'));
       // 동작 줄이기에서는 지속 시간이 0이라, 단 한 프레임 만에 이전 내용이
       // 완전히 사라지고 새 내용으로 바뀐다(애니메이션 중간 프레임이 없음).
@@ -881,6 +921,37 @@ void main() {
       );
       expect(find.text('Challenge history'), findsOneWidget);
       expect(find.text('View achievements'), findsNothing);
+    });
+
+    testWidgets(
+        'with challenge history but no puzzle records, the empty message is '
+        'distinct from the "nothing at all" message and the calendar still '
+        'shows', (tester) async {
+      await pumpRecords(
+        tester,
+        () async => _data(),
+        challengeProgressService: _FakeChallengeProgressService(
+          hasAnyCompletion: true,
+        ),
+      );
+      expect(
+        find.text("You don't have any puzzle records yet."),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'Finish a puzzle to see stats by difficulty and your activity '
+          'history.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+            'Your records will build up once you finish your first puzzle.'),
+        findsNothing,
+      );
+      expect(find.text('Start a puzzle'), findsOneWidget);
+      expect(find.text('Challenge history'), findsOneWidget);
     });
 
     testWidgets(

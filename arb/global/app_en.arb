@@ -326,8 +326,10 @@
   "recordsRetry": "Try again",
   "recordsEmptyTitle": "Your records will build up once you finish your first puzzle.",
   "recordsEmptyAction": "Start a puzzle",
+  "recordsEmptyGeneralOnlyTitle": "You don't have any puzzle records yet.",
+  "recordsEmptyGeneralOnlySubtitle": "Finish a puzzle to see stats by difficulty and your activity history.",
   "recordsLevelEmpty": "No completed puzzles at this level yet.",
-  "recordsRowBestTime": "Best time",
+  "recordsRowBestTime": "Fastest clear time",
   "recordsAverageBasisNote": "Averages are based on each puzzle's best record.",
   "recordsCalendarTitle": "All puzzle activity",
   "recordsCalendarSubtitle": "See which days you cleared puzzles and how often you played",
@@ -393,8 +395,8 @@
   "recordsActivityHeatmapTitle": "Recent activity",
   "recordsActivityHeatmapCaption": "Activity for every puzzle you've completed.",
   "recordsActivityTotalClearsLabel": "Total completions",
-  "recordsActivityCurrentStreakLabel": "Clear streak",
-  "recordsActivityBestStreakLabel": "Longest clear streak",
+  "recordsActivityCurrentStreakLabel": "Current streak",
+  "recordsActivityBestStreakLabel": "Longest streak",
   "recordsChallengeStreakLabel": "Today's challenge streak",
   "recordsActivityDayCount": "{count, plural, one{{count} day} other{{count} days}}",
   "@recordsActivityDayCount": {
@@ -917,6 +919,39 @@
   "recordsMyRecordTitle": "My record",
   "recordsSummaryTotalCleared": "Puzzles cleared",
   "recordsSummaryPerfectClears": "Mistake-free clears",
+  "recordsSummaryHeroCount": "{count}",
+  "@recordsSummaryHeroCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsSummaryHeroDescription": "puzzles solved",
+  "recordsSummaryHeroSemanticLabel": "Solved {count} puzzles",
+  "@recordsSummaryHeroSemanticLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsSummaryPerfectChip": "{count} mistake-free",
+  "@recordsSummaryPerfectChip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsSummaryStreakChip": "{count}-day streak",
+  "@recordsSummaryStreakChip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "challengeMonthlyDescription": "Pick a date to replay a past challenge.",
   "challengeTodayEyebrow": "Today",
   "gamePausedTitle": "Paused",

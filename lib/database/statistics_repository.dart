@@ -107,10 +107,18 @@ class StatisticsRepository {
     final totalAvgWrong =
         (totalAvgWrongResult.first['avg_wrong'] as num?)?.toDouble() ?? 0.0;
 
-    // 오답 없이 완료한 기록 수
-    final perfectResult = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM clear_records WHERE wrong_count = 0',
-    );
+    // 한 번이라도 오답 없이 완료한 고유 퍼즐 수. clear_records는 퍼즐당
+    // 최고 기록 한 건만 남기므로, 더 빠르지만 오답 있는 기록이 최고 기록을
+    // 덮어써도 과거 무오답 완료가 사라지지 않도록 clear_events(전체 이력)를
+    // 함께 본다. clear_events가 없던 구버전 데이터 호환을 위해
+    // clear_records도 합친다.
+    final perfectResult = await db.rawQuery('''
+      SELECT COUNT(*) as count FROM (
+        SELECT level_name, game_number FROM clear_events WHERE wrong_count = 0
+        UNION
+        SELECT level_name, game_number FROM clear_records WHERE wrong_count = 0
+      )
+    ''');
     final perfectClears = Sqflite.firstIntValue(perfectResult) ?? 0;
 
     // 전체 클리어율
