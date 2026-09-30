@@ -273,18 +273,31 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gameNumberInputTitle => '数字输入';
 
   @override
-  String gameRowsCompleted(int count) {
-    return '完成 $count 行';
+  String get gameLineWaveRowLabel => '横排';
+
+  @override
+  String get gameLineWaveColLabel => '竖排';
+
+  @override
+  String get gameLineWaveBoxLabel => '3×3 宫';
+
+  @override
+  String gameLineWaveAnnounce(String parts) {
+    return '$parts完成';
   }
 
   @override
-  String gameColsCompleted(int count) {
-    return '完成 $count 列';
-  }
+  String get gameLineWaveRowSentence => '你完成了一行';
 
   @override
-  String gameBoxesCompleted(int count) {
-    return '完成 $count 个宫';
+  String get gameLineWaveColSentence => '你完成了一列';
+
+  @override
+  String get gameLineWaveBoxSentence => '你完成了一个 3×3 宫';
+
+  @override
+  String gameDigitCompleteSentence(int number) {
+    return '你填满了所有的 $number';
   }
 
   @override
@@ -365,7 +378,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dialogPlayAgain => '重新解题';
 
   @override
-  String get dialogPuzzleCompleteTitle => '谜题完成';
+  String get dialogPuzzleCompleteTitle => '你完成了谜题';
 
   @override
   String get dialogNewBestMessage => '刷新了最佳记录';
@@ -373,6 +386,24 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String dialogHintsUsed(int count) {
     return '使用提示 $count 次';
+  }
+
+  @override
+  String dialogCompletionTimeSentenceMinutes(int minutes, int seconds) {
+    return '用时 $minutes 分 $seconds 秒解开';
+  }
+
+  @override
+  String dialogCompletionTimeSentenceSeconds(int seconds) {
+    return '用时 $seconds 秒解开';
+  }
+
+  @override
+  String get dialogCompletionNoMistakes => '全程没有失误';
+
+  @override
+  String dialogCompletionMistakeCount(num count) {
+    return '失误了 $count 次';
   }
 
   @override
@@ -1327,7 +1358,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get levelNotesInProgress => '正在写笔记';
 
   @override
-  String get levelEmptyInProgress => '没有可继续的谜题。';
+  String get levelEmptyInProgress => '还没有可以继续的谜题。';
 
   @override
   String get levelEmptyCompleted => '创建你的第一条完成记录。';
@@ -1395,7 +1426,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get savedGamesDeleteFailed => '删除失败,请重试。';
 
   @override
-  String get recordsMyRecordTitle => '我的记录';
+  String get recordsMyRecordTitle => '目前为止';
 
   @override
   String get recordsSummaryTotalCleared => '已完成谜题';

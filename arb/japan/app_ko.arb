@@ -93,26 +93,24 @@
   "gameProgressShort": "진행율",
   "gameTimeShort": "시간",
   "gameNumberInputTitle": "숫자 입력",
-  "gameRowsCompleted": "행 {count}개 완성",
-  "@gameRowsCompleted": {
+  "gameLineWaveRowLabel": "가로줄",
+  "gameLineWaveColLabel": "세로줄",
+  "gameLineWaveBoxLabel": "3×3 박스",
+  "gameLineWaveAnnounce": "{parts} 완성",
+  "@gameLineWaveAnnounce": {
     "placeholders": {
-      "count": {
-        "type": "int"
+      "parts": {
+        "type": "String"
       }
     }
   },
-  "gameColsCompleted": "열 {count}개 완성",
-  "@gameColsCompleted": {
+  "gameLineWaveRowSentence": "가로줄을 완성했어요",
+  "gameLineWaveColSentence": "세로줄을 완성했어요",
+  "gameLineWaveBoxSentence": "3×3 박스를 완성했어요",
+  "gameDigitCompleteSentence": "숫자 {number}를 모두 채웠어요",
+  "@gameDigitCompleteSentence": {
     "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "gameBoxesCompleted": "박스 {count}개 완성",
-  "@gameBoxesCompleted": {
-    "placeholders": {
-      "count": {
+      "number": {
         "type": "int"
       }
     }
@@ -177,9 +175,37 @@
   "dialogShare": "공유하기",
   "dialogBackToLevels": "퍼즐 목록으로",
   "dialogPlayAgain": "다시 풀기",
-  "dialogPuzzleCompleteTitle": "퍼즐 완료",
+  "dialogPuzzleCompleteTitle": "퍼즐을 완성했어요",
   "dialogNewBestMessage": "새로운 최고 기록이에요",
   "dialogHintsUsed": "힌트 {count}회 사용",
+  "dialogCompletionTimeSentenceMinutes": "{minutes}분 {seconds}초 만에 풀었어요",
+  "@dialogCompletionTimeSentenceMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "dialogCompletionTimeSentenceSeconds": "{seconds}초 만에 풀었어요",
+  "@dialogCompletionTimeSentenceSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "dialogCompletionNoMistakes": "실수 없이 마무리했어요",
+  "dialogCompletionMistakeCount": "실수는 {count}번 있었어요",
+  "@dialogCompletionMistakeCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
   "dialogSolveSameAgain": "같은 퍼즐 다시 풀기",
   "dialogNextPuzzle": "다음 퍼즐",
   "updateRequiredTitle": "업데이트가 필요합니다",
@@ -295,7 +321,7 @@
   "recordsLevelMiniBest": "베스트",
   "recordsLevelMiniPerfectRate": "퍼펙트율",
   "recordsLevelMiniAvgWrong": "평균 오답",
-  "recordsStatsLoadError": "통계 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "recordsStatsLoadError": "통계 데이터를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.",
   "recordsRetry": "다시 시도",
   "recordsEmptyTitle": "첫 퍼즐을 완성하면 기록이 쌓여요.",
   "recordsEmptyAction": "퍼즐 시작하기",
@@ -775,7 +801,7 @@
   "levelStartNextNew": "다음 새 퍼즐 시작 · {number}",
   "levelViewInProgress": "진행 중 {count}개 보기",
   "levelNotesInProgress": "메모 작성 중",
-  "levelEmptyInProgress": "이어 풀 퍼즐이 없어요.",
+  "levelEmptyInProgress": "이어갈 퍼즐이 아직 없어요.",
   "levelEmptyCompleted": "첫 완료 기록을 만들어보세요.",
   "levelEmptyFresh": "새로 시작할 퍼즐이 없어요.",
   "levelAllCompleted": "이 난이도의 모든 퍼즐을 완료했어요.",
@@ -796,7 +822,7 @@
   "savedGamesSortPlayTime": "플레이 시간순",
   "savedGamesEmpty": "선택한 조건에 맞는 저장 게임이 없어요.",
   "savedGamesDeleteFailed": "삭제하지 못했어요. 다시 시도해 주세요.",
-  "recordsMyRecordTitle": "나의 기록",
+  "recordsMyRecordTitle": "지금까지",
   "recordsSummaryTotalCleared": "완료한 퍼즐",
   "recordsSummaryPerfectClears": "무오답 완료",
   "recordsSummaryHeroCount": "{count}개",

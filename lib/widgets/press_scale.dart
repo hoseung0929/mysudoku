@@ -6,7 +6,12 @@ import 'package:flutter/material.dart';
 /// 뗄 때는 조금 더 천천히 돌아오며 튕기지 않는다. 동작 줄이기에서는 크기를
 /// 바꾸지 않는다.
 class PressScale extends StatelessWidget {
-  const PressScale({super.key, required this.pressed, required this.child});
+  const PressScale({
+    super.key,
+    required this.pressed,
+    required this.child,
+    this.scale = pressedScale,
+  });
 
   static const double pressedScale = 0.98;
   static const Duration pressDuration = Duration(milliseconds: 90);
@@ -15,11 +20,15 @@ class PressScale extends StatelessWidget {
   final bool pressed;
   final Widget child;
 
+  /// 눌렸을 때의 크기 비율. 기본값은 [pressedScale]이고, 더 뚜렷한 눌림이
+  /// 필요한 곳(예: 게임 숫자패드)에서만 다른 값을 넘긴다.
+  final double scale;
+
   @override
   Widget build(BuildContext context) {
     final active = pressed && !MediaQuery.disableAnimationsOf(context);
     return AnimatedScale(
-      scale: active ? pressedScale : 1.0,
+      scale: active ? scale : 1.0,
       duration: pressed ? pressDuration : releaseDuration,
       curve: Curves.easeOutCubic,
       child: child,

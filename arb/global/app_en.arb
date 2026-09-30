@@ -113,26 +113,24 @@
   "gameProgressShort": "Progress",
   "gameTimeShort": "Time",
   "gameNumberInputTitle": "Number input",
-  "gameRowsCompleted": "{count} row cleared",
-  "@gameRowsCompleted": {
+  "gameLineWaveRowLabel": "Row",
+  "gameLineWaveColLabel": "Column",
+  "gameLineWaveBoxLabel": "3×3 box",
+  "gameLineWaveAnnounce": "{parts} cleared",
+  "@gameLineWaveAnnounce": {
     "placeholders": {
-      "count": {
-        "type": "int"
+      "parts": {
+        "type": "String"
       }
     }
   },
-  "gameColsCompleted": "{count} column cleared",
-  "@gameColsCompleted": {
+  "gameLineWaveRowSentence": "You completed a row",
+  "gameLineWaveColSentence": "You completed a column",
+  "gameLineWaveBoxSentence": "You completed a 3×3 box",
+  "gameDigitCompleteSentence": "You filled in all the {number}s",
+  "@gameDigitCompleteSentence": {
     "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "gameBoxesCompleted": "{count} box cleared",
-  "@gameBoxesCompleted": {
-    "placeholders": {
-      "count": {
+      "number": {
         "type": "int"
       }
     }
@@ -197,9 +195,37 @@
   "dialogShare": "Share",
   "dialogBackToLevels": "Puzzle list",
   "dialogPlayAgain": "Solve again",
-  "dialogPuzzleCompleteTitle": "Puzzle complete",
+  "dialogPuzzleCompleteTitle": "You solved the puzzle",
   "dialogNewBestMessage": "New best record!",
   "dialogHintsUsed": "Hints used: {count}",
+  "dialogCompletionTimeSentenceMinutes": "Solved in {minutes} min {seconds} sec",
+  "@dialogCompletionTimeSentenceMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "dialogCompletionTimeSentenceSeconds": "Solved in {seconds} sec",
+  "@dialogCompletionTimeSentenceSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "dialogCompletionNoMistakes": "Finished with no mistakes",
+  "dialogCompletionMistakeCount": "{count, plural, one{You made {count} mistake} other{You made {count} mistakes}}",
+  "@dialogCompletionMistakeCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
   "@dialogHintsUsed": {
     "placeholders": {
       "count": {
@@ -878,7 +904,7 @@
     }
   },
   "levelNotesInProgress": "Writing notes",
-  "levelEmptyInProgress": "No puzzles to continue.",
+  "levelEmptyInProgress": "You don't have a puzzle to continue yet.",
   "levelEmptyCompleted": "Make your first completion record.",
   "levelEmptyFresh": "No new puzzles to start.",
   "levelAllCompleted": "You've completed every puzzle at this level.",
@@ -916,7 +942,7 @@
   "savedGamesSortPlayTime": "Play time",
   "savedGamesEmpty": "No saved games match this filter.",
   "savedGamesDeleteFailed": "Couldn't delete this puzzle. Please try again.",
-  "recordsMyRecordTitle": "My record",
+  "recordsMyRecordTitle": "So far",
   "recordsSummaryTotalCleared": "Puzzles cleared",
   "recordsSummaryPerfectClears": "Mistake-free clears",
   "recordsSummaryHeroCount": "{count}",

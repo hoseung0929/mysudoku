@@ -27,6 +27,8 @@ class SudokuBoardGrid extends StatelessWidget {
     this.hintTargetCell,
     this.undoActive = const {},
     this.hintAppliedActive = const {},
+    this.digitCompleteActive = const {},
+    this.showCompletionGlow = false,
   });
 
   final SudokuGamePresenter presenter;
@@ -51,6 +53,14 @@ class SudokuBoardGrid extends StatelessWidget {
 
   // 힌트로 채운 칸 강조('$row,$col' 키, 항상 최대 1개 true).
   final Map<String, bool> hintAppliedActive;
+
+  // 숫자 1~9 완료 반응: 방금 다 채워진 숫자가 들어간 모든 칸을 짧게
+  // 옅은 색으로 강조한다('$row,$col' 키).
+  final Map<String, bool> digitCompleteActive;
+
+  // 퍼즐 완료 연출: 결과 다이얼로그가 뜨기 직전 잠깐(≈500ms, 동작 줄이기는
+  // ≈100ms) 보드 전체에 겹쳐 그리는 완료 강조. true인 동안만 마운트된다.
+  final bool showCompletionGlow;
 
   @override
   Widget build(BuildContext context) {
@@ -110,6 +120,12 @@ class SudokuBoardGrid extends StatelessWidget {
     final hintAppliedColor = isDark
         ? const Color(0xFF2E4A57).withValues(alpha: 0.75)
         : const Color(0xFFDCEAF0);
+    // 숫자 완료 보드 강조: "옅게"라는 요구대로 되돌리기 강조보다도 연한
+    // 보라. 방금 입력한 칸의 정답 강조(민트)와 같은 칸에서 겹쳐도, 그쪽이
+    // 렌더링 우선순위상 먼저 보이므로 이 옅은 색이 튀지 않는다.
+    final digitCompleteColor = isDark
+        ? levelPalette.primaryPurple.withValues(alpha: 0.16)
+        : levelPalette.primaryPurple.withValues(alpha: 0.12);
     final isHintActive = hintRegionCells.isNotEmpty;
     final digitOnBoard = cs.onSurface;
     final selectedRow = presenter.selectedRow;
@@ -193,6 +209,8 @@ class SudokuBoardGrid extends StatelessWidget {
                     final isUndoActive = undoActive['$row,$col'] == true;
                     final isHintApplied =
                         hintAppliedActive['$row,$col'] == true;
+                    final isDigitComplete =
+                        digitCompleteActive['$row,$col'] == true;
                     final horizontalOffset = errorOffset['$row,$col'] ?? 0.0;
 
                     final l10n = AppLocalizations.of(context)!;
@@ -339,44 +357,26 @@ class SudokuBoardGrid extends StatelessWidget {
                                                       ? hintAppliedColor
                                                       : isUndoActive
                                                           ? undoHighlightColor
-                                                          : Colors.transparent,
+                                                          : isDigitComplete
+                                                              ? digitCompleteColor
+                                                              : Colors
+                                                                  .transparent,
                                     ),
                                   ),
                                   Center(
                                     child: value != 0
-                                        ? Text(
-                                            value.toString(),
-                                            style: isWrong
-                                                ? AppTheme
-                                                    .sudokuWrongNumberStyle
-                                                    .copyWith(
-                                                    fontSize: digitFontSize,
-                                                  )
-                                                : isFixed
-                                                    ? GoogleFonts.notoSans(
-                                                        fontSize: digitFontSize,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: digitOnBoard,
-                                                      )
-                                                    : isHint
-                                                        ? GoogleFonts.notoSans(
-                                                            fontSize:
-                                                                digitFontSize,
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                            color: const Color(
-                                                                0xFF457B9D),
-                                                          )
-                                                        : GoogleFonts.notoSans(
-                                                            fontSize:
-                                                                digitFontSize,
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                            color: context
-                                                                .colors
-                                                                .boardUserNumber,
-                                                          ),
+                                        ? _buildDigitText(
+                                            value: value,
+                                            isWrong: isWrong,
+                                            isFixed: isFixed,
+                                            isHint: isHint,
+                                            digitFontSize: digitFontSize,
+                                            digitOnBoard: digitOnBoard,
+                                            userNumberColor:
+                                                context.colors.boardUserNumber,
+                                            playPopIn: isWave && !reduceMotion,
+                                            row: row,
+                                            col: col,
                                           )
                                         : SudokuMemoNotesGrid(
                                             notes: notes,
@@ -412,9 +412,72 @@ class SudokuBoardGrid extends StatelessWidget {
                 cellExtent: cellExtent,
                 onDigitEntered: onPencilDigit!,
               ),
+            if (showCompletionGlow)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: _PuzzleCompleteOverlay(
+                    key: const ValueKey('puzzle-complete-overlay'),
+                    color: levelPalette.primaryPurple,
+                    reduceMotion: reduceMotion,
+                  ),
+                ),
+              ),
           ],
         );
       },
+    );
+  }
+
+  /// 칸에 채워진 숫자 텍스트. [playPopIn]이 true면(방금 정답을 입력한 칸,
+  /// 동작 줄이기 아님) `0.92 → 1.06 → 1.0`으로 한 번 튀는 등장 애니메이션을
+  /// 180ms 동안 재생하고, 그 외에는 애니메이션 없이 그대로 보여준다. 이미
+  /// 채워져 있던 숫자나 고정 숫자는 [playPopIn]이 항상 false로 들어와
+  /// 재생되지 않는다(호출부에서 isWave로만 판단).
+  Widget _buildDigitText({
+    required int value,
+    required bool isWrong,
+    required bool isFixed,
+    required bool isHint,
+    required double digitFontSize,
+    required Color digitOnBoard,
+    required Color userNumberColor,
+    required bool playPopIn,
+    required int row,
+    required int col,
+  }) {
+    final text = Text(
+      value.toString(),
+      style: isWrong
+          ? AppTheme.sudokuWrongNumberStyle.copyWith(fontSize: digitFontSize)
+          : isFixed
+              ? GoogleFonts.notoSans(
+                  fontSize: digitFontSize,
+                  fontWeight: FontWeight.bold,
+                  color: digitOnBoard,
+                )
+              : isHint
+                  ? GoogleFonts.notoSans(
+                      fontSize: digitFontSize,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF457B9D),
+                    )
+                  : GoogleFonts.notoSans(
+                      fontSize: digitFontSize,
+                      fontWeight: FontWeight.w600,
+                      color: userNumberColor,
+                    ),
+    );
+    if (!playPopIn) {
+      return text;
+    }
+    return TweenAnimationBuilder<double>(
+      key: ValueKey('cell-pop-$row-$col'),
+      tween: Tween(begin: 0.92, end: 1.0),
+      duration: const Duration(milliseconds: 180),
+      curve: const _PopScaleCurve(),
+      builder: (context, scale, child) =>
+          Transform.scale(scale: scale, child: child),
+      child: text,
     );
   }
 
@@ -464,4 +527,124 @@ class SudokuBoardGrid extends StatelessWidget {
     }
     return count;
   }
+}
+
+/// 숫자 입력 팝 애니메이션 전용 커브: `TweenAnimationBuilder(begin: 0.92,
+/// end: 1.0)`와 함께 쓰여 0.92 → (커브가 만드는 오버슛으로) 약 1.06 →
+/// 1.0으로 보이게 한다. t=0.55 부근에서 최고점(1.75)을 찍고 t=1에서
+/// 정확히 1.0으로 돌아온다 — Curve 계약(transform(1) == 1)을 지키므로
+/// 최종 값은 항상 [Tween]의 end와 같다.
+class _PopScaleCurve extends Curve {
+  const _PopScaleCurve();
+
+  static const double _peakAt = 0.55;
+  static const double _peakValue = 1.75;
+
+  @override
+  double transform(double t) {
+    if (t <= _peakAt) {
+      final p = t / _peakAt;
+      return Curves.easeOut.transform(p) * _peakValue;
+    }
+    final p = (t - _peakAt) / (1 - _peakAt);
+    return _peakValue - Curves.easeInOut.transform(p) * (_peakValue - 1);
+  }
+}
+
+/// 퍼즐 완료 연출: 결과 다이얼로그가 뜨기 직전 잠깐 보드 위에 겹쳐 그리는
+/// 완료 강조. 마운트되는 즉시 한 번만 재생하고(부모가 지속 시간이 지나면
+/// 위젯 자체를 내려서 끝낸다), 동작 줄이기에서는 파동 없이 짧은 단색
+/// 강조만 보여준다.
+class _PuzzleCompleteOverlay extends StatelessWidget {
+  const _PuzzleCompleteOverlay({
+    super.key,
+    required this.color,
+    required this.reduceMotion,
+  });
+
+  final Color color;
+  final bool reduceMotion;
+
+  @override
+  Widget build(BuildContext context) {
+    if (reduceMotion) {
+      return TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: 1),
+        duration: GameEffectsController.puzzleCompleteGlowDurationReduced,
+        builder: (context, t, child) {
+          // 0→1→0 삼각파 한 번: 색만 짧게 밝아졌다 사라진다(이동·확산 없음).
+          final opacity = t < 0.5 ? t * 2 : (1 - t) * 2;
+          return IgnorePointer(
+            child: Container(color: color.withValues(alpha: opacity * 0.22)),
+          );
+        },
+      );
+    }
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: GameEffectsController.puzzleCompleteGlowDuration,
+      curve: Curves.easeOut,
+      builder: (context, t, child) {
+        // 글로우: 중앙에서 바깥으로 반경이 커지며 0→peak→0으로 밝아졌다 사라짐.
+        final glowOpacity =
+            (t < 0.35 ? t / 0.35 : (1 - t) / 0.65).clamp(0.0, 1.0).toDouble();
+        final glowRadius = 0.15 + t * 1.25;
+        // 3×3 박스 경계 강조: 글로우보다 살짝 늦게 나타났다 먼저 사라진다.
+        final boxT = ((t - 0.2) / 0.55).clamp(0.0, 1.0);
+        final boxOpacity =
+            (boxT < 0.5 ? boxT * 2 : (1 - boxT) * 2).clamp(0.0, 1.0);
+
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    radius: glowRadius,
+                    colors: [
+                      color.withValues(alpha: glowOpacity * 0.30),
+                      color.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            if (boxOpacity > 0)
+              Opacity(
+                opacity: boxOpacity,
+                child: CustomPaint(
+                  painter: _BoxBoundaryPainter(color: color),
+                  size: Size.infinite,
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// 3×3 박스 경계(내부 구분선 4개)만 강조해서 그린다. 셀 격자 자체의 얇은
+/// 보더와 겹쳐도 자연스럽도록 두껍고 약간 반투명한 선을 쓴다.
+class _BoxBoundaryPainter extends CustomPainter {
+  const _BoxBoundaryPainter({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color.withValues(alpha: 0.55)
+      ..strokeWidth = 2.5;
+    for (final fraction in [1 / 3, 2 / 3]) {
+      final x = size.width * fraction;
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+      final y = size.height * fraction;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _BoxBoundaryPainter oldDelegate) =>
+      oldDelegate.color != color;
 }

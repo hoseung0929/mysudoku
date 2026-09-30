@@ -93,26 +93,24 @@
   "gameProgressShort": "进度",
   "gameTimeShort": "用时",
   "gameNumberInputTitle": "数字输入",
-  "gameRowsCompleted": "完成 {count} 行",
-  "@gameRowsCompleted": {
+  "gameLineWaveRowLabel": "横排",
+  "gameLineWaveColLabel": "竖排",
+  "gameLineWaveBoxLabel": "3×3 宫",
+  "gameLineWaveAnnounce": "{parts}完成",
+  "@gameLineWaveAnnounce": {
     "placeholders": {
-      "count": {
-        "type": "int"
+      "parts": {
+        "type": "String"
       }
     }
   },
-  "gameColsCompleted": "完成 {count} 列",
-  "@gameColsCompleted": {
+  "gameLineWaveRowSentence": "你完成了一行",
+  "gameLineWaveColSentence": "你完成了一列",
+  "gameLineWaveBoxSentence": "你完成了一个 3×3 宫",
+  "gameDigitCompleteSentence": "你填满了所有的 {number}",
+  "@gameDigitCompleteSentence": {
     "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "gameBoxesCompleted": "完成 {count} 个宫",
-  "@gameBoxesCompleted": {
-    "placeholders": {
-      "count": {
+      "number": {
         "type": "int"
       }
     }
@@ -177,9 +175,37 @@
   "dialogShare": "分享",
   "dialogBackToLevels": "谜题列表",
   "dialogPlayAgain": "重新解题",
-  "dialogPuzzleCompleteTitle": "谜题完成",
+  "dialogPuzzleCompleteTitle": "你完成了谜题",
   "dialogNewBestMessage": "刷新了最佳记录",
   "dialogHintsUsed": "使用提示 {count} 次",
+  "dialogCompletionTimeSentenceMinutes": "用时 {minutes} 分 {seconds} 秒解开",
+  "@dialogCompletionTimeSentenceMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "dialogCompletionTimeSentenceSeconds": "用时 {seconds} 秒解开",
+  "@dialogCompletionTimeSentenceSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "dialogCompletionNoMistakes": "全程没有失误",
+  "dialogCompletionMistakeCount": "失误了 {count} 次",
+  "@dialogCompletionMistakeCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
   "dialogSolveSameAgain": "重新解这道谜题",
   "dialogNextPuzzle": "下一题",
   "updateRequiredTitle": "需要更新",
@@ -775,7 +801,7 @@
   "levelStartNextNew": "开始新谜题 · {number}",
   "levelViewInProgress": "查看 {count} 个进行中",
   "levelNotesInProgress": "正在写笔记",
-  "levelEmptyInProgress": "没有可继续的谜题。",
+  "levelEmptyInProgress": "还没有可以继续的谜题。",
   "levelEmptyCompleted": "创建你的第一条完成记录。",
   "levelEmptyFresh": "没有可开始的新谜题。",
   "levelAllCompleted": "你已完成该难度的所有谜题。",
@@ -796,7 +822,7 @@
   "savedGamesSortPlayTime": "按游玩时长",
   "savedGamesEmpty": "没有符合该筛选条件的存档。",
   "savedGamesDeleteFailed": "删除失败,请重试。",
-  "recordsMyRecordTitle": "我的记录",
+  "recordsMyRecordTitle": "目前为止",
   "recordsSummaryTotalCleared": "已完成谜题",
   "recordsSummaryPerfectClears": "无失误通关",
   "recordsSummaryHeroCount": "{count}道",

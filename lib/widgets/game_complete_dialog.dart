@@ -43,6 +43,19 @@ class GameCompleteDialog extends StatefulWidget {
   State<GameCompleteDialog> createState() => _GameCompleteDialogState();
 }
 
+/// "8분 24초 만에 풀었어요"처럼 자연스러운 문장용 시간 표기. 상세 라벨의
+/// 08:24 같은 디지털 표기와는 별개로, 1시간을 넘는 드문 경우는 분으로
+/// 뭉쳐 표시한다(그 경우에도 상세 라벨 쪽은 정확한 H:MM:SS를 유지한다).
+String _timeSentence(AppLocalizations l10n, int totalSeconds) {
+  final total = totalSeconds < 0 ? 0 : totalSeconds;
+  final minutes = total ~/ 60;
+  final seconds = total % 60;
+  if (minutes == 0) {
+    return l10n.dialogCompletionTimeSentenceSeconds(seconds);
+  }
+  return l10n.dialogCompletionTimeSentenceMinutes(minutes, seconds);
+}
+
 class _GameCompleteDialogState extends State<GameCompleteDialog> {
   // 빠르게 반복해서 눌러도 화면 이동/팝이 한 번만 일어나게 한다.
   bool _handled = false;
@@ -77,7 +90,22 @@ class _GameCompleteDialogState extends State<GameCompleteDialog> {
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 14),
+        // 대표 결과를 짧은 문장 두 줄로 먼저 보여준다 — 아래 상세 라벨과
+        // 같은 값을 다루지만, 목적이 달라(느낌 대 스캔) 둘 다 유지한다.
+        Text(
+          _timeSentence(l10n, widget.timeInSeconds),
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 15, color: cs.onSurface),
+        ),
+        Text(
+          widget.wrongCount == 0
+              ? l10n.dialogCompletionNoMistakes
+              : l10n.dialogCompletionMistakeCount(widget.wrongCount),
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 15, color: cs.onSurface),
+        ),
+        const SizedBox(height: 16),
         _ResultSummary(
           timeLabel: l10n.dialogElapsedTime,
           timeValue: widget.formattedTime,

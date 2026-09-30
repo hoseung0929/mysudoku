@@ -125,10 +125,10 @@ void main() {
         (tester) async {
       var next = 0;
       await tester.pumpWidget(_app(dialog(onNext: () => next++)));
-      final before = tester.getTopLeft(find.text('Puzzle complete'));
+      final before = tester.getTopLeft(find.text('You solved the puzzle'));
       final nextBefore = tester.getTopLeft(find.text('Next puzzle'));
       await tester.pump(const Duration(milliseconds: 100));
-      expect(tester.getTopLeft(find.text('Puzzle complete')), before);
+      expect(tester.getTopLeft(find.text('You solved the puzzle')), before);
       expect(tester.getTopLeft(find.text('Next puzzle')), nextBefore);
       // 기록 숫자는 처음부터 최종 값.
       expect(find.text('02:05'), findsOneWidget);

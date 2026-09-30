@@ -57,6 +57,14 @@ class GameEffectsController {
   final Map<String, bool> _undoActive = <String, bool>{};
   final Map<String, bool> _hintAppliedActive = <String, bool>{};
 
+  /// 숫자 1~9 완료 반응으로 보드에서 옅게 강조되는 칸('$row,$col' 키).
+  /// 정답·오답·줄 완성 등 기존 효과와는 독립된 별도 토큰으로 관리해서,
+  /// 방금 입력한 칸에 이미 걸려 있는 정답 강조(triggerCorrectEffect)를
+  /// 지우지 않고 함께 표시할 수 있게 한다.
+  final Map<String, bool> _digitCompleteActive = <String, bool>{};
+  final Map<String, int> _digitTokens = <String, int>{};
+  int _digitTokenSeed = 0;
+
   /// 현재 되돌리기 강조가 걸려 있는 칸(항상 최대 1개). 새 되돌리기가 다른
   /// 칸을 강조하면 이 칸의 강조는 타이머를 기다리지 않고 즉시 정리한다.
   String? _activeUndoKey;
@@ -67,13 +75,16 @@ class GameEffectsController {
   Map<String, double> get errorOffset => _errorOffset;
   Map<String, bool> get undoActive => _undoActive;
   Map<String, bool> get hintAppliedActive => _hintAppliedActive;
+  Map<String, bool> get digitCompleteActive => _digitCompleteActive;
 
   /// 일반 정답 강조: 대기 시간. 위젯의 [effectFadeDuration]과 합쳐 총 지속
-  /// 시간이 되므로(120 + 60 = 180ms), 컨트롤러 쪽만 따로 늘리지 않는다.
-  static const Duration correctPulseHold = Duration(milliseconds: 120);
+  /// 시간이 되므로(200 + 60 = 260ms), 컨트롤러 쪽만 따로 늘리지 않는다.
+  static const Duration correctPulseHold = Duration(milliseconds: 200);
 
-  /// 행·열·박스 완성 강조 대기 시간(490 + 60 = 550ms).
-  static const Duration lineCompleteHold = Duration(milliseconds: 490);
+  /// 행·열·박스 완성 강조: 칸이 켜진 뒤(각자의 파동 지연 이후) 머무는
+  /// 시간(380 + 60 = 440ms). 9칸 파동의 최대 지연(8 * 25 = 200ms)과 더해도
+  /// 마지막 칸이 640ms 안에 끝나 전체 효과가 650ms를 넘지 않는다.
+  static const Duration lineCompleteHold = Duration(milliseconds: 380);
 
   /// 오답 강조(배경·흔들림) 대기 시간(140 + 60 = 200ms).
   static const Duration errorHold = Duration(milliseconds: 140);
@@ -84,10 +95,24 @@ class GameEffectsController {
   /// 힌트로 채운 칸 강조 대기 시간(140 + 60 = 200ms, 180~220ms 범위).
   static const Duration hintAppliedHold = Duration(milliseconds: 140);
 
+  /// 숫자 완료 보드 강조 대기 시간(190 + 60 = 250ms).
+  static const Duration digitCompleteHold = Duration(milliseconds: 190);
+
   /// 보드 위젯이 효과 색을 등장·복원시키는 데 쓰는 공통 전환 시간.
   /// 대기 시간과 이 값의 합이 곧 사용자가 보는 전체 지속 시간이므로, 위젯도
   /// 반드시 이 상수를 그대로 사용해야 총 시간이 어긋나지 않는다.
   static const Duration effectFadeDuration = Duration(milliseconds: 60);
+
+  /// 퍼즐 완료 연출(글로우+박스 강조) 전체 길이. 게임 화면은 이 값이 지난
+  /// 뒤 햅틱 1회와 함께 결과 다이얼로그를 연다 — 보드 위젯의 글로우
+  /// 애니메이션 길이와 반드시 같아야 다이얼로그가 뜨는 순간과 글로우가
+  /// 사라지는 순간이 어긋나지 않는다.
+  static const Duration puzzleCompleteGlowDuration =
+      Duration(milliseconds: 500);
+
+  /// 동작 줄이기에서의 완료 연출 길이(짧은 단색 강조만).
+  static const Duration puzzleCompleteGlowDurationReduced =
+      Duration(milliseconds: 100);
 
   void resetForBoard({
     required List<List<int>> board,
@@ -113,6 +138,8 @@ class GameEffectsController {
     _undoActive.clear();
     _activeUndoKey = null;
     _hintAppliedActive.clear();
+    _digitCompleteActive.clear();
+    _digitTokens.clear();
   }
 
   /// [key] 칸에 새 효과를 걸 준비를 한다: 새 토큰을 발급해 그 칸에 걸린
@@ -197,9 +224,14 @@ class GameEffectsController {
       isPuzzleComplete: isPuzzleComplete,
     );
 
-    _suppressCorrectPulse = delta.hasNewCompletion || isPuzzleComplete;
+    // 퍼즐을 완성시킨 마지막 입력은 줄 완성 파동(행 9개가 한 번에 완성돼
+    // 의미가 없다)은 생략하되, 마지막 칸 자체의 정답 강조는 그대로 재생해
+    // 완료 연출(_beginPuzzleCompleteSequence)의 1단계로 이어지게 한다.
+    _suppressCorrectPulse = delta.hasNewCompletion && !isPuzzleComplete;
     if (isPuzzleComplete) {
-      // 마지막 입력: 남아 있던 임시 강조를 정리하고 결과창에 자리를 넘긴다.
+      // 남아 있던 다른 칸의 임시 강조만 정리하고, 결과창에 자리를 넘기기
+      // 전에 마지막 칸의 정답 강조(triggerCorrectEffect)가 걸릴 자리를
+      // 남겨 둔다.
       _clearVisibleEffects();
       return delta;
     }
@@ -355,6 +387,52 @@ class GameEffectsController {
     });
   }
 
+  /// 특정 숫자가 9개 모두 채워진 순간, 보드에서 그 숫자가 들어간 칸을 모두
+  /// 짧게 옅은 색으로 강조한다. 자체 토큰 맵을 따로 두므로, 방금 입력한
+  /// 칸에 이미 걸려 있는 정답 강조(triggerCorrectEffect)를 지우지 않는다.
+  void triggerDigitCompleteEffect({
+    required int digit,
+    required List<List<int>> board,
+    required void Function(void Function()) setState,
+    required bool Function() isMounted,
+  }) {
+    final generation = _effectGeneration;
+    final targets = <String>{};
+    for (int row = 0; row < 9; row++) {
+      for (int col = 0; col < 9; col++) {
+        if (board[row][col] == digit) {
+          targets.add('$row,$col');
+        }
+      }
+    }
+    if (targets.isEmpty) return;
+
+    final tokens = <String, int>{};
+    for (final key in targets) {
+      final token = ++_digitTokenSeed;
+      _digitTokens[key] = token;
+      tokens[key] = token;
+    }
+    setState(() {
+      for (final key in targets) {
+        _digitCompleteActive[key] = true;
+      }
+    });
+
+    Future<void>.delayed(digitCompleteHold, () {
+      if (!_stillValid(isMounted, generation)) {
+        return;
+      }
+      setState(() {
+        for (final key in targets) {
+          if (_digitTokens[key] == tokens[key]) {
+            _digitCompleteActive[key] = false;
+          }
+        }
+      });
+    });
+  }
+
   bool _stillValid(bool Function() isMounted, int generation) =>
       isMounted() && generation == _effectGeneration;
 
@@ -368,6 +446,8 @@ class GameEffectsController {
     _undoActive.clear();
     _activeUndoKey = null;
     _hintAppliedActive.clear();
+    _digitCompleteActive.clear();
+    _digitTokens.clear();
   }
 
   Set<int> _getCompletedCorrectRows({
@@ -457,6 +537,15 @@ class GameEffectsController {
     return completedBoxes;
   }
 
+  /// 3×3 박스 안 상대 좌표(row*3+col, 0~8)를 "중앙 → 상하좌우 → 대각선
+  /// 모서리" 순서의 파동 순위(0~8)로 매핑한다. 중앙(1,1)이 0순위, 그다음
+  /// 직교 이웃 4칸, 마지막으로 대각선 모서리 4칸(둘 다 읽기 순서로 정렬).
+  static const List<int> _boxWaveRank = [5, 1, 6, 2, 0, 3, 7, 4, 8];
+
+  /// 칸별 파동 지연 간격. 9칸 기준 최대 지연은 8 * 25 = 200ms로, 대기
+  /// 시간·페이드와 합쳐도 전체가 650ms 안에 끝난다.
+  static const int _lineWaveStaggerMs = 25;
+
   void _triggerLineCompletionEffect({
     required Set<int> rows,
     required Set<int> cols,
@@ -465,53 +554,95 @@ class GameEffectsController {
     required bool Function() isMounted,
   }) {
     final generation = _effectGeneration;
-    final targets = <String>{};
+    // 칸별 시작 지연(ms). 여러 줄·박스에 동시에 걸리면 "가장 빠른 시작
+    // 시점 하나만" 쓴다 — 더 작은 지연으로 덮어쓴다.
+    final delays = <String, int>{};
+    void considerDelay(String key, int delayMs) {
+      final existing = delays[key];
+      if (existing == null || delayMs < existing) {
+        delays[key] = delayMs;
+      }
+    }
+
+    // 동작 줄이기에서는 순차 파동 없이 대상 전체를 동시에(지연 0) 켠다.
+    final wave = !reduceMotion;
     for (final row in rows) {
       for (int col = 0; col < 9; col++) {
-        targets.add('$row,$col');
+        considerDelay('$row,$col', wave ? col * _lineWaveStaggerMs : 0);
       }
     }
     for (final col in cols) {
       for (int row = 0; row < 9; row++) {
-        targets.add('$row,$col');
+        considerDelay('$row,$col', wave ? row * _lineWaveStaggerMs : 0);
       }
     }
     for (final boxIndex in boxes) {
       final startRow = (boxIndex ~/ 3) * 3;
       final startCol = (boxIndex % 3) * 3;
-      for (int row = startRow; row < startRow + 3; row++) {
-        for (int col = startCol; col < startCol + 3; col++) {
-          targets.add('$row,$col');
+      for (int r = 0; r < 3; r++) {
+        for (int c = 0; c < 3; c++) {
+          final key = '${startRow + r},${startCol + c}';
+          final rank = _boxWaveRank[r * 3 + c];
+          considerDelay(key, wave ? rank * _lineWaveStaggerMs : 0);
         }
       }
     }
-    if (targets.isEmpty) {
+    if (delays.isEmpty) {
       return;
     }
 
-    // 행·열·박스가 함께 완성돼도 칸의 합집합에 한 번만 적용한다. _claim이
-    // 대상 칸에 남아 있던 일반 정답 효과(이전 입력의 잔상 포함)도 함께
-    // 정리하므로 줄 완성이 항상 우선한다.
+    // 행·열·박스가 함께 완성돼도 칸의 합집합에 한 번만 적용한다. _claim은
+    // 지금(모든 칸의 지연이 결정된 시점) 한꺼번에 걸어, 그 칸에 남아 있던
+    // 일반 정답 효과(이전 입력의 잔상 포함)를 정리하고 기존 토큰 취소
+    // 구조를 그대로 유지한다 — 실제 활성화는 각자의 지연만큼 뒤에 온다.
     final tokens = <String, int>{
-      for (final key in targets) key: _claim(key),
+      for (final key in delays.keys) key: _claim(key),
     };
-    setState(() {
-      for (final key in targets) {
-        _lineCompleteActive[key] = true;
-      }
-    });
 
-    Future.delayed(lineCompleteHold, () {
-      if (!_stillValid(isMounted, generation)) {
-        return;
-      }
-      setState(() {
-        for (final key in targets) {
-          if (_tokens[key] == tokens[key]) {
+    void scheduleOff(String key, int token) {
+      Future.delayed(lineCompleteHold, () {
+        if (!_stillValid(isMounted, generation)) {
+          return;
+        }
+        setState(() {
+          if (_tokens[key] == token) {
             _lineCompleteActive[key] = false;
           }
+        });
+      });
+    }
+
+    // 지연이 0인 칸(파동의 맨 앞, 또는 동작 줄이기의 전체)은 한 setState로
+    // 동시에 켠다 — Future.delayed(Duration.zero)를 거치면 다음 이벤트
+    // 루프 턴까지 밀려 "즉시 반응"이 아니게 되므로 피한다.
+    final immediateKeys = [
+      for (final entry in delays.entries)
+        if (entry.value == 0) entry.key,
+    ];
+    if (immediateKeys.isNotEmpty) {
+      setState(() {
+        for (final key in immediateKeys) {
+          _lineCompleteActive[key] = true;
         }
       });
-    });
+      for (final key in immediateKeys) {
+        scheduleOff(key, tokens[key]!);
+      }
+    }
+
+    for (final entry in delays.entries) {
+      if (entry.value == 0) continue; // 위에서 이미 처리함.
+      final key = entry.key;
+      final token = tokens[key]!;
+      Future.delayed(Duration(milliseconds: entry.value), () {
+        if (!_isCurrent(key, token, generation, isMounted())) {
+          return;
+        }
+        setState(() {
+          _lineCompleteActive[key] = true;
+        });
+        scheduleOff(key, token);
+      });
+    }
   }
 }

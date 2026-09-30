@@ -148,7 +148,7 @@ void main() {
         (tester) async {
       await tester.pumpWidget(_app(dialog(onNext: () {}, hints: 1)));
 
-      expect(find.text('Puzzle complete'), findsOneWidget);
+      expect(find.text('You solved the puzzle'), findsOneWidget);
       expect(find.text('Beginner · Game 18'), findsOneWidget);
       expect(find.text('1:02:05'), findsOneWidget);
       expect(find.text('2 times'), findsOneWidget);
@@ -159,7 +159,7 @@ void main() {
       expect(find.text('Suggested next step'), findsNothing);
       // 세로 순서: 제목 < 난이도 < 결과 < 주요 버튼 < 보조 버튼
       double y(String t) => tester.getTopLeft(find.text(t)).dy;
-      expect(y('Puzzle complete'), lessThan(y('Beginner · Game 18')));
+      expect(y('You solved the puzzle'), lessThan(y('Beginner · Game 18')));
       expect(y('Beginner · Game 18'), lessThan(y('1:02:05')));
       expect(y('1:02:05'), lessThan(y('Next puzzle')));
       expect(y('Next puzzle'), lessThan(y('Puzzle list')));
@@ -179,7 +179,7 @@ void main() {
 
       await tester.pumpWidget(_app(dialog(onNext: () {}), textScale: 2.0));
       expect(find.byType(MascotImage), findsNothing);
-      expect(find.text('Puzzle complete'), findsOneWidget);
+      expect(find.text('You solved the puzzle'), findsOneWidget);
       expect(find.text('Next puzzle'), findsOneWidget);
     });
 

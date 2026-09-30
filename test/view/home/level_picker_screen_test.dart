@@ -287,7 +287,7 @@ void main() {
     await pumpPicker(tester, games: games, cleared: {1});
     await tester.tap(find.text('In progress 0'));
     await tester.pump();
-    expect(find.text('No puzzles to continue.'), findsOneWidget);
+    expect(find.text("You don't have a puzzle to continue yet."), findsOneWidget);
     expect(find.text('Start new puzzle · 002'), findsWidgets);
     await tester.tap(find.text('Show new puzzles'));
     await tester.pump();

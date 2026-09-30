@@ -274,18 +274,31 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gameNumberInputTitle => '数字入力';
 
   @override
-  String gameRowsCompleted(int count) {
-    return '$count行クリア';
+  String get gameLineWaveRowLabel => '横列';
+
+  @override
+  String get gameLineWaveColLabel => '縦列';
+
+  @override
+  String get gameLineWaveBoxLabel => '3×3ブロック';
+
+  @override
+  String gameLineWaveAnnounce(String parts) {
+    return '$partsクリア';
   }
 
   @override
-  String gameColsCompleted(int count) {
-    return '$count列クリア';
-  }
+  String get gameLineWaveRowSentence => '横列を完成させました';
 
   @override
-  String gameBoxesCompleted(int count) {
-    return '$countブロッククリア';
+  String get gameLineWaveColSentence => '縦列を完成させました';
+
+  @override
+  String get gameLineWaveBoxSentence => '3×3ブロックを完成させました';
+
+  @override
+  String gameDigitCompleteSentence(int number) {
+    return '数字の$numberをすべて埋めました';
   }
 
   @override
@@ -366,7 +379,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get dialogPlayAgain => 'もう一度解く';
 
   @override
-  String get dialogPuzzleCompleteTitle => 'パズル完了';
+  String get dialogPuzzleCompleteTitle => 'パズルを完成させました';
 
   @override
   String get dialogNewBestMessage => 'ベスト記録を更新しました';
@@ -374,6 +387,24 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String dialogHintsUsed(int count) {
     return 'ヒント $count回使用';
+  }
+
+  @override
+  String dialogCompletionTimeSentenceMinutes(int minutes, int seconds) {
+    return '$minutes分$seconds秒で解けました';
+  }
+
+  @override
+  String dialogCompletionTimeSentenceSeconds(int seconds) {
+    return '$seconds秒で解けました';
+  }
+
+  @override
+  String get dialogCompletionNoMistakes => 'ミスなく解けました';
+
+  @override
+  String dialogCompletionMistakeCount(num count) {
+    return 'ミスは$count回でした';
   }
 
   @override
@@ -1334,7 +1365,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get levelNotesInProgress => 'メモ作成中';
 
   @override
-  String get levelEmptyInProgress => '続きから解くパズルはありません。';
+  String get levelEmptyInProgress => 'まだ続きから解けるパズルがありません。';
 
   @override
   String get levelEmptyCompleted => '最初のクリア記録を作りましょう。';
@@ -1402,7 +1433,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get savedGamesDeleteFailed => '削除できませんでした。もう一度お試しください。';
 
   @override
-  String get recordsMyRecordTitle => '私の記録';
+  String get recordsMyRecordTitle => 'これまで';
 
   @override
   String get recordsSummaryTotalCleared => 'クリアしたパズル';

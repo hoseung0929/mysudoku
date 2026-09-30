@@ -220,7 +220,7 @@ void main() {
 
     testWidgets(
         'a plain correct pulse colors in, then fully restores within '
-        '~180ms', (tester) async {
+        '~260ms', (tester) async {
       final presenter = _presenter();
       final controller = GameEffectsController();
       final board = List.generate(9, (_) => List.filled(9, 0));
@@ -240,17 +240,17 @@ void main() {
       await tester.pump(const Duration(milliseconds: 60));
       expect(effectColor(tester), isNot(Colors.transparent));
 
-      // 대기 시간(120ms)이 끝나기 전에는 계속 강조색이어야 한다.
+      // 대기 시간(200ms)이 끝나기 전에는 계속 강조색이어야 한다.
       await tester.pump(const Duration(milliseconds: 40)); // 누적 100ms
       expect(effectColor(tester), isNot(Colors.transparent));
 
-      // 대기 시간이 끝나는 경계(120ms)를 넘겨 컨트롤러의 예약 콜백이
+      // 대기 시간이 끝나는 경계(200ms)를 넘겨 컨트롤러의 예약 콜백이
       // 실행되게 한 뒤, AnimatedContainer가 새 목표(투명)를 등록하도록
       // 한 프레임을 더 그리고 위젯 전환 시간만큼 흘려보낸다. 전체 지속
-      // 시간이 문서화된 180ms 근방에서 끝난다.
-      await tester.pump(const Duration(milliseconds: 22)); // 누적 122ms
+      // 시간이 문서화된 260ms 근방에서 끝난다.
+      await tester.pump(const Duration(milliseconds: 102)); // 누적 202ms
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 60)); // 누적 182ms
+      await tester.pump(const Duration(milliseconds: 60)); // 누적 262ms
       expect(effectColor(tester), Colors.transparent);
 
       // 컨트롤러가 예약해 둔 타이머(취소돼 아무 것도 안 하는 것 포함)를 모두 흘려보내 테스트 종료 시 남은 타이머가 없게 한다.
@@ -259,8 +259,8 @@ void main() {
     });
 
     testWidgets(
-        'a line/box completion colors in, then fully restores within '
-        '~550ms', (tester) async {
+        'a line/box completion colors in (after its wave delay), then fully '
+        'restores', (tester) async {
       final presenter = _presenter();
       final controller = GameEffectsController();
       final board = copy();
@@ -280,19 +280,28 @@ void main() {
       // setState를 부른다 — 보드 diff 취소는 그 콜백 밖에서 일어나기 때문이다.
       setState(() {});
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 60));
+
+      // (8,8)을 계속 비워 둬서 열8은 완성되지 않고, 행0·박스2만 완성된다.
+      // (0,8)은 박스2 파동에서 지연 150ms(행0 쪽 지연 200ms보다 빠른
+      // 박스2가 이긴다) — 활성화 전까지는 계속 투명하다.
+      await tester.pump(const Duration(milliseconds: 100)); // 누적 100ms
+      expect(effectColor(tester, row: 0, col: 8), Colors.transparent);
+
+      await tester.pump(const Duration(milliseconds: 50)); // 누적 150ms, 활성화
+      await tester.pump(); // 새 목표(강조색) 등록
+      await tester.pump(const Duration(milliseconds: 60)); // 누적 210ms
       expect(effectColor(tester, row: 0, col: 8), isNot(Colors.transparent));
 
-      // 대기 시간(490ms)이 끝나기 전에는 계속 강조색이어야 한다.
-      await tester.pump(const Duration(milliseconds: 400)); // 누적 460ms
+      // 대기 시간(활성화 후 380ms, 누적 530ms)이 끝나기 전에는 계속
+      // 강조색이어야 한다.
+      await tester.pump(const Duration(milliseconds: 300)); // 누적 510ms
       expect(effectColor(tester, row: 0, col: 8), isNot(Colors.transparent));
 
-      // 대기 시간이 끝나는 경계(490ms)를 넘긴 뒤 새 목표(투명)를 등록할
-      // 프레임을 한 번 더 그리고 위젯 전환 시간만큼 흘려보낸다. 전체
-      // 지속 시간이 문서화된 550ms 근방에서 끝난다.
-      await tester.pump(const Duration(milliseconds: 32)); // 누적 492ms
+      // 대기 시간이 끝나는 경계(누적 530ms)를 넘긴 뒤 새 목표(투명)를
+      // 등록할 프레임을 한 번 더 그리고 위젯 전환 시간만큼 흘려보낸다.
+      await tester.pump(const Duration(milliseconds: 22)); // 누적 532ms
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 60)); // 누적 552ms
+      await tester.pump(const Duration(milliseconds: 60)); // 누적 592ms
       expect(effectColor(tester, row: 0, col: 8), Colors.transparent);
 
       // 컨트롤러가 예약해 둔 타이머(취소돼 아무 것도 안 하는 것 포함)를 모두 흘려보내 테스트 종료 시 남은 타이머가 없게 한다.
@@ -346,6 +355,9 @@ void main() {
       // setState를 부른다 — 보드 diff 취소는 그 콜백 밖에서 일어나기 때문이다.
       setState(() {});
       await tester.pump();
+      // (0,1)은 행0 파동의 두 번째 칸(지연 25ms)이라, 파동의 최대 지연
+      // (9칸 기준 최대 200ms)을 넉넉히 덮는 시간까지 흘려보낸 뒤 확인한다.
+      await tester.pump(const Duration(milliseconds: 220));
       await tester.pump(const Duration(milliseconds: 60));
 
       final lineColor = effectColor(tester, row: 0, col: 1);
@@ -399,15 +411,26 @@ void main() {
       setState(() {});
       await tester.pump();
 
-      // 이벤트1이 원래 끝났어야 할 시점(t=490)을 넘긴 뒤, 새 목표를 등록할
-      // 프레임을 한 번 더 그리고 위젯 전환 시간만큼 흘려보낸다: 전용 칸은
-      // 꺼지지만, 공유 칸은 이벤트2가 새로 가져가(t=590에 끝남) 켜진 채로
-      // 남아야 한다.
-      await tester.pump(const Duration(milliseconds: 392)); // 누적 492ms
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 60)); // 누적 552ms
+      // (0,0)은 행0 파동에서 맨 앞(지연 0)이라 이벤트2가 T=100에 곧장
+      // 켠다. 이벤트1의 전용 칸(1,0)은 T=50에 켜져 T=430에 꺼지고,
+      // 이벤트2가 새로 켠 (0,0)은 T=480에 꺼진다.
+      //
+      // AnimatedContainer는 목표가 바뀐 프레임에서야 그 시점의 색부터
+      // 새로 전환을 시작하므로(중간에 프레임을 그리지 않고 한 번에 크게
+      // 건너뛰면 그 큰 점프 시작 시점을 기준으로 다시 전환이 시작된다),
+      // 각 꺼짐 경계마다 딱 맞춰 한 프레임을 그려 목표를 등록한 뒤 위젯
+      // 전환 시간(60ms)만큼 흘려보내야 실제로 다 사라진 상태를 본다.
+      await tester.pump(const Duration(milliseconds: 330)); // 누적 430ms
+      await tester.pump(); // (1,0) 목표(투명) 등록
+      await tester.pump(const Duration(milliseconds: 60)); // 누적 490ms
       expect(effectColor(tester, row: 1, col: 0), Colors.transparent);
+      // (0,0)은 T=480에 꺼졌지만 위젯이 막 그 시점을 인지한 참이라 아직
+      // 이전(강조) 색 그대로다 — 공유 칸이 살아 있다는 것만 확인한다.
       expect(effectColor(tester, row: 0, col: 0), isNot(Colors.transparent));
+
+      await tester.pump(); // (0,0) 목표(투명) 등록
+      await tester.pump(const Duration(milliseconds: 60)); // 누적 550ms
+      expect(effectColor(tester, row: 0, col: 0), Colors.transparent);
 
       // 컨트롤러가 예약해 둔 타이머(취소돼 아무 것도 안 하는 것 포함)를 모두 흘려보내 테스트 종료 시 남은 타이머가 없게 한다.
       await tester.pump(const Duration(seconds: 1));

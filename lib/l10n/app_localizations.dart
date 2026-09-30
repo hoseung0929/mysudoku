@@ -620,23 +620,53 @@ abstract class AppLocalizations {
   /// **'Number input'**
   String get gameNumberInputTitle;
 
-  /// No description provided for @gameRowsCompleted.
+  /// No description provided for @gameLineWaveRowLabel.
   ///
   /// In en, this message translates to:
-  /// **'{count} row cleared'**
-  String gameRowsCompleted(int count);
+  /// **'Row'**
+  String get gameLineWaveRowLabel;
 
-  /// No description provided for @gameColsCompleted.
+  /// No description provided for @gameLineWaveColLabel.
   ///
   /// In en, this message translates to:
-  /// **'{count} column cleared'**
-  String gameColsCompleted(int count);
+  /// **'Column'**
+  String get gameLineWaveColLabel;
 
-  /// No description provided for @gameBoxesCompleted.
+  /// No description provided for @gameLineWaveBoxLabel.
   ///
   /// In en, this message translates to:
-  /// **'{count} box cleared'**
-  String gameBoxesCompleted(int count);
+  /// **'3×3 box'**
+  String get gameLineWaveBoxLabel;
+
+  /// No description provided for @gameLineWaveAnnounce.
+  ///
+  /// In en, this message translates to:
+  /// **'{parts} cleared'**
+  String gameLineWaveAnnounce(String parts);
+
+  /// No description provided for @gameLineWaveRowSentence.
+  ///
+  /// In en, this message translates to:
+  /// **'You completed a row'**
+  String get gameLineWaveRowSentence;
+
+  /// No description provided for @gameLineWaveColSentence.
+  ///
+  /// In en, this message translates to:
+  /// **'You completed a column'**
+  String get gameLineWaveColSentence;
+
+  /// No description provided for @gameLineWaveBoxSentence.
+  ///
+  /// In en, this message translates to:
+  /// **'You completed a 3×3 box'**
+  String get gameLineWaveBoxSentence;
+
+  /// No description provided for @gameDigitCompleteSentence.
+  ///
+  /// In en, this message translates to:
+  /// **'You filled in all the {number}s'**
+  String gameDigitCompleteSentence(int number);
 
   /// No description provided for @gamePause.
   ///
@@ -779,7 +809,7 @@ abstract class AppLocalizations {
   /// No description provided for @dialogPuzzleCompleteTitle.
   ///
   /// In en, this message translates to:
-  /// **'Puzzle complete'**
+  /// **'You solved the puzzle'**
   String get dialogPuzzleCompleteTitle;
 
   /// No description provided for @dialogNewBestMessage.
@@ -793,6 +823,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hints used: {count}'**
   String dialogHintsUsed(int count);
+
+  /// No description provided for @dialogCompletionTimeSentenceMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Solved in {minutes} min {seconds} sec'**
+  String dialogCompletionTimeSentenceMinutes(int minutes, int seconds);
+
+  /// No description provided for @dialogCompletionTimeSentenceSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'Solved in {seconds} sec'**
+  String dialogCompletionTimeSentenceSeconds(int seconds);
+
+  /// No description provided for @dialogCompletionNoMistakes.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished with no mistakes'**
+  String get dialogCompletionNoMistakes;
+
+  /// No description provided for @dialogCompletionMistakeCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{You made {count} mistake} other{You made {count} mistakes}}'**
+  String dialogCompletionMistakeCount(num count);
 
   /// No description provided for @dialogSolveSameAgain.
   ///
@@ -2507,7 +2561,7 @@ abstract class AppLocalizations {
   /// No description provided for @levelEmptyInProgress.
   ///
   /// In en, this message translates to:
-  /// **'No puzzles to continue.'**
+  /// **'You don\'t have a puzzle to continue yet.'**
   String get levelEmptyInProgress;
 
   /// No description provided for @levelEmptyCompleted.
@@ -2633,7 +2687,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordsMyRecordTitle.
   ///
   /// In en, this message translates to:
-  /// **'My record'**
+  /// **'So far'**
   String get recordsMyRecordTitle;
 
   /// No description provided for @recordsSummaryTotalCleared.

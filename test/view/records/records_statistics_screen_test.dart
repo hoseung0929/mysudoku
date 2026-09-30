@@ -371,7 +371,7 @@ void main() {
         findsOneWidget);
     // "나의 기록" 요약 카드: 완료 수가 가장 큰 대표 숫자, 무오답·연속은
     // 보조 칩으로 표시한다(recent.length=2, activitySummary 고정값들).
-    expect(find.text('My record'), findsOneWidget);
+    expect(find.text('So far'), findsOneWidget);
     expect(
       find.descendant(
         of: find.byKey(const Key('records_summary_card')),
@@ -489,7 +489,7 @@ void main() {
         theme: dark ? AppTheme.darkTheme() : AppTheme.lightTheme(),
       );
       expect(tester.takeException(), isNull);
-      expect(find.text('My record'), findsOneWidget);
+      expect(find.text('So far'), findsOneWidget);
     });
   }
 
@@ -589,7 +589,7 @@ void main() {
     );
     expect(
       tester.getTopLeft(find.text('puzzles solved')).dy,
-      greaterThan(tester.getTopLeft(find.text('My record')).dy),
+      greaterThan(tester.getTopLeft(find.text('So far')).dy),
     );
   });
 
@@ -609,7 +609,7 @@ void main() {
       ),
       findsNothing,
     );
-    expect(find.text('My record'), findsOneWidget);
+    expect(find.text('So far'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -632,7 +632,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.byKey(const Key('records_initial_skeleton')), findsNothing);
-    expect(find.text('My record'), findsOneWidget);
+    expect(find.text('So far'), findsOneWidget);
   });
 
   testWidgets('challenge title is not repeated and its streak stays in card',
@@ -978,7 +978,7 @@ void main() {
           throwOnMonthCalendar: true,
         ),
       );
-      expect(find.text('My record'), findsOneWidget);
+      expect(find.text('So far'), findsOneWidget);
       expect(find.text('Records by level'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
@@ -1007,7 +1007,7 @@ void main() {
         ),
       );
       expect(find.text("Today's challenge streak 0 days"), findsOneWidget);
-      expect(find.text('My record'), findsOneWidget);
+      expect(find.text('So far'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 

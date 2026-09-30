@@ -284,18 +284,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gameNumberInputTitle => 'Number input';
 
   @override
-  String gameRowsCompleted(int count) {
-    return '$count row cleared';
+  String get gameLineWaveRowLabel => 'Row';
+
+  @override
+  String get gameLineWaveColLabel => 'Column';
+
+  @override
+  String get gameLineWaveBoxLabel => '3×3 box';
+
+  @override
+  String gameLineWaveAnnounce(String parts) {
+    return '$parts cleared';
   }
 
   @override
-  String gameColsCompleted(int count) {
-    return '$count column cleared';
-  }
+  String get gameLineWaveRowSentence => 'You completed a row';
 
   @override
-  String gameBoxesCompleted(int count) {
-    return '$count box cleared';
+  String get gameLineWaveColSentence => 'You completed a column';
+
+  @override
+  String get gameLineWaveBoxSentence => 'You completed a 3×3 box';
+
+  @override
+  String gameDigitCompleteSentence(int number) {
+    return 'You filled in all the ${number}s';
   }
 
   @override
@@ -376,7 +389,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dialogPlayAgain => 'Solve again';
 
   @override
-  String get dialogPuzzleCompleteTitle => 'Puzzle complete';
+  String get dialogPuzzleCompleteTitle => 'You solved the puzzle';
 
   @override
   String get dialogNewBestMessage => 'New best record!';
@@ -384,6 +397,30 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String dialogHintsUsed(int count) {
     return 'Hints used: $count';
+  }
+
+  @override
+  String dialogCompletionTimeSentenceMinutes(int minutes, int seconds) {
+    return 'Solved in $minutes min $seconds sec';
+  }
+
+  @override
+  String dialogCompletionTimeSentenceSeconds(int seconds) {
+    return 'Solved in $seconds sec';
+  }
+
+  @override
+  String get dialogCompletionNoMistakes => 'Finished with no mistakes';
+
+  @override
+  String dialogCompletionMistakeCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You made $count mistakes',
+      one: 'You made $count mistake',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1428,7 +1465,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get levelNotesInProgress => 'Writing notes';
 
   @override
-  String get levelEmptyInProgress => 'No puzzles to continue.';
+  String get levelEmptyInProgress =>
+      'You don\'t have a puzzle to continue yet.';
 
   @override
   String get levelEmptyCompleted => 'Make your first completion record.';
@@ -1499,7 +1537,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t delete this puzzle. Please try again.';
 
   @override
-  String get recordsMyRecordTitle => 'My record';
+  String get recordsMyRecordTitle => 'So far';
 
   @override
   String get recordsSummaryTotalCleared => 'Puzzles cleared';

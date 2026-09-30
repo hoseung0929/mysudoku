@@ -275,18 +275,31 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gameNumberInputTitle => '숫자 입력';
 
   @override
-  String gameRowsCompleted(int count) {
-    return '행 $count개 완성';
+  String get gameLineWaveRowLabel => '가로줄';
+
+  @override
+  String get gameLineWaveColLabel => '세로줄';
+
+  @override
+  String get gameLineWaveBoxLabel => '3×3 박스';
+
+  @override
+  String gameLineWaveAnnounce(String parts) {
+    return '$parts 완성';
   }
 
   @override
-  String gameColsCompleted(int count) {
-    return '열 $count개 완성';
-  }
+  String get gameLineWaveRowSentence => '가로줄을 완성했어요';
 
   @override
-  String gameBoxesCompleted(int count) {
-    return '박스 $count개 완성';
+  String get gameLineWaveColSentence => '세로줄을 완성했어요';
+
+  @override
+  String get gameLineWaveBoxSentence => '3×3 박스를 완성했어요';
+
+  @override
+  String gameDigitCompleteSentence(int number) {
+    return '숫자 $number를 모두 채웠어요';
   }
 
   @override
@@ -367,7 +380,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get dialogPlayAgain => '다시 풀기';
 
   @override
-  String get dialogPuzzleCompleteTitle => '퍼즐 완료';
+  String get dialogPuzzleCompleteTitle => '퍼즐을 완성했어요';
 
   @override
   String get dialogNewBestMessage => '새로운 최고 기록이에요';
@@ -375,6 +388,24 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String dialogHintsUsed(int count) {
     return '힌트 $count회 사용';
+  }
+
+  @override
+  String dialogCompletionTimeSentenceMinutes(int minutes, int seconds) {
+    return '$minutes분 $seconds초 만에 풀었어요';
+  }
+
+  @override
+  String dialogCompletionTimeSentenceSeconds(int seconds) {
+    return '$seconds초 만에 풀었어요';
+  }
+
+  @override
+  String get dialogCompletionNoMistakes => '실수 없이 마무리했어요';
+
+  @override
+  String dialogCompletionMistakeCount(num count) {
+    return '실수는 $count번 있었어요';
   }
 
   @override
@@ -596,7 +627,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsLevelMiniAvgWrong => '평균 오답';
 
   @override
-  String get recordsStatsLoadError => '통계 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
+  String get recordsStatsLoadError => '통계 데이터를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.';
 
   @override
   String get recordsRetry => '다시 시도';
@@ -1340,7 +1371,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get levelNotesInProgress => '메모 작성 중';
 
   @override
-  String get levelEmptyInProgress => '이어 풀 퍼즐이 없어요.';
+  String get levelEmptyInProgress => '이어갈 퍼즐이 아직 없어요.';
 
   @override
   String get levelEmptyCompleted => '첫 완료 기록을 만들어보세요.';
@@ -1408,7 +1439,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get savedGamesDeleteFailed => '삭제하지 못했어요. 다시 시도해 주세요.';
 
   @override
-  String get recordsMyRecordTitle => '나의 기록';
+  String get recordsMyRecordTitle => '지금까지';
 
   @override
   String get recordsSummaryTotalCleared => '완료한 퍼즐';

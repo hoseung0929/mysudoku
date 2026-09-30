@@ -93,26 +93,24 @@
   "gameProgressShort": "進捗",
   "gameTimeShort": "タイム",
   "gameNumberInputTitle": "数字入力",
-  "gameRowsCompleted": "{count}行クリア",
-  "@gameRowsCompleted": {
+  "gameLineWaveRowLabel": "横列",
+  "gameLineWaveColLabel": "縦列",
+  "gameLineWaveBoxLabel": "3×3ブロック",
+  "gameLineWaveAnnounce": "{parts}クリア",
+  "@gameLineWaveAnnounce": {
     "placeholders": {
-      "count": {
-        "type": "int"
+      "parts": {
+        "type": "String"
       }
     }
   },
-  "gameColsCompleted": "{count}列クリア",
-  "@gameColsCompleted": {
+  "gameLineWaveRowSentence": "横列を完成させました",
+  "gameLineWaveColSentence": "縦列を完成させました",
+  "gameLineWaveBoxSentence": "3×3ブロックを完成させました",
+  "gameDigitCompleteSentence": "数字の{number}をすべて埋めました",
+  "@gameDigitCompleteSentence": {
     "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "gameBoxesCompleted": "{count}ブロッククリア",
-  "@gameBoxesCompleted": {
-    "placeholders": {
-      "count": {
+      "number": {
         "type": "int"
       }
     }
@@ -177,9 +175,37 @@
   "dialogShare": "シェア",
   "dialogBackToLevels": "パズル一覧へ",
   "dialogPlayAgain": "もう一度解く",
-  "dialogPuzzleCompleteTitle": "パズル完了",
+  "dialogPuzzleCompleteTitle": "パズルを完成させました",
   "dialogNewBestMessage": "ベスト記録を更新しました",
   "dialogHintsUsed": "ヒント {count}回使用",
+  "dialogCompletionTimeSentenceMinutes": "{minutes}分{seconds}秒で解けました",
+  "@dialogCompletionTimeSentenceMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "dialogCompletionTimeSentenceSeconds": "{seconds}秒で解けました",
+  "@dialogCompletionTimeSentenceSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "dialogCompletionNoMistakes": "ミスなく解けました",
+  "dialogCompletionMistakeCount": "ミスは{count}回でした",
+  "@dialogCompletionMistakeCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
   "dialogSolveSameAgain": "同じパズルをもう一度解く",
   "dialogNextPuzzle": "次のパズル",
   "updateRequiredTitle": "アップデートが必要です",
@@ -775,7 +801,7 @@
   "levelStartNextNew": "次の新しいパズルを始める · {number}",
   "levelViewInProgress": "進行中 {count}件を見る",
   "levelNotesInProgress": "メモ作成中",
-  "levelEmptyInProgress": "続きから解くパズルはありません。",
+  "levelEmptyInProgress": "まだ続きから解けるパズルがありません。",
   "levelEmptyCompleted": "最初のクリア記録を作りましょう。",
   "levelEmptyFresh": "新しく始められるパズルはありません。",
   "levelAllCompleted": "このレベルのパズルをすべてクリアしました。",
@@ -796,7 +822,7 @@
   "savedGamesSortPlayTime": "プレイ時間順",
   "savedGamesEmpty": "この条件に一致する保存済みゲームはありません。",
   "savedGamesDeleteFailed": "削除できませんでした。もう一度お試しください。",
-  "recordsMyRecordTitle": "私の記録",
+  "recordsMyRecordTitle": "これまで",
   "recordsSummaryTotalCleared": "クリアしたパズル",
   "recordsSummaryPerfectClears": "ミスなしクリア",
   "recordsSummaryHeroCount": "{count}問",

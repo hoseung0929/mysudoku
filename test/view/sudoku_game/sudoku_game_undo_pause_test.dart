@@ -376,12 +376,15 @@ void main() {
       presenter.setSelectedCellValue(3); // 행 0 완성 → 정상적인 줄 완성 효과
       await tester.pump();
       expect(lineCompleteActiveOf(tester).values.any((v) => v), isTrue);
-      expect(find.textContaining('row cleared'), findsOneWidget);
+      // 이 입력은 행0 완성과 숫자 3 전부 채움이 동시에 일어난다. 안내 칩은
+      // 하나만(최신 것만) 보여주므로, onCorrectAnswer에서 더 나중에 확정된
+      // 숫자 완료 문구가 행 완성 문구를 덮어쓴다.
+      expect(find.textContaining('filled in all the 3s'), findsOneWidget);
 
       // 효과·토스트가 자연히 사라질 때까지 기다린다.
       await tester.pump(const Duration(milliseconds: 1300));
       expect(lineCompleteActiveOf(tester).values.any((v) => v), isFalse);
-      expect(find.textContaining('row cleared'), findsNothing);
+      expect(find.textContaining('filled in all the 3s'), findsNothing);
 
       // (0,1)을 지워 행을 다시 미완성으로 만든다.
       await tester.tap(find.text('Erase'));
@@ -395,7 +398,7 @@ void main() {
       await tester.pump();
       expect(presenter.getCellValue(0, 1), 3);
       expect(lineCompleteActiveOf(tester).values.any((v) => v), isFalse);
-      expect(find.textContaining('row cleared'), findsNothing);
+      expect(find.textContaining('filled in all the 3s'), findsNothing);
       expect(undoActiveOf(tester)['0,1'], isTrue);
       await tester.pump(const Duration(milliseconds: 600));
     });

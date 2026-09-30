@@ -6,48 +6,57 @@ import 'package:sudoku159/view/sudoku_game/game_effects_controller.dart';
 void main() {
   group('GameEffectsController', () {
     test('detects newly completed row, column, and box', () {
-      final board = [
-        [5, 3, 0, 6, 7, 8, 9, 1, 2],
-        [6, 7, 2, 1, 9, 5, 3, 4, 8],
-        [1, 9, 8, 3, 4, 2, 5, 6, 7],
-        [8, 5, 9, 7, 6, 1, 4, 2, 3],
-        [4, 2, 6, 8, 5, 3, 7, 9, 1],
-        [7, 1, 3, 9, 2, 4, 8, 5, 6],
-        [9, 6, 1, 5, 3, 7, 2, 8, 4],
-        [2, 8, 7, 4, 1, 9, 6, 3, 5],
-        [3, 4, 5, 2, 8, 6, 1, 7, 0],
-      ];
-      final solution = [
-        [5, 3, 4, 6, 7, 8, 9, 1, 2],
-        [6, 7, 2, 1, 9, 5, 3, 4, 8],
-        [1, 9, 8, 3, 4, 2, 5, 6, 7],
-        [8, 5, 9, 7, 6, 1, 4, 2, 3],
-        [4, 2, 6, 8, 5, 3, 7, 9, 1],
-        [7, 1, 3, 9, 2, 4, 8, 5, 6],
-        [9, 6, 1, 5, 3, 7, 2, 8, 4],
-        [2, 8, 7, 4, 1, 9, 6, 3, 5],
-        [3, 4, 5, 2, 8, 6, 1, 7, 9],
-      ];
-      final controller = GameEffectsController();
+      fakeAsync((async) {
+        final board = [
+          [5, 3, 0, 6, 7, 8, 9, 1, 2],
+          [6, 7, 2, 1, 9, 5, 3, 4, 8],
+          [1, 9, 8, 3, 4, 2, 5, 6, 7],
+          [8, 5, 9, 7, 6, 1, 4, 2, 3],
+          [4, 2, 6, 8, 5, 3, 7, 9, 1],
+          [7, 1, 3, 9, 2, 4, 8, 5, 6],
+          [9, 6, 1, 5, 3, 7, 2, 8, 4],
+          [2, 8, 7, 4, 1, 9, 6, 3, 5],
+          [3, 4, 5, 2, 8, 6, 1, 7, 0],
+        ];
+        final solution = [
+          [5, 3, 4, 6, 7, 8, 9, 1, 2],
+          [6, 7, 2, 1, 9, 5, 3, 4, 8],
+          [1, 9, 8, 3, 4, 2, 5, 6, 7],
+          [8, 5, 9, 7, 6, 1, 4, 2, 3],
+          [4, 2, 6, 8, 5, 3, 7, 9, 1],
+          [7, 1, 3, 9, 2, 4, 8, 5, 6],
+          [9, 6, 1, 5, 3, 7, 2, 8, 4],
+          [2, 8, 7, 4, 1, 9, 6, 3, 5],
+          [3, 4, 5, 2, 8, 6, 1, 7, 9],
+        ];
+        final controller = GameEffectsController();
 
-      controller.initializeCompletedLineState(board: board, solution: solution);
-      board[0][2] = 4;
+        controller.initializeCompletedLineState(
+            board: board, solution: solution);
+        board[0][2] = 4;
 
-      final delta = controller.handleBoardChanged(
-        board: board,
-        solution: solution,
-        setState: (fn) => fn(),
-        isMounted: () => true,
-      );
+        final delta = controller.handleBoardChanged(
+          board: board,
+          solution: solution,
+          setState: (fn) => fn(),
+          isMounted: () => true,
+        );
 
-      expect(delta.completedRows, 1);
-      expect(delta.completedCols, 1);
-      expect(delta.completedBoxes, 1);
-      expect(delta.hasNewCompletion, isTrue);
-      expect(controller.lineCompleteActive['0,0'], isTrue);
-      expect(controller.lineCompleteActive['0,2'], isTrue);
-      expect(controller.lineCompleteActive['8,2'], isTrue);
-      expect(controller.lineCompleteActive['1,1'], isTrue);
+        expect(delta.completedRows, 1);
+        expect(delta.completedCols, 1);
+        expect(delta.completedBoxes, 1);
+        expect(delta.hasNewCompletion, isTrue);
+        // (0,0)·(0,2)·(1,1)은 행0/박스0 파동에서 지연 0(맨 앞)이라
+        // 동기적으로 바로 켜진다.
+        expect(controller.lineCompleteActive['0,0'], isTrue);
+        expect(controller.lineCompleteActive['0,2'], isTrue);
+        expect(controller.lineCompleteActive['1,1'], isTrue);
+        // (8,2)는 열2 파동에서 8행째(맨 끝)라 25ms * 8 = 200ms 뒤에 켜진다.
+        expect(controller.lineCompleteActive['8,2'], isNull);
+        async.elapse(const Duration(milliseconds: 200));
+        expect(controller.lineCompleteActive['8,2'], isTrue);
+        async.elapse(const Duration(seconds: 1));
+      });
     });
 
     test('triggers temporary error effect for a wrong cell', () async {
@@ -168,7 +177,9 @@ void main() {
         });
       });
 
-      test('final input reports puzzle complete and starts no line effect', () {
+      test(
+          'final input reports puzzle complete, starts no line effect, but '
+          'still plays the last cell\'s own correct pulse', () {
         fakeAsync((async) {
           final board = copy()..[8][8] = 0;
           final c = fresh(board);
@@ -181,13 +192,15 @@ void main() {
           );
           expect(delta.isPuzzleComplete, isTrue);
           expect(c.lineCompleteActive, isEmpty);
+          // 9개 행이 한 번에 완성돼 의미 없는 줄 파동은 생략하지만, 완료
+          // 연출의 1단계로 이어지도록 마지막 칸 자체의 정답 강조는 재생된다.
           c.triggerCorrectEffect(
             row: 8,
             col: 8,
             setState: run,
             isMounted: () => true,
           );
-          expect(c.waveActive, isEmpty);
+          expect(c.waveActive['8,8'], isTrue);
         });
       });
 
@@ -584,7 +597,10 @@ void main() {
           );
 
           // A는 더 이상 일반 정답 색이 아니라 줄 완성 강조로 보여야 한다.
+          // (0,1)은 행0 파동에서 1번째 칸이라 25ms 뒤에 켜진다.
           expect(c.waveActive['0,1'], isNull);
+          expect(c.lineCompleteActive['0,1'], isNull);
+          async.elapse(const Duration(milliseconds: 25));
           expect(c.lineCompleteActive['0,1'], isTrue);
 
           // A의 옛 펄스가 원래 사라졌을 시점이 지나도 줄 완성 강조는
@@ -612,11 +628,17 @@ void main() {
             setState: run,
             isMounted: () => true,
           );
+          // (1,0)은 박스0 파동에서 2번째(지연 50ms), (0,0)은 5번째(지연
+          // 125ms)라 아직 둘 다 켜지지 않았다.
+          expect(c.lineCompleteActive['1,0'], isNull);
+          expect(c.lineCompleteActive['0,0'], isNull);
+          async.elapse(const Duration(milliseconds: 50));
           expect(c.lineCompleteActive['1,0'], isTrue); // 박스0 전용 칸
-          expect(c.lineCompleteActive['0,0'], isTrue); // 박스0·행0 공유 칸
 
-          // 100ms 뒤, 이벤트 2: 행0을 완성한다(공유 칸 (0,0)(0,1)(0,2) 포함).
-          async.elapse(const Duration(milliseconds: 100));
+          // 100ms 뒤(절대 T=100), 이벤트 2: 행0을 완성한다(공유 칸
+          // (0,0)(0,1)(0,2) 포함). (0,0)은 행0 파동에서 맨 앞(지연 0)이라
+          // 이벤트1이 아직 켜기 전이었던 자신의 예약을 선점해 곧바로 켜진다.
+          async.elapse(const Duration(milliseconds: 50));
           board[0][7] = solved[0][7];
           c.handleBoardChanged(
             board: board,
@@ -624,16 +646,18 @@ void main() {
             setState: run,
             isMounted: () => true,
           );
-          expect(c.lineCompleteActive['0,7'], isTrue);
+          expect(c.lineCompleteActive['0,0'], isTrue); // 이벤트2가 새로 켬
+          expect(c.lineCompleteActive['0,7'], isTrue); // 열7 파동 맨 앞(지연 0)
 
-          // 이벤트1이 원래 끝났어야 할 시점(t=490): 전용 칸은 꺼지지만,
-          // 공유 칸은 이벤트2가 새로 가져가 켜진 채로 남아야 한다.
-          async.elapse(const Duration(milliseconds: 390));
+          // 절대 T=460: 이벤트1의 전용 칸(1,0)은 T=430에 이미 꺼졌지만,
+          // (0,0)은 이벤트2가 T=100에 새로 켠 뒤라 아직 켜져 있어야 한다.
+          async.elapse(const Duration(milliseconds: 360));
           expect(c.lineCompleteActive['1,0'], isFalse);
           expect(c.lineCompleteActive['0,0'], isTrue);
 
-          // 이벤트2가 끝나는 시점(t=590)에는 공유 칸도 함께 꺼진다.
-          async.elapse(const Duration(milliseconds: 100));
+          // 절대 T=490: 이벤트2가 끝나는 시점(T=100+380=480)을 지나 공유
+          // 칸도 함께 꺼진다.
+          async.elapse(const Duration(milliseconds: 30));
           expect(c.lineCompleteActive['0,0'], isFalse);
           expect(c.lineCompleteActive['0,7'], isFalse);
         });
@@ -900,7 +924,9 @@ void main() {
         });
       });
 
-      test('is skipped when this input completed the puzzle', () {
+      test(
+          'still plays for the last cell when this input completed the '
+          'puzzle (feeds into the completion sequence)', () {
         final board = copy()..[8][8] = 0;
         final c = GameEffectsController()
           ..resetForBoard(board: board, solution: solved);
@@ -919,7 +945,7 @@ void main() {
           setState: (fn) => fn(),
           isMounted: () => true,
         );
-        expect(c.hintAppliedActive, isEmpty);
+        expect(c.hintAppliedActive['8,8'], isTrue);
       });
 
       test('does not touch correct/error/line-complete/undo state', () {
@@ -975,6 +1001,100 @@ void main() {
           mounted = false;
           async.elapse(const Duration(milliseconds: 200));
           expect(setStateCalls, 1);
+        });
+      });
+    });
+
+    group('digit-complete board highlight', () {
+      final board = [
+        [5, 5, 0, 6, 7, 8, 9, 1, 2],
+        [6, 7, 2, 1, 9, 5, 3, 4, 8],
+        [1, 9, 8, 3, 4, 2, 5, 6, 7],
+        [8, 5, 9, 7, 6, 1, 4, 2, 3],
+        [4, 2, 6, 8, 5, 3, 7, 9, 1],
+        [7, 1, 3, 9, 2, 4, 8, 5, 6],
+        [9, 6, 1, 5, 3, 7, 2, 8, 4],
+        [2, 8, 7, 4, 1, 9, 6, 3, 5],
+        [3, 4, 5, 2, 8, 6, 1, 7, 0],
+      ];
+
+      test(
+          'highlights every cell holding the given digit, then clears '
+          'within ~250ms', () {
+        fakeAsync((async) {
+          final c = GameEffectsController();
+          c.triggerDigitCompleteEffect(
+            digit: 5,
+            board: board,
+            setState: (fn) => fn(),
+            isMounted: () => true,
+          );
+          // board의 5는 (0,0),(0,1),(1,5),(2,6),(3,1),(4,4),(5,7),(6,3),
+          // (7,8),(8,2).
+          expect(c.digitCompleteActive['0,0'], isTrue);
+          expect(c.digitCompleteActive['0,1'], isTrue);
+          expect(c.digitCompleteActive['8,2'], isTrue);
+          expect(c.digitCompleteActive['0,2'], isNull); // 5가 아닌 칸
+
+          // 컨트롤러 쪽 대기 시간은 digitCompleteHold(190ms) — 나머지
+          // 60ms는 위젯의 AnimatedContainer 페이드로, 컨트롤러 상태와는
+          // 무관하다(다른 효과들과 같은 구조).
+          async.elapse(const Duration(milliseconds: 189));
+          expect(c.digitCompleteActive['0,0'], isTrue);
+          async.elapse(const Duration(milliseconds: 10));
+          expect(c.digitCompleteActive['0,0'], isFalse);
+        });
+      });
+
+      test(
+          'does not cancel a correct-pulse already playing on the same cell '
+          '(independent token from the shared effect map)', () {
+        fakeAsync((async) {
+          final c = GameEffectsController();
+          c.triggerCorrectEffect(
+            row: 0,
+            col: 0,
+            setState: (fn) => fn(),
+            isMounted: () => true,
+          );
+          expect(c.waveActive['0,0'], isTrue);
+
+          c.triggerDigitCompleteEffect(
+            digit: 5,
+            board: board,
+            setState: (fn) => fn(),
+            isMounted: () => true,
+          );
+          // 같은 칸에 두 효과가 함께 걸려도 정답 강조(wave)는 그대로 산다.
+          expect(c.waveActive['0,0'], isTrue);
+          expect(c.digitCompleteActive['0,0'], isTrue);
+          async.elapse(const Duration(seconds: 1));
+        });
+      });
+
+      test('a later trigger for the same cells cancels an earlier one', () {
+        fakeAsync((async) {
+          final c = GameEffectsController();
+          c.triggerDigitCompleteEffect(
+            digit: 5,
+            board: board,
+            setState: (fn) => fn(),
+            isMounted: () => true,
+          );
+          async.elapse(const Duration(milliseconds: 100));
+          // 새 트리거가 같은 칸의 토큰을 갈아치운다.
+          c.triggerDigitCompleteEffect(
+            digit: 5,
+            board: board,
+            setState: (fn) => fn(),
+            isMounted: () => true,
+          );
+          // 첫 트리거만 있었다면 t=190ms(트리거 후 190ms)에 꺼졌겠지만,
+          // 두 번째 트리거가 t=100ms에 새 타이머(190ms)를 다시 세웠으므로
+          // t=250ms(두 번째 트리거 후 150ms)에는 아직 켜져 있어야 한다.
+          async.elapse(const Duration(milliseconds: 150));
+          expect(c.digitCompleteActive['0,0'], isTrue);
+          async.elapse(const Duration(seconds: 1));
         });
       });
     });

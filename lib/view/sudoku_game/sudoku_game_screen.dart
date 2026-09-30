@@ -433,6 +433,93 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   /// 콜백이 이 플래그를 보고 정답·오답·줄 완성 효과를 재실행하지 않는다.
   bool _isApplyingUndo = false;
 
+  /// 퍼즐 완료 연출(보드 글로우) 표시 여부. true인 동안 결과 다이얼로그는
+  /// 아직 뜨지 않은 상태다.
+  bool _showCompletionGlow = false;
+
+  /// [onGameCompleteChanged]가 두 번 이상 호출되어도 완료 연출·다이얼로그가
+  /// 중복 실행되지 않도록 막는 가드.
+  bool _completionSequenceStarted = false;
+
+  /// 완료 연출이 끝난 뒤 햅틱+다이얼로그를 여는 예약 작업. 화면이 닫히면
+  /// (뒤로 가기 등으로 dispose되면) 취소해 언마운트된 context로 다이얼로그를
+  /// 열려는 시도를 막는다.
+  Timer? _completionSequenceTimer;
+
+  /// 마지막 칸의 정답 강조 → 보드 글로우+박스 강조 → 햅틱 1회 → 결과
+  /// 다이얼로그 순서로 진행하는 퍼즐 완료 연출을 시작한다.
+  void _beginPuzzleCompleteSequence() {
+    if (_completionSequenceStarted) return;
+    _completionSequenceStarted = true;
+    final duration = _effectsController.reduceMotion
+        ? GameEffectsController.puzzleCompleteGlowDurationReduced
+        : GameEffectsController.puzzleCompleteGlowDuration;
+    setState(() => _showCompletionGlow = true);
+    _completionSequenceTimer = Timer(duration, () {
+      _completionSequenceTimer = null;
+      if (!mounted) return;
+      setState(() => _showCompletionGlow = false);
+      if (_isVibrationEnabled) {
+        unawaited(HapticFeedback.heavyImpact());
+      }
+      _showGameCompleteDialog();
+    });
+  }
+
+  /// 이번 세션에서 완료 반응을 이미 보여준 숫자(1~9). 게임 시작 시 이미
+  /// 다 채워져 있던 숫자, 그리고 완료 반응을 한 번 재생한 숫자가 들어간다
+  /// — 되돌리기로 다시 모자라졌다가 재입력으로 다시 채워져도 반복하지 않는다.
+  final Set<int> _celebratedCompleteDigits = {};
+
+  /// 숫자패드에서 완료(1.0→1.08→1.0) 팝을 재생 중인 숫자. null이면 없음.
+  int? _numberPopDigit;
+  Timer? _numberPopTimer;
+
+  /// 게임 시작·재시작 시점에 이미 9개가 다 채워진 숫자는 "새로 완료됨"이
+  /// 아니므로 조용히 완료 목록에 먼저 넣어 둔다.
+  void _primeCelebratedCompleteDigits() {
+    _celebratedCompleteDigits.clear();
+    for (var digit = 1; digit <= 9; digit++) {
+      if (_remainingCountForNumber(digit) == 0) {
+        _celebratedCompleteDigits.add(digit);
+      }
+    }
+  }
+
+  /// 방금 [row],[col]에 넣은 정답으로 어떤 숫자가 처음 9개 모두 채워졌다면
+  /// 숫자패드 팝·보드 강조·햅틱으로 짧게 알려준다.
+  void _maybeCelebrateDigitCompletion(int row, int col) {
+    final value = _presenter.getCellValue(row, col);
+    if (value == 0 || _celebratedCompleteDigits.contains(value)) return;
+    if (_remainingCountForNumber(value) != 0) return;
+    _celebratedCompleteDigits.add(value);
+
+    if (_isVibrationEnabled) {
+      unawaited(HapticFeedback.selectionClick());
+    }
+    _showTopFeedback(
+      AppLocalizations.of(context)!.gameDigitCompleteSentence(value),
+    );
+    if (_effectsController.reduceMotion) {
+      // 동작 줄이기: 배지의 체크 아이콘 전환(AnimatedSwitcher)만 그대로
+      // 적용되고, 숫자패드 팝·보드 강조는 재생하지 않는다.
+      return;
+    }
+    _numberPopTimer?.cancel();
+    setState(() => _numberPopDigit = value);
+    _numberPopTimer = Timer(const Duration(milliseconds: 220), () {
+      _numberPopTimer = null;
+      if (!mounted) return;
+      setState(() => _numberPopDigit = null);
+    });
+    _effectsController.triggerDigitCompleteEffect(
+      digit: value,
+      board: _presenter.boardSnapshot,
+      setState: setState,
+      isMounted: () => mounted,
+    );
+  }
+
   void _undoLastInput() {
     if (!_canUndo) return;
     // 되돌린 칸에 오답 자동 삭제 타이머가 남아 있으면 복원한 값을 지워 버린다.
@@ -660,14 +747,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       onGameCompleteChanged: (isComplete) {
         if (isComplete) {
           _activeHint = null;
-          if (_isVibrationEnabled) {
-            HapticFeedback.heavyImpact()
-                .then((_) => Future<void>.delayed(
-                      const Duration(milliseconds: 120),
-                    ))
-                .then((_) => HapticFeedback.heavyImpact());
-          }
-          _showGameCompleteDialog();
+          _beginPuzzleCompleteSequence();
         }
         setState(() {});
       },
@@ -700,14 +780,17 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
             setState: setState,
             isMounted: () => mounted,
           );
-          return;
+        } else {
+          _effectsController.triggerCorrectEffect(
+            row: row,
+            col: col,
+            setState: setState,
+            isMounted: () => mounted,
+          );
         }
-        _effectsController.triggerCorrectEffect(
-          row: row,
-          col: col,
-          setState: setState,
-          isMounted: () => mounted,
-        );
+        // 힌트로 채웠든 직접 입력했든, 이 입력으로 어떤 숫자가 9개 모두
+        // 채워졌다면 완료 반응을 준다(둘 다 정답 입력이라는 점은 같다).
+        _maybeCelebrateDigitCompletion(row, col);
       },
       onIncorrectAnswer: (row, col) {
         _effectsController.triggerErrorEffect(
@@ -721,6 +804,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     );
 
     _primeCompletedUnitIds();
+    _primeCelebratedCompleteDigits();
     if (mounted) {
       setState(() {
         _presenterReady = true;
@@ -766,22 +850,45 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     }
 
     final l10n = AppLocalizations.of(context)!;
-    final parts = <String>[];
-    if (completionDelta.completedRows > 0) {
-      parts.add(l10n.gameRowsCompleted(completionDelta.completedRows));
-    }
-    if (completionDelta.completedCols > 0) {
-      parts.add(l10n.gameColsCompleted(completionDelta.completedCols));
-    }
-    if (completionDelta.completedBoxes > 0) {
-      parts.add(l10n.gameBoxesCompleted(completionDelta.completedBoxes));
-    }
-    if (parts.isEmpty) {
+    // 한 가지 영역만 완성됐으면 자연스러운 문장으로, 여러 영역이 동시에
+    // 완성되면 문장으로 억지로 합치지 않고 짧은 라벨을 나열한다(완성은
+    // 한 번만 붙인다). 완성 개수(행 2개 등)는 어느 쪽이든 보여주지 않는다.
+    final completedKinds = [
+      if (completionDelta.completedRows > 0) _LineWaveKind.row,
+      if (completionDelta.completedCols > 0) _LineWaveKind.col,
+      if (completionDelta.completedBoxes > 0) _LineWaveKind.box,
+    ];
+    if (completedKinds.isEmpty) {
       return;
     }
 
-    _showTopFeedback(parts.join(' · '));
+    if (completedKinds.length == 1) {
+      final message = switch (completedKinds.single) {
+        _LineWaveKind.row => l10n.gameLineWaveRowSentence,
+        _LineWaveKind.col => l10n.gameLineWaveColSentence,
+        _LineWaveKind.box => l10n.gameLineWaveBoxSentence,
+      };
+      _showTopFeedback(message);
+      return;
+    }
+
+    final parts = completedKinds.map((kind) => switch (kind) {
+          _LineWaveKind.row => l10n.gameLineWaveRowLabel,
+          _LineWaveKind.col => l10n.gameLineWaveColLabel,
+          _LineWaveKind.box => l10n.gameLineWaveBoxLabel,
+        });
+    _showTopFeedback(l10n.gameLineWaveAnnounce(parts.join(' · ')));
   }
+
+  /// 완성 안내 칩의 등장/퇴장 페이드 길이.
+  static const Duration _completionFeedbackFade = Duration(milliseconds: 120);
+
+  /// 완전히 보이는 상태로 머무는 시간(페이드 제외).
+  static const Duration _completionFeedbackHold = Duration(milliseconds: 900);
+
+  /// 완전히 보이는 상태인지. OverlayEntry의 builder가 매 rebuild마다 이
+  /// 값을 읽어 [AnimatedOpacity]의 목표값으로 쓴다.
+  bool _completionFeedbackVisible = false;
 
   void _showTopFeedback(
     String message, {
@@ -791,54 +898,64 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       return;
     }
 
+    // 연속 입력으로 이전 안내가 남아 있다면 즉시(페이드 없이) 치우고
+    // 최신 안내 하나만 보여준다.
     _hideCompletionFeedback();
     final overlay = Overlay.maybeOf(context);
     if (overlay == null) {
       return;
     }
 
+    // 앱바(toolbarHeight 50) 바로 아래, 상태바를 가리지 않는 위치.
     final mediaQuery = MediaQuery.of(context);
-    final isTablet = mediaQuery.size.width > 600;
-    final bottomOffset = mediaQuery.padding.bottom + (isTablet ? 28 : 18);
+    final topOffset = mediaQuery.padding.top + 50 + 10;
+    final fadeDuration = _effectsController.reduceMotion
+        ? Duration.zero
+        : _completionFeedbackFade;
 
+    _completionFeedbackVisible = false;
     _completionFeedbackEntry = OverlayEntry(
       builder: (context) => Positioned(
-        bottom: bottomOffset,
+        top: topOffset,
         left: 16,
         right: 16,
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          child: IgnorePointer(
-            child: Material(
-              color: Colors.transparent,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 340),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: backgroundColor,
-                    borderRadius: BorderRadius.circular(999),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.16),
-                        blurRadius: 14,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
+        child: IgnorePointer(
+          child: Material(
+            color: Colors.transparent,
+            child: Center(
+              child: AnimatedOpacity(
+                opacity: _completionFeedbackVisible ? 1 : 0,
+                duration: fadeDuration,
+                curve: Curves.easeOut,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 340),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: backgroundColor,
+                      borderRadius: BorderRadius.circular(999),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.16),
+                          blurRadius: 14,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
                     ),
-                    child: Text(
-                      message,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.notoSans(
-                        fontSize: 13,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      child: Text(
+                        message,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.notoSans(
+                          fontSize: 13,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
@@ -850,15 +967,29 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       ),
     );
     overlay.insert(_completionFeedbackEntry!);
-    _completionFeedbackTimer = Timer(
-      const Duration(milliseconds: 1100),
-      _hideCompletionFeedback,
-    );
+    // 다음 프레임에 표시 상태로 바꿔야 AnimatedOpacity가 0→1 페이드인을
+    // 실제로 재생한다(삽입과 같은 프레임이면 애니메이션 없이 바로 1로 그려짐).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_completionFeedbackEntry == null || !mounted) return;
+      _completionFeedbackVisible = true;
+      _completionFeedbackEntry!.markNeedsBuild();
+    });
+
+    _completionFeedbackTimer = Timer(_completionFeedbackHold, () {
+      if (_completionFeedbackEntry == null) return;
+      _completionFeedbackVisible = false;
+      _completionFeedbackEntry!.markNeedsBuild();
+      _completionFeedbackTimer = Timer(fadeDuration, () {
+        _completionFeedbackEntry?.remove();
+        _completionFeedbackEntry = null;
+      });
+    });
   }
 
   void _hideCompletionFeedback() {
     _completionFeedbackTimer?.cancel();
     _completionFeedbackTimer = null;
+    _completionFeedbackVisible = false;
     _completionFeedbackEntry?.remove();
     _completionFeedbackEntry = null;
   }
@@ -873,14 +1004,24 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   Future<void> _resetAndRestartCurrentGame() async {
     await _clearCurrentGameState();
     if (!mounted) return;
+    _completionSequenceTimer?.cancel();
+    _completionSequenceTimer = null;
+    _numberPopTimer?.cancel();
+    _numberPopTimer = null;
     setState(() {
       _memoFocusNumber = null;
+      _completionSequenceStarted = false;
+      _showCompletionGlow = false;
+      _numberPopDigit = null;
     });
     _effectsController.resetForBoard(
       board: widget.game.board,
       solution: widget.game.solution,
     );
     _presenter.restartGame();
+    // 재시작한 보드는 widget.game.board(진행 전 상태) 기준이라, 시작부터
+    // 이미 다 채워진 숫자가 있는지 다시 계산해야 한다.
+    _primeCelebratedCompleteDigits();
   }
 
   Future<void> _showResetCurrentGameDialog() async {
@@ -951,6 +1092,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       t.cancel();
     }
     _wrongCellTimers.clear();
+    _completionSequenceTimer?.cancel();
+    _numberPopTimer?.cancel();
     _penguinActiveTimer?.cancel();
     _timeNotifier.dispose();
     if (_presenterReady) {
@@ -1674,6 +1817,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                 errorOffset: _effectsController.errorOffset,
                 undoActive: _effectsController.undoActive,
                 hintAppliedActive: _effectsController.hintAppliedActive,
+                digitCompleteActive: _effectsController.digitCompleteActive,
+                showCompletionGlow: _showCompletionGlow,
                 highlightedMemoNumber:
                     _memoHighlightEnabled && _featurePolicy.memoEnabled
                         ? _memoFocusNumber
@@ -1681,7 +1826,18 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                 enableMemoHighlights:
                     _memoHighlightEnabled && _featurePolicy.memoEnabled,
                 onCellTapped: (row, col) {
+                  final previousRow = _presenter.selectedRow;
+                  final previousCol = _presenter.selectedCol;
                   _presenter.selectCell(row, col);
+                  // 실제로 선택이 바뀐 경우에만 가볍게 알린다(같은 칸 재선택,
+                  // 일시정지·완료 상태의 no-op 탭에서는 울리지 않는다).
+                  final didSelectionChange =
+                      (previousRow != row || previousCol != col) &&
+                          _presenter.selectedRow == row &&
+                          _presenter.selectedCol == col;
+                  if (didSelectionChange && _isVibrationEnabled) {
+                    unawaited(HapticFeedback.selectionClick());
+                  }
                 },
                 hintRegionCells: _activeHint?.regionCells ?? const {},
                 hintBlockerCells: _hintStep == 2
@@ -1822,13 +1978,14 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                 : buttonColor.withValues(alpha: 0.22))
             : (isDark ? const Color(0xFF323232) : context.colors.surface);
 
-    return MediaQuery.withNoTextScaling(
+    final button = MediaQuery.withNoTextScaling(
         child: ProgressiveBlurButton(
       onPressed: isEnabled ? () => _insertDigit(number) : null,
       backgroundColor: effectiveBackgroundColor,
       width: width ?? (compact ? 72 : 95),
       height: height ?? (compact ? 56 : 70),
       borderRadius: borderRadius ?? (compact ? 20 : 28),
+      enablePressScale: true,
       child: Stack(
         children: [
           if (isSelectedNumber)
@@ -1877,31 +2034,61 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                   width: 1,
                 ),
               ),
-              child: isCompletedNumber
-                  ? Icon(
-                      Icons.check_rounded,
-                      size: (compact ? 16 : 18) * badgeScale,
-                      color: isDark
-                          ? const Color(0xFF5A8A70)
-                          : AppTheme.lightBlueColor,
-                    )
-                  : Text(
-                      '$remainingCount',
-                      style: GoogleFonts.notoSans(
-                        fontSize:
-                            (isCompactSmallButton ? 9 : (compact ? 10 : 11)) *
-                                badgeScale,
-                        fontWeight: FontWeight.w800,
+              child: AnimatedSwitcher(
+                duration: _effectsController.reduceMotion
+                    ? Duration.zero
+                    : const Duration(milliseconds: 150),
+                switchInCurve: Curves.easeOut,
+                switchOutCurve: Curves.easeOut,
+                transitionBuilder: (child, animation) =>
+                    FadeTransition(opacity: animation, child: child),
+                child: isCompletedNumber
+                    ? Icon(
+                        Icons.check_rounded,
+                        key: const ValueKey('badge-check'),
+                        size: (compact ? 16 : 18) * badgeScale,
                         color: isDark
-                            ? context.colors.textSecondary
-                            : context.colors.textPrimary,
+                            ? const Color(0xFF5A8A70)
+                            : AppTheme.lightBlueColor,
+                      )
+                    : Text(
+                        '$remainingCount',
+                        key: ValueKey('badge-count-$remainingCount'),
+                        style: GoogleFonts.notoSans(
+                          fontSize:
+                              (isCompactSmallButton ? 9 : (compact ? 10 : 11)) *
+                                  badgeScale,
+                          fontWeight: FontWeight.w800,
+                          color: isDark
+                              ? context.colors.textSecondary
+                              : context.colors.textPrimary,
+                        ),
                       ),
-                    ),
+              ),
             ),
           ),
         ],
       ),
     ));
+
+    if (number != _numberPopDigit) {
+      return button;
+    }
+    // 이 숫자를 방금 9개 모두 채웠을 때만: 1.0 → 1.08 → 1.0으로 한 번
+    // 튀는 완료 반응(220ms). begin==end==1.0이면 Tween 보간이 그대로
+    // 상수가 되므로, t(0~1)를 받아 피크(1.08)를 직접 계산한다.
+    return TweenAnimationBuilder<double>(
+      key: ValueKey('numpad-pop-$number'),
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 220),
+      builder: (context, t, child) {
+        final scale = t < 0.45
+            ? 1.0 + 0.08 * Curves.easeOut.transform(t / 0.45)
+            : 1.08 - 0.08 * Curves.easeIn.transform((t - 0.45) / 0.55);
+        return Transform.scale(scale: scale, child: child);
+      },
+      child: button,
+    );
   }
 
   void _scheduleWrongCellAutoClear(int row, int col) {
@@ -2241,6 +2428,9 @@ enum _DeveloperCheatAction {
   fillSelected,
   autoSolve,
 }
+
+/// 완성 안내 칩의 문구를 고르기 위한 완성 영역 종류.
+enum _LineWaveKind { row, col, box }
 
 class _MobileGameLayoutMetrics {
   const _MobileGameLayoutMetrics({

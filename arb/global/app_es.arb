@@ -93,26 +93,24 @@
   "gameProgressShort": "Progreso",
   "gameTimeShort": "Tiempo",
   "gameNumberInputTitle": "Entrada de números",
-  "gameRowsCompleted": "{count} fila completada",
-  "@gameRowsCompleted": {
+  "gameLineWaveRowLabel": "Fila",
+  "gameLineWaveColLabel": "Columna",
+  "gameLineWaveBoxLabel": "Caja de 3×3",
+  "gameLineWaveAnnounce": "{parts} completada",
+  "@gameLineWaveAnnounce": {
     "placeholders": {
-      "count": {
-        "type": "int"
+      "parts": {
+        "type": "String"
       }
     }
   },
-  "gameColsCompleted": "{count} columna completada",
-  "@gameColsCompleted": {
+  "gameLineWaveRowSentence": "Completaste una fila",
+  "gameLineWaveColSentence": "Completaste una columna",
+  "gameLineWaveBoxSentence": "Completaste una caja de 3×3",
+  "gameDigitCompleteSentence": "Rellenaste todos los {number}",
+  "@gameDigitCompleteSentence": {
     "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "gameBoxesCompleted": "{count} caja completada",
-  "@gameBoxesCompleted": {
-    "placeholders": {
-      "count": {
+      "number": {
         "type": "int"
       }
     }
@@ -177,9 +175,37 @@
   "dialogShare": "Compartir",
   "dialogBackToLevels": "Lista de puzles",
   "dialogPlayAgain": "Resolver de nuevo",
-  "dialogPuzzleCompleteTitle": "Puzle completado",
+  "dialogPuzzleCompleteTitle": "Completaste el puzle",
   "dialogNewBestMessage": "¡Nuevo mejor registro!",
   "dialogHintsUsed": "Pistas usadas: {count}",
+  "dialogCompletionTimeSentenceMinutes": "Resuelto en {minutes} min {seconds} s",
+  "@dialogCompletionTimeSentenceMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "dialogCompletionTimeSentenceSeconds": "Resuelto en {seconds} s",
+  "@dialogCompletionTimeSentenceSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "dialogCompletionNoMistakes": "Terminaste sin errores",
+  "dialogCompletionMistakeCount": "{count, plural, one{Tuviste {count} error} other{Tuviste {count} errores}}",
+  "@dialogCompletionMistakeCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
   "dialogSolveSameAgain": "Resolver este puzle de nuevo",
   "dialogNextPuzzle": "Siguiente puzle",
   "updateRequiredTitle": "Actualización necesaria",
@@ -775,7 +801,7 @@
   "levelStartNextNew": "Empezar nuevo puzle · {number}",
   "levelViewInProgress": "Ver {count} en curso",
   "levelNotesInProgress": "Escribiendo notas",
-  "levelEmptyInProgress": "No hay puzles para continuar.",
+  "levelEmptyInProgress": "Todavía no tienes un puzle para continuar.",
   "levelEmptyCompleted": "Crea tu primer registro completado.",
   "levelEmptyFresh": "No hay puzles nuevos para empezar.",
   "levelAllCompleted": "Has completado todos los puzles de este nivel.",
@@ -796,7 +822,7 @@
   "savedGamesSortPlayTime": "Tiempo jugado",
   "savedGamesEmpty": "No hay partidas guardadas que coincidan con este filtro.",
   "savedGamesDeleteFailed": "No se pudo eliminar este puzzle. Inténtalo de nuevo.",
-  "recordsMyRecordTitle": "Mi historial",
+  "recordsMyRecordTitle": "Hasta ahora",
   "recordsSummaryTotalCleared": "Puzles completados",
   "recordsSummaryPerfectClears": "Sin errores",
   "recordsSummaryHeroCount": "{count}",
