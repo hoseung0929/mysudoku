@@ -497,7 +497,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsTrendWindowAvgTime => '평균 시간 (같은 기간)';
 
   @override
-  String get recordsTrendWindowAvgWrong => '평균 오답 (같은 기간)';
+  String get recordsTrendWindowAvgWrong => '평균 실수 (같은 기간)';
 
   @override
   String get recordsHeroBadgeFlow => '흐름';
@@ -531,7 +531,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsTrendTodayLabel => '오늘';
 
   @override
-  String get recordsPlayInsightsTitle => '이번 주 기록';
+  String get recordsPlayInsightsTitle => '이번 주 활동';
 
   @override
   String get recordsWeekSubtitle => '요일을 눌러 기록을 확인하세요';
@@ -561,7 +561,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String recordsTimelineMistakesValue(int count) {
-    return '오답 $count회';
+    return '실수 $count회';
   }
 
   @override
@@ -586,20 +586,20 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsMetricClears => '클리어 (필터)';
 
   @override
-  String get recordsMetricClearRate => '퍼즐 완료 현황';
+  String get recordsMetricClearRate => '완료한 퍼즐';
 
   @override
-  String get recordsMetricPerfectRate => '무오답 완료 비율';
+  String get recordsMetricPerfectRate => '실수 없이 완료한 비율';
 
   @override
   String get recordsSummaryMetricsFootnote =>
       '퍼즐마다 최고 기록 한 건만 세고, 기간·난이도 필터를 반영해요. 완료 현황은 같은 범위의 전체 퍼즐 수와 비교한 값이에요.';
 
   @override
-  String get recordsMetricAvgTime => '평균 클리어 시간';
+  String get recordsMetricAvgTime => '평균 완료 시간';
 
   @override
-  String get recordsMetricAvgWrong => '평균 오답';
+  String get recordsMetricAvgWrong => '평균 실수';
 
   @override
   String get recordsByLevelTitle => '난이도별 기록';
@@ -624,7 +624,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsLevelMiniPerfectRate => '퍼펙트율';
 
   @override
-  String get recordsLevelMiniAvgWrong => '평균 오답';
+  String get recordsLevelMiniAvgWrong => '평균 실수';
 
   @override
   String get recordsStatsLoadError => '통계 데이터를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.';
@@ -646,27 +646,21 @@ class AppLocalizationsKo extends AppLocalizations {
       '퍼즐을 완료하면 난이도별 통계와 활동 기록을 확인할 수 있어요.';
 
   @override
-  String get recordsLevelEmpty => '아직 완료한 기록이 없어요.';
+  String get recordsLevelEmpty => '이 난이도에서 완료한 퍼즐이 아직 없어요.';
 
   @override
-  String get recordsRowBestTime => '최단 클리어 시간';
+  String get recordsRowBestTime => '가장 빠른 기록';
 
   @override
   String get recordsAverageBasisNote => '평균은 퍼즐별 최고 기록 기준이에요.';
 
   @override
-  String get recordsCalendarTitle => '전체 퍼즐 활동';
-
-  @override
-  String get recordsCalendarSubtitle => '완료한 날짜와 플레이 빈도를 확인하세요';
-
-  @override
-  String recordsCalendarPeriod(int weeks) {
-    return '최근 $weeks주';
+  String recordsCalendarTitle(int weeks) {
+    return '최근 $weeks주 활동';
   }
 
   @override
-  String get recordsViewAchievements => '업적 보기';
+  String get recordsCalendarSubtitle => '완료한 날짜와 플레이 빈도를 확인하세요';
 
   @override
   String recordsOverallNote(int cleared, int total) {
@@ -719,9 +713,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get recordsActivityBestStreakLabel => '최장 연속';
-
-  @override
-  String get recordsChallengeStreakLabel => '오늘의 도전 연속';
 
   @override
   String recordsActivityDayCount(int count) {
@@ -811,7 +802,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String recordsBestByLevelDetail(String time, int wrongCount) {
-    return '$time · 오답 $wrongCount';
+    return '$time · 실수 $wrongCount';
   }
 
   @override
@@ -841,12 +832,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String recordsRecentDetail(String time, int wrongCount, String date) {
-    return '$time · 오답 $wrongCount · $date';
+    return '$time · 실수 $wrongCount · $date';
   }
 
   @override
   String recordsBestDetail(String time, int wrongCount) {
-    return '$time · 오답 $wrongCount';
+    return '$time · 실수 $wrongCount';
   }
 
   @override
@@ -1037,138 +1028,6 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get achievementCollectionAppBarTitle => '배지 컬렉션';
-
-  @override
-  String get achievementLoadError => '배지 정보를 불러올 수 없습니다.';
-
-  @override
-  String get achievementViewSettings => '보기 설정';
-
-  @override
-  String get achievementSortLabel => '정렬';
-
-  @override
-  String get achievementFilterAll => '전체';
-
-  @override
-  String get achievementFilterUnlocked => '획득';
-
-  @override
-  String get achievementFilterLocked => '도전 중';
-
-  @override
-  String get achievementSectionAll => '전체 배지';
-
-  @override
-  String get achievementSectionUnlocked => '획득한 배지';
-
-  @override
-  String get achievementSectionLocked => '도전 중인 배지';
-
-  @override
-  String get achievementEmptyAll => '표시할 배지가 없습니다.';
-
-  @override
-  String get achievementEmptyUnlocked => '아직 획득한 배지가 없습니다.';
-
-  @override
-  String get achievementEmptyLocked => '모든 배지를 획득했어요.';
-
-  @override
-  String get achievementHeroTitle => '성취 컬렉션';
-
-  @override
-  String achievementHeroProgress(int unlocked, int total) {
-    return '획득 $unlocked / 전체 $total';
-  }
-
-  @override
-  String get achievementHeroAllUnlocked => '모든 배지를 모았어요. 정말 멋집니다.';
-
-  @override
-  String get achievementHeroKeepGoing => '남은 배지를 하나씩 열면서 플레이 기록을 쌓아보세요.';
-
-  @override
-  String get achievementBadgeFirstClearTitle => '첫 클리어';
-
-  @override
-  String get achievementBadgeFirstClearDesc => '첫 퍼즐을 완주해 스도쿠 여정을 시작했어요.';
-
-  @override
-  String get achievementBadgeStreakTitle => '3일 연속';
-
-  @override
-  String get achievementBadgeStreakDesc => '3일 연속으로 퍼즐을 클리어해 리듬을 만들어요.';
-
-  @override
-  String get achievementBadgeWeeklyTitle => '주간 러너';
-
-  @override
-  String get achievementBadgeWeeklyDesc => '최근 7일 동안 5판을 클리어해 꾸준함을 보여주세요.';
-
-  @override
-  String get achievementBadgePerfectTitle => '퍼펙트 클리어';
-
-  @override
-  String get achievementBadgePerfectDesc => '오답 없이 한 판을 끝내면 획득합니다.';
-
-  @override
-  String get achievementBadgeMasterTitle => '마스터 첫 승리';
-
-  @override
-  String get achievementBadgeMasterDesc => '마스터 난이도를 처음 클리어하면 해금됩니다.';
-
-  @override
-  String achievementProgressFraction(int current, int max) {
-    return '$current/$max';
-  }
-
-  @override
-  String achievementProgressStreak(int current, int max) {
-    return '$current/$max일';
-  }
-
-  @override
-  String achievementProgressWeekly(int current, int max) {
-    return '$current/$max판';
-  }
-
-  @override
-  String get achievementStatusDone => '완료';
-
-  @override
-  String get achievementStatusNotMet => '미달성';
-
-  @override
-  String get achievementStatusTrying => '도전 중';
-
-  @override
-  String achievementTileProgress(String label) {
-    return '진행: $label';
-  }
-
-  @override
-  String achievementTileRarity(String label) {
-    return '희귀도: $label';
-  }
-
-  @override
-  String get achievementRarityCommon => '기본';
-
-  @override
-  String get achievementRarityRare => '희귀';
-
-  @override
-  String get achievementRarityEpic => '에픽';
-
-  @override
-  String get achievementSortDefault => '기본순';
-
-  @override
-  String get achievementSortRarity => '희귀도순';
-
-  @override
   String get commonSave => '저장';
 
   @override
@@ -1224,6 +1083,37 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get homeTodayChallengeLoadError => '오늘의 퍼즐을 불러오지 못했어요.';
+
+  @override
+  String get homeChallengeStartButton => '도전 시작';
+
+  @override
+  String get homeChallengeReplayButton => '다시 풀기';
+
+  @override
+  String get homeChallengeNotStarted => '아직 시작 전';
+
+  @override
+  String homeChallengeProgress(int percent) {
+    return '$percent% 진행';
+  }
+
+  @override
+  String get homeChallengeCompleteTitle => '오늘의 도전 완료!';
+
+  @override
+  String homeChallengeStreak(num days) {
+    return '도전 $days일 연속';
+  }
+
+  @override
+  String get homeChallengeLoadErrorTitle => '오늘의 도전을 불러오지 못했어요';
+
+  @override
+  String get homeChallengeLoadErrorBody => '잠시 후 다시 시도해주세요.';
+
+  @override
+  String get recordsChallengeTodayDone => '오늘 도전 완료';
 
   @override
   String get homeTodayChallengeDateChanged => '날짜가 바뀌어 오늘의 도전을 새로 불러왔어요.';
@@ -1363,6 +1253,36 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get levelStartNewButton => '퍼즐 시작';
+
+  @override
+  String levelPuzzleNumber(int number) {
+    return '$number번 퍼즐';
+  }
+
+  @override
+  String levelCompletedCount(num count) {
+    return '$count개 완료';
+  }
+
+  @override
+  String get levelCardFirstSub => '첫 퍼즐부터 시작해볼까요?';
+
+  @override
+  String get levelCardNextSub => '다음 퍼즐을 시작해보세요';
+
+  @override
+  String levelCardAllDoneTitle(String levelName) {
+    return '$levelName 퍼즐을 모두 완료했어요';
+  }
+
+  @override
+  String get levelCardAllDoneSub => '완료한 퍼즐을 다시 풀어보세요';
+
+  @override
+  String get levelCardViewCompleted => '완료한 퍼즐 보기';
+
+  @override
   String levelViewInProgress(int count) {
     return '진행 중 $count개 보기';
   }
@@ -1445,15 +1365,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsSummaryTotalCleared => '완료한 퍼즐';
 
   @override
-  String get recordsSummaryPerfectClears => '무오답 완료';
+  String get recordsSummaryPerfectClears => '실수 없이 완료';
 
   @override
   String recordsSummaryHeroCount(int count) {
     return '$count개';
   }
-
-  @override
-  String get recordsSummaryHeroDescription => '퍼즐을 풀었어요';
 
   @override
   String recordsSummaryHeroSemanticLabel(int count) {
@@ -1467,8 +1384,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String recordsSummaryStreakChip(int count) {
-    return '현재 $count일 연속';
+    return '$count일 연속 플레이';
   }
+
+  @override
+  String get recordsSummaryStreakToday => '오늘 플레이';
 
   @override
   String get challengeMonthlyDescription => '날짜를 선택해 지난 도전을 다시 풀 수 있어요.';

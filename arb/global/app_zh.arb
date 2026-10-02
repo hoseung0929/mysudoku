@@ -274,7 +274,7 @@
   "recordsTrendSectionSubtitle": "最近七天的每日通关数一览。",
   "recordsTrendLegendDailyClears": "每日通关",
   "recordsTrendTodayLabel": "今天",
-  "recordsPlayInsightsTitle": "本周概览",
+  "recordsPlayInsightsTitle": "本周活动",
   "recordsWeekSubtitle": "点按星期查看记录",
   "recordsPlayCalendarTitle": "按天查看",
   "recordsWeeklyReportTitle": "本周报告",
@@ -308,10 +308,10 @@
   "recordsPacePreviousWindow": "此前 7 天",
   "recordsPaceDelta": "变化",
   "recordsMetricClears": "通关数（已筛选）",
-  "recordsMetricClearRate": "谜题完成情况",
+  "recordsMetricClearRate": "已完成谜题",
   "recordsMetricPerfectRate": "无失误占比",
   "recordsSummaryMetricsFootnote": "每道谜题只按其最佳记录计一次，并遵循当前筛选。完成情况是与同一范围内谜题总数的比较。",
-  "recordsMetricAvgTime": "平均通关用时",
+  "recordsMetricAvgTime": "平均完成用时",
   "recordsMetricAvgWrong": "平均失误",
   "recordsByLevelTitle": "按难度的记录",
   "recordsByLevelSubtitle": "选择难度来比较记录",
@@ -328,12 +328,10 @@
   "recordsEmptyGeneralOnlyTitle": "还没有普通谜题记录。",
   "recordsEmptyGeneralOnlySubtitle": "完成一道谜题即可查看按难度划分的统计和活动记录。",
   "recordsLevelEmpty": "该难度还没有完成记录。",
-  "recordsRowBestTime": "最快用时",
+  "recordsRowBestTime": "最快记录",
   "recordsAverageBasisNote": "平均值以每道谜题的最佳记录为准。",
-  "recordsCalendarTitle": "全部谜题活动",
+  "recordsCalendarTitle": "最近 {weeks} 周活动",
   "recordsCalendarSubtitle": "查看完成日期和游玩频率",
-  "recordsCalendarPeriod": "最近 {weeks} 周",
-  "recordsViewAchievements": "查看成就",
   "recordsOverallNote": "所有难度共 {total} 道谜题，已完成 {cleared} 道。",
   "recordsWeekActiveDays": "活动 {count} 天",
   "recordsWeekCompletions": "完成 {count} 局",
@@ -348,7 +346,6 @@
   "recordsActivityTotalClearsLabel": "累计完成次数",
   "recordsActivityCurrentStreakLabel": "当前连续",
   "recordsActivityBestStreakLabel": "最长连续",
-  "recordsChallengeStreakLabel": "今日挑战连续",
   "recordsActivityDayCount": "{count} 天",
   "@recordsActivityDayCount": {
     "placeholders": {
@@ -602,100 +599,6 @@
       }
     }
   },
-  "achievementCollectionAppBarTitle": "徽章",
-  "achievementLoadError": "无法加载徽章。",
-  "achievementViewSettings": "显示",
-  "achievementSortLabel": "排序",
-  "achievementFilterAll": "全部",
-  "achievementFilterUnlocked": "已获得",
-  "achievementFilterLocked": "进行中",
-  "achievementSectionAll": "全部徽章",
-  "achievementSectionUnlocked": "已获得徽章",
-  "achievementSectionLocked": "进行中的徽章",
-  "achievementEmptyAll": "暂无可显示的徽章。",
-  "achievementEmptyUnlocked": "还没有获得任何徽章。",
-  "achievementEmptyLocked": "你已解锁全部徽章。",
-  "achievementHeroTitle": "成就",
-  "achievementHeroProgress": "已获得 {unlocked} / {total}",
-  "@achievementHeroProgress": {
-    "placeholders": {
-      "unlocked": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "achievementHeroAllUnlocked": "你已收集全部徽章，太棒了！",
-  "achievementHeroKeepGoing": "继续游玩以解锁更多徽章。",
-  "achievementBadgeFirstClearTitle": "初次通关",
-  "achievementBadgeFirstClearDesc": "完成你的第一道题目，开启数独之旅。",
-  "achievementBadgeStreakTitle": "连续 3 天",
-  "achievementBadgeStreakDesc": "连续三天通关题目，养成好习惯。",
-  "achievementBadgeWeeklyTitle": "每周常客",
-  "achievementBadgeWeeklyDesc": "在最近 7 天内通关五道题目。",
-  "achievementBadgePerfectTitle": "完美通关",
-  "achievementBadgePerfectDesc": "零失误完成一道题目。",
-  "achievementBadgeMasterTitle": "大师首胜",
-  "achievementBadgeMasterDesc": "首次通关大师难度题目。",
-  "achievementProgressFraction": "{current}/{max}",
-  "@achievementProgressFraction": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      },
-      "max": {
-        "type": "int"
-      }
-    }
-  },
-  "achievementProgressStreak": "{current}/{max} 天",
-  "@achievementProgressStreak": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      },
-      "max": {
-        "type": "int"
-      }
-    }
-  },
-  "achievementProgressWeekly": "{current}/{max} 次",
-  "@achievementProgressWeekly": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      },
-      "max": {
-        "type": "int"
-      }
-    }
-  },
-  "achievementStatusDone": "完成",
-  "achievementStatusNotMet": "未达成",
-  "achievementStatusTrying": "进行中",
-  "achievementTileProgress": "进度：{label}",
-  "@achievementTileProgress": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
-  "achievementTileRarity": "稀有度：{label}",
-  "@achievementTileRarity": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
-  "achievementRarityCommon": "普通",
-  "achievementRarityRare": "稀有",
-  "achievementRarityEpic": "史诗",
-  "achievementSortDefault": "默认顺序",
-  "achievementSortRarity": "按稀有度",
   "commonSave": "保存",
   "settingsDisplaySection": "显示",
   "settingsTheme": "主题",
@@ -715,6 +618,15 @@
   "homeTodayChallengeResumeButton": "继续今日挑战",
   "homeTodayChallengeReviewButton": "再玩今日谜题",
   "homeTodayChallengeLoadError": "无法加载今日谜题。",
+  "homeChallengeStartButton": "开始挑战",
+  "homeChallengeReplayButton": "再玩一次",
+  "homeChallengeNotStarted": "尚未开始",
+  "homeChallengeProgress": "已完成 {percent}%",
+  "homeChallengeCompleteTitle": "今日挑战完成！",
+  "homeChallengeStreak": "挑战连续 {days} 天",
+  "homeChallengeLoadErrorTitle": "无法加载今日挑战",
+  "homeChallengeLoadErrorBody": "请稍后再试。",
+  "recordsChallengeTodayDone": "今日挑战已完成",
   "homeTodayChallengeDateChanged": "日期已变更，已刷新今日挑战。",
   "homeFirstStartTitle": "开始你的第一道谜题",
   "homeNewPuzzleTitle": "开始一道新谜题",
@@ -799,6 +711,14 @@
   "levelTryAgain": "再试一次",
   "levelContinueButton": "继续解题",
   "levelStartNextNew": "开始新谜题 · {number}",
+  "levelStartNewButton": "开始谜题",
+  "levelPuzzleNumber": "第{number}道谜题",
+  "levelCompletedCount": "已完成 {count} 个",
+  "levelCardFirstSub": "从第一道谜题开始吧",
+  "levelCardNextSub": "开始下一道谜题吧",
+  "levelCardAllDoneTitle": "已完成所有{levelName}谜题",
+  "levelCardAllDoneSub": "再玩一次已完成的谜题吧",
+  "levelCardViewCompleted": "查看已完成的谜题",
   "levelViewInProgress": "查看 {count} 个进行中",
   "levelNotesInProgress": "正在写笔记",
   "levelEmptyInProgress": "还没有可以继续的谜题。",
@@ -833,7 +753,6 @@
       }
     }
   },
-  "recordsSummaryHeroDescription": "谜题已完成",
   "recordsSummaryHeroSemanticLabel": "已完成 {count} 道谜题",
   "@recordsSummaryHeroSemanticLabel": {
     "placeholders": {
@@ -850,7 +769,7 @@
       }
     }
   },
-  "recordsSummaryStreakChip": "当前连续 {count} 天",
+  "recordsSummaryStreakChip": "连续玩了 {count} 天",
   "@recordsSummaryStreakChip": {
     "placeholders": {
       "count": {
@@ -858,6 +777,7 @@
       }
     }
   },
+  "recordsSummaryStreakToday": "今天已玩",
   "challengeMonthlyDescription": "选择日期即可重新挑战过去的题目。",
   "challengeTodayEyebrow": "今日动态",
   "gamePausedTitle": "已暂停",

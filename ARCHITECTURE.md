@@ -15,7 +15,7 @@
 
 - `model/` — `SudokuLevel`, `SudokuGame` 등
 - `utils/` — 퍼즐 생성, `board_codec`, 로거
-- `l10n/` — ARB 생성 코드 + 레벨/업적 문자열 헬퍼 (`arb/`가 소스)
+- `l10n/` — ARB 생성 코드 + 레벨 문자열 헬퍼 (`arb/`가 소스)
 
 ## 2. 앱 시작 흐름
 
@@ -39,7 +39,7 @@ main()
 
 탭 간 이동: [`lib/navigation/root_nav_scope.dart`](lib/navigation/root_nav_scope.dart)
 
-챌린지·업적 상세 UI: [`lib/view/challenge/`](lib/view/challenge/) (`ChallengeScreen`, `AchievementCollectionScreen`). 홈 카드에서 게임·업적 흐름으로 연결됩니다.
+챌린지 UI: [`lib/view/challenge/`](lib/view/challenge/) (월간 도전 달력 카드 등). 업적 기능은 2026-10-03에 제거했습니다.
 
 ## 3. 데이터 저장
 
@@ -109,7 +109,6 @@ main()
 - `GameStateService` 저장 세션
 - `games` + solution
 - `ChallengeProgressService`
-- 업적 요약
 - 통계
 
 출력 (대표):
@@ -117,7 +116,6 @@ main()
 - `continueGame` / `continueGames`
 - `todayChallenge`
 - `challengeProgress`
-- `achievementSummary`
 
 최적화: 저장 게임 재조회 최소화, 보드+해답 단일 조회, 기록 탭 lazy load.
 
@@ -133,7 +131,7 @@ main()
 | `GameSessionController` | 세션 복원·저장·삭제 |
 | `GameSettingsController` | 설정 로드, wakelock |
 | `GameEndFlow` | 완료/실패 다이얼로그, 공유 |
-| `GameCompletionCoordinator` | 기록 저장, 업적, 챌린지, 다음 퍼즐 |
+| `GameCompletionCoordinator` | 기록 저장, 챌린지, 다음 퍼즐 |
 
 ### 진입
 
@@ -145,7 +143,7 @@ main()
 
 ### 종료
 
-- **완료**: 기록·업적·챌린지·알림 → 완료 다이얼로그
+- **완료**: 기록·챌린지·알림 → 완료 다이얼로그
 - **실패**: 게임오버 다이얼로그
 
 ## 7. Presenter 경계

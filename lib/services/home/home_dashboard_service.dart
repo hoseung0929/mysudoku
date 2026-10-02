@@ -3,7 +3,6 @@ import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/model/sudoku_game.dart';
 import 'package:sudoku159/model/sudoku_game_feature_policy.dart';
 import 'package:sudoku159/model/sudoku_level.dart';
-import 'package:sudoku159/services/challenge/achievement_service.dart';
 import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
 import 'package:sudoku159/services/game/game_state_service.dart';
 
@@ -37,9 +36,8 @@ class HomeDashboardData {
     required this.continueGames,
     required this.totalContinueCount,
     required this.todayChallenge,
-    required this.todayChallengeHasSession,
+    this.todayChallengeContinueGame,
     required this.challengeProgress,
-    required this.achievementSummary,
     required this.averageClearTimeSeconds,
   });
 
@@ -52,10 +50,12 @@ class HomeDashboardData {
   /// 오늘의 도전 타깃 문제. 지정된 문제를 열 수 없으면 null (다른 문제로 대체하지 않음).
   final SudokuGame? todayChallenge;
 
+  /// 오늘의 도전 문제의 저장 세션 요약(진행률·메모·마지막 플레이 등). 없으면 null.
+  final ContinueGameSummary? todayChallengeContinueGame;
+
   /// 오늘의 도전 문제에 이어할 수 있는 저장 세션이 있는지.
-  final bool todayChallengeHasSession;
+  bool get todayChallengeHasSession => todayChallengeContinueGame != null;
   final ChallengeProgressSummary challengeProgress;
-  final AchievementSummary achievementSummary;
   final int averageClearTimeSeconds;
 }
 
@@ -66,7 +66,6 @@ class HomeDashboardService {
     DatabaseHelper? databaseHelper,
     GameStateService? gameStateService,
     ChallengeProgressService? challengeProgressService,
-    AchievementService? achievementService,
     Future<Map<String, dynamic>?> Function(String levelName, int gameNumber)?
         loadGameEntry,
     Future<Map<String, dynamic>> Function()? loadOverallStatistics,
@@ -74,23 +73,16 @@ class HomeDashboardService {
   })  : _gameStateService = gameStateService ?? GameStateService(),
         _challengeProgressService = challengeProgressService ??
             ChallengeProgressService(databaseHelper: databaseHelper),
-        _achievementService = achievementService ??
-            AchievementService(databaseHelper: databaseHelper),
         _loadGameEntry =
             loadGameEntry ?? (databaseHelper ?? DatabaseHelper()).getGameEntry,
         _loadOverallStatistics = loadOverallStatistics ??
-            (achievementService != null && databaseHelper == null
-                ? (() async => const <String, dynamic>{})
-                : (databaseHelper ?? DatabaseHelper()).getOverallStatistics),
+            (databaseHelper ?? DatabaseHelper()).getOverallStatistics,
         _loadRecentRecords = loadRecentRecords ??
-            (achievementService != null && databaseHelper == null
-                ? (() async => const <Map<String, dynamic>>[])
-                : (() => (databaseHelper ?? DatabaseHelper())
-                    .getRecentClearRecords(limit: 10000)));
+            (() => (databaseHelper ?? DatabaseHelper())
+                .getRecentClearRecords(limit: 10000));
 
   final GameStateService _gameStateService;
   final ChallengeProgressService _challengeProgressService;
-  final AchievementService _achievementService;
   final Future<Map<String, dynamic>?> Function(String levelName, int gameNumber)
       _loadGameEntry;
   final Future<Map<String, dynamic>> Function() _loadOverallStatistics;
@@ -114,12 +106,6 @@ class HomeDashboardService {
     final challengeProgress = await _challengeProgressService.load(
       recentRecords: recentRecords,
     );
-    final achievementSummary = await _achievementService.loadFromData(
-      l10n,
-      overall: overallStatistics,
-      records: recentRecords,
-      progress: challengeProgress,
-    );
     final todayChallenge = await _loadTodayChallenge(
       levelName: challengeProgress.todayChallengeLevelName,
       gameNumber: challengeProgress.todayChallengeGameNumber,
@@ -132,11 +118,12 @@ class HomeDashboardService {
       continueGames: continueGames,
       totalContinueCount: allContinueGames.length,
       todayChallenge: todayChallenge,
-      todayChallengeHasSession: allContinueGames.any((g) =>
-          g.game.levelName == challengeProgress.todayChallengeLevelName &&
-          g.game.gameNumber == challengeProgress.todayChallengeGameNumber),
+      todayChallengeContinueGame: allContinueGames
+          .where((g) =>
+              g.game.levelName == challengeProgress.todayChallengeLevelName &&
+              g.game.gameNumber == challengeProgress.todayChallengeGameNumber)
+          .firstOrNull,
       challengeProgress: challengeProgress,
-      achievementSummary: achievementSummary,
       averageClearTimeSeconds: averageClearTimeSeconds,
     );
   }

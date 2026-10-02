@@ -274,7 +274,7 @@
   "recordsTrendSectionSubtitle": "直近1週間の日別クリア数をまとめて確認できます。",
   "recordsTrendLegendDailyClears": "日別クリア",
   "recordsTrendTodayLabel": "今日",
-  "recordsPlayInsightsTitle": "今週の記録",
+  "recordsPlayInsightsTitle": "今週の活動",
   "recordsWeekSubtitle": "曜日をタップして記録を確認",
   "recordsPlayCalendarTitle": "曜日別",
   "recordsWeeklyReportTitle": "今週のレポート",
@@ -308,10 +308,10 @@
   "recordsPacePreviousWindow": "前の7日",
   "recordsPaceDelta": "変化",
   "recordsMetricClears": "クリア（フィルター）",
-  "recordsMetricClearRate": "パズル完了状況",
+  "recordsMetricClearRate": "完了したパズル",
   "recordsMetricPerfectRate": "ミスなし完了の割合",
   "recordsSummaryMetricsFootnote": "パズルごとにベスト記録1件だけを数え、期間・レベルのフィルターを反映します。完了状況は同じ範囲の全パズル数との比較です。",
-  "recordsMetricAvgTime": "平均クリア時間",
+  "recordsMetricAvgTime": "平均完了時間",
   "recordsMetricAvgWrong": "平均ミス",
   "recordsByLevelTitle": "レベル別の記録",
   "recordsByLevelSubtitle": "難易度を選んで記録を比べてみましょう",
@@ -328,12 +328,10 @@
   "recordsEmptyGeneralOnlyTitle": "パズルの記録はまだありません。",
   "recordsEmptyGeneralOnlySubtitle": "パズルを完了すると、難易度別の統計と活動記録を確認できます。",
   "recordsLevelEmpty": "このレベルの完了記録はまだありません。",
-  "recordsRowBestTime": "最短クリア時間",
+  "recordsRowBestTime": "最速記録",
   "recordsAverageBasisNote": "平均はパズルごとのベスト記録が基準です。",
-  "recordsCalendarTitle": "全パズルの活動",
+  "recordsCalendarTitle": "直近{weeks}週の活動",
   "recordsCalendarSubtitle": "クリアした日とプレイ頻度を確認しましょう",
-  "recordsCalendarPeriod": "直近{weeks}週",
-  "recordsViewAchievements": "実績を見る",
   "recordsOverallNote": "全レベルで{total}問中{cleared}問を完了しました。",
   "recordsWeekActiveDays": "活動 {count}日",
   "recordsWeekCompletions": "完了 {count}回",
@@ -348,7 +346,6 @@
   "recordsActivityTotalClearsLabel": "累計クリア回数",
   "recordsActivityCurrentStreakLabel": "現在の連続",
   "recordsActivityBestStreakLabel": "最長の連続",
-  "recordsChallengeStreakLabel": "今日のチャレンジ連続",
   "recordsActivityDayCount": "{count}日",
   "@recordsActivityDayCount": {
     "placeholders": {
@@ -602,100 +599,6 @@
       }
     }
   },
-  "achievementCollectionAppBarTitle": "バッジコレクション",
-  "achievementLoadError": "バッジ情報を読み込めません。",
-  "achievementViewSettings": "表示設定",
-  "achievementSortLabel": "並び替え",
-  "achievementFilterAll": "全て",
-  "achievementFilterUnlocked": "獲得済み",
-  "achievementFilterLocked": "挑戦中",
-  "achievementSectionAll": "全バッジ",
-  "achievementSectionUnlocked": "獲得したバッジ",
-  "achievementSectionLocked": "挑戦中のバッジ",
-  "achievementEmptyAll": "表示するバッジがありません。",
-  "achievementEmptyUnlocked": "まだ獲得したバッジがありません。",
-  "achievementEmptyLocked": "全てのバッジを獲得しました。",
-  "achievementHeroTitle": "実績コレクション",
-  "achievementHeroProgress": "獲得 {unlocked} / 全 {total}",
-  "@achievementHeroProgress": {
-    "placeholders": {
-      "unlocked": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "achievementHeroAllUnlocked": "全バッジを集めました。素晴らしい！",
-  "achievementHeroKeepGoing": "プレイを続けてバッジを解除しましょう。",
-  "achievementBadgeFirstClearTitle": "初クリア",
-  "achievementBadgeFirstClearDesc": "最初のパズルをクリアしてナンプレの旅を始めましょう。",
-  "achievementBadgeStreakTitle": "3日連続",
-  "achievementBadgeStreakDesc": "3日連続でパズルをクリアしてリズムを作りましょう。",
-  "achievementBadgeWeeklyTitle": "ウィークリーランナー",
-  "achievementBadgeWeeklyDesc": "直近7日間で5問クリアして継続を証明しましょう。",
-  "achievementBadgePerfectTitle": "パーフェクトクリア",
-  "achievementBadgePerfectDesc": "ミスなしで1問クリアすると獲得します。",
-  "achievementBadgeMasterTitle": "マスター初勝利",
-  "achievementBadgeMasterDesc": "マスター難易度を初めてクリアすると解除されます。",
-  "achievementProgressFraction": "{current}/{max}",
-  "@achievementProgressFraction": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      },
-      "max": {
-        "type": "int"
-      }
-    }
-  },
-  "achievementProgressStreak": "{current}/{max}日",
-  "@achievementProgressStreak": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      },
-      "max": {
-        "type": "int"
-      }
-    }
-  },
-  "achievementProgressWeekly": "{current}/{max}回",
-  "@achievementProgressWeekly": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      },
-      "max": {
-        "type": "int"
-      }
-    }
-  },
-  "achievementStatusDone": "完了",
-  "achievementStatusNotMet": "未達成",
-  "achievementStatusTrying": "挑戦中",
-  "achievementTileProgress": "進捗: {label}",
-  "@achievementTileProgress": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
-  "achievementTileRarity": "レアリティ: {label}",
-  "@achievementTileRarity": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
-  "achievementRarityCommon": "コモン",
-  "achievementRarityRare": "レア",
-  "achievementRarityEpic": "エピック",
-  "achievementSortDefault": "デフォルト順",
-  "achievementSortRarity": "レアリティ順",
   "commonSave": "保存",
   "settingsDisplaySection": "ディスプレイ",
   "settingsTheme": "テーマ",
@@ -715,6 +618,15 @@
   "homeTodayChallengeResumeButton": "今日のチャレンジを続ける",
   "homeTodayChallengeReviewButton": "今日のパズルをもう一度",
   "homeTodayChallengeLoadError": "今日のパズルを読み込めませんでした。",
+  "homeChallengeStartButton": "チャレンジ開始",
+  "homeChallengeReplayButton": "もう一度解く",
+  "homeChallengeNotStarted": "まだ始めていません",
+  "homeChallengeProgress": "{percent}%進行",
+  "homeChallengeCompleteTitle": "今日のチャレンジ完了！",
+  "homeChallengeStreak": "チャレンジ{days}日連続",
+  "homeChallengeLoadErrorTitle": "今日のチャレンジを読み込めませんでした",
+  "homeChallengeLoadErrorBody": "しばらくしてからもう一度お試しください。",
+  "recordsChallengeTodayDone": "今日のチャレンジ完了",
   "homeTodayChallengeDateChanged": "日付が変わったため、今日のチャレンジを更新しました。",
   "homeFirstStartTitle": "最初のパズルを始めましょう",
   "homeNewPuzzleTitle": "新しいパズルを始めましょう",
@@ -799,6 +711,14 @@
   "levelTryAgain": "もう一度",
   "levelContinueButton": "続きから解く",
   "levelStartNextNew": "次の新しいパズルを始める · {number}",
+  "levelStartNewButton": "パズルを始める",
+  "levelPuzzleNumber": "{number}番のパズル",
+  "levelCompletedCount": "{count}個完了",
+  "levelCardFirstSub": "最初のパズルから始めましょう",
+  "levelCardNextSub": "次のパズルを始めましょう",
+  "levelCardAllDoneTitle": "{levelName}のパズルをすべて完了しました",
+  "levelCardAllDoneSub": "完了したパズルをもう一度解いてみましょう",
+  "levelCardViewCompleted": "完了したパズルを見る",
   "levelViewInProgress": "進行中 {count}件を見る",
   "levelNotesInProgress": "メモ作成中",
   "levelEmptyInProgress": "まだ続きから解けるパズルがありません。",
@@ -833,7 +753,6 @@
       }
     }
   },
-  "recordsSummaryHeroDescription": "クリアしました",
   "recordsSummaryHeroSemanticLabel": "パズルを{count}問解きました",
   "@recordsSummaryHeroSemanticLabel": {
     "placeholders": {
@@ -850,7 +769,7 @@
       }
     }
   },
-  "recordsSummaryStreakChip": "現在{count}日連続",
+  "recordsSummaryStreakChip": "{count}日連続プレイ",
   "@recordsSummaryStreakChip": {
     "placeholders": {
       "count": {
@@ -858,6 +777,7 @@
       }
     }
   },
+  "recordsSummaryStreakToday": "今日プレイ",
   "challengeMonthlyDescription": "日付を選んで過去のチャレンジをもう一度プレイできます。",
   "challengeTodayEyebrow": "今日の流れ",
   "gamePausedTitle": "一時停止中",

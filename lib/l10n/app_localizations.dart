@@ -1073,7 +1073,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordsPlayInsightsTitle.
   ///
   /// In en, this message translates to:
-  /// **'This week'**
+  /// **'This week\'s activity'**
   String get recordsPlayInsightsTitle;
 
   /// No description provided for @recordsWeekSubtitle.
@@ -1175,7 +1175,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordsMetricClearRate.
   ///
   /// In en, this message translates to:
-  /// **'Puzzle completion'**
+  /// **'Puzzles completed'**
   String get recordsMetricClearRate;
 
   /// No description provided for @recordsMetricPerfectRate.
@@ -1193,7 +1193,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordsMetricAvgTime.
   ///
   /// In en, this message translates to:
-  /// **'Avg. clear time'**
+  /// **'Average solve time'**
   String get recordsMetricAvgTime;
 
   /// No description provided for @recordsMetricAvgWrong.
@@ -1295,7 +1295,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordsRowBestTime.
   ///
   /// In en, this message translates to:
-  /// **'Fastest clear time'**
+  /// **'Fastest time'**
   String get recordsRowBestTime;
 
   /// No description provided for @recordsAverageBasisNote.
@@ -1307,26 +1307,14 @@ abstract class AppLocalizations {
   /// No description provided for @recordsCalendarTitle.
   ///
   /// In en, this message translates to:
-  /// **'All puzzle activity'**
-  String get recordsCalendarTitle;
+  /// **'Last {weeks} weeks of activity'**
+  String recordsCalendarTitle(int weeks);
 
   /// No description provided for @recordsCalendarSubtitle.
   ///
   /// In en, this message translates to:
   /// **'See which days you cleared puzzles and how often you played'**
   String get recordsCalendarSubtitle;
-
-  /// No description provided for @recordsCalendarPeriod.
-  ///
-  /// In en, this message translates to:
-  /// **'Last {weeks} weeks'**
-  String recordsCalendarPeriod(int weeks);
-
-  /// No description provided for @recordsViewAchievements.
-  ///
-  /// In en, this message translates to:
-  /// **'View achievements'**
-  String get recordsViewAchievements;
 
   /// No description provided for @recordsOverallNote.
   ///
@@ -1411,12 +1399,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Longest streak'**
   String get recordsActivityBestStreakLabel;
-
-  /// No description provided for @recordsChallengeStreakLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Today\'s challenge streak'**
-  String get recordsChallengeStreakLabel;
 
   /// No description provided for @recordsActivityDayCount.
   ///
@@ -1958,246 +1940,6 @@ abstract class AppLocalizations {
   /// **'Preparing more puzzles · {done}/{total}'**
   String levelCatalogPreparingShort(int done, int total);
 
-  /// No description provided for @achievementCollectionAppBarTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Badges'**
-  String get achievementCollectionAppBarTitle;
-
-  /// No description provided for @achievementLoadError.
-  ///
-  /// In en, this message translates to:
-  /// **'Couldn\'t load badges.'**
-  String get achievementLoadError;
-
-  /// No description provided for @achievementViewSettings.
-  ///
-  /// In en, this message translates to:
-  /// **'Display'**
-  String get achievementViewSettings;
-
-  /// No description provided for @achievementSortLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Sort'**
-  String get achievementSortLabel;
-
-  /// No description provided for @achievementFilterAll.
-  ///
-  /// In en, this message translates to:
-  /// **'All'**
-  String get achievementFilterAll;
-
-  /// No description provided for @achievementFilterUnlocked.
-  ///
-  /// In en, this message translates to:
-  /// **'Unlocked'**
-  String get achievementFilterUnlocked;
-
-  /// No description provided for @achievementFilterLocked.
-  ///
-  /// In en, this message translates to:
-  /// **'In progress'**
-  String get achievementFilterLocked;
-
-  /// No description provided for @achievementSectionAll.
-  ///
-  /// In en, this message translates to:
-  /// **'All badges'**
-  String get achievementSectionAll;
-
-  /// No description provided for @achievementSectionUnlocked.
-  ///
-  /// In en, this message translates to:
-  /// **'Unlocked badges'**
-  String get achievementSectionUnlocked;
-
-  /// No description provided for @achievementSectionLocked.
-  ///
-  /// In en, this message translates to:
-  /// **'Badges in progress'**
-  String get achievementSectionLocked;
-
-  /// No description provided for @achievementEmptyAll.
-  ///
-  /// In en, this message translates to:
-  /// **'No badges to show.'**
-  String get achievementEmptyAll;
-
-  /// No description provided for @achievementEmptyUnlocked.
-  ///
-  /// In en, this message translates to:
-  /// **'No badges unlocked yet.'**
-  String get achievementEmptyUnlocked;
-
-  /// No description provided for @achievementEmptyLocked.
-  ///
-  /// In en, this message translates to:
-  /// **'You\'ve unlocked every badge.'**
-  String get achievementEmptyLocked;
-
-  /// No description provided for @achievementHeroTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Achievements'**
-  String get achievementHeroTitle;
-
-  /// No description provided for @achievementHeroProgress.
-  ///
-  /// In en, this message translates to:
-  /// **'{unlocked} / {total} unlocked'**
-  String achievementHeroProgress(int unlocked, int total);
-
-  /// No description provided for @achievementHeroAllUnlocked.
-  ///
-  /// In en, this message translates to:
-  /// **'You collected every badge. Amazing!'**
-  String get achievementHeroAllUnlocked;
-
-  /// No description provided for @achievementHeroKeepGoing.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep playing to unlock more badges.'**
-  String get achievementHeroKeepGoing;
-
-  /// No description provided for @achievementBadgeFirstClearTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'First clear'**
-  String get achievementBadgeFirstClearTitle;
-
-  /// No description provided for @achievementBadgeFirstClearDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Finish your first puzzle to begin your Sudoku journey.'**
-  String get achievementBadgeFirstClearDesc;
-
-  /// No description provided for @achievementBadgeStreakTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'3-day streak'**
-  String get achievementBadgeStreakTitle;
-
-  /// No description provided for @achievementBadgeStreakDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear puzzles three days in a row to build a habit.'**
-  String get achievementBadgeStreakDesc;
-
-  /// No description provided for @achievementBadgeWeeklyTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Weekly runner'**
-  String get achievementBadgeWeeklyTitle;
-
-  /// No description provided for @achievementBadgeWeeklyDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear five puzzles in the last seven days.'**
-  String get achievementBadgeWeeklyDesc;
-
-  /// No description provided for @achievementBadgePerfectTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Perfect clear'**
-  String get achievementBadgePerfectTitle;
-
-  /// No description provided for @achievementBadgePerfectDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Finish a puzzle with zero mistakes.'**
-  String get achievementBadgePerfectDesc;
-
-  /// No description provided for @achievementBadgeMasterTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Master first win'**
-  String get achievementBadgeMasterTitle;
-
-  /// No description provided for @achievementBadgeMasterDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear a Master puzzle for the first time.'**
-  String get achievementBadgeMasterDesc;
-
-  /// No description provided for @achievementProgressFraction.
-  ///
-  /// In en, this message translates to:
-  /// **'{current}/{max}'**
-  String achievementProgressFraction(int current, int max);
-
-  /// No description provided for @achievementProgressStreak.
-  ///
-  /// In en, this message translates to:
-  /// **'{current}/{max} days'**
-  String achievementProgressStreak(int current, int max);
-
-  /// No description provided for @achievementProgressWeekly.
-  ///
-  /// In en, this message translates to:
-  /// **'{current}/{max} clears'**
-  String achievementProgressWeekly(int current, int max);
-
-  /// No description provided for @achievementStatusDone.
-  ///
-  /// In en, this message translates to:
-  /// **'Done'**
-  String get achievementStatusDone;
-
-  /// No description provided for @achievementStatusNotMet.
-  ///
-  /// In en, this message translates to:
-  /// **'Not yet'**
-  String get achievementStatusNotMet;
-
-  /// No description provided for @achievementStatusTrying.
-  ///
-  /// In en, this message translates to:
-  /// **'In progress'**
-  String get achievementStatusTrying;
-
-  /// No description provided for @achievementTileProgress.
-  ///
-  /// In en, this message translates to:
-  /// **'Progress: {label}'**
-  String achievementTileProgress(String label);
-
-  /// No description provided for @achievementTileRarity.
-  ///
-  /// In en, this message translates to:
-  /// **'Rarity: {label}'**
-  String achievementTileRarity(String label);
-
-  /// No description provided for @achievementRarityCommon.
-  ///
-  /// In en, this message translates to:
-  /// **'Common'**
-  String get achievementRarityCommon;
-
-  /// No description provided for @achievementRarityRare.
-  ///
-  /// In en, this message translates to:
-  /// **'Rare'**
-  String get achievementRarityRare;
-
-  /// No description provided for @achievementRarityEpic.
-  ///
-  /// In en, this message translates to:
-  /// **'Epic'**
-  String get achievementRarityEpic;
-
-  /// No description provided for @achievementSortDefault.
-  ///
-  /// In en, this message translates to:
-  /// **'Default order'**
-  String get achievementSortDefault;
-
-  /// No description provided for @achievementSortRarity.
-  ///
-  /// In en, this message translates to:
-  /// **'By rarity'**
-  String get achievementSortRarity;
-
   /// No description provided for @commonSave.
   ///
   /// In en, this message translates to:
@@ -2311,6 +2053,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t load today\'s puzzle.'**
   String get homeTodayChallengeLoadError;
+
+  /// No description provided for @homeChallengeStartButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Start challenge'**
+  String get homeChallengeStartButton;
+
+  /// No description provided for @homeChallengeReplayButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Play again'**
+  String get homeChallengeReplayButton;
+
+  /// No description provided for @homeChallengeNotStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Not started yet'**
+  String get homeChallengeNotStarted;
+
+  /// No description provided for @homeChallengeProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% done'**
+  String homeChallengeProgress(int percent);
+
+  /// No description provided for @homeChallengeCompleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s challenge complete!'**
+  String get homeChallengeCompleteTitle;
+
+  /// No description provided for @homeChallengeStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{1-day challenge streak} other{{days}-day challenge streak}}'**
+  String homeChallengeStreak(num days);
+
+  /// No description provided for @homeChallengeLoadErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load today\'s challenge'**
+  String get homeChallengeLoadErrorTitle;
+
+  /// No description provided for @homeChallengeLoadErrorBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Please try again in a moment.'**
+  String get homeChallengeLoadErrorBody;
+
+  /// No description provided for @recordsChallengeTodayDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s challenge done'**
+  String get recordsChallengeTodayDone;
 
   /// No description provided for @homeTodayChallengeDateChanged.
   ///
@@ -2546,6 +2342,54 @@ abstract class AppLocalizations {
   /// **'Start new puzzle · {number}'**
   String levelStartNextNew(String number);
 
+  /// No description provided for @levelStartNewButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Start puzzle'**
+  String get levelStartNewButton;
+
+  /// No description provided for @levelPuzzleNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Puzzle {number}'**
+  String levelPuzzleNumber(int number);
+
+  /// No description provided for @levelCompletedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 completed} other{{count} completed}}'**
+  String levelCompletedCount(num count);
+
+  /// No description provided for @levelCardFirstSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Shall we start with the first puzzle?'**
+  String get levelCardFirstSub;
+
+  /// No description provided for @levelCardNextSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the next puzzle'**
+  String get levelCardNextSub;
+
+  /// No description provided for @levelCardAllDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You completed every {levelName} puzzle'**
+  String levelCardAllDoneTitle(String levelName);
+
+  /// No description provided for @levelCardAllDoneSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Try your completed puzzles again'**
+  String get levelCardAllDoneSub;
+
+  /// No description provided for @levelCardViewCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'View completed puzzles'**
+  String get levelCardViewCompleted;
+
   /// No description provided for @levelViewInProgress.
   ///
   /// In en, this message translates to:
@@ -2708,12 +2552,6 @@ abstract class AppLocalizations {
   /// **'{count}'**
   String recordsSummaryHeroCount(int count);
 
-  /// No description provided for @recordsSummaryHeroDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'puzzles solved'**
-  String get recordsSummaryHeroDescription;
-
   /// No description provided for @recordsSummaryHeroSemanticLabel.
   ///
   /// In en, this message translates to:
@@ -2729,8 +2567,14 @@ abstract class AppLocalizations {
   /// No description provided for @recordsSummaryStreakChip.
   ///
   /// In en, this message translates to:
-  /// **'{count}-day streak'**
+  /// **'{count}-day play streak'**
   String recordsSummaryStreakChip(int count);
+
+  /// No description provided for @recordsSummaryStreakToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Played today'**
+  String get recordsSummaryStreakToday;
 
   /// No description provided for @challengeMonthlyDescription.
   ///

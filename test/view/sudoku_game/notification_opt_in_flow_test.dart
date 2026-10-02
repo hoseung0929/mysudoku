@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/model/sudoku_game.dart';
 import 'package:sudoku159/model/sudoku_level.dart';
-import 'package:sudoku159/services/challenge/achievement_service.dart';
 import 'package:sudoku159/services/settings/app_settings_service.dart';
 import 'package:sudoku159/theme/app_theme.dart';
 import 'package:sudoku159/view/sudoku_game/game_completion_coordinator.dart';
@@ -37,7 +36,6 @@ class FakeCoordinator extends GameCompletionCoordinator {
     log.add('saved');
     return GameCompletionData(
       isNewBestRecord: false,
-      newlyUnlockedBadges: const <AchievementBadge>[],
       challengeMessage: null,
       nextGame: nextGame,
     );

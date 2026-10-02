@@ -1,9 +1,13 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
+import 'package:sudoku159/widgets/animated_progress_bar.dart';
 import 'package:sudoku159/widgets/press_scale.dart';
+import 'package:sudoku159/widgets/press_scale_listener.dart';
+import 'package:sudoku159/utils/light_haptic.dart';
 import 'package:flutter/services.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/l10n/sudoku_level_l10n.dart';
@@ -101,7 +105,8 @@ class _HomeScreenState extends State<HomeScreen> {
   ContinueGameSummary? _continueGame;
   SudokuGame? _todayChallenge;
   ChallengeProgressSummary? _challengeProgress;
-  bool _todayChallengeHasSession = false;
+  ContinueGameSummary? _todayChallengeContinue;
+  bool get _todayChallengeHasSession => _todayChallengeContinue != null;
 
   /// 같은 날짜의 도전이 미완료→완료로 바뀐 직후에만 true. 완료 체크가
   /// 나타나는 동안만 유지하고, 앱 시작·날짜 변경으로 이미 완료된 카드에는 쓰지 않는다.
@@ -215,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _continueGame = data.continueGame;
         _totalContinueCount = data.totalContinueCount;
         _todayChallenge = data.todayChallenge;
-        _todayChallengeHasSession = data.todayChallengeHasSession;
+        _todayChallengeContinue = data.todayChallengeContinueGame;
         _challengeProgress = data.challengeProgress;
         _homeLoaded = true;
         _homeLoadFailed = false;
@@ -229,7 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _continueGame = null;
         _totalContinueCount = 0;
         _todayChallenge = null;
-        _todayChallengeHasSession = false;
+        _todayChallengeContinue = null;
         _homeLoaded = false;
         _homeLoadFailed = true;
       });
@@ -424,7 +429,7 @@ class _HomeScreenState extends State<HomeScreen> {
           title: l10n.homeSavedGamesTitle,
           description: l10n.homeSavedGamesDescription,
           itemTitleBuilder: (summary) =>
-              '${summary.level.localizedName(l10n)} · #${summary.game.gameNumber.toString().padLeft(3, '0')}',
+              '${summary.level.localizedName(l10n)} · ${l10n.levelPuzzleNumber(summary.game.gameNumber)}',
           itemSubtitleBuilder: (summary) => _continueDetail(l10n, summary),
           deleteTooltip: l10n.homeSavedGameDeleteTooltip,
           onDelete: (summary) => _deleteSavedGame(summary, games),
@@ -1046,293 +1051,389 @@ class _HomeScreenState extends State<HomeScreen> {
     final level = continueGame.level;
     final levelImage = _levelIdentityImage(level.difficulty);
     final title =
-        '${level.localizedName(l10n)} · #${continueGame.game.gameNumber.toString().padLeft(3, '0')}';
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: _homeCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                if (levelImage != null)
-                  Image.asset(levelImage, width: 52, height: 52)
-                else
-                  Icon(_levelIdentityIcon(level.difficulty), size: 52),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.homeContinueTitle,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: cs.onSurfaceVariant,
-                        ),
+        '${level.localizedName(l10n)} · ${l10n.levelPuzzleNumber(continueGame.game.gameNumber)}';
+    final continuePct = (continueGame.progress * 100).round();
+    // 오늘의 도전과 같은 문제면 이 카드가 도전 카드 역할을 한다: 분류 라벨은
+    // '오늘의 도전', 상태는 "36% 진행"(메모만 있으면 메모 상태), 진행바 포함.
+    final detail = isTodayChallenge
+        ? _challengeProgressText(l10n, continueGame)
+        : _continueDetail(l10n, continueGame);
+    final card = _homeCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              if (levelImage != null)
+                Image.asset(levelImage, width: 52, height: 52)
+              else
+                Icon(_levelIdentityIcon(level.difficulty), size: 52),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isTodayChallenge
+                          ? l10n.challengeTodaysChallengeTitle
+                          : l10n.homeContinueTitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: cs.onSurfaceVariant,
                       ),
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: cs.onSurface,
-                        ),
+                    ),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: cs.onSurface,
                       ),
-                      Text(
-                        _continueDetail(l10n, continueGame),
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: cs.onSurfaceVariant,
-                        ),
+                    ),
+                    Text(
+                      detail,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: cs.onSurfaceVariant,
                       ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            if (isTodayChallenge) ...[
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Chip(
-                  avatar: const Icon(Icons.calendar_today_rounded, size: 14),
-                  label: Text(l10n.challengeTodaysChallengeTitle),
-                  visualDensity: VisualDensity.compact,
-                  side: BorderSide(color: cs.outlineVariant),
+                    ),
+                  ],
                 ),
               ),
             ],
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: busy ? null : _openContinueGame,
+          ),
+          if (isTodayChallenge && continuePct > 0) ...[
+            const SizedBox(height: 10),
+            AnimatedProgressBar(
+              key: const Key('home_challenge_progress'),
+              value: continuePct / 100,
+              fillColor: LevelStatusPalette.of(context).primaryPurple,
+              trackColor: const Color.fromRGBO(83, 69, 164, 0.14),
+            ),
+          ],
+          const SizedBox(height: 12),
+          PressScaleListener(
+            child: FilledButton(
+              onPressed: busy
+                  ? null
+                  : () {
+                      unawaited(lightHaptic());
+                      _openContinueGame();
+                    },
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(50),
               ),
               child: Text(l10n.levelContinueButton),
             ),
-            if (_totalContinueCount > 1)
-              TextButton(
-                onPressed: busy ? null : _openSavedGames,
-                child: Text(
-                  l10n.homeViewAllInProgress(_totalContinueCount),
-                  textAlign: TextAlign.center,
-                ),
+          ),
+          if (_totalContinueCount > 1)
+            TextButton(
+              onPressed: busy ? null : _openSavedGames,
+              child: Text(
+                l10n.homeViewAllInProgress(_totalContinueCount),
+                textAlign: TextAlign.center,
               ),
-          ],
-        ),
+            ),
+        ],
+      ),
+    );
+    // 오늘의 도전과 같은 문제면 카드 전체를 눌러도 이어서 풀기가 실행된다.
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: isTodayChallenge
+          ? _tappableCard(
+              onTap: busy ? null : _openContinueFromCard, child: card)
+          : card,
+    );
+  }
+
+  /// "36% 진행", 메모만 있으면 메모 상태.
+  String _challengeProgressText(
+    AppLocalizations l10n,
+    ContinueGameSummary summary,
+  ) {
+    final pct = (summary.progress * 100).round();
+    if (pct == 0 && summary.noteCount > 0) return l10n.levelNotesInProgress;
+    return l10n.homeChallengeProgress(pct);
+  }
+
+  /// 카드 전체를 탭 영역으로 만든다. 눌림 축소는 포인터만 듣고, 안쪽 버튼의
+  /// 탭은 그대로 처리된다. 스크린리더에는 버튼만 노출한다(중복 방지).
+  Widget _tappableCard({required VoidCallback? onTap, required Widget child}) {
+    return PressScaleListener(
+      child: GestureDetector(
+        onTap: onTap,
+        excludeFromSemantics: true,
+        child: child,
       ),
     );
   }
 
-  /// 오늘의 도전: 일반 이어하기와 별도 항목. 미시작 / 진행 중 / 완료를 구분한다.
+  Future<void> _openContinueFromCard() async {
+    unawaited(lightHaptic());
+    await _openContinueGame();
+  }
+
+  Future<void> _startChallengeWithHaptic() async {
+    unawaited(lightHaptic());
+    await _openTodayChallenge();
+  }
+
+  /// 오늘의 도전: 일반 이어하기와 별도 항목.
+  /// 시작 전 / 진행 중 / 완료 / 불러오기 실패를 구분한다.
+  /// 탭 정책: 시작 전·진행 중은 카드 전체가 탭 대상, 완료·실패는 버튼만.
   Widget _buildTodayChallengeCard(SudokuGame? game) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    final done = _challengeProgress?.isTodayChallengeCleared ?? false;
+    final palette = LevelStatusPalette.of(context);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final session = _todayChallengeContinue;
+    final isError = game == null;
+    final done =
+        !isError && (_challengeProgress?.isTodayChallengeCleared ?? false);
+    final inProgress = !isError && !done && session != null;
     final busy = _isOpeningGame;
-    final title = game == null
-        ? l10n.homeTodayChallengeLoadError
-        : '${game.levelName.localizedSudokuLevelName(l10n)} · #${game.gameNumber.toString().padLeft(3, '0')}';
-    final status = game == null
-        ? null
-        : done
-            ? l10n.levelFilterDone
-            : _todayChallengeHasSession
-                ? l10n.levelStatusInProgress
-                : null;
-    final buttonLabel = game == null
+    final tappable = !isError && !done;
+    final streakDays = _challengeProgress?.streakDays ?? 0;
+
+    final puzzleTitle = isError
+        ? ''
+        : '${game.levelName.localizedSudokuLevelName(l10n)} · '
+            '${l10n.levelPuzzleNumber(game.gameNumber)}';
+    final String sub;
+    if (isError) {
+      sub = l10n.homeChallengeLoadErrorBody;
+    } else if (inProgress) {
+      sub = _challengeProgressText(l10n, session);
+    } else {
+      sub = l10n.homeChallengeNotStarted;
+    }
+    final progressPct = inProgress ? (session.progress * 100).round() : 0;
+    final buttonLabel = isError
         ? l10n.levelTryAgain
         : done
-            ? l10n.homeTodayChallengeReviewButton
-            : _todayChallengeHasSession
-                ? l10n.homeTodayChallengeResumeButton
-                : l10n.homeTodayChallengeStartButton;
-    final showArtwork = game != null &&
+            ? l10n.homeChallengeReplayButton
+            : inProgress
+                ? l10n.levelContinueButton
+                : l10n.homeChallengeStartButton;
+    final showArtwork = !isError &&
         MediaQuery.sizeOf(context).width >= 300 &&
         MediaQuery.textScalerOf(context).scale(1.0) <= 1.3;
     final headingColor =
         showArtwork ? const Color(0xFF625D69) : cs.onSurfaceVariant;
     final titleColor = showArtwork ? const Color(0xFF27242C) : cs.onSurface;
+    final stateKey = isError
+        ? 'error'
+        : done
+            ? 'done'
+            : inProgress
+                ? 'progress'
+                : 'start';
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        width: double.infinity,
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: cs.outlineVariant),
-        ),
-        child: Stack(
+    Widget titleText(String text) => Text(
+          text,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: titleColor,
+          ),
+        );
+    Widget subText(String text, {bool strong = false}) => Text(
+          text,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: strong ? FontWeight.w700 : FontWeight.w600,
+            color: headingColor,
+          ),
+        );
+
+    final List<Widget> textChildren;
+    if (isError) {
+      textChildren = [
+        titleText(l10n.homeChallengeLoadErrorTitle),
+        const SizedBox(height: 2),
+        subText(sub),
+      ];
+    } else if (done) {
+      textChildren = [
+        Row(
           children: [
-            if (showArtwork)
-              Positioned.fill(
-                child: ExcludeSemantics(
-                  child: Image.asset(
-                    'assets/images/home_daily_challenge_card_bg.png',
-                    key: const Key('home_today_challenge_artwork'),
-                    fit: BoxFit.cover,
-                    alignment: Alignment.center,
-                  ),
+            FadeInOnce(
+              enabled: _challengeJustCompleted,
+              onEnd: _finishChallengeCompleteFade,
+              child:
+                  Icon(Icons.check_circle_rounded, size: 20, color: cs.primary),
+            ),
+            const SizedBox(width: 6),
+            Expanded(child: titleText(l10n.homeChallengeCompleteTitle)),
+          ],
+        ),
+        const SizedBox(height: 2),
+        subText(puzzleTitle),
+        // 일반 활동 연속(홈 헤더)과 구분되도록 '도전'을 붙이고, 2일 이상일 때만.
+        if (streakDays >= 2) subText(l10n.homeChallengeStreak(streakDays)),
+      ];
+    } else {
+      textChildren = [
+        Row(
+          children: [
+            Icon(Icons.calendar_today_rounded, size: 16, color: headingColor),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                l10n.challengeTodaysChallengeTitle,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: headingColor,
                 ),
-              ),
-            if (showArtwork)
-              const Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      colors: [
-                        Color.fromRGBO(255, 255, 255, 0.52),
-                        Color.fromRGBO(255, 255, 255, 0.16),
-                        Color.fromRGBO(255, 255, 255, 0),
-                      ],
-                      stops: [0, 0.38, 0.65],
-                    ),
-                  ),
-                ),
-              ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: FractionallySizedBox(
-                      widthFactor: showArtwork ? 0.62 : 1,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.calendar_today_rounded,
-                                size: 16,
-                                color: headingColor,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  l10n.challengeTodaysChallengeTitle,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: headingColor,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Wrap(
-                            spacing: 10,
-                            runSpacing: 2,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              Text(
-                                title,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                  color: titleColor,
-                                ),
-                              ),
-                              if (status != null)
-                                Text.rich(
-                                  TextSpan(
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: headingColor,
-                                    ),
-                                    children: [
-                                      if (done)
-                                        WidgetSpan(
-                                          alignment:
-                                              PlaceholderAlignment.middle,
-                                          child: Padding(
-                                            padding:
-                                                const EdgeInsets.only(right: 4),
-                                            child: FadeInOnce(
-                                              enabled: _challengeJustCompleted,
-                                              onEnd:
-                                                  _finishChallengeCompleteFade,
-                                              child: Icon(
-                                                  Icons.check_circle_rounded,
-                                                  size: 16,
-                                                  color: cs.primary),
-                                            ),
-                                          ),
-                                        ),
-                                      TextSpan(text: status),
-                                    ],
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // 오른쪽 그림(펭귄·편지)을 가리지 않도록 버튼 폭을 왼쪽으로 제한한다.
-                  // 좁아서 글이 잘릴 수 있으면 전체 폭으로 되돌린다.
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final narrow =
-                          showArtwork && constraints.maxWidth * 0.62 >= 180;
-                      final button = done && game != null
-                          ? OutlinedButton(
-                              onPressed: busy ? null : _openTodayChallenge,
-                              style: OutlinedButton.styleFrom(
-                                minimumSize: const Size.fromHeight(44),
-                              ),
-                              child: Text(buttonLabel,
-                                  textAlign: TextAlign.center),
-                            )
-                          // '난이도 선택'(주 버튼, 검은색)과 위계를 구분하기 위해 연한
-                          // 보라색 배경의 보조 버튼으로 표시한다.
-                          : FilledButton(
-                              onPressed: busy ? null : _openTodayChallenge,
-                              style: FilledButton.styleFrom(
-                                backgroundColor: LevelStatusPalette.of(context)
-                                    .completedBackground,
-                                foregroundColor: LevelStatusPalette.of(context)
-                                    .primaryPurple,
-                                // 탭 직후 busy 상태에서도 배경이 비치지 않도록 유지한다.
-                                disabledBackgroundColor:
-                                    LevelStatusPalette.of(context)
-                                        .completedBackground,
-                                disabledForegroundColor:
-                                    LevelStatusPalette.of(context)
-                                        .primaryPurple,
-                                minimumSize: const Size.fromHeight(44),
-                              ),
-                              child: Text(buttonLabel,
-                                  textAlign: TextAlign.center),
-                            );
-                      return narrow
-                          ? Align(
-                              alignment: Alignment.centerLeft,
-                              child: FractionallySizedBox(
-                                widthFactor: 0.62,
-                                child: button,
-                              ),
-                            )
-                          : button;
-                    },
-                  ),
-                ],
               ),
             ),
           ],
         ),
+        const SizedBox(height: 6),
+        titleText(puzzleTitle),
+        subText(sub),
+        if (progressPct > 0) ...[
+          const SizedBox(height: 8),
+          AnimatedProgressBar(
+            key: const Key('home_challenge_progress'),
+            value: progressPct / 100,
+            fillColor: palette.primaryPurple,
+            trackColor: const Color.fromRGBO(83, 69, 164, 0.14),
+          ),
+        ],
+      ];
+    }
+
+    final content = Padding(
+      key: ValueKey(stateKey),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: FractionallySizedBox(
+              widthFactor: showArtwork ? 0.62 : 1,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: textChildren,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          // 오른쪽 그림(펭귄·편지)을 가리지 않도록 버튼 폭을 왼쪽으로 제한한다.
+          // 좁아서 글이 잘릴 수 있으면 전체 폭으로 되돌린다.
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final narrow = showArtwork && constraints.maxWidth * 0.62 >= 180;
+              final VoidCallback? onPressed = busy
+                  ? null
+                  : isError
+                      ? _openTodayChallenge
+                      : _startChallengeWithHaptic;
+              final button = PressScaleListener(
+                child: done
+                    ? OutlinedButton(
+                        onPressed: onPressed,
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(44),
+                        ),
+                        child: Text(buttonLabel, textAlign: TextAlign.center),
+                      )
+                    // '난이도 선택'(주 버튼, 검은색)과 위계를 구분하기 위해 연한
+                    // 보라색 배경의 보조 버튼으로 표시한다.
+                    : FilledButton(
+                        onPressed: onPressed,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: palette.completedBackground,
+                          foregroundColor: palette.primaryPurple,
+                          // 탭 직후 busy 상태에서도 배경이 비치지 않도록 유지한다.
+                          disabledBackgroundColor: palette.completedBackground,
+                          disabledForegroundColor: palette.primaryPurple,
+                          minimumSize: const Size.fromHeight(44),
+                        ),
+                        child: Text(buttonLabel, textAlign: TextAlign.center),
+                      ),
+              );
+              return narrow
+                  ? Align(
+                      alignment: Alignment.centerLeft,
+                      child: FractionallySizedBox(
+                        widthFactor: 0.62,
+                        child: button,
+                      ),
+                    )
+                  : button;
+            },
+          ),
+        ],
       ),
+    );
+
+    final card = Container(
+      width: double.infinity,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      child: Stack(
+        children: [
+          if (showArtwork)
+            Positioned.fill(
+              child: ExcludeSemantics(
+                child: Image.asset(
+                  'assets/images/home_daily_challenge_card_bg.png',
+                  key: const Key('home_today_challenge_artwork'),
+                  fit: BoxFit.cover,
+                  alignment: Alignment.center,
+                ),
+              ),
+            ),
+          if (showArtwork)
+            const Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      Color.fromRGBO(255, 255, 255, 0.52),
+                      Color.fromRGBO(255, 255, 255, 0.16),
+                      Color.fromRGBO(255, 255, 255, 0),
+                    ],
+                    stops: [0, 0.38, 0.65],
+                  ),
+                ),
+              ),
+            ),
+          // 상태가 바뀔 때 텍스트·버튼만 짧게 크로스페이드한다.
+          AnimatedSwitcher(
+            duration: reduceMotion
+                ? Duration.zero
+                : const Duration(milliseconds: 200),
+            child: content,
+          ),
+        ],
+      ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: tappable
+          ? _tappableCard(
+              onTap: busy ? null : _startChallengeWithHaptic,
+              child: card,
+            )
+          : card,
     );
   }
 

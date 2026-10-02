@@ -556,7 +556,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsTrendTodayLabel => 'Today';
 
   @override
-  String get recordsPlayInsightsTitle => 'This week';
+  String get recordsPlayInsightsTitle => 'This week\'s activity';
 
   @override
   String get recordsWeekSubtitle => 'Tap a day to see your record';
@@ -625,7 +625,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsMetricClears => 'Clears (filtered)';
 
   @override
-  String get recordsMetricClearRate => 'Puzzle completion';
+  String get recordsMetricClearRate => 'Puzzles completed';
 
   @override
   String get recordsMetricPerfectRate => 'Mistake-free share';
@@ -635,7 +635,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Each puzzle counts once, using its best record, and follows your active filters. Completion compares those puzzles with the total number of puzzles in the same scope.';
 
   @override
-  String get recordsMetricAvgTime => 'Avg. clear time';
+  String get recordsMetricAvgTime => 'Average solve time';
 
   @override
   String get recordsMetricAvgWrong => 'Avg. mistakes';
@@ -691,26 +691,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsLevelEmpty => 'No completed puzzles at this level yet.';
 
   @override
-  String get recordsRowBestTime => 'Fastest clear time';
+  String get recordsRowBestTime => 'Fastest time';
 
   @override
   String get recordsAverageBasisNote =>
       'Averages are based on each puzzle\'s best record.';
 
   @override
-  String get recordsCalendarTitle => 'All puzzle activity';
+  String recordsCalendarTitle(int weeks) {
+    return 'Last $weeks weeks of activity';
+  }
 
   @override
   String get recordsCalendarSubtitle =>
       'See which days you cleared puzzles and how often you played';
-
-  @override
-  String recordsCalendarPeriod(int weeks) {
-    return 'Last $weeks weeks';
-  }
-
-  @override
-  String get recordsViewAchievements => 'View achievements';
 
   @override
   String recordsOverallNote(int cleared, int total) {
@@ -764,9 +758,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recordsActivityBestStreakLabel => 'Longest streak';
-
-  @override
-  String get recordsChallengeStreakLabel => 'Today\'s challenge streak';
 
   @override
   String recordsActivityDayCount(int count) {
@@ -1119,144 +1110,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get achievementCollectionAppBarTitle => 'Badges';
-
-  @override
-  String get achievementLoadError => 'Couldn\'t load badges.';
-
-  @override
-  String get achievementViewSettings => 'Display';
-
-  @override
-  String get achievementSortLabel => 'Sort';
-
-  @override
-  String get achievementFilterAll => 'All';
-
-  @override
-  String get achievementFilterUnlocked => 'Unlocked';
-
-  @override
-  String get achievementFilterLocked => 'In progress';
-
-  @override
-  String get achievementSectionAll => 'All badges';
-
-  @override
-  String get achievementSectionUnlocked => 'Unlocked badges';
-
-  @override
-  String get achievementSectionLocked => 'Badges in progress';
-
-  @override
-  String get achievementEmptyAll => 'No badges to show.';
-
-  @override
-  String get achievementEmptyUnlocked => 'No badges unlocked yet.';
-
-  @override
-  String get achievementEmptyLocked => 'You\'ve unlocked every badge.';
-
-  @override
-  String get achievementHeroTitle => 'Achievements';
-
-  @override
-  String achievementHeroProgress(int unlocked, int total) {
-    return '$unlocked / $total unlocked';
-  }
-
-  @override
-  String get achievementHeroAllUnlocked =>
-      'You collected every badge. Amazing!';
-
-  @override
-  String get achievementHeroKeepGoing => 'Keep playing to unlock more badges.';
-
-  @override
-  String get achievementBadgeFirstClearTitle => 'First clear';
-
-  @override
-  String get achievementBadgeFirstClearDesc =>
-      'Finish your first puzzle to begin your Sudoku journey.';
-
-  @override
-  String get achievementBadgeStreakTitle => '3-day streak';
-
-  @override
-  String get achievementBadgeStreakDesc =>
-      'Clear puzzles three days in a row to build a habit.';
-
-  @override
-  String get achievementBadgeWeeklyTitle => 'Weekly runner';
-
-  @override
-  String get achievementBadgeWeeklyDesc =>
-      'Clear five puzzles in the last seven days.';
-
-  @override
-  String get achievementBadgePerfectTitle => 'Perfect clear';
-
-  @override
-  String get achievementBadgePerfectDesc =>
-      'Finish a puzzle with zero mistakes.';
-
-  @override
-  String get achievementBadgeMasterTitle => 'Master first win';
-
-  @override
-  String get achievementBadgeMasterDesc =>
-      'Clear a Master puzzle for the first time.';
-
-  @override
-  String achievementProgressFraction(int current, int max) {
-    return '$current/$max';
-  }
-
-  @override
-  String achievementProgressStreak(int current, int max) {
-    return '$current/$max days';
-  }
-
-  @override
-  String achievementProgressWeekly(int current, int max) {
-    return '$current/$max clears';
-  }
-
-  @override
-  String get achievementStatusDone => 'Done';
-
-  @override
-  String get achievementStatusNotMet => 'Not yet';
-
-  @override
-  String get achievementStatusTrying => 'In progress';
-
-  @override
-  String achievementTileProgress(String label) {
-    return 'Progress: $label';
-  }
-
-  @override
-  String achievementTileRarity(String label) {
-    return 'Rarity: $label';
-  }
-
-  @override
-  String get achievementRarityCommon => 'Common';
-
-  @override
-  String get achievementRarityRare => 'Rare';
-
-  @override
-  String get achievementRarityEpic => 'Epic';
-
-  @override
-  String get achievementSortDefault => 'Default order';
-
-  @override
-  String get achievementSortRarity => 'By rarity';
-
-  @override
   String get commonSave => 'Save';
 
   @override
@@ -1313,6 +1166,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeTodayChallengeLoadError => 'Couldn\'t load today\'s puzzle.';
+
+  @override
+  String get homeChallengeStartButton => 'Start challenge';
+
+  @override
+  String get homeChallengeReplayButton => 'Play again';
+
+  @override
+  String get homeChallengeNotStarted => 'Not started yet';
+
+  @override
+  String homeChallengeProgress(int percent) {
+    return '$percent% done';
+  }
+
+  @override
+  String get homeChallengeCompleteTitle => 'Today\'s challenge complete!';
+
+  @override
+  String homeChallengeStreak(num days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days-day challenge streak',
+      one: '1-day challenge streak',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeChallengeLoadErrorTitle => 'Couldn\'t load today\'s challenge';
+
+  @override
+  String get homeChallengeLoadErrorBody => 'Please try again in a moment.';
+
+  @override
+  String get recordsChallengeTodayDone => 'Today\'s challenge done';
 
   @override
   String get homeTodayChallengeDateChanged =>
@@ -1457,6 +1347,42 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get levelStartNewButton => 'Start puzzle';
+
+  @override
+  String levelPuzzleNumber(int number) {
+    return 'Puzzle $number';
+  }
+
+  @override
+  String levelCompletedCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count completed',
+      one: '1 completed',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get levelCardFirstSub => 'Shall we start with the first puzzle?';
+
+  @override
+  String get levelCardNextSub => 'Start the next puzzle';
+
+  @override
+  String levelCardAllDoneTitle(String levelName) {
+    return 'You completed every $levelName puzzle';
+  }
+
+  @override
+  String get levelCardAllDoneSub => 'Try your completed puzzles again';
+
+  @override
+  String get levelCardViewCompleted => 'View completed puzzles';
+
+  @override
   String levelViewInProgress(int count) {
     return 'View $count in progress';
   }
@@ -1551,9 +1477,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get recordsSummaryHeroDescription => 'puzzles solved';
-
-  @override
   String recordsSummaryHeroSemanticLabel(int count) {
     return 'Solved $count puzzles';
   }
@@ -1565,8 +1488,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String recordsSummaryStreakChip(int count) {
-    return '$count-day streak';
+    return '$count-day play streak';
   }
+
+  @override
+  String get recordsSummaryStreakToday => 'Played today';
 
   @override
   String get challengeMonthlyDescription =>

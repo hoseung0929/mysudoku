@@ -1,5 +1,11 @@
+import 'dart:async';
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
+import 'package:sudoku159/utils/light_haptic.dart';
+import 'package:sudoku159/widgets/animated_progress_bar.dart';
 import 'package:sudoku159/widgets/press_scale.dart';
+import 'package:sudoku159/widgets/press_scale_listener.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/l10n/sudoku_level_l10n.dart';
@@ -12,6 +18,7 @@ import 'package:sudoku159/navigation/app_page_route.dart';
 import 'package:sudoku159/services/game/game_state_service.dart';
 import 'package:sudoku159/services/home/level_progress_service.dart';
 import 'package:sudoku159/services/onboarding/beginner_tutorial_service.dart';
+import 'package:sudoku159/services/settings/app_settings_service.dart';
 import 'package:sudoku159/theme/level_status_colors.dart';
 import 'package:sudoku159/utils/time_format.dart';
 import 'package:sudoku159/view/onboarding/beginner_tutorial_screen.dart';
@@ -20,6 +27,9 @@ import 'package:sudoku159/view/sudoku_game/sudoku_game_screen.dart';
 enum _PuzzleFilter { all, fresh, inProgress, completed }
 
 enum _PuzzleCardKind { fresh, recent, inProgress, completed }
+
+/// 진행 카드의 상태: 이어하기 / 첫 방문 / 진행 없음(다음 퍼즐) / 전부 완료.
+enum _SummaryKind { continuePlay, first, next, allDone }
 
 class LevelPickerScreen extends StatefulWidget {
   final SudokuLevel level;
@@ -47,6 +57,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
   static const int _perfLogThresholdMs = 120;
   static const int _maxInProgressPuzzles = 5;
   final DatabaseManager _databaseManager = DatabaseManager();
+  final AppSettingsService _appSettingsService = AppSettingsService();
   late final LevelProgressService _levelProgressService =
       widget.levelProgressService ?? LevelProgressService();
   late final GameStateService _gameStateService =
@@ -538,6 +549,8 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
         final bottomPadding = MediaQuery.paddingOf(context).bottom + 24;
         final inProgress = _inProgressGameNumbers();
         final recentNumber = _recentSavedGameNumber[levelName];
+        final hasRecent = recentNumber != null &&
+            _savedGameStates[levelName]?.containsKey(recentNumber) == true;
         final nextFresh = _nextFreshGameNumber(games);
         final allCompleted = games.every((g) => _isCleared(levelName, g));
 
@@ -556,24 +569,13 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _buildSummary(totalCount: games.length),
-                        if (recentNumber != null &&
-                            _savedGameStates[levelName]
-                                    ?.containsKey(recentNumber) ==
-                                true) ...[
-                          const SizedBox(height: 10),
-                          _buildRecentCard(recentNumber, inProgress.length),
-                        ],
-                        if (nextFresh != null) ...[
-                          const SizedBox(height: 8),
-                          _buildStartNewButton(
-                            nextFresh,
-                            primary: inProgress.isEmpty,
-                          ),
-                        ] else if (allCompleted) ...[
-                          const SizedBox(height: 8),
-                          _buildInfoLine(l10n.levelAllCompleted),
-                        ],
+                        _buildSummary(
+                          continueNumber: hasRecent ? recentNumber : null,
+                          // 이어할 퍼즐이 없을 때만 다음 새 퍼즐이 카드의 주 행동.
+                          nextNumber: hasRecent ? null : nextFresh,
+                          allCompleted: !hasRecent && allCompleted,
+                          inProgressCount: inProgress.length,
+                        ),
                         const SizedBox(height: 10),
                         KeyedSubtree(
                           key: _filterKey,
@@ -745,16 +747,33 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     }
   }
 
-  Widget _buildSummary({required int totalCount}) {
+  /// 난이도 진행 카드: 현황판이 아니라 "지금 할 일"을 안내하는 카드.
+  /// - 이어할 퍼즐이 있으면 "N번 퍼즐 / 13% · 오늘" + 진행바 + 이어서 풀기
+  ///   (카드 전체 탭 가능)
+  /// - 완료 0개(첫 방문) / 진행 없음 / 전부 완료는 각각 다른 안내와 버튼.
+  /// 완료 개수는 왼쪽 위의 작은 배지로만 보여준다(전체 개수는 필터에 있다).
+  Widget _buildSummary({
+    int? continueNumber,
+    int? nextNumber,
+    required bool allCompleted,
+    int inProgressCount = 0,
+  }) {
     final level = _currentLevelInfo();
     final l10n = AppLocalizations.of(context)!;
     final cleared = _clearedGameNumbers[level.name]?.length ?? 0;
-    final progress = totalCount == 0 ? 0.0 : cleared / totalCount;
-    final cardHeight =
-        (MediaQuery.sizeOf(context).width / 3).clamp(124.0, 160.0);
-    // 배경 이미지가 밝아서 다크 모드에서도 진한 글자색을 고정한다.
-    const textColor = Color(0xFF3F3B55);
-    return ClipRRect(
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final busy = _isGameTransitioning || _selectionInFlight;
+
+    final _SummaryKind? kind = continueNumber != null
+        ? _SummaryKind.continuePlay
+        : allCompleted
+            ? _SummaryKind.allDone
+            : nextNumber != null
+                ? (cleared == 0 ? _SummaryKind.first : _SummaryKind.next)
+                : null;
+
+    final card = ClipRRect(
+      key: const Key('level_progress_card'),
       borderRadius: BorderRadius.circular(18),
       child: Stack(
         children: [
@@ -772,8 +791,8 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                   colors: [
-                    Color.fromRGBO(255, 255, 255, 0.52),
-                    Color.fromRGBO(255, 255, 255, 0.16),
+                    Color.fromRGBO(255, 255, 255, 0.30),
+                    Color.fromRGBO(255, 255, 255, 0.10),
                     Color.fromRGBO(255, 255, 255, 0.0),
                   ],
                   stops: [0.0, 0.38, 0.65],
@@ -781,73 +800,237 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
               ),
             ),
           ),
-          ConstrainedBox(
-            // 큰 글자 설정에서는 카드가 내용에 맞게 늘어나도록 최소 높이만 둔다.
-            constraints: BoxConstraints(minHeight: cardHeight),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: FractionallySizedBox(
-                widthFactor: 0.55,
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 64),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text.rich(
-                        TextSpan(
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: textColor,
-                          ),
-                          children: [
-                            TextSpan(
-                              text: '$cleared',
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: cleared > 0
+                        ? Container(
+                            key: const Key('level_completed_badge'),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color.fromRGBO(255, 255, 255, 0.78),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              l10n.levelCompletedCount(cleared),
                               style: const TextStyle(
+                                fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF5B4FA8),
+                                color: Color(0xFF4A3F9A),
                               ),
                             ),
-                            TextSpan(
-                              text:
-                                  ' ${l10n.levelProgressCompleted(totalCount)}',
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(999),
-                        child: LinearProgressIndicator(
-                          minHeight: 6,
-                          value: progress,
-                          backgroundColor:
-                              const Color.fromRGBO(83, 69, 164, 0.12),
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            _levelAccentColor(level),
-                          ),
-                        ),
-                      ),
-                    ],
+                          )
+                        : const SizedBox.shrink(),
                   ),
                 ),
               ),
-            ),
+              if (kind != null)
+                AnimatedSwitcher(
+                  duration: reduceMotion
+                      ? Duration.zero
+                      : const Duration(milliseconds: 200),
+                  child: KeyedSubtree(
+                    key: ValueKey('$kind-${continueNumber ?? nextNumber}'),
+                    child: _buildSummaryAction(
+                      kind: kind,
+                      number: continueNumber ?? nextNumber,
+                      inProgressCount: inProgressCount,
+                      busy: busy,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),
     );
+    if (kind != _SummaryKind.continuePlay) return card;
+    // 카드 어디를 눌러도 이어서 풀기가 실행된다(안쪽 버튼은 같은 동작).
+    return _InteractiveTile(
+      onTap: busy ? null : () => _startFromCard(continueNumber!),
+      child: card,
+    );
   }
 
-  Widget _buildInfoLine(String text) {
-    final colors = LevelStatusPalette.of(context);
-    return Text(
-      text,
-      textAlign: TextAlign.center,
-      style: TextStyle(fontSize: 13, color: colors.secondaryText),
+  /// 카드 하단의 주 행동 영역. 어두운 그라데이션 위에 흰 글자로 둔다.
+  Widget _buildSummaryAction({
+    required _SummaryKind kind,
+    required int? number,
+    required int inProgressCount,
+    required bool busy,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
+    final isContinue = kind == _SummaryKind.continuePlay;
+    final isDone = kind == _SummaryKind.allDone;
+    final pct = isContinue ? _savedProgressPercent(number!) : 0;
+
+    final title = isDone
+        ? l10n.levelCardAllDoneTitle(_currentLevelInfo().localizedName(l10n))
+        : l10n.levelPuzzleNumber(number!);
+    final String sub;
+    switch (kind) {
+      case _SummaryKind.continuePlay:
+        final time = _lastPlayedLabel(number!);
+        sub = [_progressDetail(number), if (time.isNotEmpty) time].join(' · ');
+      case _SummaryKind.first:
+        sub = l10n.levelCardFirstSub;
+      case _SummaryKind.next:
+        sub = l10n.levelCardNextSub;
+      case _SummaryKind.allDone:
+        sub = l10n.levelCardAllDoneSub;
+    }
+    final buttonLabel = switch (kind) {
+      _SummaryKind.continuePlay => l10n.levelContinueButton,
+      _SummaryKind.allDone => l10n.levelCardViewCompleted,
+      _ => l10n.levelStartNewButton,
+    };
+    final VoidCallback? onPressed = busy
+        ? null
+        : isDone
+            ? () => _selectFilter(_PuzzleFilter.completed, scrollToFilter: true)
+            : () => _startFromCard(number!);
+
+    // 큰 글씨, 그리고 긴 문장 제목+긴 버튼 라벨의 전부 완료 상태는 버튼을 아래로 내린다.
+    final stacked = isDone || MediaQuery.textScalerOf(context).scale(1.0) > 1.3;
+    // 밝은 일러스트 위에서도 읽히도록 이중 그림자.
+    const shadow = [
+      Shadow(color: Color(0x80000000), blurRadius: 6, offset: Offset(0, 1)),
+      Shadow(color: Color(0x4D000000), blurRadius: 2),
+    ];
+
+    final info = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+            shadows: shadow,
+            fontFeatures: [FontFeature.tabularFigures()],
+          ),
+        ),
+        if (sub.isNotEmpty)
+          Text(
+            sub,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              shadows: shadow,
+            ),
+          ),
+      ],
     );
+    // 배경 이미지·그라데이션이 테마와 무관하게 고정이라 버튼도 고정색:
+    // 반투명(약 88%) 흰 유리 버튼 + 보라 글씨. 뒤를 살짝 블러해 무늬가
+    // 글씨를 방해하지 않게 하면서 일러스트가 은은하게 비친다.
+    final button = PressScaleListener(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(999),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+          child: FilledButton(
+            onPressed: onPressed,
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xE0FFFFFF),
+              foregroundColor: const Color(0xFF4A3F9A),
+              disabledBackgroundColor: const Color(0x80FFFFFF),
+              side: const BorderSide(color: Color(0x66FFFFFF)),
+              minimumSize: const Size(0, 40),
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              textStyle: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            child:
+                Text(buttonLabel, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
+        ),
+      ),
+    );
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          // 순수 검정 대신 앱 보라 계열의 어두운 색으로 일러스트와 어울리게.
+          colors: [Color(0x002A2250), Color(0x992A2250)],
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 28, 12, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (stacked) ...[
+              info,
+              const SizedBox(height: 8),
+              button,
+            ] else
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(child: info),
+                  const SizedBox(width: 8),
+                  button,
+                ],
+              ),
+            // 현재 퍼즐 진행바: 정보(13% · 오늘) 바로 아래. 0에서 현재 값까지 채워진다.
+            if (pct > 0) ...[
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: AnimatedProgressBar(
+                  key: const Key('level_card_puzzle_progress'),
+                  value: pct / 100,
+                  fillColor: Colors.white,
+                  trackColor: const Color(0x40FFFFFF),
+                ),
+              ),
+            ],
+            if (isContinue && inProgressCount > 1)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () => _selectFilter(
+                    _PuzzleFilter.inProgress,
+                    scrollToFilter: true,
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(0, 36),
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                  ),
+                  child: Text(l10n.levelViewInProgress(inProgressCount)),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 카드에서 퍼즐을 시작할 때: 가벼운 햅틱(설정이 켜져 있을 때만) + 시작.
+  void _startFromCard(int number) {
+    unawaited(lightHaptic(settings: _appSettingsService));
+    _onGameSelected(number, widget.level);
   }
 
   /// 진행 상태 한 줄 설명: "62%" 또는 메모만 있으면 "메모 작성 중".
@@ -855,120 +1038,6 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     final l10n = AppLocalizations.of(context)!;
     final pct = _savedProgressPercent(gameNumber);
     return pct > 0 ? '$pct%' : l10n.levelNotesInProgress;
-  }
-
-  Widget _buildRecentCard(int number, int inProgressCount) {
-    final colors = LevelStatusPalette.of(context);
-    final l10n = AppLocalizations.of(context)!;
-    final timeLabel = _lastPlayedLabel(number);
-    final detail = [
-      _progressDetail(number),
-      if (timeLabel.isNotEmpty) timeLabel,
-    ].join(' · ');
-    final busy = _isGameTransitioning || _selectionInFlight;
-    // 큰 글씨에서는 버튼을 아래로 내려 좁은 화면에서도 잘리지 않게 한다.
-    final stacked = MediaQuery.textScalerOf(context).scale(1.0) > 1.3;
-    final infoColumn = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '#${number.toString().padLeft(3, '0')}',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: colors.inProgressPrimary,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
-        ),
-        Text(
-          detail,
-          maxLines: stacked ? 2 : 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontSize: 12, color: colors.secondaryText),
-        ),
-      ],
-    );
-    final continueButton = FilledButton(
-      onPressed: busy ? null : () => _onGameSelected(number, widget.level),
-      style: FilledButton.styleFrom(
-        backgroundColor: colors.inProgressPrimary,
-        foregroundColor: Colors.white,
-        minimumSize: const Size(0, 44),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-      ),
-      child: Text(l10n.levelContinueButton),
-    );
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
-      decoration: BoxDecoration(
-        color: colors.inProgressBackground,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colors.inProgressBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (stacked) ...[
-            infoColumn,
-            const SizedBox(height: 8),
-            continueButton,
-          ] else
-            Row(
-              children: [
-                Expanded(child: infoColumn),
-                const SizedBox(width: 8),
-                continueButton,
-              ],
-            ),
-          if (inProgressCount > 1)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
-                onPressed: () => _selectFilter(
-                  _PuzzleFilter.inProgress,
-                  scrollToFilter: true,
-                ),
-                style: TextButton.styleFrom(
-                  foregroundColor: colors.inProgressPrimary,
-                  minimumSize: const Size(0, 36),
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                ),
-                child: Text(l10n.levelViewInProgress(inProgressCount)),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStartNewButton(int number, {required bool primary}) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = LevelStatusPalette.of(context);
-    final busy = _isGameTransitioning || _selectionInFlight;
-    final label = l10n.levelStartNextNew(number.toString().padLeft(3, '0'));
-    final onPressed = busy ? null : () => _onGameSelected(number, widget.level);
-    const minSize = Size.fromHeight(48);
-    return primary
-        ? FilledButton(
-            onPressed: onPressed,
-            style: FilledButton.styleFrom(
-              backgroundColor: colors.primaryPurple,
-              // 다크 모드의 연한 보라 배경 위에서 흰 글씨는 대비가 낮다.
-              foregroundColor: Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xFF1A1440)
-                  : Colors.white,
-              minimumSize: minSize,
-            ),
-            child: Text(label, textAlign: TextAlign.center),
-          )
-        : OutlinedButton(
-            onPressed: onPressed,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: colors.primaryPurple,
-              minimumSize: minSize,
-            ),
-            child: Text(label, textAlign: TextAlign.center),
-          );
   }
 
   // ─── Filter chips ─────────────────────────────────────────────────────────

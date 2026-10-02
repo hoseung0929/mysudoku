@@ -138,7 +138,7 @@ void main() {
     await pumpPicker(tester);
     expect(find.text('Continue'), findsNothing);
 
-    await tester.tap(find.text('Start new puzzle · 001'));
+    await tester.tap(find.text('Start puzzle'));
     await settle(tester);
     expect(find.byType(SudokuGameScreen), findsOneWidget);
 
@@ -181,15 +181,15 @@ void main() {
       isMemoMode: false,
     );
     await pumpPicker(tester);
-    expect(find.text('#005'), findsOneWidget);
+    expect(find.text('Puzzle 5'), findsOneWidget);
 
     // 새 퍼즐(001)을 열기만 하고 나온다.
-    await tester.tap(find.text('Start new puzzle · 001'));
+    await tester.tap(find.text('001'));
     await settle(tester);
     await tester.pump(const Duration(seconds: 2)); // 타이머가 흘러 저장이 일어남
     await goBack(tester);
 
-    expect(find.text('#005'), findsOneWidget);
+    expect(find.text('Puzzle 5'), findsOneWidget);
     expect(find.text('In progress 1'), findsOneWidget);
     expect(find.text('New 5'), findsOneWidget); // 1번은 여전히 새 퍼즐
   });
@@ -197,7 +197,7 @@ void main() {
   testWidgets('D: erased digit/notes stay erased after leaving and resuming',
       (tester) async {
     await pumpPicker(tester);
-    await tester.tap(find.text('Start new puzzle · 001'));
+    await tester.tap(find.text('Start puzzle'));
     await settle(tester);
     final presenter = presenterOf(tester);
 
@@ -230,6 +230,29 @@ void main() {
     await goBack(tester);
   });
 
+  testWidgets('tapping the progress card itself (not the button) resumes',
+      (tester) async {
+    final board = _puzzle();
+    board[0][0] = _solution()[0][0];
+    await GameStateService().saveSession(
+      levelName: _level.name,
+      gameNumber: 5,
+      board: board,
+      notes: List.generate(9, (_) => List.generate(9, (_) => <int>{})),
+      elapsedSeconds: 30,
+      hintsRemaining: 3,
+      wrongCount: 0,
+      isMemoMode: false,
+    );
+    await pumpPicker(tester);
+    expect(find.text('Puzzle 5'), findsOneWidget);
+
+    await tester.tap(find.text('Puzzle 5'));
+    await settle(tester);
+    expect(find.byType(SudokuGameScreen), findsOneWidget);
+    await goBack(tester);
+  });
+
   testWidgets('E: replaying a cleared puzzle is resumed, record is kept',
       (tester) async {
     await pumpPicker(tester, cleared: {1});
@@ -250,8 +273,8 @@ void main() {
     // 재도전 세션이 있으므로 진행 중, 과거 완료 기록(1/6)은 유지.
     expect(find.text('In progress 1'), findsOneWidget);
     expect(find.text('Done 0'), findsOneWidget);
-    expect(find.textContaining('1 /'), findsOneWidget);
-    expect(find.text('#001'), findsOneWidget);
+    expect(find.text('1 completed'), findsOneWidget);
+    expect(find.text('Puzzle 1'), findsOneWidget);
 
     await tester.tap(find.text('Continue'));
     await settle(tester);
@@ -261,7 +284,7 @@ void main() {
 
   testWidgets('G: rapid double tap opens a single game screen', (tester) async {
     await pumpPicker(tester);
-    final start = find.text('Start new puzzle · 001');
+    final start = find.text('Start puzzle');
     await tester.tap(start);
     await tester.tap(start, warnIfMissed: false);
     await settle(tester);

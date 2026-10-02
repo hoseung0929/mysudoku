@@ -530,7 +530,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsTrendTodayLabel => '今日';
 
   @override
-  String get recordsPlayInsightsTitle => '今週の記録';
+  String get recordsPlayInsightsTitle => '今週の活動';
 
   @override
   String get recordsWeekSubtitle => '曜日をタップして記録を確認';
@@ -585,7 +585,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsMetricClears => 'クリア（フィルター）';
 
   @override
-  String get recordsMetricClearRate => 'パズル完了状況';
+  String get recordsMetricClearRate => '完了したパズル';
 
   @override
   String get recordsMetricPerfectRate => 'ミスなし完了の割合';
@@ -595,7 +595,7 @@ class AppLocalizationsJa extends AppLocalizations {
       'パズルごとにベスト記録1件だけを数え、期間・レベルのフィルターを反映します。完了状況は同じ範囲の全パズル数との比較です。';
 
   @override
-  String get recordsMetricAvgTime => '平均クリア時間';
+  String get recordsMetricAvgTime => '平均完了時間';
 
   @override
   String get recordsMetricAvgWrong => '平均ミス';
@@ -647,24 +647,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsLevelEmpty => 'このレベルの完了記録はまだありません。';
 
   @override
-  String get recordsRowBestTime => '最短クリア時間';
+  String get recordsRowBestTime => '最速記録';
 
   @override
   String get recordsAverageBasisNote => '平均はパズルごとのベスト記録が基準です。';
 
   @override
-  String get recordsCalendarTitle => '全パズルの活動';
-
-  @override
-  String get recordsCalendarSubtitle => 'クリアした日とプレイ頻度を確認しましょう';
-
-  @override
-  String recordsCalendarPeriod(int weeks) {
-    return '直近$weeks週';
+  String recordsCalendarTitle(int weeks) {
+    return '直近$weeks週の活動';
   }
 
   @override
-  String get recordsViewAchievements => '実績を見る';
+  String get recordsCalendarSubtitle => 'クリアした日とプレイ頻度を確認しましょう';
 
   @override
   String recordsOverallNote(int cleared, int total) {
@@ -717,9 +711,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get recordsActivityBestStreakLabel => '最長の連続';
-
-  @override
-  String get recordsChallengeStreakLabel => '今日のチャレンジ連続';
 
   @override
   String recordsActivityDayCount(int count) {
@@ -1032,138 +1023,6 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get achievementCollectionAppBarTitle => 'バッジコレクション';
-
-  @override
-  String get achievementLoadError => 'バッジ情報を読み込めません。';
-
-  @override
-  String get achievementViewSettings => '表示設定';
-
-  @override
-  String get achievementSortLabel => '並び替え';
-
-  @override
-  String get achievementFilterAll => '全て';
-
-  @override
-  String get achievementFilterUnlocked => '獲得済み';
-
-  @override
-  String get achievementFilterLocked => '挑戦中';
-
-  @override
-  String get achievementSectionAll => '全バッジ';
-
-  @override
-  String get achievementSectionUnlocked => '獲得したバッジ';
-
-  @override
-  String get achievementSectionLocked => '挑戦中のバッジ';
-
-  @override
-  String get achievementEmptyAll => '表示するバッジがありません。';
-
-  @override
-  String get achievementEmptyUnlocked => 'まだ獲得したバッジがありません。';
-
-  @override
-  String get achievementEmptyLocked => '全てのバッジを獲得しました。';
-
-  @override
-  String get achievementHeroTitle => '実績コレクション';
-
-  @override
-  String achievementHeroProgress(int unlocked, int total) {
-    return '獲得 $unlocked / 全 $total';
-  }
-
-  @override
-  String get achievementHeroAllUnlocked => '全バッジを集めました。素晴らしい！';
-
-  @override
-  String get achievementHeroKeepGoing => 'プレイを続けてバッジを解除しましょう。';
-
-  @override
-  String get achievementBadgeFirstClearTitle => '初クリア';
-
-  @override
-  String get achievementBadgeFirstClearDesc => '最初のパズルをクリアして数独の旅を始めましょう。';
-
-  @override
-  String get achievementBadgeStreakTitle => '3日連続';
-
-  @override
-  String get achievementBadgeStreakDesc => '3日連続でパズルをクリアしてリズムを作りましょう。';
-
-  @override
-  String get achievementBadgeWeeklyTitle => 'ウィークリーランナー';
-
-  @override
-  String get achievementBadgeWeeklyDesc => '直近7日間で5問クリアして継続を証明しましょう。';
-
-  @override
-  String get achievementBadgePerfectTitle => 'パーフェクトクリア';
-
-  @override
-  String get achievementBadgePerfectDesc => 'ミスなしで1問クリアすると獲得します。';
-
-  @override
-  String get achievementBadgeMasterTitle => 'マスター初勝利';
-
-  @override
-  String get achievementBadgeMasterDesc => 'マスター難易度を初めてクリアすると解除されます。';
-
-  @override
-  String achievementProgressFraction(int current, int max) {
-    return '$current/$max';
-  }
-
-  @override
-  String achievementProgressStreak(int current, int max) {
-    return '$current/$max日';
-  }
-
-  @override
-  String achievementProgressWeekly(int current, int max) {
-    return '$current/$max回';
-  }
-
-  @override
-  String get achievementStatusDone => '完了';
-
-  @override
-  String get achievementStatusNotMet => '未達成';
-
-  @override
-  String get achievementStatusTrying => '挑戦中';
-
-  @override
-  String achievementTileProgress(String label) {
-    return '進捗: $label';
-  }
-
-  @override
-  String achievementTileRarity(String label) {
-    return 'レアリティ: $label';
-  }
-
-  @override
-  String get achievementRarityCommon => 'コモン';
-
-  @override
-  String get achievementRarityRare => 'レア';
-
-  @override
-  String get achievementRarityEpic => 'エピック';
-
-  @override
-  String get achievementSortDefault => 'デフォルト順';
-
-  @override
-  String get achievementSortRarity => 'レアリティ順';
-
-  @override
   String get commonSave => '保存';
 
   @override
@@ -1219,6 +1078,37 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get homeTodayChallengeLoadError => '今日のパズルを読み込めませんでした。';
+
+  @override
+  String get homeChallengeStartButton => 'チャレンジ開始';
+
+  @override
+  String get homeChallengeReplayButton => 'もう一度解く';
+
+  @override
+  String get homeChallengeNotStarted => 'まだ始めていません';
+
+  @override
+  String homeChallengeProgress(int percent) {
+    return '$percent%進行';
+  }
+
+  @override
+  String get homeChallengeCompleteTitle => '今日のチャレンジ完了！';
+
+  @override
+  String homeChallengeStreak(num days) {
+    return 'チャレンジ$days日連続';
+  }
+
+  @override
+  String get homeChallengeLoadErrorTitle => '今日のチャレンジを読み込めませんでした';
+
+  @override
+  String get homeChallengeLoadErrorBody => 'しばらくしてからもう一度お試しください。';
+
+  @override
+  String get recordsChallengeTodayDone => '今日のチャレンジ完了';
 
   @override
   String get homeTodayChallengeDateChanged => '日付が変わったため、今日のチャレンジを更新しました。';
@@ -1357,6 +1247,36 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get levelStartNewButton => 'パズルを始める';
+
+  @override
+  String levelPuzzleNumber(int number) {
+    return '$number番のパズル';
+  }
+
+  @override
+  String levelCompletedCount(num count) {
+    return '$count個完了';
+  }
+
+  @override
+  String get levelCardFirstSub => '最初のパズルから始めましょう';
+
+  @override
+  String get levelCardNextSub => '次のパズルを始めましょう';
+
+  @override
+  String levelCardAllDoneTitle(String levelName) {
+    return '$levelNameのパズルをすべて完了しました';
+  }
+
+  @override
+  String get levelCardAllDoneSub => '完了したパズルをもう一度解いてみましょう';
+
+  @override
+  String get levelCardViewCompleted => '完了したパズルを見る';
+
+  @override
   String levelViewInProgress(int count) {
     return '進行中 $count件を見る';
   }
@@ -1447,9 +1367,6 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get recordsSummaryHeroDescription => 'クリアしました';
-
-  @override
   String recordsSummaryHeroSemanticLabel(int count) {
     return 'パズルを$count問解きました';
   }
@@ -1461,8 +1378,11 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String recordsSummaryStreakChip(int count) {
-    return '現在$count日連続';
+    return '$count日連続プレイ';
   }
+
+  @override
+  String get recordsSummaryStreakToday => '今日プレイ';
 
   @override
   String get challengeMonthlyDescription => '日付を選んで過去のチャレンジをもう一度プレイできます。';

@@ -557,7 +557,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recordsTrendTodayLabel => 'Hoy';
 
   @override
-  String get recordsPlayInsightsTitle => 'Esta semana';
+  String get recordsPlayInsightsTitle => 'Actividad de esta semana';
 
   @override
   String get recordsWeekSubtitle => 'Toca un día para ver tu registro';
@@ -701,19 +701,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Los promedios se basan en el mejor registro de cada puzle.';
 
   @override
-  String get recordsCalendarTitle => 'Actividad de todos los puzles';
+  String recordsCalendarTitle(int weeks) {
+    return 'Actividad de las últimas $weeks semanas';
+  }
 
   @override
   String get recordsCalendarSubtitle =>
       'Consulta los días que completaste y tu frecuencia de juego';
-
-  @override
-  String recordsCalendarPeriod(int weeks) {
-    return 'Últimas $weeks semanas';
-  }
-
-  @override
-  String get recordsViewAchievements => 'Ver logros';
 
   @override
   String recordsOverallNote(int cleared, int total) {
@@ -768,9 +762,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get recordsActivityBestStreakLabel => 'Mayor racha';
-
-  @override
-  String get recordsChallengeStreakLabel => 'Racha del desafío de hoy';
 
   @override
   String recordsActivityDayCount(int count) {
@@ -1127,146 +1118,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get achievementCollectionAppBarTitle => 'Insignias';
-
-  @override
-  String get achievementLoadError => 'No se pudieron cargar las insignias.';
-
-  @override
-  String get achievementViewSettings => 'Vista';
-
-  @override
-  String get achievementSortLabel => 'Ordenar';
-
-  @override
-  String get achievementFilterAll => 'Todas';
-
-  @override
-  String get achievementFilterUnlocked => 'Obtenidas';
-
-  @override
-  String get achievementFilterLocked => 'En curso';
-
-  @override
-  String get achievementSectionAll => 'Todas las insignias';
-
-  @override
-  String get achievementSectionUnlocked => 'Insignias obtenidas';
-
-  @override
-  String get achievementSectionLocked => 'Insignias en curso';
-
-  @override
-  String get achievementEmptyAll => 'No hay insignias que mostrar.';
-
-  @override
-  String get achievementEmptyUnlocked =>
-      'Aún no has obtenido ninguna insignia.';
-
-  @override
-  String get achievementEmptyLocked => 'Has desbloqueado todas las insignias.';
-
-  @override
-  String get achievementHeroTitle => 'Logros';
-
-  @override
-  String achievementHeroProgress(int unlocked, int total) {
-    return '$unlocked / $total desbloqueadas';
-  }
-
-  @override
-  String get achievementHeroAllUnlocked =>
-      'Reuniste todas las insignias. ¡Increíble!';
-
-  @override
-  String get achievementHeroKeepGoing =>
-      'Sigue jugando para desbloquear más insignias.';
-
-  @override
-  String get achievementBadgeFirstClearTitle => 'Primera victoria';
-
-  @override
-  String get achievementBadgeFirstClearDesc =>
-      'Completa tu primer puzle para comenzar tu viaje en el sudoku.';
-
-  @override
-  String get achievementBadgeStreakTitle => 'Racha de 3 días';
-
-  @override
-  String get achievementBadgeStreakDesc =>
-      'Resuelve puzles tres días seguidos para crear un hábito.';
-
-  @override
-  String get achievementBadgeWeeklyTitle => 'Corredor semanal';
-
-  @override
-  String get achievementBadgeWeeklyDesc =>
-      'Resuelve cinco puzles en los últimos siete días.';
-
-  @override
-  String get achievementBadgePerfectTitle => 'Victoria perfecta';
-
-  @override
-  String get achievementBadgePerfectDesc =>
-      'Termina un puzle sin ningún error.';
-
-  @override
-  String get achievementBadgeMasterTitle => 'Primera victoria Maestro';
-
-  @override
-  String get achievementBadgeMasterDesc =>
-      'Resuelve un puzle de nivel Maestro por primera vez.';
-
-  @override
-  String achievementProgressFraction(int current, int max) {
-    return '$current/$max';
-  }
-
-  @override
-  String achievementProgressStreak(int current, int max) {
-    return '$current/$max días';
-  }
-
-  @override
-  String achievementProgressWeekly(int current, int max) {
-    return '$current/$max victorias';
-  }
-
-  @override
-  String get achievementStatusDone => 'Hecho';
-
-  @override
-  String get achievementStatusNotMet => 'Pendiente';
-
-  @override
-  String get achievementStatusTrying => 'En curso';
-
-  @override
-  String achievementTileProgress(String label) {
-    return 'Progreso: $label';
-  }
-
-  @override
-  String achievementTileRarity(String label) {
-    return 'Rareza: $label';
-  }
-
-  @override
-  String get achievementRarityCommon => 'Común';
-
-  @override
-  String get achievementRarityRare => 'Raro';
-
-  @override
-  String get achievementRarityEpic => 'Épico';
-
-  @override
-  String get achievementSortDefault => 'Orden predeterminado';
-
-  @override
-  String get achievementSortRarity => 'Por rareza';
-
-  @override
   String get commonSave => 'Guardar';
 
   @override
@@ -1325,6 +1176,44 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get homeTodayChallengeLoadError =>
       'No se pudo cargar el puzle de hoy.';
+
+  @override
+  String get homeChallengeStartButton => 'Empezar desafío';
+
+  @override
+  String get homeChallengeReplayButton => 'Jugar de nuevo';
+
+  @override
+  String get homeChallengeNotStarted => 'Aún sin empezar';
+
+  @override
+  String homeChallengeProgress(int percent) {
+    return '$percent% completado';
+  }
+
+  @override
+  String get homeChallengeCompleteTitle => '¡Desafío de hoy completado!';
+
+  @override
+  String homeChallengeStreak(num days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Racha de desafíos: $days días',
+      one: 'Racha de desafíos: 1 día',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeChallengeLoadErrorTitle =>
+      'No se pudo cargar el desafío de hoy';
+
+  @override
+  String get homeChallengeLoadErrorBody => 'Inténtalo de nuevo en un momento.';
+
+  @override
+  String get recordsChallengeTodayDone => 'Desafío de hoy completado';
 
   @override
   String get homeTodayChallengeDateChanged =>
@@ -1469,6 +1358,42 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get levelStartNewButton => 'Empezar puzle';
+
+  @override
+  String levelPuzzleNumber(int number) {
+    return 'Puzle $number';
+  }
+
+  @override
+  String levelCompletedCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count completados',
+      one: '1 completado',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get levelCardFirstSub => '¿Empezamos por el primer puzle?';
+
+  @override
+  String get levelCardNextSub => 'Empieza el siguiente puzle';
+
+  @override
+  String levelCardAllDoneTitle(String levelName) {
+    return 'Completaste todos los puzles de $levelName';
+  }
+
+  @override
+  String get levelCardAllDoneSub => 'Vuelve a resolver los puzles completados';
+
+  @override
+  String get levelCardViewCompleted => 'Ver puzles completados';
+
+  @override
   String levelViewInProgress(int count) {
     return 'Ver $count en curso';
   }
@@ -1564,9 +1489,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get recordsSummaryHeroDescription => 'puzles resueltos';
-
-  @override
   String recordsSummaryHeroSemanticLabel(int count) {
     return 'Resolviste $count puzles';
   }
@@ -1578,8 +1500,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String recordsSummaryStreakChip(int count) {
-    return 'Racha actual de $count días';
+    return '$count días seguidos jugando';
   }
+
+  @override
+  String get recordsSummaryStreakToday => 'Jugaste hoy';
 
   @override
   String get challengeMonthlyDescription =>

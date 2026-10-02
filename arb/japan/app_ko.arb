@@ -257,7 +257,7 @@
   "recordsTrendClears": "클리어 수",
   "recordsTrendActiveDays": "플레이 일수",
   "recordsTrendWindowAvgTime": "평균 시간 (같은 기간)",
-  "recordsTrendWindowAvgWrong": "평균 오답 (같은 기간)",
+  "recordsTrendWindowAvgWrong": "평균 실수 (같은 기간)",
   "recordsHeroBadgeFlow": "흐름",
   "recordsHeroTitle": "차분하게 쌓인 흐름을 먼저 살펴보세요.",
   "recordsHeroSubtitle": "위에는 같은 7일을 부드럽게 표현했어요. 아래 카드에서 날짜별 클리어 수를 확인할 수 있어요.",
@@ -274,7 +274,7 @@
   "recordsTrendSectionSubtitle": "최근 일주일 동안 날짜별 클리어 수를 한눈에 보는 요약이에요.",
   "recordsTrendLegendDailyClears": "일별 클리어",
   "recordsTrendTodayLabel": "오늘",
-  "recordsPlayInsightsTitle": "이번 주 기록",
+  "recordsPlayInsightsTitle": "이번 주 활동",
   "recordsWeekSubtitle": "요일을 눌러 기록을 확인하세요",
   "recordsPlayCalendarTitle": "요일별",
   "recordsWeeklyReportTitle": "이번 주 리포트",
@@ -293,7 +293,7 @@
   "recordsWeeklyReportTopDayFallback": "아직 클리어가 없어요",
   "recordsTimelineTitle": "최근 플레이 타임라인",
   "recordsTimelineEmpty": "최근 클리어가 생기면 여기에 차곡차곡 보여드릴게요.",
-  "recordsTimelineMistakesValue": "오답 {count}회",
+  "recordsTimelineMistakesValue": "실수 {count}회",
   "@recordsTimelineMistakesValue": {
     "placeholders": {
       "count": {
@@ -308,11 +308,11 @@
   "recordsPacePreviousWindow": "이전 7일",
   "recordsPaceDelta": "변화",
   "recordsMetricClears": "클리어 (필터)",
-  "recordsMetricClearRate": "퍼즐 완료 현황",
-  "recordsMetricPerfectRate": "무오답 완료 비율",
+  "recordsMetricClearRate": "완료한 퍼즐",
+  "recordsMetricPerfectRate": "실수 없이 완료한 비율",
   "recordsSummaryMetricsFootnote": "퍼즐마다 최고 기록 한 건만 세고, 기간·난이도 필터를 반영해요. 완료 현황은 같은 범위의 전체 퍼즐 수와 비교한 값이에요.",
-  "recordsMetricAvgTime": "평균 클리어 시간",
-  "recordsMetricAvgWrong": "평균 오답",
+  "recordsMetricAvgTime": "평균 완료 시간",
+  "recordsMetricAvgWrong": "평균 실수",
   "recordsByLevelTitle": "난이도별 기록",
   "recordsByLevelSubtitle": "난이도를 선택해 기록을 비교해보세요",
   "recordsByLevelEmpty": "표시할 레벨 통계가 없습니다.",
@@ -320,20 +320,18 @@
   "recordsLevelInfographicClearRate": "퍼즐 완료 현황",
   "recordsLevelMiniBest": "베스트",
   "recordsLevelMiniPerfectRate": "퍼펙트율",
-  "recordsLevelMiniAvgWrong": "평균 오답",
+  "recordsLevelMiniAvgWrong": "평균 실수",
   "recordsStatsLoadError": "통계 데이터를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.",
   "recordsRetry": "다시 시도",
   "recordsEmptyTitle": "첫 퍼즐을 완성하면 기록이 쌓여요.",
   "recordsEmptyAction": "퍼즐 시작하기",
   "recordsEmptyGeneralOnlyTitle": "일반 퍼즐 기록은 아직 없어요.",
   "recordsEmptyGeneralOnlySubtitle": "퍼즐을 완료하면 난이도별 통계와 활동 기록을 확인할 수 있어요.",
-  "recordsLevelEmpty": "아직 완료한 기록이 없어요.",
-  "recordsRowBestTime": "최단 클리어 시간",
+  "recordsLevelEmpty": "이 난이도에서 완료한 퍼즐이 아직 없어요.",
+  "recordsRowBestTime": "가장 빠른 기록",
   "recordsAverageBasisNote": "평균은 퍼즐별 최고 기록 기준이에요.",
-  "recordsCalendarTitle": "전체 퍼즐 활동",
+  "recordsCalendarTitle": "최근 {weeks}주 활동",
   "recordsCalendarSubtitle": "완료한 날짜와 플레이 빈도를 확인하세요",
-  "recordsCalendarPeriod": "최근 {weeks}주",
-  "recordsViewAchievements": "업적 보기",
   "recordsOverallNote": "전체 난이도에서 {total}개 중 {cleared}개를 완료했어요.",
   "recordsWeekActiveDays": "활동 {count}일",
   "recordsWeekCompletions": "완료 {count}판",
@@ -348,7 +346,6 @@
   "recordsActivityTotalClearsLabel": "누적 완료 횟수",
   "recordsActivityCurrentStreakLabel": "현재 연속",
   "recordsActivityBestStreakLabel": "최장 연속",
-  "recordsChallengeStreakLabel": "오늘의 도전 연속",
   "recordsActivityDayCount": "{count}일",
   "@recordsActivityDayCount": {
     "placeholders": {
@@ -409,7 +406,7 @@
   "recordsStatsBasisFootnote": "통계는 퍼즐별 최고 클리어 기록을 기준으로 계산됩니다.",
   "recordsBestByLevelTitle": "난이도별 최고 기록",
   "recordsBestByLevelEmpty": "표시할 난이도별 최고 기록이 없습니다.",
-  "recordsBestByLevelDetail": "{time} · 오답 {wrongCount}",
+  "recordsBestByLevelDetail": "{time} · 실수 {wrongCount}",
   "@recordsBestByLevelDetail": {
     "placeholders": {
       "time": {
@@ -444,7 +441,7 @@
       }
     }
   },
-  "recordsRecentDetail": "{time} · 오답 {wrongCount} · {date}",
+  "recordsRecentDetail": "{time} · 실수 {wrongCount} · {date}",
   "@recordsRecentDetail": {
     "placeholders": {
       "time": {
@@ -458,7 +455,7 @@
       }
     }
   },
-  "recordsBestDetail": "{time} · 오답 {wrongCount}",
+  "recordsBestDetail": "{time} · 실수 {wrongCount}",
   "@recordsBestDetail": {
     "placeholders": {
       "time": {
@@ -602,100 +599,6 @@
       }
     }
   },
-  "achievementCollectionAppBarTitle": "배지 컬렉션",
-  "achievementLoadError": "배지 정보를 불러올 수 없습니다.",
-  "achievementViewSettings": "보기 설정",
-  "achievementSortLabel": "정렬",
-  "achievementFilterAll": "전체",
-  "achievementFilterUnlocked": "획득",
-  "achievementFilterLocked": "도전 중",
-  "achievementSectionAll": "전체 배지",
-  "achievementSectionUnlocked": "획득한 배지",
-  "achievementSectionLocked": "도전 중인 배지",
-  "achievementEmptyAll": "표시할 배지가 없습니다.",
-  "achievementEmptyUnlocked": "아직 획득한 배지가 없습니다.",
-  "achievementEmptyLocked": "모든 배지를 획득했어요.",
-  "achievementHeroTitle": "성취 컬렉션",
-  "achievementHeroProgress": "획득 {unlocked} / 전체 {total}",
-  "@achievementHeroProgress": {
-    "placeholders": {
-      "unlocked": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "achievementHeroAllUnlocked": "모든 배지를 모았어요. 정말 멋집니다.",
-  "achievementHeroKeepGoing": "남은 배지를 하나씩 열면서 플레이 기록을 쌓아보세요.",
-  "achievementBadgeFirstClearTitle": "첫 클리어",
-  "achievementBadgeFirstClearDesc": "첫 퍼즐을 완주해 난프레 여정을 시작했어요.",
-  "achievementBadgeStreakTitle": "3일 연속",
-  "achievementBadgeStreakDesc": "3일 연속으로 퍼즐을 클리어해 리듬을 만들어요.",
-  "achievementBadgeWeeklyTitle": "주간 러너",
-  "achievementBadgeWeeklyDesc": "최근 7일 동안 5판을 클리어해 꾸준함을 보여주세요.",
-  "achievementBadgePerfectTitle": "퍼펙트 클리어",
-  "achievementBadgePerfectDesc": "오답 없이 한 판을 끝내면 획득합니다.",
-  "achievementBadgeMasterTitle": "마스터 첫 승리",
-  "achievementBadgeMasterDesc": "마스터 난이도를 처음 클리어하면 해금됩니다.",
-  "achievementProgressFraction": "{current}/{max}",
-  "@achievementProgressFraction": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      },
-      "max": {
-        "type": "int"
-      }
-    }
-  },
-  "achievementProgressStreak": "{current}/{max}일",
-  "@achievementProgressStreak": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      },
-      "max": {
-        "type": "int"
-      }
-    }
-  },
-  "achievementProgressWeekly": "{current}/{max}판",
-  "@achievementProgressWeekly": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      },
-      "max": {
-        "type": "int"
-      }
-    }
-  },
-  "achievementStatusDone": "완료",
-  "achievementStatusNotMet": "미달성",
-  "achievementStatusTrying": "도전 중",
-  "achievementTileProgress": "진행: {label}",
-  "@achievementTileProgress": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
-  "achievementTileRarity": "희귀도: {label}",
-  "@achievementTileRarity": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
-  "achievementRarityCommon": "기본",
-  "achievementRarityRare": "희귀",
-  "achievementRarityEpic": "에픽",
-  "achievementSortDefault": "기본순",
-  "achievementSortRarity": "희귀도순",
   "commonSave": "저장",
   "settingsDisplaySection": "화면",
   "settingsTheme": "테마",
@@ -715,6 +618,15 @@
   "homeTodayChallengeResumeButton": "오늘의 도전 이어하기",
   "homeTodayChallengeReviewButton": "오늘의 퍼즐 다시 풀기",
   "homeTodayChallengeLoadError": "오늘의 퍼즐을 불러오지 못했어요.",
+  "homeChallengeStartButton": "도전 시작",
+  "homeChallengeReplayButton": "다시 풀기",
+  "homeChallengeNotStarted": "아직 시작 전",
+  "homeChallengeProgress": "{percent}% 진행",
+  "homeChallengeCompleteTitle": "오늘의 도전 완료!",
+  "homeChallengeStreak": "도전 {days}일 연속",
+  "homeChallengeLoadErrorTitle": "오늘의 도전을 불러오지 못했어요",
+  "homeChallengeLoadErrorBody": "잠시 후 다시 시도해주세요.",
+  "recordsChallengeTodayDone": "오늘 도전 완료",
   "homeTodayChallengeDateChanged": "날짜가 바뀌어 오늘의 도전을 새로 불러왔어요.",
   "homeFirstStartTitle": "첫 퍼즐을 시작해보세요",
   "homeNewPuzzleTitle": "새 퍼즐을 시작해보세요",
@@ -799,6 +711,14 @@
   "levelTryAgain": "다시 시도",
   "levelContinueButton": "이어서 풀기",
   "levelStartNextNew": "다음 새 퍼즐 시작 · {number}",
+  "levelStartNewButton": "퍼즐 시작",
+  "levelPuzzleNumber": "{number}번 퍼즐",
+  "levelCompletedCount": "{count}개 완료",
+  "levelCardFirstSub": "첫 퍼즐부터 시작해볼까요?",
+  "levelCardNextSub": "다음 퍼즐을 시작해보세요",
+  "levelCardAllDoneTitle": "{levelName} 퍼즐을 모두 완료했어요",
+  "levelCardAllDoneSub": "완료한 퍼즐을 다시 풀어보세요",
+  "levelCardViewCompleted": "완료한 퍼즐 보기",
   "levelViewInProgress": "진행 중 {count}개 보기",
   "levelNotesInProgress": "메모 작성 중",
   "levelEmptyInProgress": "이어갈 퍼즐이 아직 없어요.",
@@ -824,7 +744,7 @@
   "savedGamesDeleteFailed": "삭제하지 못했어요. 다시 시도해 주세요.",
   "recordsMyRecordTitle": "지금까지",
   "recordsSummaryTotalCleared": "완료한 퍼즐",
-  "recordsSummaryPerfectClears": "무오답 완료",
+  "recordsSummaryPerfectClears": "실수 없이 완료",
   "recordsSummaryHeroCount": "{count}개",
   "@recordsSummaryHeroCount": {
     "placeholders": {
@@ -833,7 +753,6 @@
       }
     }
   },
-  "recordsSummaryHeroDescription": "퍼즐을 풀었어요",
   "recordsSummaryHeroSemanticLabel": "퍼즐 {count}개를 풀었어요",
   "@recordsSummaryHeroSemanticLabel": {
     "placeholders": {
@@ -850,7 +769,7 @@
       }
     }
   },
-  "recordsSummaryStreakChip": "현재 {count}일 연속",
+  "recordsSummaryStreakChip": "{count}일 연속 플레이",
   "@recordsSummaryStreakChip": {
     "placeholders": {
       "count": {
@@ -858,6 +777,7 @@
       }
     }
   },
+  "recordsSummaryStreakToday": "오늘 플레이",
   "challengeMonthlyDescription": "날짜를 선택해 지난 도전을 다시 풀 수 있어요.",
   "challengeTodayEyebrow": "오늘의 흐름",
   "gamePausedTitle": "일시정지됨",

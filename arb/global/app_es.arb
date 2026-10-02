@@ -274,7 +274,7 @@
   "recordsTrendSectionSubtitle": "Victorias día a día de los últimos siete días.",
   "recordsTrendLegendDailyClears": "Victorias diarias",
   "recordsTrendTodayLabel": "Hoy",
-  "recordsPlayInsightsTitle": "Esta semana",
+  "recordsPlayInsightsTitle": "Actividad de esta semana",
   "recordsWeekSubtitle": "Toca un día para ver tu registro",
   "recordsPlayCalendarTitle": "Por día",
   "recordsWeeklyReportTitle": "Informe semanal",
@@ -330,10 +330,8 @@
   "recordsLevelEmpty": "Aún no hay puzles completados en este nivel.",
   "recordsRowBestTime": "Tiempo más rápido",
   "recordsAverageBasisNote": "Los promedios se basan en el mejor registro de cada puzle.",
-  "recordsCalendarTitle": "Actividad de todos los puzles",
+  "recordsCalendarTitle": "Actividad de las últimas {weeks} semanas",
   "recordsCalendarSubtitle": "Consulta los días que completaste y tu frecuencia de juego",
-  "recordsCalendarPeriod": "Últimas {weeks} semanas",
-  "recordsViewAchievements": "Ver logros",
   "recordsOverallNote": "{cleared} de {total} puzles completados en todos los niveles.",
   "recordsWeekActiveDays": "Días activos: {count}",
   "recordsWeekCompletions": "Completados: {count}",
@@ -348,7 +346,6 @@
   "recordsActivityTotalClearsLabel": "Completados en total",
   "recordsActivityCurrentStreakLabel": "Racha actual",
   "recordsActivityBestStreakLabel": "Mayor racha",
-  "recordsChallengeStreakLabel": "Racha del desafío de hoy",
   "recordsActivityDayCount": "{count, plural, one{{count} día} other{{count} días}}",
   "@recordsActivityDayCount": {
     "placeholders": {
@@ -602,100 +599,6 @@
       }
     }
   },
-  "achievementCollectionAppBarTitle": "Insignias",
-  "achievementLoadError": "No se pudieron cargar las insignias.",
-  "achievementViewSettings": "Vista",
-  "achievementSortLabel": "Ordenar",
-  "achievementFilterAll": "Todas",
-  "achievementFilterUnlocked": "Obtenidas",
-  "achievementFilterLocked": "En curso",
-  "achievementSectionAll": "Todas las insignias",
-  "achievementSectionUnlocked": "Insignias obtenidas",
-  "achievementSectionLocked": "Insignias en curso",
-  "achievementEmptyAll": "No hay insignias que mostrar.",
-  "achievementEmptyUnlocked": "Aún no has obtenido ninguna insignia.",
-  "achievementEmptyLocked": "Has desbloqueado todas las insignias.",
-  "achievementHeroTitle": "Logros",
-  "achievementHeroProgress": "{unlocked} / {total} desbloqueadas",
-  "@achievementHeroProgress": {
-    "placeholders": {
-      "unlocked": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "achievementHeroAllUnlocked": "Reuniste todas las insignias. ¡Increíble!",
-  "achievementHeroKeepGoing": "Sigue jugando para desbloquear más insignias.",
-  "achievementBadgeFirstClearTitle": "Primera victoria",
-  "achievementBadgeFirstClearDesc": "Completa tu primer puzle para comenzar tu viaje en el sudoku.",
-  "achievementBadgeStreakTitle": "Racha de 3 días",
-  "achievementBadgeStreakDesc": "Resuelve puzles tres días seguidos para crear un hábito.",
-  "achievementBadgeWeeklyTitle": "Corredor semanal",
-  "achievementBadgeWeeklyDesc": "Resuelve cinco puzles en los últimos siete días.",
-  "achievementBadgePerfectTitle": "Victoria perfecta",
-  "achievementBadgePerfectDesc": "Termina un puzle sin ningún error.",
-  "achievementBadgeMasterTitle": "Primera victoria Maestro",
-  "achievementBadgeMasterDesc": "Resuelve un puzle de nivel Maestro por primera vez.",
-  "achievementProgressFraction": "{current}/{max}",
-  "@achievementProgressFraction": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      },
-      "max": {
-        "type": "int"
-      }
-    }
-  },
-  "achievementProgressStreak": "{current}/{max} días",
-  "@achievementProgressStreak": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      },
-      "max": {
-        "type": "int"
-      }
-    }
-  },
-  "achievementProgressWeekly": "{current}/{max} victorias",
-  "@achievementProgressWeekly": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      },
-      "max": {
-        "type": "int"
-      }
-    }
-  },
-  "achievementStatusDone": "Hecho",
-  "achievementStatusNotMet": "Pendiente",
-  "achievementStatusTrying": "En curso",
-  "achievementTileProgress": "Progreso: {label}",
-  "@achievementTileProgress": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
-  "achievementTileRarity": "Rareza: {label}",
-  "@achievementTileRarity": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
-  "achievementRarityCommon": "Común",
-  "achievementRarityRare": "Raro",
-  "achievementRarityEpic": "Épico",
-  "achievementSortDefault": "Orden predeterminado",
-  "achievementSortRarity": "Por rareza",
   "commonSave": "Guardar",
   "settingsDisplaySection": "Pantalla",
   "settingsTheme": "Tema",
@@ -715,6 +618,15 @@
   "homeTodayChallengeResumeButton": "Continuar el reto de hoy",
   "homeTodayChallengeReviewButton": "Volver a jugar el puzle de hoy",
   "homeTodayChallengeLoadError": "No se pudo cargar el puzle de hoy.",
+  "homeChallengeStartButton": "Empezar desafío",
+  "homeChallengeReplayButton": "Jugar de nuevo",
+  "homeChallengeNotStarted": "Aún sin empezar",
+  "homeChallengeProgress": "{percent}% completado",
+  "homeChallengeCompleteTitle": "¡Desafío de hoy completado!",
+  "homeChallengeStreak": "{days, plural, =1{Racha de desafíos: 1 día} other{Racha de desafíos: {days} días}}",
+  "homeChallengeLoadErrorTitle": "No se pudo cargar el desafío de hoy",
+  "homeChallengeLoadErrorBody": "Inténtalo de nuevo en un momento.",
+  "recordsChallengeTodayDone": "Desafío de hoy completado",
   "homeTodayChallengeDateChanged": "Empezó un nuevo día. Se actualizó el reto de hoy.",
   "homeFirstStartTitle": "Empieza tu primer puzle",
   "homeNewPuzzleTitle": "Empieza un puzle nuevo",
@@ -799,6 +711,14 @@
   "levelTryAgain": "Intentar de nuevo",
   "levelContinueButton": "Continuar",
   "levelStartNextNew": "Empezar nuevo puzle · {number}",
+  "levelStartNewButton": "Empezar puzle",
+  "levelPuzzleNumber": "Puzle {number}",
+  "levelCompletedCount": "{count, plural, =1{1 completado} other{{count} completados}}",
+  "levelCardFirstSub": "¿Empezamos por el primer puzle?",
+  "levelCardNextSub": "Empieza el siguiente puzle",
+  "levelCardAllDoneTitle": "Completaste todos los puzles de {levelName}",
+  "levelCardAllDoneSub": "Vuelve a resolver los puzles completados",
+  "levelCardViewCompleted": "Ver puzles completados",
   "levelViewInProgress": "Ver {count} en curso",
   "levelNotesInProgress": "Escribiendo notas",
   "levelEmptyInProgress": "Todavía no tienes un puzle para continuar.",
@@ -833,7 +753,6 @@
       }
     }
   },
-  "recordsSummaryHeroDescription": "puzles resueltos",
   "recordsSummaryHeroSemanticLabel": "Resolviste {count} puzles",
   "@recordsSummaryHeroSemanticLabel": {
     "placeholders": {
@@ -850,7 +769,7 @@
       }
     }
   },
-  "recordsSummaryStreakChip": "Racha actual de {count} días",
+  "recordsSummaryStreakChip": "{count} días seguidos jugando",
   "@recordsSummaryStreakChip": {
     "placeholders": {
       "count": {
@@ -858,6 +777,7 @@
       }
     }
   },
+  "recordsSummaryStreakToday": "Jugaste hoy",
   "challengeMonthlyDescription": "Elige una fecha para volver a jugar un reto anterior.",
   "challengeTodayEyebrow": "Hoy",
   "gamePausedTitle": "En pausa",

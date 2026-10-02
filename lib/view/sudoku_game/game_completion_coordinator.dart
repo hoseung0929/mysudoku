@@ -3,7 +3,6 @@ import 'package:sudoku159/model/sudoku_game.dart';
 import 'package:sudoku159/model/sudoku_game_set.dart';
 import 'package:sudoku159/model/sudoku_level.dart';
 import 'package:sudoku159/database/database_helper.dart';
-import 'package:sudoku159/services/challenge/achievement_service.dart';
 import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
 import 'package:sudoku159/services/records/game_record_notifier.dart';
 import 'package:sudoku159/services/records/game_record_service.dart';
@@ -14,13 +13,11 @@ import 'package:flutter/foundation.dart';
 class GameCompletionData {
   const GameCompletionData({
     required this.isNewBestRecord,
-    required this.newlyUnlockedBadges,
     required this.challengeMessage,
     required this.nextGame,
   });
 
   final bool isNewBestRecord;
-  final List<AchievementBadge> newlyUnlockedBadges;
   final String? challengeMessage;
   final SudokuGame? nextGame;
 }
@@ -29,19 +26,16 @@ class GameCompletionCoordinator {
   GameCompletionCoordinator({
     GameRecordService? gameRecordService,
     ChallengeProgressService? challengeProgressService,
-    AchievementService? achievementService,
     NotificationService? notificationService,
     DatabaseHelper? databaseHelper,
   })  : _gameRecordService = gameRecordService ?? GameRecordService(),
         _challengeProgressService =
             challengeProgressService ?? ChallengeProgressService(),
-        _achievementService = achievementService ?? AchievementService(),
         _notificationService = notificationService ?? NotificationService(),
         _databaseHelper = databaseHelper ?? DatabaseHelper();
 
   final GameRecordService _gameRecordService;
   final ChallengeProgressService _challengeProgressService;
-  final AchievementService _achievementService;
   final NotificationService _notificationService;
   final DatabaseHelper _databaseHelper;
 
@@ -56,7 +50,6 @@ class GameCompletionCoordinator {
     String? challengeDate,
     bool challengeCountsForStreak = true,
   }) async {
-    final beforeAchievements = await _achievementService.load(l10n);
     await _databaseHelper.saveClearEvent(
       levelName: level.name,
       gameNumber: game.gameNumber,
@@ -96,12 +89,6 @@ class GameCompletionCoordinator {
         streakEligible: challengeCountsForStreak,
       );
     }
-    final afterAchievements = await _achievementService.load(l10n);
-    final newlyUnlockedBadges = _achievementService.getNewlyUnlockedBadges(
-      before: beforeAchievements,
-      after: afterAchievements,
-    );
-
     GameRecordNotifier.instance.notifyChanged();
 
     try {
@@ -134,7 +121,6 @@ class GameCompletionCoordinator {
 
     return GameCompletionData(
       isNewBestRecord: recordResult.improvedPrevious,
-      newlyUnlockedBadges: newlyUnlockedBadges,
       challengeMessage:
           isNewDailyCompletion ? l10n.challengeCompletedToday : null,
       nextGame: nextGame,

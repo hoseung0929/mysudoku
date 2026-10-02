@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sudoku159/l10n/app_localizations_en.dart';
 import 'package:sudoku159/model/today_challenge_target.dart';
-import 'package:sudoku159/services/challenge/achievement_service.dart';
 import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
 import 'package:sudoku159/services/game/game_state_service.dart';
 import 'package:sudoku159/services/home/home_dashboard_service.dart';
@@ -16,14 +15,11 @@ void main() {
       final service = HomeDashboardService(
         gameStateService: _FakeGameStateService(),
         challengeProgressService: challengeFake,
-        achievementService: AchievementService(
-          challengeProgressService: challengeFake,
-          loadOverallStatistics: () async => const {
-            'total_cleared': 0,
-            'total_games': 1,
-          },
-          loadRecentRecords: () async => const [],
-        ),
+        loadOverallStatistics: () async => const {
+          'total_cleared': 0,
+          'total_games': 1,
+        },
+        loadRecentRecords: () async => const [],
         loadGameEntry: (levelName, gameNumber) async {
           return {
             'game_number': gameNumber,
@@ -73,11 +69,8 @@ void main() {
       final service = HomeDashboardService(
         gameStateService: _InvalidSavedBoardGameStateService(),
         challengeProgressService: challengeFake,
-        achievementService: AchievementService(
-          challengeProgressService: challengeFake,
-          loadOverallStatistics: () async => const <String, dynamic>{},
-          loadRecentRecords: () async => const [],
-        ),
+        loadOverallStatistics: () async => const <String, dynamic>{},
+        loadRecentRecords: () async => const [],
         loadGameEntry: (levelName, gameNumber) async {
           return {
             'game_number': gameNumber,
@@ -98,11 +91,8 @@ void main() {
       final service = HomeDashboardService(
         gameStateService: _FilteringGameStateService(),
         challengeProgressService: challengeFake,
-        achievementService: AchievementService(
-          challengeProgressService: challengeFake,
-          loadOverallStatistics: () async => const <String, dynamic>{},
-          loadRecentRecords: () async => const [],
-        ),
+        loadOverallStatistics: () async => const <String, dynamic>{},
+        loadRecentRecords: () async => const [],
         loadGameEntry: (levelName, gameNumber) async => {
           'game_number': gameNumber,
           'board': _filterBoard,
@@ -128,11 +118,8 @@ void main() {
       final service = HomeDashboardService(
         gameStateService: _FakeGameStateService(),
         challengeProgressService: challengeFake,
-        achievementService: AchievementService(
-          challengeProgressService: challengeFake,
-          loadOverallStatistics: () async => const <String, dynamic>{},
-          loadRecentRecords: () async => const [],
-        ),
+        loadOverallStatistics: () async => const <String, dynamic>{},
+        loadRecentRecords: () async => const [],
         loadGameEntry: (levelName, gameNumber) async => null,
       );
 
@@ -151,11 +138,8 @@ void main() {
         return HomeDashboardService(
           gameStateService: _FilteringGameStateService(),
           challengeProgressService: challengeFake,
-          achievementService: AchievementService(
-            challengeProgressService: challengeFake,
-            loadOverallStatistics: () async => const <String, dynamic>{},
-            loadRecentRecords: () async => const [],
-          ),
+          loadOverallStatistics: () async => const <String, dynamic>{},
+          loadRecentRecords: () async => const [],
           loadGameEntry: (levelName, gameNumber) async => {
             'game_number': gameNumber,
             'board': _filterBoard,
@@ -168,6 +152,9 @@ void main() {
 
       // 저장 세션이 있는 문제(1, 2)만 이어하기. 열어보기만 한 3은 새 시작.
       expect((await loadFor(1)).todayChallengeHasSession, isTrue);
+      // 저장 세션 요약(진행률 등)이 함께 전달된다.
+      expect((await loadFor(1)).todayChallengeContinueGame, isNotNull);
+      expect((await loadFor(3)).todayChallengeContinueGame, isNull);
       expect((await loadFor(2)).todayChallengeHasSession, isTrue);
       expect((await loadFor(3)).todayChallengeHasSession, isFalse);
       // 다른 저장 게임이 있어도 오늘의 도전 타깃은 표시된 문제 그대로.

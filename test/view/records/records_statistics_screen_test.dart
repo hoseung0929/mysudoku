@@ -10,7 +10,6 @@ import 'package:sudoku159/model/sudoku_game.dart';
 import 'package:sudoku159/model/sudoku_level.dart';
 import 'package:sudoku159/model/today_challenge_target.dart';
 import 'package:sudoku159/navigation/root_nav_scope.dart';
-import 'package:sudoku159/services/challenge/achievement_service.dart';
 import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
 import 'package:sudoku159/services/home/home_dashboard_service.dart';
 import 'package:sudoku159/services/records/records_statistics_service.dart';
@@ -40,6 +39,7 @@ class _FakeChallengeProgressService extends ChallengeProgressService {
     this.throwOnLoad = false,
     this.throwOnMonthCalendar = false,
     this.hasAnyCompletion = false,
+    this.todayCleared = false,
     String? targetLevel,
     int? targetGameNumber,
   })  : targetLevel = targetLevel ?? SudokuLevel.levels.first.name,
@@ -49,6 +49,7 @@ class _FakeChallengeProgressService extends ChallengeProgressService {
   final bool throwOnLoad;
   final bool throwOnMonthCalendar;
   final bool hasAnyCompletion;
+  final bool todayCleared;
   final String targetLevel;
   final int targetGameNumber;
 
@@ -63,7 +64,7 @@ class _FakeChallengeProgressService extends ChallengeProgressService {
     if (throwOnLoad) throw Exception('challenge streak load failed');
     return ChallengeProgressSummary(
       streakDays: streakDays,
-      isTodayChallengeCleared: false,
+      isTodayChallengeCleared: todayCleared,
       todayChallengeLevelName: targetLevel,
       todayChallengeGameNumber: targetGameNumber,
       challengeDate: ChallengeProgressService.formatLocalDate(DateTime.now()),
@@ -181,7 +182,19 @@ HomeDashboardData _dashboardData({
     continueGames: const [],
     totalContinueCount: 0,
     todayChallenge: game,
-    todayChallengeHasSession: hasTodaySession,
+    todayChallengeContinueGame: hasTodaySession
+        ? ContinueGameSummary(
+            level: level,
+            game: targetForSummary,
+            progress: 0.36,
+            elapsedFilledCells: 10,
+            lastPlayedAtMillis: DateTime.now().millisecondsSinceEpoch,
+            elapsedSeconds: 60,
+            wrongCount: 0,
+            isMemoMode: false,
+            noteCount: 0,
+          )
+        : null,
     challengeProgress: ChallengeProgressSummary(
       streakDays: 0,
       isTodayChallengeCleared: false,
@@ -196,7 +209,6 @@ HomeDashboardData _dashboardData({
       weeklyGoalTarget: 3,
       perfectClearCount: 0,
     ),
-    achievementSummary: const AchievementSummary(badges: []),
     averageClearTimeSeconds: 0,
   );
 }
@@ -206,6 +218,7 @@ String _date(DateTime d) => ChallengeProgressService.formatLocalDate(d);
 RecordsStatisticsData _data({
   List<Map<String, dynamic>> recent = const [],
   List<Map<String, dynamic>> events = const [],
+  int currentStreak = 2,
 }) {
   return RecordsStatisticsData(
     overall: {'total_cleared': recent.length, 'total_games': 636},
@@ -214,9 +227,9 @@ RecordsStatisticsData _data({
         {'level_name': n, 'total_count': 159},
     ],
     recent: recent,
-    activitySummary: const {
+    activitySummary: {
       'total_clears': 3,
-      'current_streak_days': 2,
+      'current_streak_days': currentStreak,
       'best_streak_days': 5,
     },
     events: events,
@@ -333,7 +346,7 @@ void main() {
         findsOneWidget);
     expect(find.text('00:00'), findsNothing);
     expect(find.text('Records by level'), findsNothing);
-    expect(find.text('All puzzle activity'), findsNothing);
+    expect(find.text('Last 26 weeks of activity'), findsNothing);
     // 일반 기록도, 도전 기록도 전혀 없으면 도전 달력도 함께 숨긴다.
     expect(find.text('Challenge history'), findsNothing);
 
@@ -350,11 +363,10 @@ void main() {
     double y(String t) => tester.getTopLeft(find.text(t)).dy;
     final heroY =
         tester.getTopLeft(find.byKey(const Key('records_hero_header'))).dy;
-    expect(heroY, lessThan(y('This week')));
-    expect(y('This week'), lessThan(y('Records by level')));
-    expect(y('Records by level'), lessThan(y('All puzzle activity')));
-    expect(y('All puzzle activity'), lessThan(y('Challenge history')));
-    expect(find.text('View achievements'), findsNothing);
+    expect(heroY, lessThan(y("This week's activity")));
+    expect(y("This week's activity"), lessThan(y('Records by level')));
+    expect(y('Records by level'), lessThan(y('Last 26 weeks of activity')));
+    expect(y('Last 26 weeks of activity'), lessThan(y('Challenge history')));
 
     // 이번 주 요약: 오늘 이벤트 2건 → 활동 1일 · 완료 2판(반복 포함 횟수)
     expect(find.text('Active days: 1'), findsOneWidget);
@@ -364,8 +376,8 @@ void main() {
     expect(find.text('2 / 159'), findsOneWidget);
     expect(find.text('05:00'), findsOneWidget); // best
     expect(find.text('06:50'), findsOneWidget); // (520+300)/2 = 410s
-    expect(find.text('Puzzle completion'), findsOneWidget);
-    expect(find.text('Avg. clear time'), findsOneWidget);
+    expect(find.text('Puzzles completed'), findsOneWidget);
+    expect(find.text('Average solve time'), findsOneWidget);
     expect(
         find.textContaining("Averages are based on each puzzle's best record"),
         findsOneWidget);
@@ -379,11 +391,11 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('puzzles solved'), findsOneWidget);
+    expect(find.text('Puzzles cleared'), findsOneWidget);
     expect(find.text('0 mistake-free'), findsOneWidget);
-    expect(find.text('2-day streak'), findsOneWidget);
-    // 활동 달기 기간 표기 + 최고 연속 요약 행
-    expect(find.text('Last 26 weeks'), findsOneWidget);
+    expect(find.text('2-day play streak'), findsOneWidget);
+    // 활동 달력 기간은 제목("Last 26 weeks of activity")에 있고 별도 줄은 없다.
+    expect(find.text('Last 26 weeks'), findsNothing);
     // 현재 연속은 요약 카드에만, 활동 달력 하단은 최고 연속만 보여준다(중복 제거).
     expect(find.textContaining('Longest streak'), findsOneWidget);
     expect(find.byKey(const Key('records_week_artwork')), findsOneWidget);
@@ -418,13 +430,17 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Intermediate'));
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300)); // 크로스페이드 종료
     expect(
         find.text('No completed puzzles at this level yet.'), findsOneWidget);
-    expect(find.text('—'), findsNWidgets(3));
+    // 기록이 없으면 "—" 행과 집계 기준 안내는 숨긴다.
+    expect(find.text('—'), findsNothing);
     expect(find.text('00:00'), findsNothing);
+    expect(find.textContaining('Averages are based'), findsNothing);
+    expect(find.text('Fastest time'), findsNothing);
     // 다른 섹션은 유지
-    expect(find.text('This week'), findsOneWidget);
-    expect(find.text('All puzzle activity'), findsOneWidget);
+    expect(find.text("This week's activity"), findsOneWidget);
+    expect(find.text('Last 26 weeks of activity'), findsOneWidget);
   });
 
   testWidgets('tapping a weekday shows that day; tapping again clears it',
@@ -470,7 +486,7 @@ void main() {
     await tester.tap(find.text('Try again'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('This week'), findsOneWidget);
+    expect(find.text("This week's activity"), findsOneWidget);
   });
 
   for (final entry in {
@@ -587,10 +603,11 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(
-      tester.getTopLeft(find.text('puzzles solved')).dy,
-      greaterThan(tester.getTopLeft(find.text('So far')).dy),
-    );
+    // 라벨이 대표 숫자 위에 있다: 제목 < 라벨 < 숫자.
+    final titleY = tester.getTopLeft(find.text('So far')).dy;
+    final labelY = tester.getTopLeft(find.text('Puzzles cleared')).dy;
+    expect(labelY, greaterThan(titleY));
+    expect(find.text('puzzles solved'), findsNothing);
   });
 
   testWidgets(
@@ -625,7 +642,6 @@ void main() {
     expect(find.byKey(const Key('records_initial_skeleton')), findsOneWidget);
     expect(find.byKey(const Key('records_skeleton_sample')), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsNothing);
-    expect(find.text('View achievements'), findsNothing);
 
     completer.complete(_data(recent: recent, events: events));
     await tester.pump();
@@ -647,10 +663,85 @@ void main() {
     expect(
       find.descendant(
         of: find.byType(ChallengeMonthlyCalendarCard),
-        matching: find.text("Today's challenge streak 4 days"),
+        matching: find.text('4-day challenge streak'),
       ),
       findsOneWidget,
     );
+  });
+
+  group('streak wording', () {
+    final todayClear = _clear('초급', 1, 300, 0, today);
+    final yesterdayClear =
+        _clear('초급', 2, 300, 0, today.subtract(const Duration(days: 1)));
+
+    testWidgets('1-day streak shows "Played today" only if played today',
+        (tester) async {
+      await pumpRecords(
+        tester,
+        () async => _data(
+          recent: [todayClear],
+          events: [todayClear],
+          currentStreak: 1,
+        ),
+      );
+      expect(find.text('Played today'), findsOneWidget);
+      expect(find.textContaining('play streak'), findsNothing);
+    });
+
+    testWidgets('1-day streak from yesterday only (not played today) is hidden',
+        (tester) async {
+      await pumpRecords(
+        tester,
+        () async => _data(
+          recent: [yesterdayClear],
+          events: [yesterdayClear],
+          currentStreak: 1,
+        ),
+      );
+      expect(find.text('Played today'), findsNothing);
+      expect(find.textContaining('play streak'), findsNothing);
+    });
+
+    testWidgets('0-day streak shows no streak chip', (tester) async {
+      await pumpRecords(
+        tester,
+        () async => _data(
+          recent: [yesterdayClear],
+          events: [yesterdayClear],
+          currentStreak: 0,
+        ),
+      );
+      expect(find.text('Played today'), findsNothing);
+      expect(find.textContaining('play streak'), findsNothing);
+    });
+
+    testWidgets('challenge streak: 0 hidden, 1 only when done today, 2+ shown',
+        (tester) async {
+      Future<void> pumpWith(int days, {bool cleared = false}) async {
+        await pumpRecords(
+          tester,
+          () async => _data(recent: recent, events: events),
+          challengeProgressService: _FakeChallengeProgressService(
+            streakDays: days,
+            todayCleared: cleared,
+          ),
+        );
+      }
+
+      await pumpWith(0);
+      expect(find.textContaining('challenge streak'), findsNothing);
+      expect(find.text("Today's challenge done"), findsNothing);
+
+      await pumpWith(1);
+      expect(find.textContaining('challenge streak'), findsNothing);
+      expect(find.text("Today's challenge done"), findsNothing);
+
+      await pumpWith(1, cleared: true);
+      expect(find.text("Today's challenge done"), findsOneWidget);
+
+      await pumpWith(2);
+      expect(find.text('2-day challenge streak'), findsOneWidget);
+    });
   });
 
   testWidgets(
@@ -662,7 +753,7 @@ void main() {
     );
     // 현재 연속은 요약 카드의 보조 칩(2-day streak)에만 있고, 활동 달력
     // 쪽에는 최고 연속만 별도로 표시되어 중복되지 않는다.
-    expect(find.text('2-day streak'), findsOneWidget);
+    expect(find.text('2-day play streak'), findsOneWidget);
     expect(find.textContaining('Longest streak'), findsOneWidget);
   });
 
@@ -673,10 +764,11 @@ void main() {
       () async => _data(recent: recent, events: events),
       size: const Size(1280, 800),
     );
-    final weekLeft = tester.getTopLeft(find.text('This week')).dx;
-    final calendarLeft = tester.getTopLeft(find.text('All puzzle activity')).dx;
+    final weekLeft = tester.getTopLeft(find.text("This week's activity")).dx;
+    final calendarLeft =
+        tester.getTopLeft(find.text('Last 26 weeks of activity')).dx;
     expect(calendarLeft, greaterThan(weekLeft + 300)); // 오른쪽 칼럼
-    final width = tester.getSize(find.text('All puzzle activity')).width;
+    final width = tester.getSize(find.text('Last 26 weeks of activity')).width;
     expect(width, lessThan(960));
     // 콘텐츠 바깥 여백이 가운데 정렬을 반영 (1280 - 960)/2 = 160
     expect(weekLeft, greaterThanOrEqualTo(160));
@@ -872,9 +964,10 @@ void main() {
         () async => _data(recent: twoLevelRecent, events: events),
         size: const Size(1280, 800),
       );
-      final weekLeftBefore = tester.getTopLeft(find.text('This week')).dx;
+      final weekLeftBefore =
+          tester.getTopLeft(find.text("This week's activity")).dx;
       final calendarLeftBefore =
-          tester.getTopLeft(find.text('All puzzle activity')).dx;
+          tester.getTopLeft(find.text('Last 26 weeks of activity')).dx;
 
       await tester.tap(find.text('Intermediate'));
       await tester.pump();
@@ -886,9 +979,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
       handle.dispose();
 
-      expect(tester.getTopLeft(find.text('This week')).dx, weekLeftBefore);
+      expect(tester.getTopLeft(find.text("This week's activity")).dx,
+          weekLeftBefore);
       expect(
-        tester.getTopLeft(find.text('All puzzle activity')).dx,
+        tester.getTopLeft(find.text('Last 26 weeks of activity')).dx,
         calendarLeftBefore,
       );
       expect(tester.takeException(), isNull);
@@ -900,6 +994,24 @@ void main() {
       await tester.ensureVisible(finder);
       await tester.pumpAndSettle();
       await tester.tap(finder);
+    }
+
+    /// 도전 달력에서 [date]를 고른다. 이번 달에 어제가 없는 달 1일에는 이전 달로
+    /// 먼저 이동한다(테스트 날짜가 달 초에 따라 흔들리지 않게).
+    Future<void> selectPastDay(WidgetTester tester, DateTime date) async {
+      if (date.month != DateTime.now().month) {
+        await tapVisible(tester, find.byTooltip('Previous month'));
+        await tester.pumpAndSettle();
+      }
+      await tapVisible(
+        tester,
+        find
+            .descendant(
+              of: find.byKey(const Key('records_challenge_calendar')),
+              matching: find.text('${date.day}'),
+            )
+            .first,
+      );
     }
 
     testWidgets(
@@ -920,7 +1032,6 @@ void main() {
         ),
       );
       expect(find.text('Challenge history'), findsOneWidget);
-      expect(find.text('View achievements'), findsNothing);
     });
 
     testWidgets(
@@ -964,7 +1075,6 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Challenge history'), findsOneWidget);
-      expect(find.text('View achievements'), findsNothing);
       expect(tester.takeException(), isNull);
     });
 
@@ -993,7 +1103,7 @@ void main() {
           streakDays: 4,
         ),
       );
-      expect(find.text("Today's challenge streak 4 days"), findsOneWidget);
+      expect(find.text('4-day challenge streak'), findsOneWidget);
     });
 
     testWidgets(
@@ -1006,7 +1116,7 @@ void main() {
           throwOnLoad: true,
         ),
       );
-      expect(find.text("Today's challenge streak 0 days"), findsOneWidget);
+      expect(find.textContaining('challenge streak'), findsNothing);
       expect(find.text('So far'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
@@ -1027,7 +1137,13 @@ void main() {
           () async => _dashboardData(todayChallenge: game),
         ),
       );
-      await tapVisible(tester, find.text('${today.day}').first);
+      await tapVisible(
+          tester,
+          find
+              .descendant(
+                  of: find.byKey(const Key('records_challenge_calendar')),
+                  matching: find.text('${today.day}'))
+              .first);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
       await tapVisible(
@@ -1073,7 +1189,13 @@ void main() {
       );
       final loadsBefore = statsLoadCount;
 
-      await tapVisible(tester, find.text('${today.day}').first);
+      await tapVisible(
+          tester,
+          find
+              .descendant(
+                  of: find.byKey(const Key('records_challenge_calendar')),
+                  matching: find.text('${today.day}'))
+              .first);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
       await tapVisible(
@@ -1094,7 +1216,7 @@ void main() {
     testWidgets(
         'selecting a past date opens its exact target with '
         'challengeCountsForStreak false', (tester) async {
-      final pastDate = today.subtract(const Duration(days: 5));
+      final pastDate = today.subtract(const Duration(days: 1));
       final pastDateStr = ChallengeProgressService.formatLocalDate(pastDate);
       final level = SudokuLevel.levels.first;
       await pumpRecords(
@@ -1105,7 +1227,7 @@ void main() {
           targetGameNumber: 9,
         ),
       );
-      await tapVisible(tester, find.text('${pastDate.day}').first);
+      await selectPastDay(tester, pastDate);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
       await tapVisible(
@@ -1126,13 +1248,13 @@ void main() {
 
     testWidgets('a past puzzle load failure shows an error, opens nothing',
         (tester) async {
-      final pastDate = today.subtract(const Duration(days: 5));
+      final pastDate = today.subtract(const Duration(days: 1));
       await pumpRecords(
         tester,
         () async => _data(recent: recent, events: events),
         databaseHelper: _FakeDatabaseHelper(failGameEntry: true),
       );
-      await tapVisible(tester, find.text('${pastDate.day}').first);
+      await selectPastDay(tester, pastDate);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
       await tapVisible(

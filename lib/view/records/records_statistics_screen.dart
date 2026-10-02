@@ -24,6 +24,24 @@ import 'package:sudoku159/widgets/mascot_image.dart';
 import 'package:sudoku159/widgets/press_scale.dart';
 import 'package:sudoku159/widgets/sudoku_motif.dart';
 
+/// 문장 안의 숫자만 굵게 만든다(언어와 무관하게 숫자 덩어리를 찾는다).
+List<InlineSpan> _boldNumberSpans(String text) {
+  final spans = <InlineSpan>[];
+  var last = 0;
+  for (final m in RegExp(r'\d+').allMatches(text)) {
+    if (m.start > last) {
+      spans.add(TextSpan(text: text.substring(last, m.start)));
+    }
+    spans.add(TextSpan(
+      text: m.group(0),
+      style: const TextStyle(fontWeight: FontWeight.w800),
+    ));
+    last = m.end;
+  }
+  if (last < text.length) spans.add(TextSpan(text: text.substring(last)));
+  return spans;
+}
+
 class RecordsStatisticsScreen extends StatefulWidget {
   const RecordsStatisticsScreen({
     super.key,
@@ -70,7 +88,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       widget.databaseHelper ?? DatabaseHelper();
   final ScrollController _scrollController = ScrollController();
   final ScrollController _heatmapScrollController = ScrollController();
-  bool _isLoading = true;
   bool _hasLoaded = false;
   int _loadRequestId = 0;
   String? _loadErrorMessage;
@@ -78,6 +95,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   String? _selectedLevelName;
   String? _selectedHeatmapDateKey;
   int _challengeStreakDays = 0;
+  bool _todayChallengeCleared = false;
 
   /// 지금까지 완료한 도전이 하나라도 있는지. 일반 퍼즐 기록이 없을 때
   /// 도전 달력을 보여줄지 판단하는 데 쓴다.
@@ -166,6 +184,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       if (!mounted) return;
       setState(() {
         _challengeStreakDays = summary.streakDays;
+        _todayChallengeCleared = summary.isTodayChallengeCleared;
         _hasChallengeHistory = hasHistory;
       });
     } catch (_) {
@@ -282,7 +301,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   Future<void> _loadStats() async {
     final requestId = ++_loadRequestId;
     setState(() {
-      _isLoading = true;
       _loadErrorMessage = null;
     });
 
@@ -313,12 +331,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         setState(() {
           _loadErrorMessage =
               AppLocalizations.of(context)!.recordsStatsLoadError;
-        });
-      }
-    } finally {
-      if (mounted && requestId == _loadRequestId) {
-        setState(() {
-          _isLoading = false;
         });
       }
     }
@@ -426,13 +438,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 ),
               ],
             ),
-            if (_isLoading && _hasLoaded)
-              const Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: LinearProgressIndicator(minHeight: 2),
-              ),
           ],
         ),
       ),
@@ -777,15 +782,23 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   /// 연속만 보여준다(일반 퍼즐 연속 기록과 구분). 제목·이미지는 카드 바깥에
   /// 중복 표시하지 않고 카드 내부 헤더로 넣는다.
   Widget _buildChallengeSection(AppLocalizations l10n) {
+    // 도전 연속: 0일은 숨기고, 1일은 오늘 완료했을 때만 보여준다(어제까지의
+    // 1일 연속은 "오늘 도전 완료"가 거짓이 된다). 2일 이상은 어제까지 이어진
+    // 기록이므로 오늘 아직이어도 보여준다.
+    final String? challengeFooter = _challengeStreakDays >= 2
+        ? l10n.homeChallengeStreak(_challengeStreakDays)
+        : (_challengeStreakDays == 1 && _todayChallengeCleared)
+            ? l10n.recordsChallengeTodayDone
+            : null;
     return ChallengeMonthlyCalendarCard(
+      key: const Key('records_challenge_calendar'),
       challengeProgressService: _challengeProgressService,
       onOpenDate: _openChallengeForDate,
       headerImage: _sectionIcon(
         Icons.calendar_month_rounded,
         const Key('records_challenge_artwork'),
       ),
-      footerText: '${l10n.recordsChallengeStreakLabel} '
-          '${l10n.recordsActivityDayCount(_challengeStreakDays)}',
+      footerText: challengeFooter,
     );
   }
 
@@ -842,21 +855,36 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                     color: chipBackground,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Text(
-                    text,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: chipTextColor,
+                  // 숫자만 굵게: 무엇이 몇 개인지 먼저 눈에 들어오도록.
+                  child: Text.rich(
+                    TextSpan(
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: chipTextColor,
+                      ),
+                      children: _boldNumberSpans(text),
                     ),
                   ),
                 );
 
             final heroCountText = l10n.recordsSummaryHeroCount(totalCleared);
-            final heroDescText = l10n.recordsSummaryHeroDescription;
+            final heroLabelText = l10n.recordsSummaryTotalCleared;
             final perfectChipText =
                 l10n.recordsSummaryPerfectChip(perfectClears);
-            final streakChipText = l10n.recordsSummaryStreakChip(currentStreak);
+            // 활동 연속: 0일은 숨기고, 1일은 오늘 플레이했을 때만 "오늘 플레이"
+            // (연속 계산은 어제부터 이어 세므로 어제만 한 경우가 1일로 나온다).
+            final now = DateTime.now();
+            final todayKey = '${now.year}-'
+                '${now.month.toString().padLeft(2, '0')}-'
+                '${now.day.toString().padLeft(2, '0')}';
+            final playedToday =
+                _events.any((e) => e['clear_date']?.toString() == todayKey);
+            final String? streakChipText = currentStreak >= 2
+                ? l10n.recordsSummaryStreakChip(currentStreak)
+                : (currentStreak == 1 && playedToday)
+                    ? l10n.recordsSummaryStreakToday
+                    : null;
             final heroSemanticLabel =
                 l10n.recordsSummaryHeroSemanticLabel(totalCleared);
 
@@ -875,6 +903,15 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        Text(
+                          heroLabelText,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: cs.onSurface.withValues(alpha: 0.85),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
                         AnimatedSwitcher(
                           duration: reduceMotion
                               ? Duration.zero
@@ -896,15 +933,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          heroDescText,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: cs.onSurface.withValues(alpha: 0.85),
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -915,7 +943,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                   runSpacing: 8,
                   children: [
                     chip(perfectChipText),
-                    chip(streakChipText),
+                    if (streakChipText != null) chip(streakChipText),
                   ],
                 ),
               ],
@@ -1368,21 +1396,26 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                               fontSize: 14, color: cs.onSurfaceVariant),
                         ),
                       ],
-                      row(Icons.emoji_events_outlined, l10n.recordsRowBestTime,
-                          time(stat['best_time'] as num?)),
-                      row(Icons.timer_outlined, l10n.recordsMetricAvgTime,
-                          time(stat['average_time'] as num?)),
-                      row(Icons.rule_rounded, l10n.recordsMetricAvgWrong,
-                          avgWrongLabel),
-                      const SizedBox(height: 14),
-                      Text(
-                        l10n.recordsAverageBasisNote,
-                        style: TextStyle(
-                          fontSize: 12,
-                          height: 1.35,
-                          color: cs.onSurfaceVariant,
+                      // 기록이 없으면 "—" 행과 집계 기준 안내는 숨긴다.
+                      if (hasRecords) ...[
+                        row(
+                            Icons.emoji_events_outlined,
+                            l10n.recordsRowBestTime,
+                            time(stat['best_time'] as num?)),
+                        row(Icons.timer_outlined, l10n.recordsMetricAvgTime,
+                            time(stat['average_time'] as num?)),
+                        row(Icons.rule_rounded, l10n.recordsMetricAvgWrong,
+                            avgWrongLabel),
+                        const SizedBox(height: 14),
+                        Text(
+                          l10n.recordsAverageBasisNote,
+                          style: TextStyle(
+                            fontSize: 12,
+                            height: 1.35,
+                            color: cs.onSurfaceVariant,
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
@@ -1422,17 +1455,12 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _RecordCardHeader(
-            title: l10n.recordsCalendarTitle,
+            title: l10n.recordsCalendarTitle(_kHeatmapWeeks),
             subtitle: l10n.recordsCalendarSubtitle,
             trailing: _sectionIcon(
               Icons.grid_view_rounded,
               const Key('records_calendar_artwork'),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            l10n.recordsCalendarPeriod(_kHeatmapWeeks),
-            style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: 16),
           _buildActivityHeatmap(l10n, heatmap),

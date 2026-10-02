@@ -33,6 +33,8 @@
 
 ## 최근 완료
 
+- **업적 기능 제거 (2026-10-03, 미커밋)** — 해금 요소를 설계하기 어렵고 업적 수도 적어 의도적으로 제외하기로 함(기록 화면 진입점은 이미 없었음). `AchievementService`·`AchievementCollectionScreen`·`achievement_l10n.dart`와 전용 테스트 삭제, `GameCompletionCoordinator`의 업적 계산(`newlyUnlockedBadges`)과 `HomeDashboardData.achievementSummary` 제거, ARB 47개 키×8파일 삭제. 저장 데이터·DB는 변경 없음. 아래 이전 항목의 업적 서술은 당시 기록이다. 나중에 다시 한다면 해금이 필요 없는 "마일스톤" 형태를 검토. `flutter analyze` 0건, 테스트 617 통과 / 기존 records 도전 이력 4건 실패(변경과 무관, 이전부터 실패).
+
 - **초보자 가이드·자동 메모·오늘의 도전 월간 달력 (2026-09-26 구현, 2026-09-27 출시 전 검토 반영, 미커밋)** — 실기기 육안 확인은 아직 없음(위젯 테스트로만 확인, 아래 "미해결" 참고).
   - **초보자용 첫 게임 가이드**: `BeginnerTutorialService`(SharedPreferences, 키 `beginner_tutorial_state_v1`, unseen/completed/dismissed)로 상태를 관리. 초급 새 문제를 처음 시작할 때만 안내 다이얼로그(가이드 시작/건너뛰기)를 보여주고, 이어하기·완료 재도전·오늘의 도전에서는 자동으로 뜨지 않는다. `BeginnerTutorialScreen`은 실제 `SudokuGamePresenter`/`SudokuBoardController`/`SudokuBoardGrid`/`SudokuHintPanel`을 그대로 재사용하는 고정 연습 퍼즐(일반 기록·연속 일수·업적에 미반영)로 행·열·박스 규칙 → 숫자 입력 → 메모·지우기 → 힌트 → 완료 7단계를 안내한다. 설정 화면 "게임 방법"에서 언제든 다시 볼 수 있다.
     - **설정에서 "다시 보기" 시 상태 보존** (2026-09-27): 최초 안내(`isReplay==false`)만 완료/닫기에 따라 `completed`/`dismissed`를 실제로 기록하고, 설정에서 다시 볼 때(`isReplay==true`)는 완료하든 중간에 닫든 기존에 저장된 상태를 그대로 둔다 — 이미 `completed`였던 사용자가 다시 보기를 하다 중간에 나가도 `dismissed`로 덮어써지지 않는다.

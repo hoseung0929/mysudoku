@@ -115,7 +115,7 @@ void main() {
       'first fresh beginner puzzle shows the guide prompt before opening',
       (tester) async {
     await pumpPicker(tester);
-    await tester.tap(find.text('Start new puzzle · 001'));
+    await tester.tap(find.text('Start puzzle'));
     await tester.pump();
     expect(find.text('New to Sudoku?'), findsOneWidget);
     expect(find.byType(SudokuGameScreen), findsNothing);
@@ -124,7 +124,7 @@ void main() {
   testWidgets('skipping the prompt opens the originally chosen puzzle',
       (tester) async {
     await pumpPicker(tester);
-    await tester.tap(find.text('Start new puzzle · 001'));
+    await tester.tap(find.text('Start puzzle'));
     await tester.pump();
     await tester.tap(find.text('Skip'));
     await settle(tester);
@@ -141,7 +141,7 @@ void main() {
       'starting the guide opens the tutorial; finishing it opens the puzzle',
       (tester) async {
     await pumpPicker(tester);
-    await tester.tap(find.text('Start new puzzle · 001'));
+    await tester.tap(find.text('Start puzzle'));
     await tester.pump();
     await tester.tap(find.text('Start the guide'));
     await settle(tester);
@@ -165,7 +165,7 @@ void main() {
       ),
     );
     await pumpPicker(tester);
-    await tester.tap(find.text('Start new puzzle · 001'));
+    await tester.tap(find.text('Start puzzle'));
     await settle(tester);
 
     expect(find.text('New to Sudoku?'), findsNothing);

@@ -301,7 +301,7 @@
   "recordsTrendSectionSubtitle": "Day-by-day clears for the last seven days.",
   "recordsTrendLegendDailyClears": "Daily clears",
   "recordsTrendTodayLabel": "Today",
-  "recordsPlayInsightsTitle": "This week",
+  "recordsPlayInsightsTitle": "This week's activity",
   "recordsWeekSubtitle": "Tap a day to see your record",
   "recordsPlayCalendarTitle": "By day",
   "recordsWeeklyReportTitle": "Weekly report",
@@ -335,10 +335,10 @@
   "recordsPacePreviousWindow": "Previous 7 days",
   "recordsPaceDelta": "Change",
   "recordsMetricClears": "Clears (filtered)",
-  "recordsMetricClearRate": "Puzzle completion",
+  "recordsMetricClearRate": "Puzzles completed",
   "recordsMetricPerfectRate": "Mistake-free share",
   "recordsSummaryMetricsFootnote": "Each puzzle counts once, using its best record, and follows your active filters. Completion compares those puzzles with the total number of puzzles in the same scope.",
-  "recordsMetricAvgTime": "Avg. clear time",
+  "recordsMetricAvgTime": "Average solve time",
   "recordsMetricAvgWrong": "Avg. mistakes",
   "recordsByLevelTitle": "Records by level",
   "recordsByLevelSubtitle": "Select a difficulty to compare records",
@@ -355,19 +355,17 @@
   "recordsEmptyGeneralOnlyTitle": "You don't have any puzzle records yet.",
   "recordsEmptyGeneralOnlySubtitle": "Finish a puzzle to see stats by difficulty and your activity history.",
   "recordsLevelEmpty": "No completed puzzles at this level yet.",
-  "recordsRowBestTime": "Fastest clear time",
+  "recordsRowBestTime": "Fastest time",
   "recordsAverageBasisNote": "Averages are based on each puzzle's best record.",
-  "recordsCalendarTitle": "All puzzle activity",
-  "recordsCalendarSubtitle": "See which days you cleared puzzles and how often you played",
-  "recordsCalendarPeriod": "Last {weeks} weeks",
-  "@recordsCalendarPeriod": {
+  "recordsCalendarTitle": "Last {weeks} weeks of activity",
+  "@recordsCalendarTitle": {
     "placeholders": {
       "weeks": {
         "type": "int"
       }
     }
   },
-  "recordsViewAchievements": "View achievements",
+  "recordsCalendarSubtitle": "See which days you cleared puzzles and how often you played",
   "recordsOverallNote": "{cleared} of {total} puzzles completed across all levels.",
   "@recordsOverallNote": {
     "placeholders": {
@@ -423,7 +421,6 @@
   "recordsActivityTotalClearsLabel": "Total completions",
   "recordsActivityCurrentStreakLabel": "Current streak",
   "recordsActivityBestStreakLabel": "Longest streak",
-  "recordsChallengeStreakLabel": "Today's challenge streak",
   "recordsActivityDayCount": "{count, plural, one{{count} day} other{{count} days}}",
   "@recordsActivityDayCount": {
     "placeholders": {
@@ -677,100 +674,6 @@
       }
     }
   },
-  "achievementCollectionAppBarTitle": "Badges",
-  "achievementLoadError": "Couldn't load badges.",
-  "achievementViewSettings": "Display",
-  "achievementSortLabel": "Sort",
-  "achievementFilterAll": "All",
-  "achievementFilterUnlocked": "Unlocked",
-  "achievementFilterLocked": "In progress",
-  "achievementSectionAll": "All badges",
-  "achievementSectionUnlocked": "Unlocked badges",
-  "achievementSectionLocked": "Badges in progress",
-  "achievementEmptyAll": "No badges to show.",
-  "achievementEmptyUnlocked": "No badges unlocked yet.",
-  "achievementEmptyLocked": "You've unlocked every badge.",
-  "achievementHeroTitle": "Achievements",
-  "achievementHeroProgress": "{unlocked} / {total} unlocked",
-  "@achievementHeroProgress": {
-    "placeholders": {
-      "unlocked": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "achievementHeroAllUnlocked": "You collected every badge. Amazing!",
-  "achievementHeroKeepGoing": "Keep playing to unlock more badges.",
-  "achievementBadgeFirstClearTitle": "First clear",
-  "achievementBadgeFirstClearDesc": "Finish your first puzzle to begin your Sudoku journey.",
-  "achievementBadgeStreakTitle": "3-day streak",
-  "achievementBadgeStreakDesc": "Clear puzzles three days in a row to build a habit.",
-  "achievementBadgeWeeklyTitle": "Weekly runner",
-  "achievementBadgeWeeklyDesc": "Clear five puzzles in the last seven days.",
-  "achievementBadgePerfectTitle": "Perfect clear",
-  "achievementBadgePerfectDesc": "Finish a puzzle with zero mistakes.",
-  "achievementBadgeMasterTitle": "Master first win",
-  "achievementBadgeMasterDesc": "Clear a Master puzzle for the first time.",
-  "achievementProgressFraction": "{current}/{max}",
-  "@achievementProgressFraction": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      },
-      "max": {
-        "type": "int"
-      }
-    }
-  },
-  "achievementProgressStreak": "{current}/{max} days",
-  "@achievementProgressStreak": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      },
-      "max": {
-        "type": "int"
-      }
-    }
-  },
-  "achievementProgressWeekly": "{current}/{max} clears",
-  "@achievementProgressWeekly": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      },
-      "max": {
-        "type": "int"
-      }
-    }
-  },
-  "achievementStatusDone": "Done",
-  "achievementStatusNotMet": "Not yet",
-  "achievementStatusTrying": "In progress",
-  "achievementTileProgress": "Progress: {label}",
-  "@achievementTileProgress": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
-  "achievementTileRarity": "Rarity: {label}",
-  "@achievementTileRarity": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
-  "achievementRarityCommon": "Common",
-  "achievementRarityRare": "Rare",
-  "achievementRarityEpic": "Epic",
-  "achievementSortDefault": "Default order",
-  "achievementSortRarity": "By rarity",
   "commonSave": "Save",
   "settingsDisplaySection": "Display",
   "settingsTheme": "Theme",
@@ -790,6 +693,29 @@
   "homeTodayChallengeResumeButton": "Resume today's challenge",
   "homeTodayChallengeReviewButton": "Play today's puzzle again",
   "homeTodayChallengeLoadError": "Couldn't load today's puzzle.",
+  "homeChallengeStartButton": "Start challenge",
+  "homeChallengeReplayButton": "Play again",
+  "homeChallengeNotStarted": "Not started yet",
+  "homeChallengeProgress": "{percent}% done",
+  "@homeChallengeProgress": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "homeChallengeCompleteTitle": "Today's challenge complete!",
+  "homeChallengeStreak": "{days, plural, =1{1-day challenge streak} other{{days}-day challenge streak}}",
+  "@homeChallengeStreak": {
+    "placeholders": {
+      "days": {
+        "type": "num"
+      }
+    }
+  },
+  "homeChallengeLoadErrorTitle": "Couldn't load today's challenge",
+  "homeChallengeLoadErrorBody": "Please try again in a moment.",
+  "recordsChallengeTodayDone": "Today's challenge done",
   "homeTodayChallengeDateChanged": "A new day started. Today's challenge was refreshed.",
   "homeFirstStartTitle": "Start your first puzzle",
   "homeNewPuzzleTitle": "Start a new puzzle",
@@ -895,6 +821,35 @@
       }
     }
   },
+  "levelStartNewButton": "Start puzzle",
+  "levelPuzzleNumber": "Puzzle {number}",
+  "@levelPuzzleNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "levelCompletedCount": "{count, plural, =1{1 completed} other{{count} completed}}",
+  "@levelCompletedCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "levelCardFirstSub": "Shall we start with the first puzzle?",
+  "levelCardNextSub": "Start the next puzzle",
+  "levelCardAllDoneTitle": "You completed every {levelName} puzzle",
+  "@levelCardAllDoneTitle": {
+    "placeholders": {
+      "levelName": {
+        "type": "String"
+      }
+    }
+  },
+  "levelCardAllDoneSub": "Try your completed puzzles again",
+  "levelCardViewCompleted": "View completed puzzles",
   "levelViewInProgress": "View {count} in progress",
   "@levelViewInProgress": {
     "placeholders": {
@@ -953,7 +908,6 @@
       }
     }
   },
-  "recordsSummaryHeroDescription": "puzzles solved",
   "recordsSummaryHeroSemanticLabel": "Solved {count} puzzles",
   "@recordsSummaryHeroSemanticLabel": {
     "placeholders": {
@@ -970,7 +924,7 @@
       }
     }
   },
-  "recordsSummaryStreakChip": "{count}-day streak",
+  "recordsSummaryStreakChip": "{count}-day play streak",
   "@recordsSummaryStreakChip": {
     "placeholders": {
       "count": {
@@ -978,6 +932,7 @@
       }
     }
   },
+  "recordsSummaryStreakToday": "Played today",
   "challengeMonthlyDescription": "Pick a date to replay a past challenge.",
   "challengeTodayEyebrow": "Today",
   "gamePausedTitle": "Paused",

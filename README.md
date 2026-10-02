@@ -1,6 +1,6 @@
 # Sudoku159
 
-Flutter로 만든 스도쿠 앱입니다. 레벨별 퍼즐 플레이, 일일 챌린지, 업적, 기록/통계, 저장 게임 복원, 알림, 프로필 설정을 지원합니다.
+Flutter로 만든 스도쿠 앱입니다. 레벨별 퍼즐 플레이, 일일 챌린지, 기록/통계, 저장 게임 복원, 알림, 프로필 설정을 지원합니다.
 
 - 패키지명: `sudoku159`
 - 앱 버전: `1.1.0+2` (`pubspec.yaml` 기준)
@@ -12,7 +12,7 @@ Flutter로 만든 스도쿠 앱입니다. 레벨별 퍼즐 플레이, 일일 챌
 - 진행 중 게임 저장 및 복원
 - 메모 모드, 힌트, 오답 카운트, 게임 오버
 - 홈 화면의 오늘의 챌린지, 연속 플레이, 주간 목표
-- 업적·기록·통계
+- 기록·통계
 - 결과 공유, 로컬 알림, 프로필 이미지/이름
 - 한국어 / 영어 / 일본어 로컬라이제이션
 
@@ -38,7 +38,7 @@ Flutter로 만든 스도쿠 앱입니다. 레벨별 퍼즐 플레이, 일일 챌
    - **기록** [`RecordsStatisticsScreen`](lib/view/records/records_statistics_screen.dart): 클리어 기록·통계
 3. 게임 [`SudokuGameScreen`](lib/view/sudoku_game/sudoku_game_screen.dart) — 세션/설정/종료 흐름은 전용 컨트롤러·플로우로 분리
 
-챌린지·업적 전용 UI는 [`lib/view/challenge/`](lib/view/challenge/)에 있으며, 홈에서 오늘의 챌린지 등으로 연결됩니다.
+챌린지 전용 UI는 [`lib/view/challenge/`](lib/view/challenge/)에 있으며, 홈에서 오늘의 챌린지 등으로 연결됩니다.
 
 ## 디렉터리 개요
 

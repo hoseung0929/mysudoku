@@ -8,7 +8,6 @@ import 'package:sudoku159/database/database_helper.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/model/sudoku_game.dart';
 import 'package:sudoku159/model/sudoku_level.dart';
-import 'package:sudoku159/services/challenge/achievement_service.dart';
 import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
 import 'package:sudoku159/services/home/home_dashboard_service.dart';
 import 'package:sudoku159/services/home/level_progress_service.dart';
@@ -93,6 +92,9 @@ HomeDashboardData _data({
   int challengeNumber = 7,
   bool challengeDone = false,
   bool challengeHasSession = false,
+  double challengeProgressValue = 0.36,
+  int challengeNotes = 0,
+  int streakDays = 0,
   String? lastClearDate,
   SudokuGame? challenge,
   bool noChallenge = false,
@@ -104,9 +106,12 @@ HomeDashboardData _data({
     totalContinueCount: continues.length,
     todayChallenge:
         noChallenge ? null : (challenge ?? _game('초급', challengeNumber)),
-    todayChallengeHasSession: challengeHasSession,
+    todayChallengeContinueGame: challengeHasSession
+        ? _summary(challengeNumber,
+            progress: challengeProgressValue, notes: challengeNotes)
+        : null,
     challengeProgress: ChallengeProgressSummary(
-      streakDays: 0,
+      streakDays: streakDays,
       isTodayChallengeCleared: challengeDone,
       todayChallengeLevelName: '초급',
       todayChallengeGameNumber: challengeNumber,
@@ -116,7 +121,6 @@ HomeDashboardData _data({
       weeklyGoalTarget: 3,
       perfectClearCount: 0,
     ),
-    achievementSummary: const AchievementSummary(badges: []),
     averageClearTimeSeconds: 0,
   );
 }
@@ -213,13 +217,16 @@ void main() {
       _FakeDashboard(() async => _data(continues: [_summary(12)])),
     );
     expect(find.text('Continue'), findsOneWidget);
-    expect(find.text('Beginner · #012'), findsOneWidget);
+    expect(find.text('Beginner · Puzzle 12'), findsOneWidget);
     expect(find.text('40%'), findsOneWidget);
     expect(find.textContaining('View all in-progress'), findsNothing);
     // 오늘의 도전은 별도 카드
     expect(find.text("Today's challenge"), findsOneWidget);
-    expect(find.text('Beginner · #007'), findsOneWidget);
-    expect(find.text("Start today's challenge"), findsOneWidget);
+    expect(find.text('Beginner · Puzzle 7'), findsOneWidget);
+    expect(find.text('Start challenge'), findsOneWidget);
+    expect(find.text('Not started yet'), findsOneWidget);
+    // 시작 전에는 진행바가 없다.
+    expect(find.byKey(const Key('home_challenge_progress')), findsNothing);
   });
 
   testWidgets(
@@ -261,34 +268,84 @@ void main() {
         ),
       ),
     );
-    expect(find.text('Beginner · #007'), findsOneWidget);
-    expect(find.text("Today's challenge"), findsOneWidget); // 칩 하나만
-    expect(find.text('Resume today\'s challenge'), findsNothing);
+    // 병합: 이어하기 카드가 도전 카드 역할 — 라벨 '오늘의 도전', 상태+진행바.
+    expect(find.text('Beginner · Puzzle 7'), findsOneWidget);
+    expect(find.text("Today's challenge"), findsOneWidget);
+    expect(find.text('Continue today\'s challenge'), findsNothing);
+    expect(find.text('Continue'), findsOneWidget);
+    expect(find.text('40% done'), findsOneWidget);
+    expect(find.byKey(const Key('home_challenge_progress')), findsOneWidget);
     expect(find.text('Continue'), findsOneWidget);
   });
 
   testWidgets('challenge states: not started / in progress / done',
       (tester) async {
     await pumpHome(tester, _FakeDashboard(() async => _data()));
-    expect(find.text("Start today's challenge"), findsOneWidget);
+    expect(find.text('Start challenge'), findsOneWidget);
+    expect(find.text('Not started yet'), findsOneWidget);
 
     await pumpHome(
       tester,
       _FakeDashboard(() async => _data(challengeHasSession: true)),
     );
-    expect(find.text("Resume today's challenge"), findsOneWidget);
-    expect(find.text('In progress', findRichText: true), findsOneWidget);
+    expect(find.text('Continue'), findsOneWidget);
+    expect(find.text('36% done'), findsOneWidget);
+    expect(find.byKey(const Key('home_challenge_progress')), findsOneWidget);
 
     await pumpHome(
       tester,
       _FakeDashboard(() async => _data(challengeDone: true)),
     );
-    expect(find.textContaining('Done', findRichText: true), findsOneWidget);
+    expect(find.text("Today's challenge complete!"), findsOneWidget);
+    expect(find.text('Beginner · Puzzle 7'), findsOneWidget);
+    expect(find.byKey(const Key('home_challenge_progress')), findsNothing);
     // 완료 시에는 강조 버튼이 아니라 보조 버튼.
     expect(
-      find.widgetWithText(OutlinedButton, "Play today's puzzle again"),
+      find.widgetWithText(OutlinedButton, 'Play again'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('challenge streak line: only for 2+ days, always says challenge',
+      (tester) async {
+    await pumpHome(
+      tester,
+      _FakeDashboard(() async => _data(challengeDone: true, streakDays: 4)),
+    );
+    expect(find.text('4-day challenge streak'), findsOneWidget);
+
+    await pumpHome(
+      tester,
+      _FakeDashboard(() async => _data(challengeDone: true, streakDays: 1)),
+    );
+    expect(find.textContaining('streak'), findsNothing);
+
+    await pumpHome(
+      tester,
+      _FakeDashboard(() async => _data(challengeDone: true, streakDays: 0)),
+    );
+    expect(find.textContaining('streak'), findsNothing);
+  });
+
+  testWidgets('challenge card tap: starts from anywhere on the card',
+      (tester) async {
+    await pumpHome(tester, _FakeDashboard(() async => _data()));
+    await tester.tap(find.text('Not started yet'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.byType(SudokuGameScreen), findsOneWidget);
+  });
+
+  testWidgets('finished challenge card is not tappable as a whole',
+      (tester) async {
+    await pumpHome(
+      tester,
+      _FakeDashboard(() async => _data(challengeDone: true)),
+    );
+    await tester.tap(find.text("Today's challenge complete!"));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.byType(SudokuGameScreen), findsNothing);
   });
 
   testWidgets('challenge check fades in only on a real not-done -> done change',
@@ -341,7 +398,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 300));
     expect(fading(), findsNothing);
-    expect(find.textContaining('Done', findRichText: true), findsOneWidget);
+    expect(find.text("Today's challenge complete!"), findsOneWidget);
 
     // 이후 다시 그려져도(탭 복귀 등) 이미 완료된 카드는 효과 없이 완료 상태.
     await pumpApp();
@@ -383,8 +440,11 @@ void main() {
       tester,
       _FakeDashboard(() async => _data(noChallenge: true)),
     );
-    expect(find.text("Couldn't load today's puzzle."), findsOneWidget);
+    expect(find.text("Couldn't load today's challenge"), findsOneWidget);
+    expect(find.text('Please try again in a moment.'), findsOneWidget);
     expect(find.text('Try again'), findsOneWidget);
+    // 실패 상태에는 난이도·번호를 보이지 않는다.
+    expect(find.textContaining('Puzzle '), findsNothing);
   });
 
   testWidgets('view-all list restores the picked game; delete asks first',
@@ -400,7 +460,7 @@ void main() {
     expect(find.byType(SavedGamesScreen), findsOneWidget);
     Finder inList(String text) => find.descendant(
         of: find.byType(SavedGamesScreen), matching: find.text(text));
-    expect(inList('Beginner · #005'), findsOneWidget);
+    expect(inList('Beginner · Puzzle 5'), findsOneWidget);
 
     // 삭제는 확인창을 먼저 보여주고, 취소하면 목록이 그대로다.
     await tester.tap(find.byTooltip('Delete saved progress').first);
@@ -410,10 +470,10 @@ void main() {
     await tester.tap(find.text('Cancel'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    expect(inList('Beginner · #005'), findsOneWidget);
+    expect(inList('Beginner · Puzzle 5'), findsOneWidget);
 
     // 항목을 고르면 그 게임이 저장된 상태로 복원된다.
-    await tester.tap(inList('Beginner · #009'));
+    await tester.tap(inList('Beginner · Puzzle 9'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
     final screen =
@@ -457,7 +517,8 @@ void main() {
         theme: dark ? AppTheme.darkTheme() : AppTheme.lightTheme(),
       );
       expect(tester.takeException(), isNull);
-      expect(find.text('Continue'), findsOneWidget);
+      // 이어하기 카드 + 진행 중인 오늘의 도전 카드
+      expect(find.text('Continue'), findsNWidgets(2));
     });
   }
 
@@ -782,14 +843,14 @@ void main() {
       final todayChallengeButton = tester
           .widget<FilledButton>(
             find.ancestor(
-              of: find.text("Start today's challenge"),
+              of: find.text('Start challenge'),
               matching: find.byType(FilledButton),
             ),
           )
           .style;
 
       final palette = LevelStatusPalette.of(tester.element(
-        find.text("Start today's challenge"),
+        find.text('Start challenge'),
       ));
       // '난이도 선택'은 배경색을 따로 지정하지 않아 테마 기본(검은색 계열)을
       // 그대로 쓰고, '오늘의 도전 시작'만 연한 보라색 배경으로 구분한다.

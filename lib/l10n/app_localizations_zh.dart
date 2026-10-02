@@ -527,7 +527,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsTrendTodayLabel => '今天';
 
   @override
-  String get recordsPlayInsightsTitle => '本周概览';
+  String get recordsPlayInsightsTitle => '本周活动';
 
   @override
   String get recordsWeekSubtitle => '点按星期查看记录';
@@ -582,7 +582,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsMetricClears => '通关数（已筛选）';
 
   @override
-  String get recordsMetricClearRate => '谜题完成情况';
+  String get recordsMetricClearRate => '已完成谜题';
 
   @override
   String get recordsMetricPerfectRate => '无失误占比';
@@ -592,7 +592,7 @@ class AppLocalizationsZh extends AppLocalizations {
       '每道谜题只按其最佳记录计一次，并遵循当前筛选。完成情况是与同一范围内谜题总数的比较。';
 
   @override
-  String get recordsMetricAvgTime => '平均通关用时';
+  String get recordsMetricAvgTime => '平均完成用时';
 
   @override
   String get recordsMetricAvgWrong => '平均失误';
@@ -643,24 +643,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsLevelEmpty => '该难度还没有完成记录。';
 
   @override
-  String get recordsRowBestTime => '最快用时';
+  String get recordsRowBestTime => '最快记录';
 
   @override
   String get recordsAverageBasisNote => '平均值以每道谜题的最佳记录为准。';
 
   @override
-  String get recordsCalendarTitle => '全部谜题活动';
-
-  @override
-  String get recordsCalendarSubtitle => '查看完成日期和游玩频率';
-
-  @override
-  String recordsCalendarPeriod(int weeks) {
-    return '最近 $weeks 周';
+  String recordsCalendarTitle(int weeks) {
+    return '最近 $weeks 周活动';
   }
 
   @override
-  String get recordsViewAchievements => '查看成就';
+  String get recordsCalendarSubtitle => '查看完成日期和游玩频率';
 
   @override
   String recordsOverallNote(int cleared, int total) {
@@ -713,9 +707,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recordsActivityBestStreakLabel => '最长连续';
-
-  @override
-  String get recordsChallengeStreakLabel => '今日挑战连续';
 
   @override
   String recordsActivityDayCount(int count) {
@@ -1026,138 +1017,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get achievementCollectionAppBarTitle => '徽章';
-
-  @override
-  String get achievementLoadError => '无法加载徽章。';
-
-  @override
-  String get achievementViewSettings => '显示';
-
-  @override
-  String get achievementSortLabel => '排序';
-
-  @override
-  String get achievementFilterAll => '全部';
-
-  @override
-  String get achievementFilterUnlocked => '已获得';
-
-  @override
-  String get achievementFilterLocked => '进行中';
-
-  @override
-  String get achievementSectionAll => '全部徽章';
-
-  @override
-  String get achievementSectionUnlocked => '已获得徽章';
-
-  @override
-  String get achievementSectionLocked => '进行中的徽章';
-
-  @override
-  String get achievementEmptyAll => '暂无可显示的徽章。';
-
-  @override
-  String get achievementEmptyUnlocked => '还没有获得任何徽章。';
-
-  @override
-  String get achievementEmptyLocked => '你已解锁全部徽章。';
-
-  @override
-  String get achievementHeroTitle => '成就';
-
-  @override
-  String achievementHeroProgress(int unlocked, int total) {
-    return '已获得 $unlocked / $total';
-  }
-
-  @override
-  String get achievementHeroAllUnlocked => '你已收集全部徽章，太棒了！';
-
-  @override
-  String get achievementHeroKeepGoing => '继续游玩以解锁更多徽章。';
-
-  @override
-  String get achievementBadgeFirstClearTitle => '初次通关';
-
-  @override
-  String get achievementBadgeFirstClearDesc => '完成你的第一道题目，开启数独之旅。';
-
-  @override
-  String get achievementBadgeStreakTitle => '连续 3 天';
-
-  @override
-  String get achievementBadgeStreakDesc => '连续三天通关题目，养成好习惯。';
-
-  @override
-  String get achievementBadgeWeeklyTitle => '每周常客';
-
-  @override
-  String get achievementBadgeWeeklyDesc => '在最近 7 天内通关五道题目。';
-
-  @override
-  String get achievementBadgePerfectTitle => '完美通关';
-
-  @override
-  String get achievementBadgePerfectDesc => '零失误完成一道题目。';
-
-  @override
-  String get achievementBadgeMasterTitle => '大师首胜';
-
-  @override
-  String get achievementBadgeMasterDesc => '首次通关大师难度题目。';
-
-  @override
-  String achievementProgressFraction(int current, int max) {
-    return '$current/$max';
-  }
-
-  @override
-  String achievementProgressStreak(int current, int max) {
-    return '$current/$max 天';
-  }
-
-  @override
-  String achievementProgressWeekly(int current, int max) {
-    return '$current/$max 次';
-  }
-
-  @override
-  String get achievementStatusDone => '完成';
-
-  @override
-  String get achievementStatusNotMet => '未达成';
-
-  @override
-  String get achievementStatusTrying => '进行中';
-
-  @override
-  String achievementTileProgress(String label) {
-    return '进度：$label';
-  }
-
-  @override
-  String achievementTileRarity(String label) {
-    return '稀有度：$label';
-  }
-
-  @override
-  String get achievementRarityCommon => '普通';
-
-  @override
-  String get achievementRarityRare => '稀有';
-
-  @override
-  String get achievementRarityEpic => '史诗';
-
-  @override
-  String get achievementSortDefault => '默认顺序';
-
-  @override
-  String get achievementSortRarity => '按稀有度';
-
-  @override
   String get commonSave => '保存';
 
   @override
@@ -1213,6 +1072,37 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get homeTodayChallengeLoadError => '无法加载今日谜题。';
+
+  @override
+  String get homeChallengeStartButton => '开始挑战';
+
+  @override
+  String get homeChallengeReplayButton => '再玩一次';
+
+  @override
+  String get homeChallengeNotStarted => '尚未开始';
+
+  @override
+  String homeChallengeProgress(int percent) {
+    return '已完成 $percent%';
+  }
+
+  @override
+  String get homeChallengeCompleteTitle => '今日挑战完成！';
+
+  @override
+  String homeChallengeStreak(num days) {
+    return '挑战连续 $days 天';
+  }
+
+  @override
+  String get homeChallengeLoadErrorTitle => '无法加载今日挑战';
+
+  @override
+  String get homeChallengeLoadErrorBody => '请稍后再试。';
+
+  @override
+  String get recordsChallengeTodayDone => '今日挑战已完成';
 
   @override
   String get homeTodayChallengeDateChanged => '日期已变更，已刷新今日挑战。';
@@ -1350,6 +1240,36 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get levelStartNewButton => '开始谜题';
+
+  @override
+  String levelPuzzleNumber(int number) {
+    return '第$number道谜题';
+  }
+
+  @override
+  String levelCompletedCount(num count) {
+    return '已完成 $count 个';
+  }
+
+  @override
+  String get levelCardFirstSub => '从第一道谜题开始吧';
+
+  @override
+  String get levelCardNextSub => '开始下一道谜题吧';
+
+  @override
+  String levelCardAllDoneTitle(String levelName) {
+    return '已完成所有$levelName谜题';
+  }
+
+  @override
+  String get levelCardAllDoneSub => '再玩一次已完成的谜题吧';
+
+  @override
+  String get levelCardViewCompleted => '查看已完成的谜题';
+
+  @override
   String levelViewInProgress(int count) {
     return '查看 $count 个进行中';
   }
@@ -1440,9 +1360,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get recordsSummaryHeroDescription => '谜题已完成';
-
-  @override
   String recordsSummaryHeroSemanticLabel(int count) {
     return '已完成 $count 道谜题';
   }
@@ -1454,8 +1371,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String recordsSummaryStreakChip(int count) {
-    return '当前连续 $count 天';
+    return '连续玩了 $count 天';
   }
+
+  @override
+  String get recordsSummaryStreakToday => '今天已玩';
 
   @override
   String get challengeMonthlyDescription => '选择日期即可重新挑战过去的题目。';

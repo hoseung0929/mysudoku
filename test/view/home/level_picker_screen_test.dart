@@ -193,11 +193,13 @@ void main() {
       (tester) async {
     await pumpPicker(tester, games: games, cleared: {1});
     expect(find.text('Continue'), findsNothing);
-    // 새 퍼즐: 미완료·세션 없음 중 가장 앞선 번호 = 2
-    final start = find.widgetWithText(FilledButton, 'Start new puzzle · 002');
-    expect(start, findsOneWidget);
-    expect(find.widgetWithText(OutlinedButton, 'Start new puzzle · 002'),
-        findsNothing);
+    // 새 퍼즐: 미완료·세션 없음 중 가장 앞선 번호 = 2. 진행 카드 안에
+    // "2번 퍼즐"과 주 버튼으로 들어가고, 별도 보조 버튼은 없다.
+    expect(find.text('Puzzle 2'), findsOneWidget);
+    expect(find.text('Start the next puzzle'), findsOneWidget);
+    expect(find.text('1 completed'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Start puzzle'), findsOneWidget);
+    expect(find.textContaining('Start new puzzle ·'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -210,10 +212,9 @@ void main() {
     );
     // 대표 이어하기는 가장 최근(4) 한 개만.
     expect(find.text('Continue'), findsOneWidget);
-    expect(find.text('#004'), findsOneWidget);
-    // 새 퍼즐 시작은 보조 버튼, 번호는 진행 중을 건너뛴 1.
-    expect(find.widgetWithText(OutlinedButton, 'Start new puzzle · 001'),
-        findsOneWidget);
+    expect(find.text('Puzzle 4'), findsOneWidget);
+    // 이어할 퍼즐이 있으면 별도의 새 퍼즐 시작 버튼은 없다(그리드·필터에서 선택).
+    expect(find.textContaining('Start puzzle'), findsNothing);
 
     await tester.tap(find.text('View 3 in progress'));
     await tester.pump();
@@ -223,6 +224,70 @@ void main() {
     expect(find.text('003'), findsOneWidget);
     expect(find.text('001'), findsNothing);
   });
+
+  testWidgets(
+      'continue lives inside the progress card; tapping the card resumes',
+      (tester) async {
+    await pumpPicker(
+      tester,
+      games: games,
+      cleared: {1},
+      saved: {4: (5, false, 10)},
+    );
+    // 완료 개수 배지("1 completed")와 현재 퍼즐("Puzzle 4", 진행바)이 같은 카드 안에 있다.
+    final cardFinder = find.byKey(const Key('level_progress_card'));
+    expect(cardFinder, findsOneWidget);
+    expect(
+      find.descendant(of: cardFinder, matching: find.text('Continue')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: cardFinder,
+        matching: find.text('Puzzle 4'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: cardFinder,
+        matching: find.text('1 completed'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: cardFinder,
+        matching: find.byKey(const Key('level_card_puzzle_progress')),
+      ),
+      findsOneWidget,
+    );
+    // 기존의 별도 이어하기 카드(주황 테두리)는 더 이상 없다.
+    expect(find.text('Continue'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final saved in [
+    <int, (int, bool, int)>{4: (5, false, 10), 5: (1, false, 90)},
+    <int, (int, bool, int)>{},
+  ]) {
+    testWidgets(
+        'progress card action does not overflow on small/large text '
+        '(${saved.isEmpty ? 'no progress' : 'continue'})', (tester) async {
+      await pumpPicker(
+        tester,
+        games: games,
+        saved: saved,
+        size: const Size(320, 568),
+        textScale: 2.0,
+      );
+      expect(tester.takeException(), isNull);
+      expect(
+        find.text(saved.isEmpty ? 'Start puzzle' : 'Continue'),
+        findsOneWidget,
+      );
+    });
+  }
 
   testWidgets('notes-only game is in progress and shows notes state',
       (tester) async {
@@ -237,8 +302,11 @@ void main() {
     await pumpPicker(tester, games: games, saved: {2: (0, false, 1)});
     expect(find.text('Continue'), findsNothing);
     expect(find.text('In progress 0'), findsOneWidget);
-    expect(find.widgetWithText(FilledButton, 'Start new puzzle · 001'),
-        findsOneWidget);
+    // 완료 0개 = 첫 방문 상태: 배지 없이 첫 퍼즐 안내.
+    expect(find.text('Puzzle 1'), findsOneWidget);
+    expect(find.text('Shall we start with the first puzzle?'), findsOneWidget);
+    expect(find.byKey(const Key('level_completed_badge')), findsNothing);
+    expect(find.widgetWithText(FilledButton, 'Start puzzle'), findsOneWidget);
   });
 
   testWidgets('retry session on a cleared puzzle is continued, record kept',
@@ -250,18 +318,19 @@ void main() {
       saved: {2: (3, false, 2)},
     );
     expect(find.text('Continue'), findsOneWidget);
-    expect(find.text('#002'), findsOneWidget);
+    expect(find.text('Puzzle 2'), findsOneWidget);
     // 완료 필터: 2는 재도전 중이라 진행 중으로, 1만 완료. 완료 기록 자체는 2개.
     expect(find.text('Done 1'), findsOneWidget);
     expect(find.text('In progress 1'), findsOneWidget);
-    expect(find.textContaining('2 /'), findsOneWidget);
+    expect(find.text('2 completed'), findsOneWidget);
   });
 
   testWidgets('all completed is distinct from no-new-puzzles', (tester) async {
     await pumpPicker(tester, games: [1, 2, 3], cleared: {1, 2, 3});
-    expect(find.textContaining('Start new puzzle'), findsNothing);
-    expect(find.text("You've completed every puzzle at this level."),
-        findsOneWidget);
+    expect(find.textContaining('Start puzzle'), findsNothing);
+    // 전부 완료: 카드 안에서 축하 + 완료한 퍼즐 보기.
+    expect(find.text('You completed every Beginner puzzle'), findsOneWidget);
+    expect(find.text('View completed puzzles'), findsOneWidget);
     await tester.tap(find.text('New 0'));
     await tester.pump();
     expect(find.text("You've completed every puzzle at this level."),
@@ -276,7 +345,7 @@ void main() {
       cleared: {1},
       saved: {2: (2, false, 3), 3: (1, false, 8)},
     );
-    expect(find.textContaining('Start new puzzle'), findsNothing);
+    expect(find.textContaining('Start puzzle'), findsNothing);
     await tester.tap(find.text('New 0'));
     await tester.pump();
     expect(find.text('No new puzzles to start.'), findsOneWidget);
@@ -287,7 +356,8 @@ void main() {
     await pumpPicker(tester, games: games, cleared: {1});
     await tester.tap(find.text('In progress 0'));
     await tester.pump();
-    expect(find.text("You don't have a puzzle to continue yet."), findsOneWidget);
+    expect(
+        find.text("You don't have a puzzle to continue yet."), findsOneWidget);
     expect(find.text('Start new puzzle · 002'), findsWidgets);
     await tester.tap(find.text('Show new puzzles'));
     await tester.pump();
@@ -299,12 +369,12 @@ void main() {
     final gate = Completer<void>();
     await pumpPicker(tester, games: games, gate: gate.future);
     expect(find.text('Loading puzzles…'), findsOneWidget);
-    expect(find.textContaining('Start new puzzle'), findsNothing);
+    expect(find.textContaining('Start puzzle'), findsNothing);
     expect(find.text('In progress 0'), findsNothing);
     gate.complete();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.textContaining('Start new puzzle'), findsOneWidget);
+    expect(find.textContaining('Start puzzle'), findsOneWidget);
   });
 
   testWidgets('filter counts match the visible grid', (tester) async {
