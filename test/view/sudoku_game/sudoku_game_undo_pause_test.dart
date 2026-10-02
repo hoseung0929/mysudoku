@@ -231,6 +231,45 @@ void main() {
     expect(find.textContaining('OVERFLOWED'), findsNothing);
   });
 
+  testWidgets('long-pressing Undo reapplies the last undone input',
+      (tester) async {
+    final presenter = await pumpSafeGame(tester, const Size(390, 844));
+    await selectCell(tester, presenter, 1);
+    presenter.setSelectedCellValue(3);
+    await tester.pump();
+
+    await tester.tap(find.text('Undo'));
+    await tester.pump();
+    expect(presenter.getCellValue(0, 1), 0);
+
+    await tester.longPress(find.text('Undo'));
+    await tester.pump();
+    expect(presenter.getCellValue(0, 1), 3);
+    await tester.pump(const Duration(milliseconds: 600));
+  });
+
+  testWidgets('selecting a number first locks it and a cell tap enters it',
+      (tester) async {
+    final presenter = await pumpSafeGame(tester, const Size(390, 844));
+
+    tester
+        .widget<ProgressiveBlurButton>(
+          find.byKey(const ValueKey('number-button-3')),
+        )
+        .onPressed!();
+    await tester.pump();
+    expect(find.byKey(const ValueKey('number-lock-3')), findsOneWidget);
+
+    tester.widget<SudokuBoardGrid>(find.byType(SudokuBoardGrid)).onCellTapped(
+          0,
+          1,
+        );
+    await tester.pump();
+    expect(presenter.getCellValue(0, 1), 3);
+    expect(find.byKey(const ValueKey('number-lock-3')), findsNothing);
+    await tester.pump(const Duration(milliseconds: 600));
+  });
+
   group('undo result-cell highlight', () {
     testWidgets('highlights only the restored cell, then clears',
         (tester) async {

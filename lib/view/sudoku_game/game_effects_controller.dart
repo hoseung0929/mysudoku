@@ -55,6 +55,7 @@ class GameEffectsController {
   final Map<String, bool> _errorActive = <String, bool>{};
   final Map<String, double> _errorOffset = <String, double>{};
   final Map<String, bool> _undoActive = <String, bool>{};
+  final Map<String, bool> _eraseActive = <String, bool>{};
   final Map<String, bool> _hintAppliedActive = <String, bool>{};
 
   /// 숫자 1~9 완료 반응으로 보드에서 옅게 강조되는 칸('$row,$col' 키).
@@ -74,6 +75,7 @@ class GameEffectsController {
   Map<String, bool> get errorActive => _errorActive;
   Map<String, double> get errorOffset => _errorOffset;
   Map<String, bool> get undoActive => _undoActive;
+  Map<String, bool> get eraseActive => _eraseActive;
   Map<String, bool> get hintAppliedActive => _hintAppliedActive;
   Map<String, bool> get digitCompleteActive => _digitCompleteActive;
 
@@ -91,6 +93,9 @@ class GameEffectsController {
 
   /// 되돌리기 결과 칸 강조 대기 시간(140 + 60 = 200ms).
   static const Duration undoHighlightHold = Duration(milliseconds: 140);
+
+  /// 지우기 결과 칸 강조 대기 시간(100 + 60 = 160ms).
+  static const Duration eraseHighlightHold = Duration(milliseconds: 100);
 
   /// 힌트로 채운 칸 강조 대기 시간(140 + 60 = 200ms, 180~220ms 범위).
   static const Duration hintAppliedHold = Duration(milliseconds: 140);
@@ -136,6 +141,7 @@ class GameEffectsController {
     _errorActive.clear();
     _errorOffset.clear();
     _undoActive.clear();
+    _eraseActive.clear();
     _activeUndoKey = null;
     _hintAppliedActive.clear();
     _digitCompleteActive.clear();
@@ -154,6 +160,7 @@ class GameEffectsController {
     _errorActive.remove(key);
     _errorOffset.remove(key);
     _undoActive.remove(key);
+    _eraseActive.remove(key);
     _hintAppliedActive.remove(key);
     return token;
   }
@@ -352,6 +359,23 @@ class GameEffectsController {
       if (_activeUndoKey == key) {
         _activeUndoKey = null;
       }
+    });
+  }
+
+  /// 사용자가 숫자나 메모를 지운 빈칸을 짧게 강조한다.
+  void triggerEraseEffect({
+    required int row,
+    required int col,
+    required void Function(void Function()) setState,
+    required bool Function() isMounted,
+  }) {
+    final generation = _effectGeneration;
+    final key = '$row,$col';
+    final token = _claim(key);
+    setState(() => _eraseActive[key] = true);
+    Future<void>.delayed(eraseHighlightHold, () {
+      if (!_isCurrent(key, token, generation, isMounted())) return;
+      setState(() => _eraseActive[key] = false);
     });
   }
 

@@ -1098,5 +1098,21 @@ void main() {
         });
       });
     });
+
+    test('erase highlight appears on one cell and clears', () {
+      fakeAsync((async) {
+        final c = GameEffectsController();
+        c.triggerEraseEffect(
+          row: 2,
+          col: 3,
+          setState: (fn) => fn(),
+          isMounted: () => true,
+        );
+        expect(c.eraseActive['2,3'], isTrue);
+
+        async.elapse(GameEffectsController.eraseHighlightHold);
+        expect(c.eraseActive['2,3'], isFalse);
+      });
+    });
   });
 }

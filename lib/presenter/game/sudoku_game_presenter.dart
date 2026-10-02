@@ -50,6 +50,7 @@ class SudokuGamePresenter {
   /// 되돌리기 기록(숫자 입력·메모·지우기 직전 상태). 실수 횟수와 힌트 사용은
   /// 기록하지 않으므로 되돌려도 줄어들지 않는다. 앱 세션 안에서만 유지한다.
   final List<_UndoEntry> _undoStack = [];
+  final List<_UndoEntry> _redoStack = [];
   static const int _maxUndoDepth = 200;
   late final GameTimerController _timerController;
   late final SudokuBoardController _boardController;
@@ -270,6 +271,7 @@ class SudokuGamePresenter {
   void _resetSessionState() {
     _stopTimer();
     _undoStack.clear();
+    _redoStack.clear();
     _isPaused = false;
     _isGameComplete = false;
     _isGameOver = false;
@@ -479,6 +481,7 @@ class SudokuGamePresenter {
     if (_boardController.isCellFixed(row, col)) return;
     if (_hintCells.contains('$row,$col')) return;
 
+    _redoStack.clear();
     final correctValue = _boardController.getCorrectValue(row, col);
 
     _boardController.setCellValue(row, col, correctValue, isHint: true);
@@ -689,11 +692,16 @@ class SudokuGamePresenter {
   bool get canUndo =>
       !_isGameComplete && !_isGameOver && !_isPaused && _undoStack.isNotEmpty;
 
+  bool get canRedo =>
+      !_isGameComplete && !_isGameOver && !_isPaused && _redoStack.isNotEmpty;
+
   (int, int)? _lastUndoCell;
+  (int, int)? _lastRedoCell;
 
   /// 가장 최근 undo()가 실제로 바꾼 대표 칸. 그 undo()가 아무것도 바꾸지
   /// 못했으면(이론상 빈 스택 소진) null. 화면이 이 칸만 짧게 강조한다.
   (int, int)? get lastUndoCell => _lastUndoCell;
+  (int, int)? get lastRedoCell => _lastRedoCell;
 
   /// 마지막 숫자 입력·메모·지우기를 되돌린다. 실수 횟수·남은 힌트는 그대로이고,
   /// 힌트로 채운 칸은 되돌려도 유지된다. 되돌린 칸을 선택해 위치를 보여 준다.
@@ -711,9 +719,38 @@ class SudokuGamePresenter {
     }
     if (target == null) return;
 
+    _pushHistoryEntry(_redoStack, before);
     _boardController.restoreBoardAndNotes(target.board, target.notes);
     final changedCell = before.firstDifferentCell(target);
     _lastUndoCell = changedCell;
+    if (changedCell != null) {
+      _boardController.selectCell(changedCell.$1, changedCell.$2);
+    }
+    _boardController.recomputeWrongStatus();
+    onBoardChanged(_boardController.board);
+    onWrongNumbersChanged(_boardController.wrongNumbers);
+  }
+
+  /// 직전에 되돌린 숫자 입력·메모·지우기를 다시 적용한다. 새 입력이 발생하면
+  /// redo 기록은 [_recordUndoSnapshot]에서 비워진다.
+  void redo() {
+    if (!canRedo) return;
+    _lastRedoCell = null;
+    final before = _currentUndoEntry();
+    _UndoEntry? target;
+    while (_redoStack.isNotEmpty) {
+      final candidate = _withHintCellsApplied(_redoStack.removeLast());
+      if (!candidate.sameAs(before)) {
+        target = candidate;
+        break;
+      }
+    }
+    if (target == null) return;
+
+    _pushHistoryEntry(_undoStack, before);
+    _boardController.restoreBoardAndNotes(target.board, target.notes);
+    final changedCell = before.firstDifferentCell(target);
+    _lastRedoCell = changedCell;
     if (changedCell != null) {
       _boardController.selectCell(changedCell.$1, changedCell.$2);
     }
@@ -731,10 +768,13 @@ class SudokuGamePresenter {
   }
 
   void _recordUndoSnapshot() {
-    _undoStack.add(_currentUndoEntry());
-    if (_undoStack.length > _maxUndoDepth) {
-      _undoStack.removeAt(0);
-    }
+    _pushHistoryEntry(_undoStack, _currentUndoEntry());
+    _redoStack.clear();
+  }
+
+  void _pushHistoryEntry(List<_UndoEntry> stack, _UndoEntry entry) {
+    stack.add(entry);
+    if (stack.length > _maxUndoDepth) stack.removeAt(0);
   }
 
   /// 변화가 없었던 기록(같은 값 재입력, 자동으로 지워진 오답 등)은 버튼을

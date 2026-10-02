@@ -26,6 +26,7 @@ class SudokuBoardGrid extends StatelessWidget {
     this.hintBlockerCells = const {},
     this.hintTargetCell,
     this.undoActive = const {},
+    this.eraseActive = const {},
     this.hintAppliedActive = const {},
     this.digitCompleteActive = const {},
     this.showCompletionGlow = false,
@@ -50,6 +51,9 @@ class SudokuBoardGrid extends StatelessWidget {
 
   // 되돌리기 결과 칸 강조('$row,$col' 키, 항상 최대 1개 true).
   final Map<String, bool> undoActive;
+
+  // 지우기 직후 빈칸 강조('$row,$col' 키, 항상 최대 1개 true).
+  final Map<String, bool> eraseActive;
 
   // 힌트로 채운 칸 강조('$row,$col' 키, 항상 최대 1개 true).
   final Map<String, bool> hintAppliedActive;
@@ -114,6 +118,9 @@ class SudokuBoardGrid extends StatelessWidget {
     final undoHighlightColor = isDark
         ? levelPalette.primaryPurple.withValues(alpha: 0.32)
         : levelPalette.primaryPurple.withValues(alpha: 0.24);
+    final eraseHighlightColor = isDark
+        ? const Color(0xFF3A4145).withValues(alpha: 0.72)
+        : const Color(0xFFDCE4E8).withValues(alpha: 0.82);
     // 힌트로 채운 칸 강조: 보드 안 힌트 숫자 색(파란 계열)과 어울리되 배경으로
     // 쓰기엔 채도를 낮춘 톤. 정답(민트)·오답(핑크)·줄 완성(노랑)·되돌리기(보라)와
     // 겹치지 않는 별도 키로 관리한다.
@@ -207,6 +214,7 @@ class SudokuBoardGrid extends StatelessWidget {
                         lineCompleteActive['$row,$col'] == true;
                     final isErrorActive = errorActive['$row,$col'] == true;
                     final isUndoActive = undoActive['$row,$col'] == true;
+                    final isEraseActive = eraseActive['$row,$col'] == true;
                     final isHintApplied =
                         hintAppliedActive['$row,$col'] == true;
                     final isDigitComplete =
@@ -357,10 +365,12 @@ class SudokuBoardGrid extends StatelessWidget {
                                                       ? hintAppliedColor
                                                       : isUndoActive
                                                           ? undoHighlightColor
-                                                          : isDigitComplete
-                                                              ? digitCompleteColor
-                                                              : Colors
-                                                                  .transparent,
+                                                          : isEraseActive
+                                                              ? eraseHighlightColor
+                                                              : isDigitComplete
+                                                                  ? digitCompleteColor
+                                                                  : Colors
+                                                                      .transparent,
                                     ),
                                   ),
                                   Center(

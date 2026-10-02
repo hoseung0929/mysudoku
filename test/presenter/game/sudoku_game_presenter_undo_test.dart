@@ -69,6 +69,44 @@ void main() {
     expect(presenter.canUndo, isFalse);
   });
 
+  test('redo reapplies the last undone input and selects that cell', () {
+    presenter.selectCell(0, 1);
+    presenter.setSelectedCellValue(3);
+
+    presenter.undo();
+    expect(presenter.canRedo, isTrue);
+    expect(presenter.getCellValue(0, 1), 0);
+
+    presenter.redo();
+    expect(presenter.getCellValue(0, 1), 3);
+    expect((presenter.selectedRow, presenter.selectedCol), (0, 1));
+    expect(presenter.canRedo, isFalse);
+    expect(presenter.canUndo, isTrue);
+  });
+
+  test('a new input clears redo history', () {
+    presenter.selectCell(0, 1);
+    presenter.setSelectedCellValue(3);
+    presenter.undo();
+    expect(presenter.canRedo, isTrue);
+
+    presenter.selectCell(1, 0);
+    presenter.setSelectedCellValue(6);
+    expect(presenter.canRedo, isFalse);
+  });
+
+  test('redo restores notes and erase as a single history step', () {
+    presenter.toggleMemoMode();
+    presenter.selectCell(0, 2);
+    presenter.setSelectedCellValue(4);
+    presenter.eraseSelectedCell();
+
+    presenter.undo();
+    expect(presenter.getCellNotes(0, 2), {4});
+    presenter.redo();
+    expect(presenter.getCellNotes(0, 2), isEmpty);
+  });
+
   test('undo restores notes cleared by a number input', () {
     presenter.toggleMemoMode();
     presenter.selectCell(0, 2);

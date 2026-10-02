@@ -74,6 +74,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   final ValueNotifier<String> _timeNotifier = ValueNotifier<String>('0m');
   bool _isLeavingScreen = false;
   int? _memoFocusNumber;
+  int? _lockedInputNumber;
+  final Set<int> _celebratedProgressMilestones = <int>{};
+  bool _lastBoardChangeCompletedLine = false;
   // 자동 메모 적용 직후 보드 전체에 짧게 강조를 준다. 트리거될 때마다 새 키를
   // 줘서 TweenAnimationBuilder가 처음부터 다시 재생하게 한다.
   Key? _autoNotesFlashKey;
@@ -151,10 +154,12 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     }
   }
 
-  void _triggerPenguinBurst() {
+  void _triggerPenguinBurst({
+    Duration duration = const Duration(seconds: 5),
+  }) {
     _penguinActiveTimer?.cancel();
     setState(() => _isPenguinActive = true);
-    _penguinActiveTimer = Timer(const Duration(seconds: 5), () {
+    _penguinActiveTimer = Timer(duration, () {
       if (!mounted) return;
       setState(() => _isPenguinActive = false);
     });
@@ -300,6 +305,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     _presenter.clearSelection();
     setState(() {
       _memoFocusNumber = null;
+      _lockedInputNumber = null;
       _activeHint = hint;
       _hintStep = 1;
     });
@@ -423,11 +429,23 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
 
   void _eraseSelectedCell() {
     if (!_canEraseSelection) return;
-    _cancelWrongCellTimer(_presenter.selectedRow, _presenter.selectedCol);
+    final row = _presenter.selectedRow!;
+    final col = _presenter.selectedCol!;
+    _cancelWrongCellTimer(row, col);
     _presenter.eraseSelectedCell();
+    _effectsController.triggerEraseEffect(
+      row: row,
+      col: col,
+      setState: setState,
+      isMounted: () => mounted,
+    );
+    if (_isVibrationEnabled) {
+      unawaited(HapticFeedback.selectionClick());
+    }
   }
 
   bool get _canUndo => _presenterReady && _presenter.canUndo;
+  bool get _canRedo => _presenterReady && _presenter.canRedo;
 
   /// presenter.undo()가 동기적으로 실행되는 동안만 켠다. onBoardChanged
   /// 콜백이 이 플래그를 보고 정답·오답·줄 완성 효과를 재실행하지 않는다.
@@ -494,6 +512,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     if (_remainingCountForNumber(value) != 0) return;
     _celebratedCompleteDigits.add(value);
 
+    if (_lockedInputNumber == value) {
+      setState(() => _lockedInputNumber = null);
+    }
+
     if (_isVibrationEnabled) {
       unawaited(HapticFeedback.selectionClick());
     }
@@ -520,6 +542,34 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     );
   }
 
+  static const List<int> _progressMilestones = <int>[25, 50, 75];
+
+  void _primeProgressMilestones() {
+    final percent = (_presenter.progress * 100).floor();
+    _celebratedProgressMilestones
+      ..clear()
+      ..addAll(_progressMilestones.where((value) => value <= percent));
+  }
+
+  void _maybeCelebrateProgressMilestone() {
+    final percent = (_presenter.progress * 100).floor();
+    final reached = _progressMilestones
+        .where((value) =>
+            value <= percent && !_celebratedProgressMilestones.contains(value))
+        .toList();
+    if (reached.isEmpty) return;
+    _celebratedProgressMilestones.addAll(reached);
+    if (_lastBoardChangeCompletedLine || _presenter.isGameComplete) return;
+
+    final milestone = reached.last;
+    final l10n = AppLocalizations.of(context)!;
+    _showTopFeedback('${l10n.gameProgressShort} $milestone%');
+    _triggerPenguinBurst(duration: const Duration(milliseconds: 1500));
+    if (_isVibrationEnabled && !_effectsController.reduceMotion) {
+      unawaited(HapticFeedback.selectionClick());
+    }
+  }
+
   void _undoLastInput() {
     if (!_canUndo) return;
     // 되돌린 칸에 오답 자동 삭제 타이머가 남아 있으면 복원한 값을 지워 버린다.
@@ -535,6 +585,28 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     }
 
     final cell = _presenter.lastUndoCell;
+    if (cell == null) return;
+    _effectsController.triggerUndoEffect(
+      row: cell.$1,
+      col: cell.$2,
+      setState: setState,
+      isMounted: () => mounted,
+    );
+    unawaited(_maybeVibrateForUndo());
+  }
+
+  void _redoLastInput() {
+    if (!_canRedo) return;
+    _cancelAllWrongCellTimers();
+    setState(() => _memoFocusNumber = null);
+    _isApplyingUndo = true;
+    try {
+      _presenter.redo();
+    } finally {
+      _isApplyingUndo = false;
+    }
+
+    final cell = _presenter.lastRedoCell;
     if (cell == null) return;
     _effectsController.triggerUndoEffect(
       row: cell.$1,
@@ -566,6 +638,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     _autoPausedByLifecycle = false;
     _effectsController.clearTransientEffects();
     _activeHint = null;
+    _lockedInputNumber = null;
     _presenter.togglePause();
   }
 
@@ -720,6 +793,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           setState: setState,
           isMounted: () => mounted,
         );
+        _lastBoardChangeCompletedLine = completionDelta.hasNewCompletion;
         setState(() {});
         if (completionDelta.isPuzzleComplete) {
           _hideCompletionFeedback();
@@ -754,6 +828,15 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       onWrongCountChanged: (wrongCount) {
         setState(() {});
         _scheduleSessionSave();
+        if (_presenterReady &&
+            wrongCount > 0 &&
+            wrongCount < _featurePolicy.maxWrongCount) {
+          final l10n = AppLocalizations.of(context)!;
+          _showTopFeedback(
+            '${l10n.gameWrongShort} $wrongCount/${_featurePolicy.maxWrongCount}',
+            backgroundColor: const Color(0xFF7A3E48),
+          );
+        }
       },
       onGameOver: () {
         _activeHint = null;
@@ -791,6 +874,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         // 힌트로 채웠든 직접 입력했든, 이 입력으로 어떤 숫자가 9개 모두
         // 채워졌다면 완료 반응을 준다(둘 다 정답 입력이라는 점은 같다).
         _maybeCelebrateDigitCompletion(row, col);
+        _maybeCelebrateProgressMilestone();
       },
       onIncorrectAnswer: (row, col) {
         _effectsController.triggerErrorEffect(
@@ -805,6 +889,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
 
     _primeCompletedUnitIds();
     _primeCelebratedCompleteDigits();
+    _primeProgressMilestones();
     if (mounted) {
       setState(() {
         _presenterReady = true;
@@ -1010,6 +1095,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     _numberPopTimer = null;
     setState(() {
       _memoFocusNumber = null;
+      _lockedInputNumber = null;
       _completionSequenceStarted = false;
       _showCompletionGlow = false;
       _numberPopDigit = null;
@@ -1022,6 +1108,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     // 재시작한 보드는 widget.game.board(진행 전 상태) 기준이라, 시작부터
     // 이미 다 채워진 숫자가 있는지 다시 계산해야 한다.
     _primeCelebratedCompleteDigits();
+    _primeProgressMilestones();
   }
 
   Future<void> _showResetCurrentGameDialog() async {
@@ -1494,6 +1581,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                         color: AppTheme.lightBlueColor,
                                         onPressed:
                                             _canUndo ? _undoLastInput : null,
+                                        onLongPress:
+                                            _canRedo ? _redoLastInput : null,
+                                        longPressSemanticsHint:
+                                            l10n.gameRedoShort,
                                         compact: true,
                                         size: metrics.actionButtonSize,
                                         labelFontSize:
@@ -1681,6 +1772,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                       .gameUndoShort,
                                   color: AppTheme.lightBlueColor,
                                   onPressed: _canUndo ? _undoLastInput : null,
+                                  onLongPress: _canRedo ? _redoLastInput : null,
+                                  longPressSemanticsHint:
+                                      AppLocalizations.of(context)!
+                                          .gameRedoShort,
                                   compact: true,
                                   size: metrics.actionButtonSize,
                                   labelFontSize: metrics.actionLabelFontSize,
@@ -1816,6 +1911,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                 errorActive: _effectsController.errorActive,
                 errorOffset: _effectsController.errorOffset,
                 undoActive: _effectsController.undoActive,
+                eraseActive: _effectsController.eraseActive,
                 hintAppliedActive: _effectsController.hintAppliedActive,
                 digitCompleteActive: _effectsController.digitCompleteActive,
                 showCompletionGlow: _showCompletionGlow,
@@ -1835,7 +1931,12 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                       (previousRow != row || previousCol != col) &&
                           _presenter.selectedRow == row &&
                           _presenter.selectedCol == col;
-                  if (didSelectionChange && _isVibrationEnabled) {
+                  final lockedNumber = _lockedInputNumber;
+                  final shouldApplyLockedNumber =
+                      lockedNumber != null && _hasEditableSelection;
+                  if (shouldApplyLockedNumber) {
+                    _insertDigit(lockedNumber);
+                  } else if (didSelectionChange && _isVibrationEnabled) {
                     unawaited(HapticFeedback.selectionClick());
                   }
                 },
@@ -1903,6 +2004,34 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     return _remainingCountForNumber(number) > 0;
   }
 
+  bool _canLockNumber(int number) {
+    return _presenterReady &&
+        !_presenter.isPaused &&
+        !_presenter.isGameComplete &&
+        !_presenter.isGameOver &&
+        _activeHint == null &&
+        _remainingCountForNumber(number) > 0;
+  }
+
+  void _toggleNumberLock(int number) {
+    if (!_canLockNumber(number)) return;
+    setState(() {
+      _lockedInputNumber = _lockedInputNumber == number ? null : number;
+      _memoFocusNumber = _presenter.isMemoMode ? _lockedInputNumber : null;
+    });
+    if (_isVibrationEnabled) {
+      unawaited(HapticFeedback.selectionClick());
+    }
+  }
+
+  void _handleNumberButtonTap(int number) {
+    if (_isNumberInputEnabled(number)) {
+      _insertDigit(number);
+      return;
+    }
+    _toggleNumberLock(number);
+  }
+
   // 넘패드 탭과 아이패드 애플펜슬 필기 입력이 공유하는 실제 입력 처리.
   // 두 경로 모두 같은 검증/부수효과(진동, 오답셀 타이머, 메모 하이라이트)를
   // 거치도록 한곳에 모아둔다.
@@ -1948,8 +2077,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   }) {
     const buttonColor = AppTheme.lightBlueColor;
     final remainingCount = _remainingCountForNumber(number);
-    final isEnabled = _isNumberInputEnabled(number);
+    final isEnabled = _isNumberInputEnabled(number) || _canLockNumber(number);
     final isSelectedNumber = _selectedInputNumber() == number;
+    final isLockedNumber = _lockedInputNumber == number;
     final isCompletedNumber = remainingCount == 0;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isCompactSmallButton = compact && height != null && height < 56;
@@ -1972,15 +2102,16 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     final badgeScale = badgeSize / badgeBaseSize;
     final effectiveBackgroundColor = isCompletedNumber
         ? (isDark ? const Color(0xFF232323) : context.colors.surfaceSubtle)
-        : isSelectedNumber
+        : isSelectedNumber || isLockedNumber
             ? (isDark
                 ? const Color(0xFF2C4055)
                 : buttonColor.withValues(alpha: 0.22))
             : (isDark ? const Color(0xFF323232) : context.colors.surface);
 
-    final button = MediaQuery.withNoTextScaling(
+    Widget button = MediaQuery.withNoTextScaling(
         child: ProgressiveBlurButton(
-      onPressed: isEnabled ? () => _insertDigit(number) : null,
+      key: ValueKey('number-button-$number'),
+      onPressed: isEnabled ? () => _handleNumberButtonTap(number) : null,
       backgroundColor: effectiveBackgroundColor,
       width: width ?? (compact ? 72 : 95),
       height: height ?? (compact ? 56 : 70),
@@ -1988,7 +2119,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       enablePressScale: true,
       child: Stack(
         children: [
-          if (isSelectedNumber)
+          if (isSelectedNumber || isLockedNumber)
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
@@ -1996,8 +2127,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                     borderRadius ?? (compact ? 20 : 28),
                   ),
                   border: Border.all(
-                    color: buttonColor.withValues(alpha: 0.75),
-                    width: 1.6,
+                    color: buttonColor.withValues(
+                      alpha: isLockedNumber ? 1 : 0.75,
+                    ),
+                    width: isLockedNumber ? 2.2 : 1.6,
                   ),
                 ),
               ),
@@ -2011,10 +2144,22 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                       fontWeight: FontWeight.w600,
                       color: context.colors.textPrimary)
                   .copyWith(
-                fontWeight: isSelectedNumber ? FontWeight.w800 : null,
+                fontWeight:
+                    isSelectedNumber || isLockedNumber ? FontWeight.w800 : null,
               ),
             ),
           ),
+          if (isLockedNumber)
+            Positioned(
+              left: badgeInset,
+              top: badgeInset,
+              child: Icon(
+                Icons.push_pin_rounded,
+                key: ValueKey('number-lock-$number'),
+                size: (compact ? 14 : 16) * badgeScale,
+                color: buttonColor,
+              ),
+            ),
           Positioned(
             top: badgeInset,
             right: badgeInset,
@@ -2070,6 +2215,14 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         ],
       ),
     ));
+
+    if (_canLockNumber(number)) {
+      button = GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onLongPress: () => _toggleNumberLock(number),
+        child: button,
+      );
+    }
 
     if (number != _numberPopDigit) {
       return button;
@@ -2179,7 +2332,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         container: true,
         hint: longPressSemanticsHint,
         button: true,
-        enabled: onPressed != null,
+        enabled: onPressed != null || onLongPress != null,
         toggled: toggled,
         label: semanticsLabel ?? label,
         excludeSemantics: true,
