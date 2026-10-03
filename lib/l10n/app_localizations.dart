@@ -998,12 +998,6 @@ abstract class AppLocalizations {
   /// **'Clears'**
   String get recordsTrendClears;
 
-  /// No description provided for @recordsTrendActiveDays.
-  ///
-  /// In en, this message translates to:
-  /// **'Days played'**
-  String get recordsTrendActiveDays;
-
   /// No description provided for @recordsTrendWindowAvgTime.
   ///
   /// In en, this message translates to:
@@ -1261,12 +1255,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try again'**
   String get recordsRetry;
-
-  /// No description provided for @recordsEmptyTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Your records will build up once you finish your first puzzle.'**
-  String get recordsEmptyTitle;
 
   /// No description provided for @recordsEmptyAction.
   ///
@@ -2456,47 +2444,47 @@ abstract class AppLocalizations {
   /// **'So far'**
   String get recordsMyRecordTitle;
 
-  /// No description provided for @recordsSummaryTotalCleared.
+  /// No description provided for @recordsSummaryHeroSentence.
   ///
   /// In en, this message translates to:
-  /// **'Puzzles cleared'**
-  String get recordsSummaryTotalCleared;
+  /// **'{count, plural, =1{You\'ve completed 1 puzzle} other{You\'ve completed {count} puzzles}}'**
+  String recordsSummaryHeroSentence(num count);
 
-  /// No description provided for @recordsSummaryPerfectClears.
+  /// No description provided for @recordsSummaryAllPerfect.
   ///
   /// In en, this message translates to:
-  /// **'Mistake-free clears'**
-  String get recordsSummaryPerfectClears;
+  /// **'All solved without mistakes'**
+  String get recordsSummaryAllPerfect;
 
-  /// No description provided for @recordsSummaryHeroCount.
+  /// No description provided for @recordsSummaryPartialPerfect.
   ///
   /// In en, this message translates to:
-  /// **'{count}'**
-  String recordsSummaryHeroCount(int count);
+  /// **'{count, plural, =1{1 of them without mistakes} other{{count} of them without mistakes}}'**
+  String recordsSummaryPartialPerfect(num count);
 
-  /// No description provided for @recordsSummaryHeroSemanticLabel.
+  /// No description provided for @recordsSummaryStreakPlaying.
   ///
   /// In en, this message translates to:
-  /// **'Puzzles cleared: {count}'**
-  String recordsSummaryHeroSemanticLabel(int count);
+  /// **'{days, plural, =1{Played 1 day in a row} other{Playing {days} days in a row}}'**
+  String recordsSummaryStreakPlaying(num days);
 
-  /// No description provided for @recordsSummaryStreakChip.
+  /// No description provided for @recordsSummaryPlayDays.
   ///
   /// In en, this message translates to:
-  /// **'{count}-day play streak'**
-  String recordsSummaryStreakChip(int count);
+  /// **'{days, plural, =1{1 day played} other{{days} days played}}'**
+  String recordsSummaryPlayDays(num days);
 
-  /// No description provided for @recordsSummaryStreakToday.
+  /// No description provided for @recordsSummaryEmptyTitle.
   ///
   /// In en, this message translates to:
-  /// **'Played today'**
-  String get recordsSummaryStreakToday;
+  /// **'Ready to make your first record?'**
+  String get recordsSummaryEmptyTitle;
 
-  /// No description provided for @recordsSummaryDaysValue.
+  /// No description provided for @recordsSummaryEmptyBody.
   ///
   /// In en, this message translates to:
-  /// **'{count}'**
-  String recordsSummaryDaysValue(int count);
+  /// **'Finish a puzzle and your records will build up here'**
+  String get recordsSummaryEmptyBody;
 
   /// No description provided for @challengeTodayEyebrow.
   ///

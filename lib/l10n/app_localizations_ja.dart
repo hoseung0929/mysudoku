@@ -491,9 +491,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsTrendClears => 'クリア数';
 
   @override
-  String get recordsTrendActiveDays => 'プレイ日数';
-
-  @override
   String get recordsTrendWindowAvgTime => '平均タイム（同期間）';
 
   @override
@@ -629,9 +626,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get recordsRetry => '再試行';
-
-  @override
-  String get recordsEmptyTitle => '最初のパズルを完成させると記録がたまります。';
 
   @override
   String get recordsEmptyAction => 'パズルを始める';
@@ -1310,33 +1304,33 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsMyRecordTitle => 'これまで';
 
   @override
-  String get recordsSummaryTotalCleared => 'クリアしたパズル';
-
-  @override
-  String get recordsSummaryPerfectClears => 'ミスなしクリア';
-
-  @override
-  String recordsSummaryHeroCount(int count) {
-    return '$count問';
+  String recordsSummaryHeroSentence(num count) {
+    return '$count問のパズルを完成しました';
   }
 
   @override
-  String recordsSummaryHeroSemanticLabel(int count) {
-    return 'クリアしたパズル $count問';
+  String get recordsSummaryAllPerfect => 'すべてミスなしで解きました';
+
+  @override
+  String recordsSummaryPartialPerfect(num count) {
+    return 'そのうち$count問はミスなしで解きました';
   }
 
   @override
-  String recordsSummaryStreakChip(int count) {
-    return '$count日連続プレイ';
+  String recordsSummaryStreakPlaying(num days) {
+    return '$days日連続でプレイ中';
   }
 
   @override
-  String get recordsSummaryStreakToday => '今日プレイ';
+  String recordsSummaryPlayDays(num days) {
+    return 'プレイ$days日';
+  }
 
   @override
-  String recordsSummaryDaysValue(int count) {
-    return '$count日';
-  }
+  String get recordsSummaryEmptyTitle => '最初の記録をつくりましょう';
+
+  @override
+  String get recordsSummaryEmptyBody => 'パズルを完成させると、ここに記録がたまります';
 
   @override
   String get challengeTodayEyebrow => '今日の流れ';

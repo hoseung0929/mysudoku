@@ -12,9 +12,22 @@ import 'package:sudoku159/theme/level_status_colors.dart';
 import 'package:sudoku159/theme/system_ui_style.dart';
 import 'package:sudoku159/utils/time_format.dart';
 import 'package:sudoku159/widgets/loading_skeleton.dart';
-import 'package:sudoku159/widgets/mascot_image.dart';
 import 'package:sudoku159/widgets/press_scale.dart';
-import 'package:sudoku159/widgets/sudoku_motif.dart';
+
+/// 문장 안의 숫자 덩어리에만 [numberStyle]을 적용한다(언어와 무관).
+List<InlineSpan> _numberSpans(String text, TextStyle numberStyle) {
+  final spans = <InlineSpan>[];
+  var last = 0;
+  for (final m in RegExp(r'\d+').allMatches(text)) {
+    if (m.start > last) {
+      spans.add(TextSpan(text: text.substring(last, m.start)));
+    }
+    spans.add(TextSpan(text: m.group(0), style: numberStyle));
+    last = m.end;
+  }
+  if (last < text.length) spans.add(TextSpan(text: text.substring(last)));
+  return spans;
+}
 
 /// 문장 안의 숫자만 굵게 만든다(언어와 무관하게 숫자 덩어리를 찾는다).
 List<InlineSpan> _boldNumberSpans(String text) {
@@ -225,7 +238,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     } else if (!_hasLoaded) {
       content = _buildInitialLoadingSkeleton(l10n, sectionGap);
     } else if (_recent.isEmpty) {
-      content = _buildNoRecords(l10n);
+      // 기록이 없으면 요약 카드가 빈 상태 안내 역할을 한다(아래 카드 없음).
+      content = const SizedBox.shrink();
     } else {
       content = _buildSections(l10n);
     }
@@ -272,11 +286,10 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                             _buildLoadError(l10n, _loadErrorMessage!),
                             SizedBox(height: isTablet ? 24 : 16),
                           ],
-                          if (_hasLoaded &&
-                              _loadErrorMessage == null &&
-                              _recent.isNotEmpty) ...[
+                          if (_hasLoaded && _loadErrorMessage == null) ...[
                             _buildSummaryCard(l10n),
-                            SizedBox(height: sectionGap),
+                            if (_recent.isNotEmpty)
+                              SizedBox(height: sectionGap),
                           ],
                           content,
                         ],
@@ -604,25 +617,19 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     );
   }
 
-  /// "나의 기록" 요약 카드: 홈 히어로와 다른 화풍의 캐릭터를 반복하지 않고,
-  /// 테마 색상을 따르는 스도쿠·체크 모티프로 기록 화면의 성격을 보여준다.
+  /// 기록 상단 요약 카드: 상세 통계가 아니라 "지금까지 쌓은 성과"를 한 문장으로
+  /// 전하는 카드. 배경 이미지(기록장·메달)는 오른쪽 약 45%에서 분위기를 보조하고
+  /// 글은 왼쪽 55% 안에 둔다(메달이 카드 폭의 55~62%에 있다). 값 비교용 상세
+  /// 수치는 아래 기록 카드들이 맡는다. 기록이 없으면 같은 카드가 빈 상태가 된다.
   Widget _buildSummaryCard(AppLocalizations l10n) {
     final cs = Theme.of(context).colorScheme;
     final palette = LevelStatusPalette.of(context);
+    final isEmpty = _recent.isEmpty;
     final totalCleared = (_overall['total_cleared'] as num?)?.toInt() ?? 0;
     final perfectClears = (_overall['perfect_clears'] as num?)?.toInt() ?? 0;
     final currentStreak =
         (_activitySummary['current_streak_days'] as num?)?.toInt() ?? 0;
     final activeDays = (_activitySummary['active_days'] as num?)?.toInt() ?? 0;
-
-    final title = Text(
-      l10n.recordsMyRecordTitle,
-      style: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w700,
-        color: cs.onSurface,
-      ),
-    );
 
     return ClipRRect(
       key: const Key('records_summary_card'),
@@ -635,108 +642,98 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final textScale = MediaQuery.textScalerOf(context).scale(1.0);
-            // LayoutBuilder가 카드 내부 Padding(16)보다 바깥이라, 패딩
-            // 안쪽 폭 기준 임계값과 맞추려면 양쪽 패딩만큼 뺀다.
+            // 카드 안쪽 폭(패딩 16×2 제외). 큰 글씨·좁은 화면에서는 글이 전체
+            // 폭을 쓰고 이미지는 이미지를 숨기지 않고 옅은 배경으로만 남긴다.
             final innerWidth = constraints.maxWidth - 32;
-            final stackStats = textScale > 1.3 || innerWidth < 300;
-            // 좁은 화면·큰 글자에서는 배경 이미지 없이 기존 단색 카드로.
-            final showBackgroundImage = !stackStats;
+            final faintImage = textScale > 1.3 || innerWidth < 300;
             final reduceMotion = MediaQuery.disableAnimationsOf(context);
             final isDark = Theme.of(context).brightness == Brightness.dark;
-            final overlayColor = palette.completedBackground;
-            // 라이트: 왼쪽 72%는 글자 보호용으로 진하게 유지하고, 오른쪽 끝에서만
-            // 이미지(노트·메달)가 더 선명해지도록 낮춘다. 다크는 값을 바꾸지 않는다.
-            final overlayStops =
-                isDark ? const [0.97, 0.92, 0.88] : const [0.94, 0.86, 0.60];
-            final List<double>? gradientStops =
-                isDark ? null : const [0.0, 0.72, 1.0];
-            // 보조 지표 한 묶음: [라벨][간격][값]. 라벨과 값을 하나의 묶음으로 두어
-            // 공간이 부족하면 값만 떨어지지 않고 묶음 전체가 다음 줄로 넘어간다.
-            Widget statPair(String label, String value) => Semantics(
-                  container: true,
-                  label: '$label $value',
-                  excludeSemantics: true,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        value,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: cs.onSurface,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
+            final overlay = palette.completedBackground;
 
-            final heroCountText = l10n.recordsSummaryHeroCount(totalCleared);
-            final heroLabelText = l10n.recordsSummaryTotalCleared;
-            // 활동 연속: 0일은 숨기고, 1일은 오늘 플레이했을 때만 "오늘 플레이"
-            // (연속 계산은 어제부터 이어 세므로 어제만 한 경우가 1일로 나온다).
-            final now = DateTime.now();
-            final todayKey = '${now.year}-'
-                '${now.month.toString().padLeft(2, '0')}-'
-                '${now.day.toString().padLeft(2, '0')}';
-            final playedToday =
-                _events.any((e) => e['clear_date']?.toString() == todayKey);
-            final String? streakText = currentStreak >= 2
-                ? l10n.recordsSummaryStreakChip(currentStreak)
-                : (currentStreak == 1 && playedToday)
-                    ? l10n.recordsSummaryStreakToday
-                    : null;
-            final heroSemanticLabel =
-                l10n.recordsSummaryHeroSemanticLabel(totalCleared);
+            // ── 문구(전체 문장은 번역 키로 받는다) ──────────────────────────
+            final heroSentence = l10n.recordsSummaryHeroSentence(totalCleared);
+            // 보조 문구: 가장 긍정적인 정보 우선. 실수 없이 완료가 없으면 생략.
+            final String? qualityText = perfectClears <= 0
+                ? null
+                : (totalCleared > 0 && perfectClears >= totalCleared)
+                    ? l10n.recordsSummaryAllPerfect
+                    : l10n.recordsSummaryPartialPerfect(perfectClears);
+            // 연속 2일 이상이면 연속, 아니면 플레이 일수.
+            final String? habitText = currentStreak >= 2
+                ? l10n.recordsSummaryStreakPlaying(currentStreak)
+                : (activeDays > 0
+                    ? l10n.recordsSummaryPlayDays(activeDays)
+                    : null);
+            final supportTexts = [
+              if (qualityText != null) qualityText,
+              if (habitText != null) habitText,
+            ];
 
-            // 대표 행: 라벨 왼쪽, 대표 숫자 오른쪽(같은 행). 제목과 함께 이미지가
-            // 보이는 오른쪽 여백을 침범하지 않도록 이미지가 있을 때는 왼쪽 72%에
-            // 둔다.
-            final heroRow = Semantics(
-              label: heroSemanticLabel,
-              child: ExcludeSemantics(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        heroLabelText,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: cs.onSurface.withValues(alpha: 0.85),
-                        ),
-                      ),
+            final labelStyle = TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: cs.onSurface,
+            );
+            final supportStyle = TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w500,
+              color: cs.onSurface.withValues(alpha: 0.85),
+            );
+
+            Widget headBlock;
+            Widget? supportBlock;
+            String switchKey;
+            if (isEmpty) {
+              // 빈 상태: 0개를 크게 보이지 않고 첫 기록을 권한다(버튼은 여기 한 곳).
+              switchKey = 'empty';
+              headBlock = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(l10n.recordsSummaryEmptyTitle, style: labelStyle),
+                  const SizedBox(height: 6),
+                  Text(
+                    l10n.recordsSummaryEmptyBody,
+                    style: TextStyle(
+                      fontSize: 14,
+                      height: 1.4,
+                      color: cs.onSurfaceVariant,
                     ),
-                    const SizedBox(width: 8),
-                    AnimatedSwitcher(
-                      duration: reduceMotion
-                          ? Duration.zero
-                          : const Duration(milliseconds: 150),
-                      switchInCurve: Curves.easeOut,
-                      switchOutCurve: Curves.easeOut,
-                      transitionBuilder: (child, animation) =>
-                          FadeTransition(opacity: animation, child: child),
-                      child: Text(
-                        heroCountText,
-                        key: ValueKey(heroCountText),
-                        style: TextStyle(
+                  ),
+                  const SizedBox(height: 14),
+                  FilledButton(
+                    onPressed: () => RootNavScope.maybeOf(context)?.goToTab(0),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(0, 48),
+                    ),
+                    child: Text(
+                      l10n.recordsEmptyAction,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              );
+            } else {
+              switchKey = '$heroSentence|${supportTexts.join('|')}';
+              // 숫자만 크게(30~32px), 나머지는 같은 문장 안에서 17px.
+              final heroStyle = TextStyle(
+                fontSize: 17,
+                height: 1.25,
+                fontWeight: FontWeight.w600,
+                color: cs.onSurface.withValues(alpha: 0.85),
+              );
+              headBlock = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(l10n.recordsMyRecordTitle, style: labelStyle),
+                  const SizedBox(height: 8),
+                  Text.rich(
+                    TextSpan(
+                      style: heroStyle,
+                      children: _numberSpans(
+                        heroSentence,
+                        TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.w800,
                           color: palette.primaryPurple,
@@ -744,80 +741,101 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ),
-            );
-            final headBlock = Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                title,
-                const SizedBox(height: 8),
-                heroRow,
-              ],
-            );
-            // 보조 지표: 배경·테두리 없이 카드 안쪽 전체 폭을 쓰는 한 줄(부족하면
-            // 묶음 단위로 줄바꿈). 항목 사이는 점 대신 간격으로만 구분한다.
-            final supportBlock = Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Wrap(
+                  ),
+                ],
+              );
+              if (supportTexts.isNotEmpty) {
+                // 문구 단위로 줄바꿈하는 전체 폭 Wrap. 점·알약 없이 간격으로만 구분.
+                supportBlock = Wrap(
                   spacing: 12,
                   runSpacing: 4,
                   children: [
-                    // 실수 없이 0개도, 전부 실수 없이도 숫자 그대로 보여준다.
-                    statPair(
-                      l10n.recordsSummaryPerfectClears,
-                      l10n.recordsSummaryHeroCount(perfectClears),
-                    ),
-                    statPair(
-                      l10n.recordsTrendActiveDays,
-                      l10n.recordsSummaryDaysValue(activeDays),
-                    ),
-                  ],
-                ),
-                // 연속은 유효할 때만. 없으면 이 줄 전체를 두지 않는다.
-                if (streakText != null) ...[
-                  const SizedBox(height: 4),
-                  Text.rich(
-                    TextSpan(
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: cs.onSurface.withValues(alpha: 0.85),
+                    for (final t in supportTexts)
+                      Text.rich(
+                        TextSpan(
+                          style: supportStyle,
+                          children: _boldNumberSpans(t),
+                        ),
                       ),
-                      children: _boldNumberSpans(streakText),
-                    ),
-                  ),
-                ],
-              ],
-            );
-            final body = Column(
+                  ],
+                );
+              }
+            }
+
+            Widget body = Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
-                showBackgroundImage
-                    ? Align(
-                        alignment: Alignment.centerLeft,
-                        child: FractionallySizedBox(
-                          widthFactor: 0.72,
-                          child: headBlock,
-                        ),
-                      )
-                    : headBlock,
-                const SizedBox(height: 8),
-                supportBlock,
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: FractionallySizedBox(
+                    widthFactor: faintImage ? 1 : 0.55,
+                    child: headBlock,
+                  ),
+                ),
+                if (supportBlock != null) ...[
+                  const SizedBox(height: 14),
+                  supportBlock,
+                ],
               ],
             );
-
+            if (!isEmpty) {
+              body = Semantics(
+                container: true,
+                label: [heroSentence, ...supportTexts].join('. '),
+                excludeSemantics: true,
+                child: body,
+              );
+            }
+            // 데이터가 바뀌었을 때만 짧게 페이드: 같은 값으로 재조회하면 그대로.
             final content = Padding(
               padding: const EdgeInsets.all(16),
-              child: body,
+              child: AnimatedSwitcher(
+                duration: reduceMotion
+                    ? Duration.zero
+                    : const Duration(milliseconds: 200),
+                child: KeyedSubtree(key: ValueKey(switchKey), child: body),
+              ),
             );
 
-            if (!showBackgroundImage) return content;
+            // ── 배경: 이미지는 유지하되 글을 덮는 쪽만 진하게 ────────────────
+            final LinearGradient sideOverlay;
+            if (isDark) {
+              sideOverlay = LinearGradient(
+                colors: faintImage
+                    ? [
+                        overlay.withValues(alpha: 0.95),
+                        overlay.withValues(alpha: 0.95),
+                      ]
+                    : [
+                        overlay.withValues(alpha: 0.97),
+                        overlay.withValues(alpha: 0.92),
+                        overlay.withValues(alpha: 0.88),
+                      ],
+              );
+            } else if (faintImage) {
+              // 큰 글씨: 이미지는 워터마크 수준으로만 남긴다.
+              sideOverlay = LinearGradient(
+                colors: [
+                  overlay.withValues(alpha: 0.9),
+                  overlay.withValues(alpha: 0.9),
+                ],
+              );
+            } else {
+              // 왼쪽 글 영역은 진하게, 55~62% 구간에서 빠르게 낮춰 메달과
+              // 기록장이 오른쪽에서 선명하게 보이게 한다.
+              sideOverlay = LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  overlay.withValues(alpha: 0.96),
+                  overlay.withValues(alpha: 0.84),
+                  overlay.withValues(alpha: 0.45),
+                  overlay.withValues(alpha: 0.40),
+                ],
+                stops: const [0.0, 0.5, 0.62, 1.0],
+              );
+            }
 
             return Stack(
               children: [
@@ -828,23 +846,28 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                       key: const Key('records_summary_card_bg'),
                       fit: BoxFit.cover,
                       // 카드가 낮아져 세로가 잘릴 때 꽃보다 노트·메달이 남도록 중앙보다
-                      // 조금 아래를 기준으로 한다(0.2~0.4 사이에서 실화면으로 조정).
+                      // 조금 아래를 기준으로 한다.
                       alignment: const Alignment(1.0, 0.3),
                     ),
                   ),
                 ),
                 Positioned.fill(
                   child: DecoratedBox(
+                    decoration: BoxDecoration(gradient: sideOverlay),
+                  ),
+                ),
+                // 하단 보조 문구가 이미지 위에서도 읽히도록 아래쪽만 옅게 덮는다.
+                Positioned.fill(
+                  child: DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
                         colors: [
-                          overlayColor.withValues(alpha: overlayStops[0]),
-                          overlayColor.withValues(alpha: overlayStops[1]),
-                          overlayColor.withValues(alpha: overlayStops[2]),
+                          overlay.withValues(alpha: 0),
+                          overlay.withValues(alpha: 0.5),
                         ],
-                        stops: gradientStops,
+                        stops: const [0.55, 1.0],
                       ),
                     ),
                   ),
@@ -1565,60 +1588,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
 
   /// 전체 완료 기록이 하나도 없을 때: 화면 중앙에 떠 있는 큰 블록 대신,
   /// 다른 섹션과 같은 카드 하나로 줄여서 보여준다.
-  Widget _buildNoRecords(AppLocalizations l10n) {
-    final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: _card(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 펭귄 옆에 작은 스도쿠 종이: 첫 기록을 기다리는 장면(장식).
-            ExcludeSemantics(
-              child: SizedBox(
-                width: 110,
-                height: 90,
-                child: Stack(
-                  children: [
-                    const Positioned(
-                      left: 0,
-                      bottom: 0,
-                      child: MascotImage(
-                        asset: MascotImage.welcome,
-                        size: 82,
-                      ),
-                    ),
-                    Positioned(
-                      right: 0,
-                      bottom: 4,
-                      child: Transform.rotate(
-                        angle: 0.09,
-                        child: const SudokuMotif(size: 34),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              l10n.recordsEmptyTitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, height: 1.4, color: cs.onSurface),
-            ),
-            const SizedBox(height: 16),
-            FilledButton(
-              // 홈의 실제 게임 시작 경로(홈 탭)로 이동한다.
-              onPressed: () => RootNavScope.maybeOf(context)?.goToTab(0),
-              style: FilledButton.styleFrom(minimumSize: const Size(200, 48)),
-              child: Text(l10n.recordsEmptyAction),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildLoadError(AppLocalizations l10n, String message) {
     final cs = Theme.of(context).colorScheme;
     return _card(

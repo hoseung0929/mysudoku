@@ -255,7 +255,6 @@
   "recordsTrendTitle": "直近7日間の推移",
   "recordsTrendEmpty": "7日間の推移を表示するための記録が足りません。",
   "recordsTrendClears": "クリア数",
-  "recordsTrendActiveDays": "プレイ日数",
   "recordsTrendWindowAvgTime": "平均タイム（同期間）",
   "recordsTrendWindowAvgWrong": "平均ミス（同期間）",
   "recordsHeroBadgeFlow": "フロー",
@@ -323,7 +322,6 @@
   "recordsLevelMiniAvgWrong": "平均ミス",
   "recordsStatsLoadError": "統計データを読み込めませんでした。しばらくしてから再試行してください。",
   "recordsRetry": "再試行",
-  "recordsEmptyTitle": "最初のパズルを完成させると記録がたまります。",
   "recordsEmptyAction": "パズルを始める",
   "recordsLevelEmpty": "このレベルの完了記録はまだありません。",
   "recordsRowBestTime": "最速記録",
@@ -709,34 +707,13 @@
   "savedGamesEmpty": "この条件に一致する保存済みゲームはありません。",
   "savedGamesDeleteFailed": "削除できませんでした。もう一度お試しください。",
   "recordsMyRecordTitle": "これまで",
-  "recordsSummaryTotalCleared": "クリアしたパズル",
-  "recordsSummaryPerfectClears": "ミスなしクリア",
-  "recordsSummaryHeroCount": "{count}問",
-  "@recordsSummaryHeroCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordsSummaryHeroSemanticLabel": "クリアしたパズル {count}問",
-  "@recordsSummaryHeroSemanticLabel": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordsSummaryStreakChip": "{count}日連続プレイ",
-  "@recordsSummaryStreakChip": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordsSummaryStreakToday": "今日プレイ",
-  "recordsSummaryDaysValue": "{count}日",
+  "recordsSummaryHeroSentence": "{count}問のパズルを完成しました",
+  "recordsSummaryAllPerfect": "すべてミスなしで解きました",
+  "recordsSummaryPartialPerfect": "そのうち{count}問はミスなしで解きました",
+  "recordsSummaryStreakPlaying": "{days}日連続でプレイ中",
+  "recordsSummaryPlayDays": "プレイ{days}日",
+  "recordsSummaryEmptyTitle": "最初の記録をつくりましょう",
+  "recordsSummaryEmptyBody": "パズルを完成させると、ここに記録がたまります",
   "challengeTodayEyebrow": "今日の流れ",
   "gamePausedTitle": "一時停止中",
   "gamePausedBody": "タイマーを止めて、盤面を隠しています。",

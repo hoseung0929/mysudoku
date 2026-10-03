@@ -13,7 +13,6 @@ import 'package:sudoku159/theme/level_status_colors.dart';
 import 'package:sudoku159/utils/app_logger.dart';
 import 'package:sudoku159/view/records/records_statistics_screen.dart';
 import 'package:sudoku159/widgets/mascot_image.dart';
-import 'package:sudoku159/widgets/sudoku_motif.dart';
 
 class _FakeStats extends RecordsStatisticsService {
   _FakeStats(this.produce);
@@ -145,19 +144,32 @@ void main() {
     {'level_name': '초급', 'clear_date': _date(today)},
   ];
 
-  testWidgets('no records at all: message + start action, no zero stats',
-      (tester) async {
+  testWidgets(
+      'no records at all: one summary-card empty state with the start '
+      'button, no zero stats', (tester) async {
     var tab = -1;
     await pumpRecords(tester, () async => _data(), onTab: (i) => tab = i);
     expect(find.byKey(const Key('records_hero_header')), findsOneWidget);
+    final card = find.byKey(const Key('records_summary_card'));
+    expect(card, findsOneWidget);
     expect(
-        find.text(
-            'Your records will build up once you finish your first puzzle.'),
-        findsOneWidget);
+      find.descendant(
+          of: card, matching: find.text('Ready to make your first record?')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+          of: card,
+          matching:
+              find.text('Finish a puzzle and your records will build up here')),
+      findsOneWidget,
+    );
+    // 0개를 크게 보이지 않고, 별도 빈 상태 카드도 없다(시작 버튼은 한 곳).
+    expect(find.textContaining("You've completed"), findsNothing);
+    expect(find.text('Start a puzzle'), findsOneWidget);
     expect(find.text('00:00'), findsNothing);
     expect(find.text('Records by level'), findsNothing);
     expect(find.text('Last 26 weeks of activity'), findsNothing);
-    // 일반 기록도, 도전 기록도 전혀 없으면 도전 달력도 함께 숨긴다.
 
     await tester.tap(find.text('Start a puzzle'));
     expect(tab, 0); // 홈 탭(실제 시작 경로)
@@ -189,24 +201,13 @@ void main() {
     expect(
         find.textContaining("Averages are based on each puzzle's best record"),
         findsOneWidget);
-    // "나의 기록" 요약 카드: 완료 수가 가장 큰 대표 숫자, 무오답·연속은
-    // 보조 칩으로 표시한다(recent.length=2, activitySummary 고정값들).
+    // 요약 카드: "지금까지" 라벨 아래 한 문장(recent.length=2).
     expect(find.text('So far'), findsOneWidget);
-    expect(
-      find.descendant(
-        of: find.byKey(const Key('records_summary_card')),
-        matching: find.text('2'),
-      ),
-      findsOneWidget,
-    );
-    expect(find.text('Puzzles cleared'), findsOneWidget);
-    // 통계 행은 0개여도 숨기지 않는다.
-    expect(find.text('Mistake-free clears'), findsOneWidget);
-    expect(find.text('Days played'), findsOneWidget);
-    expect(find.text('2-day play streak'), findsOneWidget);
+    expect(find.text("You've completed 2 puzzles"), findsOneWidget);
     // 활동 달력 기간은 제목("Last 26 weeks of activity")에 있고 별도 줄은 없다.
     expect(find.text('Last 26 weeks'), findsNothing);
-    // 현재 연속은 요약 카드에만, 활동 달력 하단은 최고 연속만 보여준다(중복 제거).
+    // 연속은 요약 카드에 한 번, 활동 달력 하단은 최고 연속만(중복 제거).
+    expect(find.text('Playing 2 days in a row'), findsOneWidget);
     expect(find.textContaining('Longest streak'), findsOneWidget);
     expect(find.byKey(const Key('records_week_artwork')), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -382,13 +383,18 @@ void main() {
       theme: AppTheme.darkTheme(),
     );
     const palette = LevelStatusPalette.dark;
-    final valueText = tester.widget<Text>(
+    // 대표 문장 안의 숫자(2)가 레벨 상태 팔레트의 강조색이다.
+    final sentence = tester.widget<Text>(
       find.descendant(
         of: find.byKey(const Key('records_summary_card')),
-        matching: find.text('2'),
+        matching: find.text("You've completed 2 puzzles"),
       ),
     );
-    expect(valueText.style?.color, palette.primaryPurple);
+    final numberSpan = (sentence.textSpan! as TextSpan)
+        .children!
+        .whereType<TextSpan>()
+        .firstWhere((t) => t.text == '2');
+    expect(numberSpan.style?.color, palette.primaryPurple);
 
     final card = tester.widget<DecoratedBox>(
       find
@@ -418,28 +424,34 @@ void main() {
       ),
       findsOneWidget,
     );
-    // 라벨이 대표 숫자 위에 있다: 제목 < 라벨 < 숫자.
+    // 제목 아래에 대표 문장이 있고, 글은 카드 왼쪽 55% 안에 있다.
+    final card = find.byKey(const Key('records_summary_card'));
     final titleY = tester.getTopLeft(find.text('So far')).dy;
-    final labelY = tester.getTopLeft(find.text('Puzzles cleared')).dy;
-    expect(labelY, greaterThan(titleY));
-    expect(find.text('puzzles solved'), findsNothing);
+    final sentence = find.text("You've completed 2 puzzles");
+    expect(tester.getTopLeft(sentence).dy, greaterThan(titleY));
+    final cardRect = tester.getRect(card);
+    expect(
+      tester.getRect(sentence).right,
+      lessThanOrEqualTo(cardRect.left + 16 + (cardRect.width - 32) * 0.55 + 1),
+    );
   });
 
   testWidgets(
-      'summary card falls back to a plain background on narrow screens and '
-      'large text', (tester) async {
+      'summary card keeps a faint image and uses the full width on narrow '
+      'screens and large text', (tester) async {
     await pumpRecords(
       tester,
       () async => _data(recent: recent, events: events),
       size: const Size(375, 700),
       textScale: 1.4,
     );
+    // 큰 글씨에서도 이미지는 숨기지 않고 옅게 남긴다.
     expect(
       find.descendant(
         of: find.byKey(const Key('records_summary_card')),
         matching: find.byKey(const Key('records_summary_card_bg')),
       ),
-      findsNothing,
+      findsOneWidget,
     );
     expect(find.text('So far'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -466,92 +478,122 @@ void main() {
     expect(find.text('So far'), findsOneWidget);
   });
 
-  group('summary stat rows', () {
+  group('summary card sentence and support line', () {
     Finder inSummary(Finder f) => find.descendant(
         of: find.byKey(const Key('records_summary_card')), matching: f);
 
-    testWidgets('always shows both rows with numbers, even 0 mistake-free',
-        (tester) async {
-      await pumpRecords(
-        tester,
-        () async => _data(
-          recent: recent,
-          events: events,
-          perfectClears: 0,
-          activeDays: 12,
-        ),
-      );
-      expect(inSummary(find.text('Mistake-free clears')), findsOneWidget);
-      expect(inSummary(find.text('0')), findsOneWidget);
-      expect(inSummary(find.text('Days played')), findsOneWidget);
-      expect(inSummary(find.text('12')), findsOneWidget);
-    });
-
-    testWidgets('all mistake-free keeps the number, not a sentence',
-        (tester) async {
+    testWidgets('all solved without mistakes + streak', (tester) async {
       await pumpRecords(
         tester,
         () async => _data(
           recent: recent,
           events: events,
           perfectClears: recent.length,
+          currentStreak: 4,
         ),
       );
-      expect(inSummary(find.text('${recent.length}')), findsWidgets);
-      expect(find.text('All mistake-free'), findsNothing);
+      expect(
+          inSummary(find.text('All solved without mistakes')), findsOneWidget);
+      expect(inSummary(find.text('Playing 4 days in a row')), findsOneWidget);
+      expect(inSummary(find.textContaining('days played')), findsNothing);
     });
 
-    testWidgets(
-        'compact layout: hero label and number share a row, each stat '
-        'pair stays together, support block spans the card', (tester) async {
+    testWidgets('some without mistakes + play days when there is no streak',
+        (tester) async {
       await pumpRecords(
         tester,
         () async => _data(
           recent: recent,
           events: events,
           perfectClears: 1,
-          currentStreak: 0,
+          currentStreak: 1,
+          activeDays: 5,
         ),
       );
-      final card = find.byKey(const Key('records_summary_card'));
-      // 대표 라벨과 대표 숫자가 같은 행.
-      final heroLabelY = tester
-          .getCenter(
-              find.descendant(of: card, matching: find.text('Puzzles cleared')))
-          .dy;
-      final heroValueY = tester
-          .getCenter(find
-              .descendant(of: card, matching: find.text('${recent.length}'))
-              .first)
-          .dy;
-      expect((heroLabelY - heroValueY).abs(), lessThan(24));
-      // 보조 지표: 라벨과 값이 한 묶음(같은 행)으로 붙어 있다.
-      final pairLabelY = tester
-          .getCenter(find.descendant(
-              of: card, matching: find.text('Mistake-free clears')))
-          .dy;
-      final pairValueY = tester
-          .getCenter(find.descendant(of: card, matching: find.text('1')).last)
-          .dy;
-      expect((pairLabelY - pairValueY).abs(), lessThan(8));
-      // 연속이 없으면 연속 줄이 없다.
-      expect(find.textContaining('play streak'), findsNothing);
-      expect(find.text('Played today'), findsNothing);
-      expect(tester.takeException(), isNull);
+      expect(
+          inSummary(find.text('1 of them without mistakes')), findsOneWidget);
+      expect(inSummary(find.text('5 days played')), findsOneWidget);
+    });
+
+    testWidgets('no mistake-free puzzle: that line is omitted', (tester) async {
+      await pumpRecords(
+        tester,
+        () async => _data(
+          recent: recent,
+          events: events,
+          perfectClears: 0,
+          currentStreak: 0,
+          activeDays: 1,
+        ),
+      );
+      expect(inSummary(find.textContaining('without mistakes')), findsNothing);
+      expect(inSummary(find.text('1 day played')), findsOneWidget);
+    });
+
+    testWidgets('support items are separate texts, no dot, no pill',
+        (tester) async {
+      await pumpRecords(
+        tester,
+        () async => _data(
+          recent: recent,
+          events: events,
+          perfectClears: 1,
+          activeDays: 5,
+        ),
+      );
+      expect(inSummary(find.textContaining('·')), findsNothing);
+      expect(inSummary(find.byType(Chip)), findsNothing);
+    });
+
+    testWidgets('streak of 1 never claims "playing in a row"', (tester) async {
+      await pumpRecords(
+        tester,
+        () async => _data(
+          recent: recent,
+          events: events,
+          currentStreak: 1,
+          activeDays: 3,
+        ),
+      );
+      expect(find.textContaining('in a row'), findsNothing);
+      expect(inSummary(find.text('3 days played')), findsOneWidget);
+    });
+
+    testWidgets('singular count in the hero sentence', (tester) async {
+      final one = [recent.first];
+      await pumpRecords(
+        tester,
+        () async => _data(recent: one, events: events),
+      );
+      expect(inSummary(find.text("You've completed 1 puzzle")), findsOneWidget);
+    });
+
+    testWidgets('no image or text overlap: the text stays in the left 55%',
+        (tester) async {
+      await pumpRecords(
+        tester,
+        () async => _data(recent: recent, events: events, perfectClears: 1),
+      );
+      final card =
+          tester.getRect(find.byKey(const Key('records_summary_card')));
+      final limit = card.left + 16 + (card.width - 32) * 0.55 + 1;
+      expect(
+        tester.getRect(find.text("You've completed 2 puzzles")).right,
+        lessThanOrEqualTo(limit),
+      );
     });
 
     for (final lang in ['en', 'ko', 'ja', 'es', 'zh']) {
       for (final size in [const Size(390, 844), const Size(320, 568)]) {
-        for (final scale in [1.0, 1.3]) {
-          testWidgets(
-              'summary card has no overflow: $lang ${size.width.toInt()}w '
-              '${scale}x with streak', (tester) async {
+        for (final scale in [1.0, 1.3, 2.0]) {
+          testWidgets('no overflow: $lang ${size.width.toInt()}w ${scale}x',
+              (tester) async {
             await pumpRecords(
               tester,
               () async => _data(
                 recent: recent,
                 events: events,
-                perfectClears: 2,
+                perfectClears: 1,
                 activeDays: 123,
                 currentStreak: 12,
               ),
@@ -567,60 +609,17 @@ void main() {
       }
     }
 
-    testWidgets('1 active day shows just the number in English',
-        (tester) async {
+    testWidgets('reduce motion: no fade transition', (tester) async {
       await pumpRecords(
         tester,
-        () async => _data(recent: recent, events: events, activeDays: 1),
+        () async => _data(recent: recent, events: events),
+        reduceMotion: true,
       );
-      expect(inSummary(find.text('1')), findsOneWidget);
-    });
-  });
-
-  group('streak wording', () {
-    final todayClear = _clear('초급', 1, 300, 0, today);
-    final yesterdayClear =
-        _clear('초급', 2, 300, 0, today.subtract(const Duration(days: 1)));
-
-    testWidgets('1-day streak shows "Played today" only if played today',
-        (tester) async {
-      await pumpRecords(
-        tester,
-        () async => _data(
-          recent: [todayClear],
-          events: [todayClear],
-          currentStreak: 1,
-        ),
-      );
-      expect(find.text('Played today'), findsOneWidget);
-      expect(find.textContaining('play streak'), findsNothing);
-    });
-
-    testWidgets('1-day streak from yesterday only (not played today) is hidden',
-        (tester) async {
-      await pumpRecords(
-        tester,
-        () async => _data(
-          recent: [yesterdayClear],
-          events: [yesterdayClear],
-          currentStreak: 1,
-        ),
-      );
-      expect(find.text('Played today'), findsNothing);
-      expect(find.textContaining('play streak'), findsNothing);
-    });
-
-    testWidgets('0-day streak shows no streak chip', (tester) async {
-      await pumpRecords(
-        tester,
-        () async => _data(
-          recent: [yesterdayClear],
-          events: [yesterdayClear],
-          currentStreak: 0,
-        ),
-      );
-      expect(find.text('Played today'), findsNothing);
-      expect(find.textContaining('play streak'), findsNothing);
+      final switcher = tester.widget<AnimatedSwitcher>(find.descendant(
+        of: find.byKey(const Key('records_summary_card')),
+        matching: find.byType(AnimatedSwitcher),
+      ));
+      expect(switcher.duration, Duration.zero);
     });
   });
 
@@ -633,7 +632,7 @@ void main() {
     );
     // 현재 연속은 요약 카드의 보조 칩(2-day streak)에만 있고, 활동 달력
     // 쪽에는 최고 연속만 별도로 표시되어 중복되지 않는다.
-    expect(find.text('2-day play streak'), findsOneWidget);
+    expect(find.text('Playing 2 days in a row'), findsOneWidget);
     expect(find.textContaining('Longest streak'), findsOneWidget);
   });
 
@@ -668,19 +667,16 @@ void main() {
     });
   }
 
-  testWidgets(
-      'mascot is limited to empty state; summary uses its own background '
-      'image', (tester) async {
+  testWidgets('the summary card is the only card with the background image',
+      (tester) async {
     await pumpRecords(tester, () async => _data());
-    expect(find.byType(MascotImage), findsOneWidget);
-    expect(find.byType(SudokuMotif), findsOneWidget);
-    expect(find.byKey(const Key('records_summary_card_bg')), findsNothing);
+    // 빈 상태도 같은 요약 카드(배경 이미지 포함)이며, 마스코트 카드는 없다.
+    expect(find.byKey(const Key('records_summary_card_bg')), findsOneWidget);
 
     await pumpRecords(
       tester,
       () async => _data(recent: recent, events: events),
     );
-    expect(find.byType(MascotImage), findsNothing);
     expect(find.byKey(const Key('records_summary_card_bg')), findsOneWidget);
   });
 

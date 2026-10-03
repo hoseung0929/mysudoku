@@ -282,7 +282,6 @@
   "recordsTrendTitle": "Last 7 days",
   "recordsTrendEmpty": "Not enough recent clears to show a 7-day trend.",
   "recordsTrendClears": "Clears",
-  "recordsTrendActiveDays": "Days played",
   "recordsTrendWindowAvgTime": "Avg. time (same window)",
   "recordsTrendWindowAvgWrong": "Avg. mistakes (same window)",
   "recordsHeroBadgeFlow": "Flow",
@@ -350,7 +349,6 @@
   "recordsLevelMiniAvgWrong": "Avg wrong",
   "recordsStatsLoadError": "Unable to load statistics right now. Please try again shortly.",
   "recordsRetry": "Try again",
-  "recordsEmptyTitle": "Your records will build up once you finish your first puzzle.",
   "recordsEmptyAction": "Start a puzzle",
   "recordsLevelEmpty": "No completed puzzles at this level yet.",
   "recordsRowBestTime": "Fastest time",
@@ -864,41 +862,41 @@
   "savedGamesEmpty": "No saved games match this filter.",
   "savedGamesDeleteFailed": "Couldn't delete this puzzle. Please try again.",
   "recordsMyRecordTitle": "So far",
-  "recordsSummaryTotalCleared": "Puzzles cleared",
-  "recordsSummaryPerfectClears": "Mistake-free clears",
-  "recordsSummaryHeroCount": "{count}",
-  "@recordsSummaryHeroCount": {
+  "recordsSummaryHeroSentence": "{count, plural, =1{You've completed 1 puzzle} other{You've completed {count} puzzles}}",
+  "@recordsSummaryHeroSentence": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "num"
       }
     }
   },
-  "recordsSummaryHeroSemanticLabel": "Puzzles cleared: {count}",
-  "@recordsSummaryHeroSemanticLabel": {
+  "recordsSummaryAllPerfect": "All solved without mistakes",
+  "recordsSummaryPartialPerfect": "{count, plural, =1{1 of them without mistakes} other{{count} of them without mistakes}}",
+  "@recordsSummaryPartialPerfect": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "num"
       }
     }
   },
-  "recordsSummaryStreakChip": "{count}-day play streak",
-  "@recordsSummaryStreakChip": {
+  "recordsSummaryStreakPlaying": "{days, plural, =1{Played 1 day in a row} other{Playing {days} days in a row}}",
+  "@recordsSummaryStreakPlaying": {
     "placeholders": {
-      "count": {
-        "type": "int"
+      "days": {
+        "type": "num"
       }
     }
   },
-  "recordsSummaryStreakToday": "Played today",
-  "recordsSummaryDaysValue": "{count}",
-  "@recordsSummaryDaysValue": {
+  "recordsSummaryPlayDays": "{days, plural, =1{1 day played} other{{days} days played}}",
+  "@recordsSummaryPlayDays": {
     "placeholders": {
-      "count": {
-        "type": "int"
+      "days": {
+        "type": "num"
       }
     }
   },
+  "recordsSummaryEmptyTitle": "Ready to make your first record?",
+  "recordsSummaryEmptyBody": "Finish a puzzle and your records will build up here",
   "challengeTodayEyebrow": "Today",
   "gamePausedTitle": "Paused",
   "gamePausedBody": "The timer is stopped and the board is hidden.",

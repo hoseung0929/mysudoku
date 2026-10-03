@@ -489,9 +489,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsTrendClears => '通关数';
 
   @override
-  String get recordsTrendActiveDays => '游玩天数';
-
-  @override
   String get recordsTrendWindowAvgTime => '平均用时（同一时段）';
 
   @override
@@ -626,9 +623,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recordsRetry => '重试';
-
-  @override
-  String get recordsEmptyTitle => '完成第一道谜题后，记录就会积累起来。';
 
   @override
   String get recordsEmptyAction => '开始解题';
@@ -1304,33 +1298,33 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsMyRecordTitle => '目前为止';
 
   @override
-  String get recordsSummaryTotalCleared => '已完成谜题';
-
-  @override
-  String get recordsSummaryPerfectClears => '无失误通关';
-
-  @override
-  String recordsSummaryHeroCount(int count) {
-    return '$count道';
+  String recordsSummaryHeroSentence(num count) {
+    return '你已完成 $count 道谜题';
   }
 
   @override
-  String recordsSummaryHeroSemanticLabel(int count) {
-    return '已完成谜题 $count 道';
+  String get recordsSummaryAllPerfect => '全部无失误完成';
+
+  @override
+  String recordsSummaryPartialPerfect(num count) {
+    return '其中 $count 道无失误';
   }
 
   @override
-  String recordsSummaryStreakChip(int count) {
-    return '连续玩了 $count 天';
+  String recordsSummaryStreakPlaying(num days) {
+    return '已连续玩了 $days 天';
   }
 
   @override
-  String get recordsSummaryStreakToday => '今天已玩';
+  String recordsSummaryPlayDays(num days) {
+    return '游玩 $days 天';
+  }
 
   @override
-  String recordsSummaryDaysValue(int count) {
-    return '$count 天';
-  }
+  String get recordsSummaryEmptyTitle => '来创建第一条记录吧';
+
+  @override
+  String get recordsSummaryEmptyBody => '完成谜题后，记录会在这里累积';
 
   @override
   String get challengeTodayEyebrow => '今日动态';

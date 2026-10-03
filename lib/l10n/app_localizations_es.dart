@@ -511,9 +511,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recordsTrendClears => 'Victorias';
 
   @override
-  String get recordsTrendActiveDays => 'Días jugados';
-
-  @override
   String get recordsTrendWindowAvgTime => 'Tiempo prom. (mismo periodo)';
 
   @override
@@ -673,10 +670,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get recordsRetry => 'Reintentar';
-
-  @override
-  String get recordsEmptyTitle =>
-      'Tus registros aparecerán cuando termines tu primer puzle.';
 
   @override
   String get recordsEmptyAction => 'Empezar un puzle';
@@ -1427,33 +1420,58 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recordsMyRecordTitle => 'Hasta ahora';
 
   @override
-  String get recordsSummaryTotalCleared => 'Puzles completados';
-
-  @override
-  String get recordsSummaryPerfectClears => 'Sin errores';
-
-  @override
-  String recordsSummaryHeroCount(int count) {
-    return '$count';
+  String recordsSummaryHeroSentence(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Has completado $count puzles',
+      one: 'Has completado 1 puzle',
+    );
+    return '$_temp0';
   }
 
   @override
-  String recordsSummaryHeroSemanticLabel(int count) {
-    return 'Puzles completados: $count';
+  String get recordsSummaryAllPerfect => 'Todos resueltos sin errores';
+
+  @override
+  String recordsSummaryPartialPerfect(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count de ellos sin errores',
+      one: '1 de ellos sin errores',
+    );
+    return '$_temp0';
   }
 
   @override
-  String recordsSummaryStreakChip(int count) {
-    return '$count días seguidos jugando';
+  String recordsSummaryStreakPlaying(num days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Llevas $days días seguidos jugando',
+      one: 'Jugaste 1 día seguido',
+    );
+    return '$_temp0';
   }
 
   @override
-  String get recordsSummaryStreakToday => 'Jugaste hoy';
+  String recordsSummaryPlayDays(num days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days días jugados',
+      one: '1 día jugado',
+    );
+    return '$_temp0';
+  }
 
   @override
-  String recordsSummaryDaysValue(int count) {
-    return '$count';
-  }
+  String get recordsSummaryEmptyTitle => '¿Creamos tu primer registro?';
+
+  @override
+  String get recordsSummaryEmptyBody =>
+      'Cuando completes un puzle, tus registros se acumularán aquí';
 
   @override
   String get challengeTodayEyebrow => 'Hoy';

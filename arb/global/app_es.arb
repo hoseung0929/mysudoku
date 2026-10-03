@@ -255,7 +255,6 @@
   "recordsTrendTitle": "Tendencia de los últimos 7 días",
   "recordsTrendEmpty": "No hay suficientes victorias recientes para mostrar una tendencia de 7 días.",
   "recordsTrendClears": "Victorias",
-  "recordsTrendActiveDays": "Días jugados",
   "recordsTrendWindowAvgTime": "Tiempo prom. (mismo periodo)",
   "recordsTrendWindowAvgWrong": "Errores prom. (mismo periodo)",
   "recordsHeroBadgeFlow": "Ritmo",
@@ -323,7 +322,6 @@
   "recordsLevelMiniAvgWrong": "Errores prom.",
   "recordsStatsLoadError": "No se pudieron cargar las estadísticas. Inténtalo de nuevo en unos momentos.",
   "recordsRetry": "Reintentar",
-  "recordsEmptyTitle": "Tus registros aparecerán cuando termines tu primer puzle.",
   "recordsEmptyAction": "Empezar un puzle",
   "recordsLevelEmpty": "Aún no hay puzles completados en este nivel.",
   "recordsRowBestTime": "Tiempo más rápido",
@@ -709,34 +707,13 @@
   "savedGamesEmpty": "No hay partidas guardadas que coincidan con este filtro.",
   "savedGamesDeleteFailed": "No se pudo eliminar este puzzle. Inténtalo de nuevo.",
   "recordsMyRecordTitle": "Hasta ahora",
-  "recordsSummaryTotalCleared": "Puzles completados",
-  "recordsSummaryPerfectClears": "Sin errores",
-  "recordsSummaryHeroCount": "{count}",
-  "@recordsSummaryHeroCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordsSummaryHeroSemanticLabel": "Puzles completados: {count}",
-  "@recordsSummaryHeroSemanticLabel": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordsSummaryStreakChip": "{count} días seguidos jugando",
-  "@recordsSummaryStreakChip": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordsSummaryStreakToday": "Jugaste hoy",
-  "recordsSummaryDaysValue": "{count}",
+  "recordsSummaryHeroSentence": "{count, plural, =1{Has completado 1 puzle} other{Has completado {count} puzles}}",
+  "recordsSummaryAllPerfect": "Todos resueltos sin errores",
+  "recordsSummaryPartialPerfect": "{count, plural, =1{1 de ellos sin errores} other{{count} de ellos sin errores}}",
+  "recordsSummaryStreakPlaying": "{days, plural, =1{Jugaste 1 día seguido} other{Llevas {days} días seguidos jugando}}",
+  "recordsSummaryPlayDays": "{days, plural, =1{1 día jugado} other{{days} días jugados}}",
+  "recordsSummaryEmptyTitle": "¿Creamos tu primer registro?",
+  "recordsSummaryEmptyBody": "Cuando completes un puzle, tus registros se acumularán aquí",
   "challengeTodayEyebrow": "Hoy",
   "gamePausedTitle": "En pausa",
   "gamePausedBody": "El tiempo está detenido y el tablero, oculto.",

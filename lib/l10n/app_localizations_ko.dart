@@ -491,9 +491,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsTrendClears => '클리어 수';
 
   @override
-  String get recordsTrendActiveDays => '플레이 일수';
-
-  @override
   String get recordsTrendWindowAvgTime => '평균 시간 (같은 기간)';
 
   @override
@@ -631,9 +628,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get recordsRetry => '다시 시도';
-
-  @override
-  String get recordsEmptyTitle => '첫 퍼즐을 완성하면 기록이 쌓여요.';
 
   @override
   String get recordsEmptyAction => '퍼즐 시작하기';
@@ -1315,33 +1309,33 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsMyRecordTitle => '지금까지';
 
   @override
-  String get recordsSummaryTotalCleared => '완료한 퍼즐';
-
-  @override
-  String get recordsSummaryPerfectClears => '실수 없이 완료';
-
-  @override
-  String recordsSummaryHeroCount(int count) {
-    return '$count개';
+  String recordsSummaryHeroSentence(num count) {
+    return '$count개의 퍼즐을 완성했어요';
   }
 
   @override
-  String recordsSummaryHeroSemanticLabel(int count) {
-    return '완료한 퍼즐 $count개';
+  String get recordsSummaryAllPerfect => '모두 실수 없이 풀었어요';
+
+  @override
+  String recordsSummaryPartialPerfect(num count) {
+    return '그중 $count개는 실수 없이 풀었어요';
   }
 
   @override
-  String recordsSummaryStreakChip(int count) {
-    return '$count일 연속 플레이';
+  String recordsSummaryStreakPlaying(num days) {
+    return '$days일 연속 플레이 중';
   }
 
   @override
-  String get recordsSummaryStreakToday => '오늘 플레이';
+  String recordsSummaryPlayDays(num days) {
+    return '플레이 $days일';
+  }
 
   @override
-  String recordsSummaryDaysValue(int count) {
-    return '$count일';
-  }
+  String get recordsSummaryEmptyTitle => '첫 기록을 만들어볼까요?';
+
+  @override
+  String get recordsSummaryEmptyBody => '퍼즐을 완성하면 이곳에 기록이 쌓여요';
 
   @override
   String get challengeTodayEyebrow => '오늘의 흐름';

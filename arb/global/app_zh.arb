@@ -255,7 +255,6 @@
   "recordsTrendTitle": "最近 7 天趋势",
   "recordsTrendEmpty": "最近的通关记录还不够，无法显示 7 天趋势。",
   "recordsTrendClears": "通关数",
-  "recordsTrendActiveDays": "游玩天数",
   "recordsTrendWindowAvgTime": "平均用时（同一时段）",
   "recordsTrendWindowAvgWrong": "平均错误（同一时段）",
   "recordsHeroBadgeFlow": "节奏",
@@ -323,7 +322,6 @@
   "recordsLevelMiniAvgWrong": "平均错误",
   "recordsStatsLoadError": "暂时无法加载统计数据，请稍后再试。",
   "recordsRetry": "重试",
-  "recordsEmptyTitle": "完成第一道谜题后，记录就会积累起来。",
   "recordsEmptyAction": "开始解题",
   "recordsLevelEmpty": "该难度还没有完成记录。",
   "recordsRowBestTime": "最快记录",
@@ -709,34 +707,13 @@
   "savedGamesEmpty": "没有符合该筛选条件的存档。",
   "savedGamesDeleteFailed": "删除失败,请重试。",
   "recordsMyRecordTitle": "目前为止",
-  "recordsSummaryTotalCleared": "已完成谜题",
-  "recordsSummaryPerfectClears": "无失误通关",
-  "recordsSummaryHeroCount": "{count}道",
-  "@recordsSummaryHeroCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordsSummaryHeroSemanticLabel": "已完成谜题 {count} 道",
-  "@recordsSummaryHeroSemanticLabel": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordsSummaryStreakChip": "连续玩了 {count} 天",
-  "@recordsSummaryStreakChip": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordsSummaryStreakToday": "今天已玩",
-  "recordsSummaryDaysValue": "{count} 天",
+  "recordsSummaryHeroSentence": "你已完成 {count} 道谜题",
+  "recordsSummaryAllPerfect": "全部无失误完成",
+  "recordsSummaryPartialPerfect": "其中 {count} 道无失误",
+  "recordsSummaryStreakPlaying": "已连续玩了 {days} 天",
+  "recordsSummaryPlayDays": "游玩 {days} 天",
+  "recordsSummaryEmptyTitle": "来创建第一条记录吧",
+  "recordsSummaryEmptyBody": "完成谜题后，记录会在这里累积",
   "challengeTodayEyebrow": "今日动态",
   "gamePausedTitle": "已暂停",
   "gamePausedBody": "计时已停止，棋盘暂时隐藏。",

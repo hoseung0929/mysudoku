@@ -33,6 +33,8 @@
 
 ## 최근 완료
 
+- **기록 요약 카드 문장형 개편 (2026-10-03, 미커밋)** — 숫자 중심(통계 행) 구조를 폐기하고 "지금까지 쌓은 성과"를 한 문장으로 전하는 카드로 변경. `지금까지` 라벨 + 대표 문장(`N개의 퍼즐을 완성했어요`, 숫자만 32px) + 보조 문구 Wrap(`모두 실수 없이 풀었어요`/`그중 N개는…`, `N일 연속 플레이 중`/`플레이 N일`, 점·알약 없음). 글은 왼쪽 55%(메달이 카드 폭 55~62%에 있음), 오버레이 변화 지점을 55~62%로 앞당겨 메달·기록장 노출. 큰 글씨/좁은 화면에서는 이미지를 숨기지 않고 옅게 남기고 글은 전체 폭. 기록이 없으면 같은 카드가 빈 상태(첫 기록 권유 + 시작 버튼 한 곳)가 되고 별도 빈 상태 카드는 삭제. 번역은 전체 문장 키(복수형 포함)로 제공, 미사용이 된 키 9개 삭제.
+
 - **기록 화면 '도전 기록'(월간 도전 달력) 제거 (2026-10-03, 미커밋)** — 주 단위 활동·26주 히트맵과 정보가 겹치고, 지난 도전 재도전은 일반 퍼즐과 다르지 않으며 보상이 없어 의미가 약하다고 판단해 삭제. `ChallengeMonthlyCalendarCard`, `ChallengeMonthCalendar`/`ChallengeDayStatus`, `loadMonthCalendar`, `hasCompletedAnyChallenge`, `DatabaseHelper.getDailyChallengeCompletionsForMonth`, 기록 화면의 도전 연속·이력 상태와 "일반 기록 없음(도전만 있음)" 분기, 달력 테스트를 삭제. `RecordsStatisticsScreen`은 도전 관련 주입 파라미터가 없어졌다. 도전 완료 기록(DB)과 홈의 도전 카드·`도전 N일 연속`은 유지. 달력 전용 ARB 키 25개 삭제. 이전 항목의 "도전 달력 상세 카드 재도전 세션 정책(`retrySessionDates`)"은 함께 사라졌다.
   - **정리 후보(미처리)**: `challengeCountsForStreak` 파라미터(과거 도전용, 이제 항상 true)와 `DailyChallengeCompletionRepository.getCompletionsForMonth`(DB 마이그레이션 테스트만 사용).
 
