@@ -325,8 +325,6 @@
   "recordsRetry": "Reintentar",
   "recordsEmptyTitle": "Tus registros aparecerán cuando termines tu primer puzle.",
   "recordsEmptyAction": "Empezar un puzle",
-  "recordsEmptyGeneralOnlyTitle": "Aún no tienes registros de puzles.",
-  "recordsEmptyGeneralOnlySubtitle": "Completa un puzle para ver las estadísticas por dificultad y tu historial de actividad.",
   "recordsLevelEmpty": "Aún no hay puzles completados en este nivel.",
   "recordsRowBestTime": "Tiempo más rápido",
   "recordsAverageBasisNote": "Los promedios se basan en el mejor registro de cada puzle.",
@@ -521,17 +519,6 @@
       }
     }
   },
-  "homeTodayChallengeCardDoneBody": "Terminaste el desafío de hoy. ¡Sigue con tu racha!",
-  "homeTodayChallengeCardPendingBody": "Un puzle al día: práctica ligera, progreso constante.",
-  "homeTodayChallengeFooterDoneStreak": "Desafío de hoy completado · Racha de {days} días",
-  "@homeTodayChallengeFooterDoneStreak": {
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
-  "homeTodayChallengeFooterPending": "Usa el puzle de hoy para construir una racha.",
   "homeQuickStartSectionTitle": "Inicio rápido",
   "homeBrowseLevelsTitle": "Explorar niveles",
   "homeStreakTodayDoneLine": "El desafío de hoy también está listo.",
@@ -614,10 +601,6 @@
   "profileEditorPickFromAlbumDesc": "Usar tu propia foto como perfil",
   "homeTodayLabel": "HOY",
   "homeTodayPuzzleTitle": "Un momento tranquilo para concentrarte.",
-  "homeTodayChallengeStartButton": "Empezar el reto de hoy",
-  "homeTodayChallengeResumeButton": "Continuar el reto de hoy",
-  "homeTodayChallengeReviewButton": "Volver a jugar el puzle de hoy",
-  "homeTodayChallengeLoadError": "No se pudo cargar el puzle de hoy.",
   "homeChallengeStartButton": "Empezar desafío",
   "homeChallengeReplayButton": "Jugar de nuevo",
   "homeChallengeNotStarted": "Aún sin empezar",
@@ -626,7 +609,6 @@
   "homeChallengeStreak": "{days, plural, =1{Racha de desafíos: 1 día} other{Racha de desafíos: {days} días}}",
   "homeChallengeLoadErrorTitle": "No se pudo cargar el desafío de hoy",
   "homeChallengeLoadErrorBody": "Inténtalo de nuevo en un momento.",
-  "recordsChallengeTodayDone": "Desafío de hoy completado",
   "homeTodayChallengeDateChanged": "Empezó un nuevo día. Se actualizó el reto de hoy.",
   "homeFirstStartTitle": "Empieza tu primer puzle",
   "homeNewPuzzleTitle": "Empieza un puzle nuevo",
@@ -661,22 +643,6 @@
   "levelFilterNew": "Nuevos",
   "levelFilterInProgress": "En curso",
   "levelFilterDone": "Hechos",
-  "levelProgressCardMessage": "Empieza hoy con puzles de {levelName}",
-  "@levelProgressCardMessage": {
-    "placeholders": {
-      "levelName": {
-        "type": "String"
-      }
-    }
-  },
-  "levelProgressCompleted": "/ {total} completados",
-  "@levelProgressCompleted": {
-    "placeholders": {
-      "total": {
-        "type": "int"
-      }
-    }
-  },
   "levelPuzzleListTitle": "Rompecabezas · {count}",
   "@levelPuzzleListTitle": {
     "placeholders": {
@@ -753,16 +719,8 @@
       }
     }
   },
-  "recordsSummaryHeroSemanticLabel": "Resolviste {count} puzles",
+  "recordsSummaryHeroSemanticLabel": "Puzles completados: {count}",
   "@recordsSummaryHeroSemanticLabel": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordsSummaryPerfectChip": "{count} sin errores",
-  "@recordsSummaryPerfectChip": {
     "placeholders": {
       "count": {
         "type": "int"
@@ -778,7 +736,7 @@
     }
   },
   "recordsSummaryStreakToday": "Jugaste hoy",
-  "challengeMonthlyDescription": "Elige una fecha para volver a jugar un reto anterior.",
+  "recordsSummaryDaysValue": "{count}",
   "challengeTodayEyebrow": "Hoy",
   "gamePausedTitle": "En pausa",
   "gamePausedBody": "El tiempo está detenido y el tablero, oculto.",
@@ -851,32 +809,6 @@
   "autoNotesContradictionMessage": "Algunas casillas se quedaron sin ningún número posible, así que no se rellenaron las notas. Revisa tus entradas e inténtalo de nuevo.",
   "autoNotesTipMessage": "Consejo: mantén pulsado Notas para rellenar todos los candidatos a la vez.",
   "gameMemoLongPressHint": "Toca para alternar Notas. Mantén pulsado para rellenar candidatos automáticamente.",
-  "challengeMonthlyTitle": "Historial de retos",
-  "challengePreviousMonth": "Mes anterior",
-  "challengeBackToCurrentMonth": "Este mes",
-  "challengeStatusNotCompleted": "No completado",
-  "challengeStatusInProgress": "En curso",
-  "challengeStatusCompleted": "Completado",
-  "challengeStatusPerfect": "Victoria perfecta",
-  "challengeStatusFuture": "Aún no disponible",
-  "challengeMonthComplete": "Mes completado",
-  "challengeStartPastChallenge": "Iniciar reto pasado",
-  "challengeResumePastChallenge": "Reanudar reto anterior",
-  "challengeRetryPastChallenge": "Repetir reto pasado",
-  "challengePuzzleLoadFailed": "No se pudo cargar este puzzle.",
-  "challengeCalendarLoadError": "No se pudo cargar el calendario de retos.",
-  "challengeStreakExcludedNote": "Completar un reto anterior no cuenta para tu racha",
-  "challengeDayCellSemantics": "{date}, {status}",
-  "@challengeDayCellSemantics": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      },
-      "status": {
-        "type": "String"
-      }
-    }
-  },
   "homeGreetingMorning": "Empieza con un puzle ligero.",
   "homeGreetingAfternoon": "Es un buen momento para concentrarte.",
   "homeGreetingEvening": "Relájate con un puzle tranquilo.",

@@ -38,7 +38,7 @@ Flutter로 만든 스도쿠 앱입니다. 레벨별 퍼즐 플레이, 일일 챌
    - **기록** [`RecordsStatisticsScreen`](lib/view/records/records_statistics_screen.dart): 클리어 기록·통계
 3. 게임 [`SudokuGameScreen`](lib/view/sudoku_game/sudoku_game_screen.dart) — 세션/설정/종료 흐름은 전용 컨트롤러·플로우로 분리
 
-챌린지 전용 UI는 [`lib/view/challenge/`](lib/view/challenge/)에 있으며, 홈에서 오늘의 챌린지 등으로 연결됩니다.
+오늘의 챌린지는 홈 화면의 도전 카드(`lib/view/home/home_screen.dart`)에서 시작합니다.
 
 ## 디렉터리 개요
 

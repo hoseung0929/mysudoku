@@ -1274,18 +1274,6 @@ abstract class AppLocalizations {
   /// **'Start a puzzle'**
   String get recordsEmptyAction;
 
-  /// No description provided for @recordsEmptyGeneralOnlyTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'You don\'t have any puzzle records yet.'**
-  String get recordsEmptyGeneralOnlyTitle;
-
-  /// No description provided for @recordsEmptyGeneralOnlySubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Finish a puzzle to see stats by difficulty and your activity history.'**
-  String get recordsEmptyGeneralOnlySubtitle;
-
   /// No description provided for @recordsLevelEmpty.
   ///
   /// In en, this message translates to:
@@ -1778,30 +1766,6 @@ abstract class AppLocalizations {
   /// **'Progress {percent}%'**
   String homeProgressPercent(int percent);
 
-  /// No description provided for @homeTodayChallengeCardDoneBody.
-  ///
-  /// In en, this message translates to:
-  /// **'You finished today\'s challenge. Keep your streak going!'**
-  String get homeTodayChallengeCardDoneBody;
-
-  /// No description provided for @homeTodayChallengeCardPendingBody.
-  ///
-  /// In en, this message translates to:
-  /// **'One puzzle a day—light practice, steady progress.'**
-  String get homeTodayChallengeCardPendingBody;
-
-  /// No description provided for @homeTodayChallengeFooterDoneStreak.
-  ///
-  /// In en, this message translates to:
-  /// **'Today\'s challenge done · {days}-day streak'**
-  String homeTodayChallengeFooterDoneStreak(int days);
-
-  /// No description provided for @homeTodayChallengeFooterPending.
-  ///
-  /// In en, this message translates to:
-  /// **'Use today\'s puzzle to build a streak.'**
-  String get homeTodayChallengeFooterPending;
-
   /// No description provided for @homeQuickStartSectionTitle.
   ///
   /// In en, this message translates to:
@@ -2030,30 +1994,6 @@ abstract class AppLocalizations {
   /// **'A quiet moment to focus.'**
   String get homeTodayPuzzleTitle;
 
-  /// No description provided for @homeTodayChallengeStartButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Start today\'s challenge'**
-  String get homeTodayChallengeStartButton;
-
-  /// No description provided for @homeTodayChallengeResumeButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Resume today\'s challenge'**
-  String get homeTodayChallengeResumeButton;
-
-  /// No description provided for @homeTodayChallengeReviewButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Play today\'s puzzle again'**
-  String get homeTodayChallengeReviewButton;
-
-  /// No description provided for @homeTodayChallengeLoadError.
-  ///
-  /// In en, this message translates to:
-  /// **'Couldn\'t load today\'s puzzle.'**
-  String get homeTodayChallengeLoadError;
-
   /// No description provided for @homeChallengeStartButton.
   ///
   /// In en, this message translates to:
@@ -2101,12 +2041,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please try again in a moment.'**
   String get homeChallengeLoadErrorBody;
-
-  /// No description provided for @recordsChallengeTodayDone.
-  ///
-  /// In en, this message translates to:
-  /// **'Today\'s challenge done'**
-  String get recordsChallengeTodayDone;
 
   /// No description provided for @homeTodayChallengeDateChanged.
   ///
@@ -2251,18 +2185,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Done'**
   String get levelFilterDone;
-
-  /// No description provided for @levelProgressCardMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Start with {levelName} puzzles today'**
-  String levelProgressCardMessage(String levelName);
-
-  /// No description provided for @levelProgressCompleted.
-  ///
-  /// In en, this message translates to:
-  /// **'/ {total} completed'**
-  String levelProgressCompleted(int total);
 
   /// No description provided for @levelPuzzleListTitle.
   ///
@@ -2555,14 +2477,8 @@ abstract class AppLocalizations {
   /// No description provided for @recordsSummaryHeroSemanticLabel.
   ///
   /// In en, this message translates to:
-  /// **'Solved {count} puzzles'**
+  /// **'Puzzles cleared: {count}'**
   String recordsSummaryHeroSemanticLabel(int count);
-
-  /// No description provided for @recordsSummaryPerfectChip.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} mistake-free'**
-  String recordsSummaryPerfectChip(int count);
 
   /// No description provided for @recordsSummaryStreakChip.
   ///
@@ -2576,11 +2492,11 @@ abstract class AppLocalizations {
   /// **'Played today'**
   String get recordsSummaryStreakToday;
 
-  /// No description provided for @challengeMonthlyDescription.
+  /// No description provided for @recordsSummaryDaysValue.
   ///
   /// In en, this message translates to:
-  /// **'Pick a date to replay a past challenge.'**
-  String get challengeMonthlyDescription;
+  /// **'{count}'**
+  String recordsSummaryDaysValue(int count);
 
   /// No description provided for @challengeTodayEyebrow.
   ///
@@ -2953,102 +2869,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap to toggle Notes. Long-press to auto-fill candidate notes.'**
   String get gameMemoLongPressHint;
-
-  /// No description provided for @challengeMonthlyTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Challenge history'**
-  String get challengeMonthlyTitle;
-
-  /// No description provided for @challengePreviousMonth.
-  ///
-  /// In en, this message translates to:
-  /// **'Previous month'**
-  String get challengePreviousMonth;
-
-  /// No description provided for @challengeBackToCurrentMonth.
-  ///
-  /// In en, this message translates to:
-  /// **'This month'**
-  String get challengeBackToCurrentMonth;
-
-  /// No description provided for @challengeStatusNotCompleted.
-  ///
-  /// In en, this message translates to:
-  /// **'Not completed'**
-  String get challengeStatusNotCompleted;
-
-  /// No description provided for @challengeStatusInProgress.
-  ///
-  /// In en, this message translates to:
-  /// **'In progress'**
-  String get challengeStatusInProgress;
-
-  /// No description provided for @challengeStatusCompleted.
-  ///
-  /// In en, this message translates to:
-  /// **'Completed'**
-  String get challengeStatusCompleted;
-
-  /// No description provided for @challengeStatusPerfect.
-  ///
-  /// In en, this message translates to:
-  /// **'Perfect clear'**
-  String get challengeStatusPerfect;
-
-  /// No description provided for @challengeStatusFuture.
-  ///
-  /// In en, this message translates to:
-  /// **'Not available yet'**
-  String get challengeStatusFuture;
-
-  /// No description provided for @challengeMonthComplete.
-  ///
-  /// In en, this message translates to:
-  /// **'Monthly complete'**
-  String get challengeMonthComplete;
-
-  /// No description provided for @challengeStartPastChallenge.
-  ///
-  /// In en, this message translates to:
-  /// **'Start past challenge'**
-  String get challengeStartPastChallenge;
-
-  /// No description provided for @challengeResumePastChallenge.
-  ///
-  /// In en, this message translates to:
-  /// **'Resume past challenge'**
-  String get challengeResumePastChallenge;
-
-  /// No description provided for @challengeRetryPastChallenge.
-  ///
-  /// In en, this message translates to:
-  /// **'Retry past challenge'**
-  String get challengeRetryPastChallenge;
-
-  /// No description provided for @challengePuzzleLoadFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Couldn\'t load this puzzle.'**
-  String get challengePuzzleLoadFailed;
-
-  /// No description provided for @challengeCalendarLoadError.
-  ///
-  /// In en, this message translates to:
-  /// **'Unable to load the challenge calendar.'**
-  String get challengeCalendarLoadError;
-
-  /// No description provided for @challengeStreakExcludedNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Completing a past challenge doesn\'t count toward your streak'**
-  String get challengeStreakExcludedNote;
-
-  /// No description provided for @challengeDayCellSemantics.
-  ///
-  /// In en, this message translates to:
-  /// **'{date}, {status}'**
-  String challengeDayCellSemantics(String date, String status);
 
   /// No description provided for @homeGreetingMorning.
   ///

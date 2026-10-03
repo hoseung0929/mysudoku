@@ -92,6 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _homeLoadFailed = false;
   int _dashboardRequestId = 0;
   bool _isOpeningGame = false;
+  bool _isRetryingTodayChallenge = false;
   int _totalContinueCount = 0;
   bool _isLevelTransitioning = false;
   int? _transitioningLevelIndex;
@@ -529,17 +530,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// 카드에 표시된 오늘의 도전 타깃을 그대로 연다. 표시와 시작에 같은 스냅샷을
   /// 쓰며, 그사이 날짜가 바뀌었다면 화면을 먼저 갱신하고 다른 문제는 열지 않는다.
+  /// 도전 카드의 재시도/날짜 변경 재조회. 진행 중에는 버튼·카드 탭을 막아
+  /// 연타해도 조회가 한 번만 실행되게 한다.
+  Future<void> _reloadTodayChallenge() async {
+    setState(() => _isRetryingTodayChallenge = true);
+    try {
+      await _loadHomeDashboard();
+    } finally {
+      if (mounted) setState(() => _isRetryingTodayChallenge = false);
+    }
+  }
+
   Future<void> _openTodayChallenge() async {
     final game = _todayChallenge;
     final challengeDate = _challengeProgress?.challengeDate;
-    if (!_homeLoaded || _isOpeningGame) return;
+    if (!_homeLoaded || _isOpeningGame || _isRetryingTodayChallenge) return;
     if (game == null || challengeDate == null) {
-      await _loadHomeDashboard();
+      await _reloadTodayChallenge();
       return;
     }
     if (challengeDate !=
         ChallengeProgressService.formatLocalDate(DateTime.now())) {
-      await _loadHomeDashboard();
+      await _reloadTodayChallenge();
       if (!mounted) return;
       showAppSnackBar(
         context,
@@ -948,9 +960,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final continueGame = _continueGame;
     final challenge = _todayChallenge;
     // 최근 이어하기와 오늘의 도전이 같은 문제면 큰 카드를 두 번 반복하지 않고
-    // 이어하기 카드에 '오늘의 도전' 표시만 붙인다.
+    // 이어하기 카드가 도전 카드 역할을 한다. 단, 도전을 이미 완료했다면(완료 후
+    // 다시 풀다 남은 재도전 세션) 완료 상태가 우선이라 합치지 않는다: 이어하기
+    // 카드는 재도전 진행을, 도전 카드는 "오늘 도전 완료"를 각각 보여준다.
     final sameAsChallenge = continueGame != null &&
         challenge != null &&
+        !(_challengeProgress?.isTodayChallengeCleared ?? false) &&
         continueGame.game.levelName == challenge.levelName &&
         continueGame.game.gameNumber == challenge.gameNumber;
 
@@ -1193,7 +1208,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final done =
         !isError && (_challengeProgress?.isTodayChallengeCleared ?? false);
     final inProgress = !isError && !done && session != null;
-    final busy = _isOpeningGame;
+    final busy = _isOpeningGame || _isRetryingTodayChallenge;
+    // 완료 후 다시 풀다 중단한 재도전 세션이 있으면 '다시 풀기'를 숨긴다: 새로
+    // 시작하면 그 세션이 지워지므로, 이어서 풀기는 이어하기 카드가 맡는다.
+    final showButton = !(done && session != null);
     final tappable = !isError && !done;
     final streakDays = _challengeProgress?.streakDays ?? 0;
 
@@ -1327,52 +1345,63 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          if (showButton) const SizedBox(height: 8),
           // 오른쪽 그림(펭귄·편지)을 가리지 않도록 버튼 폭을 왼쪽으로 제한한다.
           // 좁아서 글이 잘릴 수 있으면 전체 폭으로 되돌린다.
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final narrow = showArtwork && constraints.maxWidth * 0.62 >= 180;
-              final VoidCallback? onPressed = busy
-                  ? null
-                  : isError
-                      ? _openTodayChallenge
-                      : _startChallengeWithHaptic;
-              final button = PressScaleListener(
-                child: done
-                    ? OutlinedButton(
-                        onPressed: onPressed,
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(44),
+          if (showButton)
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final narrow =
+                    showArtwork && constraints.maxWidth * 0.62 >= 180;
+                final VoidCallback? onPressed = busy
+                    ? null
+                    : isError
+                        ? _openTodayChallenge
+                        : _startChallengeWithHaptic;
+                final button = PressScaleListener(
+                  child: done
+                      ? OutlinedButton(
+                          onPressed: onPressed,
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(44),
+                          ),
+                          child: Text(buttonLabel, textAlign: TextAlign.center),
+                        )
+                      // '난이도 선택'(주 버튼, 검은색)과 위계를 구분하기 위해 연한
+                      // 보라색 배경의 보조 버튼으로 표시한다.
+                      : FilledButton(
+                          onPressed: onPressed,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: palette.completedBackground,
+                            foregroundColor: palette.primaryPurple,
+                            // 탭 직후 busy 상태에서도 배경이 비치지 않도록 유지한다.
+                            disabledBackgroundColor:
+                                palette.completedBackground,
+                            disabledForegroundColor: palette.primaryPurple,
+                            minimumSize: const Size.fromHeight(44),
+                          ),
+                          child: isError && _isRetryingTodayChallenge
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(buttonLabel, textAlign: TextAlign.center),
                         ),
-                        child: Text(buttonLabel, textAlign: TextAlign.center),
+                );
+                return narrow
+                    ? Align(
+                        alignment: Alignment.centerLeft,
+                        child: FractionallySizedBox(
+                          widthFactor: 0.62,
+                          child: button,
+                        ),
                       )
-                    // '난이도 선택'(주 버튼, 검은색)과 위계를 구분하기 위해 연한
-                    // 보라색 배경의 보조 버튼으로 표시한다.
-                    : FilledButton(
-                        onPressed: onPressed,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: palette.completedBackground,
-                          foregroundColor: palette.primaryPurple,
-                          // 탭 직후 busy 상태에서도 배경이 비치지 않도록 유지한다.
-                          disabledBackgroundColor: palette.completedBackground,
-                          disabledForegroundColor: palette.primaryPurple,
-                          minimumSize: const Size.fromHeight(44),
-                        ),
-                        child: Text(buttonLabel, textAlign: TextAlign.center),
-                      ),
-              );
-              return narrow
-                  ? Align(
-                      alignment: Alignment.centerLeft,
-                      child: FractionallySizedBox(
-                        widthFactor: 0.62,
-                        child: button,
-                      ),
-                    )
-                  : button;
-            },
-          ),
+                    : button;
+              },
+            ),
         ],
       ),
     );

@@ -33,6 +33,16 @@
 
 ## 최근 완료
 
+- **기록 화면 '도전 기록'(월간 도전 달력) 제거 (2026-10-03, 미커밋)** — 주 단위 활동·26주 히트맵과 정보가 겹치고, 지난 도전 재도전은 일반 퍼즐과 다르지 않으며 보상이 없어 의미가 약하다고 판단해 삭제. `ChallengeMonthlyCalendarCard`, `ChallengeMonthCalendar`/`ChallengeDayStatus`, `loadMonthCalendar`, `hasCompletedAnyChallenge`, `DatabaseHelper.getDailyChallengeCompletionsForMonth`, 기록 화면의 도전 연속·이력 상태와 "일반 기록 없음(도전만 있음)" 분기, 달력 테스트를 삭제. `RecordsStatisticsScreen`은 도전 관련 주입 파라미터가 없어졌다. 도전 완료 기록(DB)과 홈의 도전 카드·`도전 N일 연속`은 유지. 달력 전용 ARB 키 25개 삭제. 이전 항목의 "도전 달력 상세 카드 재도전 세션 정책(`retrySessionDates`)"은 함께 사라졌다.
+  - **정리 후보(미처리)**: `challengeCountsForStreak` 파라미터(과거 도전용, 이제 항상 true)와 `DailyChallengeCompletionRepository.getCompletionsForMonth`(DB 마이그레이션 테스트만 사용).
+
+- **홈·기록 카드 개편 (2026-10-03, 커밋 `8120900` 이후 추가분)** — 레벨 선택 진행 카드(행동 안내형), 홈 오늘의 도전 카드(시작 전/진행 중/완료/오류)와 병합 카드, 기록 요약 카드(완료한 퍼즐 · 실수 없이 완료 · 플레이 일수 통계 행, 조건부 연속 문구).
+  - **병합 규칙**: 최근 이어하기와 도전이 같은 퍼즐이어도 도전을 **완료했다면 병합하지 않는다**(완료 우선). 이때 이어하기 카드는 재도전 진행을, 도전 카드는 "오늘의 도전 완료!"를 보여준다.
+  - **다시 풀기 정책**: 재도전 세션이 남아 있으면 완료 카드의 `다시 풀기`는 숨긴다(새로 시작하면 저장 세션이 지워지므로). 세션이 없으면 새 게임으로 시작. 기록 화면 도전 달력의 상세 카드도 같은 정책: 완료한 날에 재도전 세션이 있으면(`ChallengeMonthCalendar.retrySessionDates`) 버튼을 숨기고, 이어서 풀기는 홈의 진행 중 게임에서 한다.
+  - 도전 오류 카드 재시도는 조회 중 버튼·카드 탭을 막아 한 번만 실행.
+  - `active_days`(플레이한 날 수)를 활동 요약에 추가. 요약 카드 오버레이는 라이트 모드만 오른쪽 끝(0.60)을 선명하게.
+  - 미사용 ARB 키 8개 삭제(`homeTodayChallengeCardDoneBody` 등). `homeTodayChallenge*Button`·`LoadError`는 기록 화면 달력이 써서 유지. `recordsMetricPerfectRate`는 현재 미사용이지만 이번 변경과 무관한 기존 키라 별도 정리 대상으로 남김.
+
 - **업적 기능 제거 (2026-10-03, 미커밋)** — 해금 요소를 설계하기 어렵고 업적 수도 적어 의도적으로 제외하기로 함(기록 화면 진입점은 이미 없었음). `AchievementService`·`AchievementCollectionScreen`·`achievement_l10n.dart`와 전용 테스트 삭제, `GameCompletionCoordinator`의 업적 계산(`newlyUnlockedBadges`)과 `HomeDashboardData.achievementSummary` 제거, ARB 47개 키×8파일 삭제. 저장 데이터·DB는 변경 없음. 아래 이전 항목의 업적 서술은 당시 기록이다. 나중에 다시 한다면 해금이 필요 없는 "마일스톤" 형태를 검토. `flutter analyze` 0건, 테스트 617 통과 / 기존 records 도전 이력 4건 실패(변경과 무관, 이전부터 실패).
 
 - **초보자 가이드·자동 메모·오늘의 도전 월간 달력 (2026-09-26 구현, 2026-09-27 출시 전 검토 반영, 미커밋)** — 실기기 육안 확인은 아직 없음(위젯 테스트로만 확인, 아래 "미해결" 참고).

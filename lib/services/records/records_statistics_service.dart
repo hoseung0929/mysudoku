@@ -573,6 +573,7 @@ class RecordsStatisticsService {
 
     return {
       'total_clears': totalClears,
+      'active_days': playedDays.length,
       'current_streak_days': currentStreakDays,
       'best_streak_days': bestStreakDays,
     };

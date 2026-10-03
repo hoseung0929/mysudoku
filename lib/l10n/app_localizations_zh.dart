@@ -634,12 +634,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsEmptyAction => '开始解题';
 
   @override
-  String get recordsEmptyGeneralOnlyTitle => '还没有普通谜题记录。';
-
-  @override
-  String get recordsEmptyGeneralOnlySubtitle => '完成一道谜题即可查看按难度划分的统计和活动记录。';
-
-  @override
   String get recordsLevelEmpty => '该难度还没有完成记录。';
 
   @override
@@ -924,20 +918,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get homeTodayChallengeCardDoneBody => '你已完成今天的挑战，继续保持连续记录！';
-
-  @override
-  String get homeTodayChallengeCardPendingBody => '每天一题，轻松保持状态。';
-
-  @override
-  String homeTodayChallengeFooterDoneStreak(int days) {
-    return '今日挑战已完成 · 连续 $days 天';
-  }
-
-  @override
-  String get homeTodayChallengeFooterPending => '用今天的题目开启你的连续记录。';
-
-  @override
   String get homeQuickStartSectionTitle => '快速开始';
 
   @override
@@ -1062,18 +1042,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeTodayPuzzleTitle => '静下心来，专注片刻。';
 
   @override
-  String get homeTodayChallengeStartButton => '开始今日挑战';
-
-  @override
-  String get homeTodayChallengeResumeButton => '继续今日挑战';
-
-  @override
-  String get homeTodayChallengeReviewButton => '再玩今日谜题';
-
-  @override
-  String get homeTodayChallengeLoadError => '无法加载今日谜题。';
-
-  @override
   String get homeChallengeStartButton => '开始挑战';
 
   @override
@@ -1100,9 +1068,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get homeChallengeLoadErrorBody => '请稍后再试。';
-
-  @override
-  String get recordsChallengeTodayDone => '今日挑战已完成';
 
   @override
   String get homeTodayChallengeDateChanged => '日期已变更，已刷新今日挑战。';
@@ -1181,16 +1146,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get levelFilterDone => '已完成';
-
-  @override
-  String levelProgressCardMessage(String levelName) {
-    return '今天就从 $levelName 题目开始吧';
-  }
-
-  @override
-  String levelProgressCompleted(int total) {
-    return '/ $total 已完成';
-  }
 
   @override
   String levelPuzzleListTitle(int count) {
@@ -1361,12 +1316,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String recordsSummaryHeroSemanticLabel(int count) {
-    return '已完成 $count 道谜题';
-  }
-
-  @override
-  String recordsSummaryPerfectChip(int count) {
-    return '无失误 $count 道';
+    return '已完成谜题 $count 道';
   }
 
   @override
@@ -1378,7 +1328,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsSummaryStreakToday => '今天已玩';
 
   @override
-  String get challengeMonthlyDescription => '选择日期即可重新挑战过去的题目。';
+  String recordsSummaryDaysValue(int count) {
+    return '$count 天';
+  }
 
   @override
   String get challengeTodayEyebrow => '今日动态';
@@ -1590,56 +1542,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get gameMemoLongPressHint => '点击切换笔记模式，长按自动填写笔记。';
-
-  @override
-  String get challengeMonthlyTitle => '挑战记录';
-
-  @override
-  String get challengePreviousMonth => '上个月';
-
-  @override
-  String get challengeBackToCurrentMonth => '本月';
-
-  @override
-  String get challengeStatusNotCompleted => '未完成';
-
-  @override
-  String get challengeStatusInProgress => '进行中';
-
-  @override
-  String get challengeStatusCompleted => '已完成';
-
-  @override
-  String get challengeStatusPerfect => '完美通关';
-
-  @override
-  String get challengeStatusFuture => '尚不可用';
-
-  @override
-  String get challengeMonthComplete => '本月全部完成';
-
-  @override
-  String get challengeStartPastChallenge => '开始过去的挑战';
-
-  @override
-  String get challengeResumePastChallenge => '继续过去的挑战';
-
-  @override
-  String get challengeRetryPastChallenge => '重新挑战过去的题目';
-
-  @override
-  String get challengePuzzleLoadFailed => '无法加载这道题。';
-
-  @override
-  String get challengeCalendarLoadError => '无法加载挑战日历。';
-
-  @override
-  String get challengeStreakExcludedNote => '完成过去的挑战不计入连续天数';
-
-  @override
-  String challengeDayCellSemantics(String date, String status) {
-    return '$date，$status';
-  }
 
   @override
   String get homeGreetingMorning => '从一局轻松的谜题开始吧。';

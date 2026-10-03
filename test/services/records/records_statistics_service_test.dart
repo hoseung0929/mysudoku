@@ -346,6 +346,8 @@ void main() {
       expect(summary['current_streak_days'], 2);
       expect(summary['best_streak_days'], 2);
       expect(summary['total_clears'], 2);
+      // 같은 날 여러 번 풀어도 플레이한 날은 하루로 센다.
+      expect(summary['active_days'], 2);
     });
 
     test('counts current streak from yesterday when today has no play', () {

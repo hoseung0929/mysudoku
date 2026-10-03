@@ -352,8 +352,6 @@
   "recordsRetry": "Try again",
   "recordsEmptyTitle": "Your records will build up once you finish your first puzzle.",
   "recordsEmptyAction": "Start a puzzle",
-  "recordsEmptyGeneralOnlyTitle": "You don't have any puzzle records yet.",
-  "recordsEmptyGeneralOnlySubtitle": "Finish a puzzle to see stats by difficulty and your activity history.",
   "recordsLevelEmpty": "No completed puzzles at this level yet.",
   "recordsRowBestTime": "Fastest time",
   "recordsAverageBasisNote": "Averages are based on each puzzle's best record.",
@@ -596,17 +594,6 @@
       }
     }
   },
-  "homeTodayChallengeCardDoneBody": "You finished today's challenge. Keep your streak going!",
-  "homeTodayChallengeCardPendingBody": "One puzzle a day—light practice, steady progress.",
-  "homeTodayChallengeFooterDoneStreak": "Today's challenge done · {days}-day streak",
-  "@homeTodayChallengeFooterDoneStreak": {
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
-  "homeTodayChallengeFooterPending": "Use today's puzzle to build a streak.",
   "homeQuickStartSectionTitle": "Quick start",
   "homeBrowseLevelsTitle": "Browse levels",
   "homeStreakTodayDoneLine": "Today's challenge is done too.",
@@ -689,10 +676,6 @@
   "profileEditorPickFromAlbumDesc": "Set your own photo as profile",
   "homeTodayLabel": "TODAY",
   "homeTodayPuzzleTitle": "A quiet moment to focus.",
-  "homeTodayChallengeStartButton": "Start today's challenge",
-  "homeTodayChallengeResumeButton": "Resume today's challenge",
-  "homeTodayChallengeReviewButton": "Play today's puzzle again",
-  "homeTodayChallengeLoadError": "Couldn't load today's puzzle.",
   "homeChallengeStartButton": "Start challenge",
   "homeChallengeReplayButton": "Play again",
   "homeChallengeNotStarted": "Not started yet",
@@ -715,7 +698,6 @@
   },
   "homeChallengeLoadErrorTitle": "Couldn't load today's challenge",
   "homeChallengeLoadErrorBody": "Please try again in a moment.",
-  "recordsChallengeTodayDone": "Today's challenge done",
   "homeTodayChallengeDateChanged": "A new day started. Today's challenge was refreshed.",
   "homeFirstStartTitle": "Start your first puzzle",
   "homeNewPuzzleTitle": "Start a new puzzle",
@@ -764,22 +746,6 @@
   "levelFilterNew": "New",
   "levelFilterInProgress": "In progress",
   "levelFilterDone": "Done",
-  "levelProgressCardMessage": "Start with {levelName} puzzles today",
-  "@levelProgressCardMessage": {
-    "placeholders": {
-      "levelName": {
-        "type": "String"
-      }
-    }
-  },
-  "levelProgressCompleted": "/ {total} completed",
-  "@levelProgressCompleted": {
-    "placeholders": {
-      "total": {
-        "type": "int"
-      }
-    }
-  },
   "levelPuzzleListTitle": "Puzzles · {count}",
   "@levelPuzzleListTitle": {
     "placeholders": {
@@ -908,16 +874,8 @@
       }
     }
   },
-  "recordsSummaryHeroSemanticLabel": "Solved {count} puzzles",
+  "recordsSummaryHeroSemanticLabel": "Puzzles cleared: {count}",
   "@recordsSummaryHeroSemanticLabel": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordsSummaryPerfectChip": "{count} mistake-free",
-  "@recordsSummaryPerfectChip": {
     "placeholders": {
       "count": {
         "type": "int"
@@ -933,7 +891,14 @@
     }
   },
   "recordsSummaryStreakToday": "Played today",
-  "challengeMonthlyDescription": "Pick a date to replay a past challenge.",
+  "recordsSummaryDaysValue": "{count}",
+  "@recordsSummaryDaysValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "challengeTodayEyebrow": "Today",
   "gamePausedTitle": "Paused",
   "gamePausedBody": "The timer is stopped and the board is hidden.",
@@ -1077,32 +1042,6 @@
   "autoNotesContradictionMessage": "Some cells have no possible number left, so notes were not filled in. Check your entries and try again.",
   "autoNotesTipMessage": "Tip: long-press Notes to fill in all candidate numbers at once.",
   "gameMemoLongPressHint": "Tap to toggle Notes. Long-press to auto-fill candidate notes.",
-  "challengeMonthlyTitle": "Challenge history",
-  "challengePreviousMonth": "Previous month",
-  "challengeBackToCurrentMonth": "This month",
-  "challengeStatusNotCompleted": "Not completed",
-  "challengeStatusInProgress": "In progress",
-  "challengeStatusCompleted": "Completed",
-  "challengeStatusPerfect": "Perfect clear",
-  "challengeStatusFuture": "Not available yet",
-  "challengeMonthComplete": "Monthly complete",
-  "challengeStartPastChallenge": "Start past challenge",
-  "challengeResumePastChallenge": "Resume past challenge",
-  "challengeRetryPastChallenge": "Retry past challenge",
-  "challengePuzzleLoadFailed": "Couldn't load this puzzle.",
-  "challengeCalendarLoadError": "Unable to load the challenge calendar.",
-  "challengeStreakExcludedNote": "Completing a past challenge doesn't count toward your streak",
-  "challengeDayCellSemantics": "{date}, {status}",
-  "@challengeDayCellSemantics": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      },
-      "status": {
-        "type": "String"
-      }
-    }
-  },
   "homeGreetingMorning": "Start with a light puzzle.",
   "homeGreetingAfternoon": "A focused puzzle fits now.",
   "homeGreetingEvening": "Wind down with a calm puzzle.",

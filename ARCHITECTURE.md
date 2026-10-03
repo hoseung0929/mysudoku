@@ -39,7 +39,7 @@ main()
 
 탭 간 이동: [`lib/navigation/root_nav_scope.dart`](lib/navigation/root_nav_scope.dart)
 
-챌린지 UI: [`lib/view/challenge/`](lib/view/challenge/) (월간 도전 달력 카드 등). 업적 기능은 2026-10-03에 제거했습니다.
+오늘의 챌린지 UI는 홈 화면의 도전 카드입니다. 업적 기능과 기록 화면의 도전 달력은 2026-10-03에 제거했습니다.
 
 ## 3. 데이터 저장
 

@@ -325,8 +325,6 @@
   "recordsRetry": "重试",
   "recordsEmptyTitle": "完成第一道谜题后，记录就会积累起来。",
   "recordsEmptyAction": "开始解题",
-  "recordsEmptyGeneralOnlyTitle": "还没有普通谜题记录。",
-  "recordsEmptyGeneralOnlySubtitle": "完成一道谜题即可查看按难度划分的统计和活动记录。",
   "recordsLevelEmpty": "该难度还没有完成记录。",
   "recordsRowBestTime": "最快记录",
   "recordsAverageBasisNote": "平均值以每道谜题的最佳记录为准。",
@@ -521,17 +519,6 @@
       }
     }
   },
-  "homeTodayChallengeCardDoneBody": "你已完成今天的挑战，继续保持连续记录！",
-  "homeTodayChallengeCardPendingBody": "每天一题，轻松保持状态。",
-  "homeTodayChallengeFooterDoneStreak": "今日挑战已完成 · 连续 {days} 天",
-  "@homeTodayChallengeFooterDoneStreak": {
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
-  "homeTodayChallengeFooterPending": "用今天的题目开启你的连续记录。",
   "homeQuickStartSectionTitle": "快速开始",
   "homeBrowseLevelsTitle": "浏览难度",
   "homeStreakTodayDoneLine": "今天的挑战也完成了。",
@@ -614,10 +601,6 @@
   "profileEditorPickFromAlbumDesc": "使用自己的照片作为头像",
   "homeTodayLabel": "今天",
   "homeTodayPuzzleTitle": "静下心来，专注片刻。",
-  "homeTodayChallengeStartButton": "开始今日挑战",
-  "homeTodayChallengeResumeButton": "继续今日挑战",
-  "homeTodayChallengeReviewButton": "再玩今日谜题",
-  "homeTodayChallengeLoadError": "无法加载今日谜题。",
   "homeChallengeStartButton": "开始挑战",
   "homeChallengeReplayButton": "再玩一次",
   "homeChallengeNotStarted": "尚未开始",
@@ -626,7 +609,6 @@
   "homeChallengeStreak": "挑战连续 {days} 天",
   "homeChallengeLoadErrorTitle": "无法加载今日挑战",
   "homeChallengeLoadErrorBody": "请稍后再试。",
-  "recordsChallengeTodayDone": "今日挑战已完成",
   "homeTodayChallengeDateChanged": "日期已变更，已刷新今日挑战。",
   "homeFirstStartTitle": "开始你的第一道谜题",
   "homeNewPuzzleTitle": "开始一道新谜题",
@@ -661,22 +643,6 @@
   "levelFilterNew": "全新",
   "levelFilterInProgress": "进行中",
   "levelFilterDone": "已完成",
-  "levelProgressCardMessage": "今天就从 {levelName} 题目开始吧",
-  "@levelProgressCardMessage": {
-    "placeholders": {
-      "levelName": {
-        "type": "String"
-      }
-    }
-  },
-  "levelProgressCompleted": "/ {total} 已完成",
-  "@levelProgressCompleted": {
-    "placeholders": {
-      "total": {
-        "type": "int"
-      }
-    }
-  },
   "levelPuzzleListTitle": "谜题列表 · {count}",
   "@levelPuzzleListTitle": {
     "placeholders": {
@@ -753,16 +719,8 @@
       }
     }
   },
-  "recordsSummaryHeroSemanticLabel": "已完成 {count} 道谜题",
+  "recordsSummaryHeroSemanticLabel": "已完成谜题 {count} 道",
   "@recordsSummaryHeroSemanticLabel": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordsSummaryPerfectChip": "无失误 {count} 道",
-  "@recordsSummaryPerfectChip": {
     "placeholders": {
       "count": {
         "type": "int"
@@ -778,7 +736,7 @@
     }
   },
   "recordsSummaryStreakToday": "今天已玩",
-  "challengeMonthlyDescription": "选择日期即可重新挑战过去的题目。",
+  "recordsSummaryDaysValue": "{count} 天",
   "challengeTodayEyebrow": "今日动态",
   "gamePausedTitle": "已暂停",
   "gamePausedBody": "计时已停止，棋盘暂时隐藏。",
@@ -851,32 +809,6 @@
   "autoNotesContradictionMessage": "有些格子已经没有任何可能的数字，因此未能填写笔记。请检查你的输入内容后重试。",
   "autoNotesTipMessage": "提示：长按笔记可以一次性填写所有候选数字。",
   "gameMemoLongPressHint": "点击切换笔记模式，长按自动填写笔记。",
-  "challengeMonthlyTitle": "挑战记录",
-  "challengePreviousMonth": "上个月",
-  "challengeBackToCurrentMonth": "本月",
-  "challengeStatusNotCompleted": "未完成",
-  "challengeStatusInProgress": "进行中",
-  "challengeStatusCompleted": "已完成",
-  "challengeStatusPerfect": "完美通关",
-  "challengeStatusFuture": "尚不可用",
-  "challengeMonthComplete": "本月全部完成",
-  "challengeStartPastChallenge": "开始过去的挑战",
-  "challengeResumePastChallenge": "继续过去的挑战",
-  "challengeRetryPastChallenge": "重新挑战过去的题目",
-  "challengePuzzleLoadFailed": "无法加载这道题。",
-  "challengeCalendarLoadError": "无法加载挑战日历。",
-  "challengeStreakExcludedNote": "完成过去的挑战不计入连续天数",
-  "challengeDayCellSemantics": "{date}，{status}",
-  "@challengeDayCellSemantics": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      },
-      "status": {
-        "type": "String"
-      }
-    }
-  },
   "homeGreetingMorning": "从一局轻松的谜题开始吧。",
   "homeGreetingAfternoon": "现在适合专注解一局。",
   "homeGreetingEvening": "静下心来，用一局谜题收尾吧。",

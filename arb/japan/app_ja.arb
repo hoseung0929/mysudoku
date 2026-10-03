@@ -325,8 +325,6 @@
   "recordsRetry": "再試行",
   "recordsEmptyTitle": "最初のパズルを完成させると記録がたまります。",
   "recordsEmptyAction": "パズルを始める",
-  "recordsEmptyGeneralOnlyTitle": "パズルの記録はまだありません。",
-  "recordsEmptyGeneralOnlySubtitle": "パズルを完了すると、難易度別の統計と活動記録を確認できます。",
   "recordsLevelEmpty": "このレベルの完了記録はまだありません。",
   "recordsRowBestTime": "最速記録",
   "recordsAverageBasisNote": "平均はパズルごとのベスト記録が基準です。",
@@ -521,17 +519,6 @@
       }
     }
   },
-  "homeTodayChallengeCardDoneBody": "今日のチャレンジを完了しました。ストリークを続けましょう！",
-  "homeTodayChallengeCardPendingBody": "毎日一問、気軽に実力を確かめましょう。",
-  "homeTodayChallengeFooterDoneStreak": "今日のチャレンジ完了 · {days}日連続記録",
-  "@homeTodayChallengeFooterDoneStreak": {
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
-  "homeTodayChallengeFooterPending": "今日のパズルでストリークを作りましょう。",
   "homeQuickStartSectionTitle": "クイックスタート",
   "homeBrowseLevelsTitle": "難易度を選ぶ",
   "homeStreakTodayDoneLine": "今日のチャレンジも完了しました。",
@@ -614,10 +601,6 @@
   "profileEditorPickFromAlbumDesc": "自分の写真をプロフィールに設定",
   "homeTodayLabel": "今日",
   "homeTodayPuzzleTitle": "静かに集中するひとときです。",
-  "homeTodayChallengeStartButton": "今日のチャレンジを始める",
-  "homeTodayChallengeResumeButton": "今日のチャレンジを続ける",
-  "homeTodayChallengeReviewButton": "今日のパズルをもう一度",
-  "homeTodayChallengeLoadError": "今日のパズルを読み込めませんでした。",
   "homeChallengeStartButton": "チャレンジ開始",
   "homeChallengeReplayButton": "もう一度解く",
   "homeChallengeNotStarted": "まだ始めていません",
@@ -626,7 +609,6 @@
   "homeChallengeStreak": "チャレンジ{days}日連続",
   "homeChallengeLoadErrorTitle": "今日のチャレンジを読み込めませんでした",
   "homeChallengeLoadErrorBody": "しばらくしてからもう一度お試しください。",
-  "recordsChallengeTodayDone": "今日のチャレンジ完了",
   "homeTodayChallengeDateChanged": "日付が変わったため、今日のチャレンジを更新しました。",
   "homeFirstStartTitle": "最初のパズルを始めましょう",
   "homeNewPuzzleTitle": "新しいパズルを始めましょう",
@@ -661,22 +643,6 @@
   "levelFilterNew": "新規",
   "levelFilterInProgress": "進行中",
   "levelFilterDone": "完了",
-  "levelProgressCardMessage": "今日は{levelName}のパズルから始めましょう",
-  "@levelProgressCardMessage": {
-    "placeholders": {
-      "levelName": {
-        "type": "String"
-      }
-    }
-  },
-  "levelProgressCompleted": "/ {total} クリア",
-  "@levelProgressCompleted": {
-    "placeholders": {
-      "total": {
-        "type": "int"
-      }
-    }
-  },
   "levelPuzzleListTitle": "パズル一覧 · {count}",
   "@levelPuzzleListTitle": {
     "placeholders": {
@@ -753,16 +719,8 @@
       }
     }
   },
-  "recordsSummaryHeroSemanticLabel": "パズルを{count}問解きました",
+  "recordsSummaryHeroSemanticLabel": "クリアしたパズル {count}問",
   "@recordsSummaryHeroSemanticLabel": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordsSummaryPerfectChip": "ミスなし{count}問",
-  "@recordsSummaryPerfectChip": {
     "placeholders": {
       "count": {
         "type": "int"
@@ -778,7 +736,7 @@
     }
   },
   "recordsSummaryStreakToday": "今日プレイ",
-  "challengeMonthlyDescription": "日付を選んで過去のチャレンジをもう一度プレイできます。",
+  "recordsSummaryDaysValue": "{count}日",
   "challengeTodayEyebrow": "今日の流れ",
   "gamePausedTitle": "一時停止中",
   "gamePausedBody": "タイマーを止めて、盤面を隠しています。",
@@ -851,32 +809,6 @@
   "autoNotesContradictionMessage": "候補が一つも残らないマスがあるため、メモを入力できませんでした。入力内容を確認してもう一度試してください。",
   "autoNotesTipMessage": "ヒント: メモを長押しすると候補数字を一括で入力できます。",
   "gameMemoLongPressHint": "タップでメモモード切り替え、長押しで自動メモ。",
-  "challengeMonthlyTitle": "チャレンジ履歴",
-  "challengePreviousMonth": "前の月",
-  "challengeBackToCurrentMonth": "今月",
-  "challengeStatusNotCompleted": "未完了",
-  "challengeStatusInProgress": "進行中",
-  "challengeStatusCompleted": "完了",
-  "challengeStatusPerfect": "パーフェクトクリア",
-  "challengeStatusFuture": "まだ利用できません",
-  "challengeMonthComplete": "月間完了",
-  "challengeStartPastChallenge": "過去のチャレンジを始める",
-  "challengeResumePastChallenge": "過去のチャレンジを再開",
-  "challengeRetryPastChallenge": "過去のチャレンジをもう一度解く",
-  "challengePuzzleLoadFailed": "この問題を読み込めませんでした。",
-  "challengeCalendarLoadError": "チャレンジカレンダーを読み込めません。",
-  "challengeStreakExcludedNote": "過去のチャレンジ完了は連続記録に含まれません",
-  "challengeDayCellSemantics": "{date}、{status}",
-  "@challengeDayCellSemantics": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      },
-      "status": {
-        "type": "String"
-      }
-    }
-  },
   "homeGreetingMorning": "さあ、一局始めましょう。",
   "homeGreetingAfternoon": "集中して一局、いかがですか。",
   "homeGreetingEvening": "静かにパズルで締めくくりましょう。",

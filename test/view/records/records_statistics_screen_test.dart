@@ -4,21 +4,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:sudoku159/database/database_helper.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
-import 'package:sudoku159/model/sudoku_game.dart';
-import 'package:sudoku159/model/sudoku_level.dart';
-import 'package:sudoku159/model/today_challenge_target.dart';
 import 'package:sudoku159/navigation/root_nav_scope.dart';
 import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
-import 'package:sudoku159/services/home/home_dashboard_service.dart';
 import 'package:sudoku159/services/records/records_statistics_service.dart';
 import 'package:sudoku159/theme/app_theme.dart';
 import 'package:sudoku159/theme/level_status_colors.dart';
 import 'package:sudoku159/utils/app_logger.dart';
-import 'package:sudoku159/view/challenge/challenge_monthly_calendar_card.dart';
 import 'package:sudoku159/view/records/records_statistics_screen.dart';
-import 'package:sudoku159/view/sudoku_game/sudoku_game_screen.dart';
 import 'package:sudoku159/widgets/mascot_image.dart';
 import 'package:sudoku159/widgets/sudoku_motif.dart';
 
@@ -31,197 +24,21 @@ class _FakeStats extends RecordsStatisticsService {
       produce();
 }
 
-/// 도전 달력 카드가 실제 DB를 건드리지 않게 하는 가짜. 필요한 항목만
-/// 오버라이드하고, 오류 상황은 각 플래그로 만든다.
-class _FakeChallengeProgressService extends ChallengeProgressService {
-  _FakeChallengeProgressService({
-    this.streakDays = 0,
-    this.throwOnLoad = false,
-    this.throwOnMonthCalendar = false,
-    this.hasAnyCompletion = false,
-    this.todayCleared = false,
-    String? targetLevel,
-    int? targetGameNumber,
-  })  : targetLevel = targetLevel ?? SudokuLevel.levels.first.name,
-        targetGameNumber = targetGameNumber ?? 7;
-
-  final int streakDays;
-  final bool throwOnLoad;
-  final bool throwOnMonthCalendar;
-  final bool hasAnyCompletion;
-  final bool todayCleared;
-  final String targetLevel;
-  final int targetGameNumber;
-
-  @override
-  Future<bool> hasCompletedAnyChallenge() async => hasAnyCompletion;
-
-  @override
-  Future<ChallengeProgressSummary> load({
-    List<Map<String, dynamic>>? recentRecords,
-    List<Map<String, dynamic>>? recentClearEvents,
-  }) async {
-    if (throwOnLoad) throw Exception('challenge streak load failed');
-    return ChallengeProgressSummary(
-      streakDays: streakDays,
-      isTodayChallengeCleared: todayCleared,
-      todayChallengeLevelName: targetLevel,
-      todayChallengeGameNumber: targetGameNumber,
-      challengeDate: ChallengeProgressService.formatLocalDate(DateTime.now()),
-      lastClearDate: null,
-      weeklyClearCount: 0,
-      weeklyGoalTarget: 3,
-      perfectClearCount: 0,
-    );
-  }
-
-  @override
-  Future<ChallengeMonthCalendar> loadMonthCalendar({
-    required int year,
-    required int month,
-  }) async {
-    if (throwOnMonthCalendar) throw Exception('calendar load failed');
-    final now = DateTime.now();
-    final daysInMonth = DateTime(year, month + 1, 0).day;
-    return ChallengeMonthCalendar(
-      year: year,
-      month: month,
-      statusByDate: {
-        for (var d = 1; d <= daysInMonth; d++)
-          '$year-${month.toString().padLeft(2, '0')}-${d.toString().padLeft(2, '0')}':
-              DateTime(year, month, d).isAfter(
-            DateTime(now.year, now.month, now.day),
-          )
-                  ? ChallengeDayStatus.future
-                  : ChallengeDayStatus.notCompleted,
-      },
-      isMonthFullyCompleted: false,
-    );
-  }
-
-  @override
-  Future<TodayChallengeTarget> getChallengeTargetForCalendarDay(
-    DateTime calendarDay,
-  ) async {
-    return TodayChallengeTarget(
-      levelName: targetLevel,
-      gameNumber: targetGameNumber,
-      date: ChallengeProgressService.formatLocalDate(calendarDay),
-    );
-  }
-}
-
-class _FakeHomeDashboard extends HomeDashboardService {
-  _FakeHomeDashboard(this.loadData);
-  final Future<HomeDashboardData> Function() loadData;
-  int loadCount = 0;
-
-  @override
-  Future<HomeDashboardData> load(
-    AppLocalizations l10n, {
-    int continueGamesLimit = 3,
-  }) {
-    loadCount++;
-    return loadData();
-  }
-}
-
-class _FakeDatabaseHelper implements DatabaseHelper {
-  _FakeDatabaseHelper({this.failGameEntry = false});
-  final bool failGameEntry;
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) =>
-      throw UnimplementedError(invocation.memberName.toString());
-
-  @override
-  Future<Map<String, dynamic>?> getGameEntry(
-    String levelName,
-    int gameNumber,
-  ) async {
-    if (failGameEntry) return null;
-    return {
-      'game_number': gameNumber,
-      'board': _puzzle(),
-      'solution': _solution(),
-    };
-  }
-}
-
-List<List<int>> _solution() => List.generate(
-      9,
-      (r) => List.generate(9, (c) => (r * 3 + r ~/ 3 + c) % 9 + 1),
-    );
-
-List<List<int>> _puzzle() {
-  final b = _solution();
-  for (var i = 0; i < 30; i++) {
-    b[i ~/ 9][i % 9] = 0;
-  }
-  return b;
-}
-
-HomeDashboardData _dashboardData({
-  SudokuGame? todayChallenge,
-  bool noChallenge = false,
-  bool hasTodaySession = false,
-  String? challengeDate,
-}) {
-  final level = SudokuLevel.levels.first;
-  final defaultGame = SudokuGame(
-    board: _puzzle(),
-    solution: _solution(),
-    emptyCells: level.emptyCells,
-    levelName: level.name,
-    gameNumber: 7,
-  );
-  final game = noChallenge ? null : (todayChallenge ?? defaultGame);
-  final targetForSummary = game ?? defaultGame;
-  return HomeDashboardData(
-    continueGame: null,
-    continueGames: const [],
-    totalContinueCount: 0,
-    todayChallenge: game,
-    todayChallengeContinueGame: hasTodaySession
-        ? ContinueGameSummary(
-            level: level,
-            game: targetForSummary,
-            progress: 0.36,
-            elapsedFilledCells: 10,
-            lastPlayedAtMillis: DateTime.now().millisecondsSinceEpoch,
-            elapsedSeconds: 60,
-            wrongCount: 0,
-            isMemoMode: false,
-            noteCount: 0,
-          )
-        : null,
-    challengeProgress: ChallengeProgressSummary(
-      streakDays: 0,
-      isTodayChallengeCleared: false,
-      todayChallengeLevelName: targetForSummary.levelName,
-      todayChallengeGameNumber: targetForSummary.gameNumber,
-      challengeDate: challengeDate ??
-          ChallengeProgressService.formatLocalDate(
-            DateTime.now(),
-          ),
-      lastClearDate: null,
-      weeklyClearCount: 0,
-      weeklyGoalTarget: 3,
-      perfectClearCount: 0,
-    ),
-    averageClearTimeSeconds: 0,
-  );
-}
-
 String _date(DateTime d) => ChallengeProgressService.formatLocalDate(d);
 
 RecordsStatisticsData _data({
   List<Map<String, dynamic>> recent = const [],
   List<Map<String, dynamic>> events = const [],
   int currentStreak = 2,
+  int perfectClears = 0,
+  int activeDays = 12,
 }) {
   return RecordsStatisticsData(
-    overall: {'total_cleared': recent.length, 'total_games': 636},
+    overall: {
+      'total_cleared': recent.length,
+      'total_games': 636,
+      'perfect_clears': perfectClears,
+    },
     levels: [
       for (final n in ['초급', '중급', '고급', '전문가', '마스터'])
         {'level_name': n, 'total_count': 159},
@@ -229,6 +46,7 @@ RecordsStatisticsData _data({
     recent: recent,
     activitySummary: {
       'total_clears': 3,
+      'active_days': activeDays,
       'current_streak_days': currentStreak,
       'best_streak_days': 5,
     },
@@ -283,9 +101,6 @@ void main() {
     Locale? locale,
     ValueChanged<int>? onTab,
     bool reduceMotion = false,
-    ChallengeProgressService? challengeProgressService,
-    HomeDashboardService? homeDashboardService,
-    DatabaseHelper? databaseHelper,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
@@ -310,11 +125,6 @@ void main() {
             body: RecordsStatisticsScreen(
               key: UniqueKey(),
               statisticsService: _FakeStats(produce),
-              challengeProgressService:
-                  challengeProgressService ?? _FakeChallengeProgressService(),
-              homeDashboardService: homeDashboardService ??
-                  _FakeHomeDashboard(() async => _dashboardData()),
-              databaseHelper: databaseHelper ?? _FakeDatabaseHelper(),
             ),
           ),
         ),
@@ -348,7 +158,6 @@ void main() {
     expect(find.text('Records by level'), findsNothing);
     expect(find.text('Last 26 weeks of activity'), findsNothing);
     // 일반 기록도, 도전 기록도 전혀 없으면 도전 달력도 함께 숨긴다.
-    expect(find.text('Challenge history'), findsNothing);
 
     await tester.tap(find.text('Start a puzzle'));
     expect(tab, 0); // 홈 탭(실제 시작 경로)
@@ -366,7 +175,6 @@ void main() {
     expect(heroY, lessThan(y("This week's activity")));
     expect(y("This week's activity"), lessThan(y('Records by level')));
     expect(y('Records by level'), lessThan(y('Last 26 weeks of activity')));
-    expect(y('Last 26 weeks of activity'), lessThan(y('Challenge history')));
 
     // 이번 주 요약: 오늘 이벤트 2건 → 활동 1일 · 완료 2판(반복 포함 횟수)
     expect(find.text('Active days: 1'), findsOneWidget);
@@ -392,14 +200,15 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Puzzles cleared'), findsOneWidget);
-    expect(find.text('0 mistake-free'), findsOneWidget);
+    // 통계 행은 0개여도 숨기지 않는다.
+    expect(find.text('Mistake-free clears'), findsOneWidget);
+    expect(find.text('Days played'), findsOneWidget);
     expect(find.text('2-day play streak'), findsOneWidget);
     // 활동 달력 기간은 제목("Last 26 weeks of activity")에 있고 별도 줄은 없다.
     expect(find.text('Last 26 weeks'), findsNothing);
     // 현재 연속은 요약 카드에만, 활동 달력 하단은 최고 연속만 보여준다(중복 제거).
     expect(find.textContaining('Longest streak'), findsOneWidget);
     expect(find.byKey(const Key('records_week_artwork')), findsOneWidget);
-    expect(find.byKey(const Key('records_challenge_artwork')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -534,8 +343,8 @@ void main() {
   });
 
   testWidgets(
-      'selected vs unselected difficulty chips use the level-status palette '
-      'in both light and dark mode', (tester) async {
+      'level filter uses the level-status palette (selected purple + bold, '
+      'unselected gray, white highlight) in light and dark', (tester) async {
     for (final dark in [false, true]) {
       await pumpRecords(
         tester,
@@ -543,19 +352,25 @@ void main() {
         theme: dark ? AppTheme.darkTheme() : AppTheme.lightTheme(),
       );
       final palette = dark ? LevelStatusPalette.dark : LevelStatusPalette.light;
-      final cs = Theme.of(tester.element(find.byType(RecordsStatisticsScreen)))
-          .colorScheme;
+      final filter = find.byKey(const Key('records_level_filter'));
+      TextStyle styleOf(String label) => tester
+          .widget<AnimatedDefaultTextStyle>(find
+              .ancestor(
+                of: find.descendant(of: filter, matching: find.text(label)),
+                matching: find.byType(AnimatedDefaultTextStyle),
+              )
+              .first)
+          .style;
 
-      final selected = tester
-          .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Beginner'));
-      expect(selected.selectedColor, palette.completedBackground);
-      expect(selected.checkmarkColor, palette.primaryPurple);
-      expect(selected.side, BorderSide(color: palette.completedBorder));
-
-      final unselected = tester
-          .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Intermediate'));
-      expect(unselected.side, BorderSide(color: cs.outlineVariant));
-      expect(unselected.backgroundColor, cs.surface);
+      expect(styleOf('Beginner').color, palette.primaryPurple);
+      expect(styleOf('Beginner').fontWeight, FontWeight.w700);
+      expect(styleOf('Intermediate').color, palette.filterUnselectedText);
+      expect(styleOf('Intermediate').fontWeight, FontWeight.w500);
+      final container = tester.widget<Container>(filter);
+      expect(
+        (container.decoration as BoxDecoration).color,
+        palette.filterSelectedBackground,
+      );
     }
   });
 
@@ -651,22 +466,115 @@ void main() {
     expect(find.text('So far'), findsOneWidget);
   });
 
-  testWidgets('challenge title is not repeated and its streak stays in card',
-      (tester) async {
-    await pumpRecords(
-      tester,
-      () async => _data(recent: recent, events: events),
-      challengeProgressService: _FakeChallengeProgressService(streakDays: 4),
-    );
+  group('summary stat rows', () {
+    Finder inSummary(Finder f) => find.descendant(
+        of: find.byKey(const Key('records_summary_card')), matching: f);
 
-    expect(find.text('Challenge history'), findsOneWidget);
-    expect(
-      find.descendant(
-        of: find.byType(ChallengeMonthlyCalendarCard),
-        matching: find.text('4-day challenge streak'),
-      ),
-      findsOneWidget,
-    );
+    testWidgets('always shows both rows with numbers, even 0 mistake-free',
+        (tester) async {
+      await pumpRecords(
+        tester,
+        () async => _data(
+          recent: recent,
+          events: events,
+          perfectClears: 0,
+          activeDays: 12,
+        ),
+      );
+      expect(inSummary(find.text('Mistake-free clears')), findsOneWidget);
+      expect(inSummary(find.text('0')), findsOneWidget);
+      expect(inSummary(find.text('Days played')), findsOneWidget);
+      expect(inSummary(find.text('12')), findsOneWidget);
+    });
+
+    testWidgets('all mistake-free keeps the number, not a sentence',
+        (tester) async {
+      await pumpRecords(
+        tester,
+        () async => _data(
+          recent: recent,
+          events: events,
+          perfectClears: recent.length,
+        ),
+      );
+      expect(inSummary(find.text('${recent.length}')), findsWidgets);
+      expect(find.text('All mistake-free'), findsNothing);
+    });
+
+    testWidgets(
+        'compact layout: hero label and number share a row, each stat '
+        'pair stays together, support block spans the card', (tester) async {
+      await pumpRecords(
+        tester,
+        () async => _data(
+          recent: recent,
+          events: events,
+          perfectClears: 1,
+          currentStreak: 0,
+        ),
+      );
+      final card = find.byKey(const Key('records_summary_card'));
+      // 대표 라벨과 대표 숫자가 같은 행.
+      final heroLabelY = tester
+          .getCenter(
+              find.descendant(of: card, matching: find.text('Puzzles cleared')))
+          .dy;
+      final heroValueY = tester
+          .getCenter(find
+              .descendant(of: card, matching: find.text('${recent.length}'))
+              .first)
+          .dy;
+      expect((heroLabelY - heroValueY).abs(), lessThan(24));
+      // 보조 지표: 라벨과 값이 한 묶음(같은 행)으로 붙어 있다.
+      final pairLabelY = tester
+          .getCenter(find.descendant(
+              of: card, matching: find.text('Mistake-free clears')))
+          .dy;
+      final pairValueY = tester
+          .getCenter(find.descendant(of: card, matching: find.text('1')).last)
+          .dy;
+      expect((pairLabelY - pairValueY).abs(), lessThan(8));
+      // 연속이 없으면 연속 줄이 없다.
+      expect(find.textContaining('play streak'), findsNothing);
+      expect(find.text('Played today'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    for (final lang in ['en', 'ko', 'ja', 'es', 'zh']) {
+      for (final size in [const Size(390, 844), const Size(320, 568)]) {
+        for (final scale in [1.0, 1.3]) {
+          testWidgets(
+              'summary card has no overflow: $lang ${size.width.toInt()}w '
+              '${scale}x with streak', (tester) async {
+            await pumpRecords(
+              tester,
+              () async => _data(
+                recent: recent,
+                events: events,
+                perfectClears: 2,
+                activeDays: 123,
+                currentStreak: 12,
+              ),
+              size: size,
+              textScale: scale,
+              locale: Locale(lang),
+            );
+            expect(tester.takeException(), isNull);
+            expect(
+                find.byKey(const Key('records_summary_card')), findsOneWidget);
+          });
+        }
+      }
+    }
+
+    testWidgets('1 active day shows just the number in English',
+        (tester) async {
+      await pumpRecords(
+        tester,
+        () async => _data(recent: recent, events: events, activeDays: 1),
+      );
+      expect(inSummary(find.text('1')), findsOneWidget);
+    });
   });
 
   group('streak wording', () {
@@ -713,34 +621,6 @@ void main() {
       );
       expect(find.text('Played today'), findsNothing);
       expect(find.textContaining('play streak'), findsNothing);
-    });
-
-    testWidgets('challenge streak: 0 hidden, 1 only when done today, 2+ shown',
-        (tester) async {
-      Future<void> pumpWith(int days, {bool cleared = false}) async {
-        await pumpRecords(
-          tester,
-          () async => _data(recent: recent, events: events),
-          challengeProgressService: _FakeChallengeProgressService(
-            streakDays: days,
-            todayCleared: cleared,
-          ),
-        );
-      }
-
-      await pumpWith(0);
-      expect(find.textContaining('challenge streak'), findsNothing);
-      expect(find.text("Today's challenge done"), findsNothing);
-
-      await pumpWith(1);
-      expect(find.textContaining('challenge streak'), findsNothing);
-      expect(find.text("Today's challenge done"), findsNothing);
-
-      await pumpWith(1, cleared: true);
-      expect(find.text("Today's challenge done"), findsOneWidget);
-
-      await pumpWith(2);
-      expect(find.text('2-day challenge streak'), findsOneWidget);
     });
   });
 
@@ -868,7 +748,10 @@ void main() {
       handle.dispose();
     });
 
-    Finder chip(String label) => find.widgetWithText(ChoiceChip, label);
+    Finder chip(String label) => find.descendant(
+          of: find.byKey(const Key('records_level_filter')),
+          matching: find.text(label),
+        );
 
     testWidgets(
         'switching between two levels with different records shows '
@@ -915,6 +798,169 @@ void main() {
       expect(find.text('1 / 159'), findsNothing);
     });
 
+    group('segmented level filter', () {
+      Finder highlight() =>
+          find.byKey(const Key('records_level_filter_highlight'));
+      double highlightLeft(WidgetTester tester) =>
+          tester.getTopLeft(highlight()).dx;
+
+      testWidgets('the highlight moves to the tapped difficulty',
+          (tester) async {
+        await pumpRecords(
+          tester,
+          () async => _data(recent: twoLevelRecent, events: events),
+          locale: const Locale('ko'),
+        );
+        final before = highlightLeft(tester);
+        await tester.ensureVisible(find.text('중급'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('중급'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(highlightLeft(tester), greaterThan(before));
+      });
+
+      testWidgets('reduce motion: highlight and label change are instant',
+          (tester) async {
+        await pumpRecords(
+          tester,
+          () async => _data(recent: twoLevelRecent, events: events),
+          reduceMotion: true,
+        );
+        expect(
+          tester.widget<AnimatedPositioned>(highlight()).duration,
+          Duration.zero,
+        );
+      });
+
+      testWidgets('with motion, the highlight takes 220ms', (tester) async {
+        await pumpRecords(
+          tester,
+          () async => _data(recent: twoLevelRecent, events: events),
+        );
+        expect(
+          tester.widget<AnimatedPositioned>(highlight()).duration,
+          const Duration(milliseconds: 220),
+        );
+      });
+
+      testWidgets('selecting does not change any item width or position',
+          (tester) async {
+        await pumpRecords(
+          tester,
+          () async => _data(recent: twoLevelRecent, events: events),
+        );
+        final filter = find.byKey(const Key('records_level_filter'));
+        await tester.ensureVisible(filter);
+        await tester.pumpAndSettle();
+        // 필터 좌상단 기준 상대 위치(페이지 스크롤과 무관).
+        Offset rel(String label) =>
+            tester.getCenter(chip(label)) - tester.getTopLeft(filter);
+        final advancedBefore = rel('Advanced');
+        final expertBefore = rel('Expert');
+        await tester.tap(chip('Intermediate'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(rel('Advanced'), advancedBefore);
+        expect(rel('Expert'), expertBefore);
+      });
+
+      testWidgets('re-selecting the same difficulty does nothing',
+          (tester) async {
+        await pumpRecords(
+          tester,
+          () async => _data(recent: twoLevelRecent, events: events),
+        );
+        await tester.ensureVisible(chip('Beginner'));
+        await tester.pumpAndSettle();
+        final before = highlightLeft(tester);
+        await tester.tap(chip('Beginner'));
+        await tester.pump();
+        expect(highlightLeft(tester), before);
+        expect(find.text('2 / 159'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      });
+
+      for (final lang in ['en', 'ja', 'ko', 'es', 'zh']) {
+        for (final size in [const Size(390, 844), const Size(320, 568)]) {
+          testWidgets(
+              'no overflow, highlight still moves: $lang ${size.width.toInt()}w '
+              '2x text', (tester) async {
+            await pumpRecords(
+              tester,
+              () async => _data(recent: twoLevelRecent, events: events),
+              size: size,
+              textScale: 2.0,
+              locale: Locale(lang),
+            );
+            expect(tester.takeException(), isNull);
+            final filter = find.byKey(const Key('records_level_filter'));
+            // 라벨이 긴 언어(en/ja/es)는 큰 글씨에서 가로 스크롤 모드가 된다.
+            // 짧은 라벨(ko/zh)은 390폭에서는 2배에서도 들어가 스크롤이 없을 수 있다.
+            final scrollable = find.descendant(
+              of: filter,
+              matching: find.byWidgetPredicate(
+                (w) => w is Scrollable && w.axis == Axis.horizontal,
+              ),
+            );
+            if (['en', 'ja', 'es'].contains(lang)) {
+              expect(scrollable, findsOneWidget);
+            }
+            expect(highlight(), findsOneWidget);
+          });
+        }
+      }
+
+      testWidgets(
+          'scroll mode reveals an off-screen selection horizontally only; '
+          'the page does not scroll vertically', (tester) async {
+        final expertClear = _clear('전문가', 1, 600, 0, today);
+        await pumpRecords(
+          tester,
+          () async => _data(recent: [expertClear], events: [expertClear]),
+          textScale: 2.0,
+          locale: const Locale('en'),
+        );
+        await tester.pumpAndSettle();
+        final filter = find.byKey(const Key('records_level_filter'));
+        final horizontal = find.descendant(
+          of: filter,
+          matching: find.byWidgetPredicate(
+            (w) => w is Scrollable && w.axis == Axis.horizontal,
+          ),
+        );
+        final hPosition = tester.state<ScrollableState>(horizontal).position;
+        // 선택(전문가)이 가장 오른쪽이라 가로로 이동해 있다.
+        expect(hPosition.pixels, greaterThan(0));
+        // 페이지 세로 스크롤은 움직이지 않았다.
+        final vertical = find.byWidgetPredicate(
+          (w) => w is Scrollable && w.axis == Axis.vertical,
+        );
+        final vPosition =
+            tester.state<ScrollableState>(vertical.first).position;
+        expect(vPosition.pixels, 0);
+        expect(tester.takeException(), isNull);
+      });
+
+      testWidgets('an already visible selection does not scroll',
+          (tester) async {
+        await pumpRecords(
+          tester,
+          () async => _data(recent: twoLevelRecent, events: events),
+          textScale: 2.0,
+          locale: const Locale('en'),
+        );
+        await tester.pumpAndSettle();
+        final horizontal = find.descendant(
+          of: find.byKey(const Key('records_level_filter')),
+          matching: find.byWidgetPredicate(
+            (w) => w is Scrollable && w.axis == Axis.horizontal,
+          ),
+        );
+        expect(tester.state<ScrollableState>(horizontal).position.pixels, 0);
+      });
+    });
+
     testWidgets('the selected difficulty chip reports itself as selected',
         (tester) async {
       await pumpRecords(
@@ -928,9 +974,16 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
 
+      final node = find.descendant(
+        of: find.byKey(const Key('records_level_filter')),
+        matching: find.byWidgetPredicate(
+          (w) => w is Semantics && w.properties.label == 'Intermediate',
+        ),
+      );
+      expect(tester.getSemantics(node), isSemantics(isSelected: true));
       expect(
-        tester.getSemantics(chip('Intermediate')),
-        isSemantics(isSelected: true),
+        tester.getSemantics(node),
+        isSemantics(isButton: true, label: 'Intermediate'),
       );
       handle.dispose();
     });
@@ -986,286 +1039,6 @@ void main() {
         calendarLeftBefore,
       );
       expect(tester.takeException(), isNull);
-    });
-  });
-
-  group('challenge history (merged from the removed ChallengeScreen)', () {
-    Future<void> tapVisible(WidgetTester tester, Finder finder) async {
-      await tester.ensureVisible(finder);
-      await tester.pumpAndSettle();
-      await tester.tap(finder);
-    }
-
-    /// 도전 달력에서 [date]를 고른다. 이번 달에 어제가 없는 달 1일에는 이전 달로
-    /// 먼저 이동한다(테스트 날짜가 달 초에 따라 흔들리지 않게).
-    Future<void> selectPastDay(WidgetTester tester, DateTime date) async {
-      if (date.month != DateTime.now().month) {
-        await tapVisible(tester, find.byTooltip('Previous month'));
-        await tester.pumpAndSettle();
-      }
-      await tapVisible(
-        tester,
-        find
-            .descendant(
-              of: find.byKey(const Key('records_challenge_calendar')),
-              matching: find.text('${date.day}'),
-            )
-            .first,
-      );
-    }
-
-    testWidgets(
-        'the challenge calendar stays hidden with no puzzle records and no '
-        'challenge history', (tester) async {
-      await pumpRecords(tester, () async => _data());
-      expect(find.text('Challenge history'), findsNothing);
-    });
-
-    testWidgets(
-        'the challenge calendar shows with no puzzle records but past '
-        'challenge completions', (tester) async {
-      await pumpRecords(
-        tester,
-        () async => _data(),
-        challengeProgressService: _FakeChallengeProgressService(
-          hasAnyCompletion: true,
-        ),
-      );
-      expect(find.text('Challenge history'), findsOneWidget);
-    });
-
-    testWidgets(
-        'with challenge history but no puzzle records, the empty message is '
-        'distinct from the "nothing at all" message and the calendar still '
-        'shows', (tester) async {
-      await pumpRecords(
-        tester,
-        () async => _data(),
-        challengeProgressService: _FakeChallengeProgressService(
-          hasAnyCompletion: true,
-        ),
-      );
-      expect(
-        find.text("You don't have any puzzle records yet."),
-        findsOneWidget,
-      );
-      expect(
-        find.text(
-          'Finish a puzzle to see stats by difficulty and your activity '
-          'history.',
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.text(
-            'Your records will build up once you finish your first puzzle.'),
-        findsNothing,
-      );
-      expect(find.text('Start a puzzle'), findsOneWidget);
-      expect(find.text('Challenge history'), findsOneWidget);
-    });
-
-    testWidgets(
-        'a statistics load failure does not hide the challenge calendar',
-        (tester) async {
-      await pumpRecords(tester, () async => throw StateError('db down'));
-      expect(
-        find.text(
-            'Unable to load statistics right now. Please try again shortly.'),
-        findsOneWidget,
-      );
-      expect(find.text('Challenge history'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
-
-    testWidgets(
-        'a challenge-calendar load failure does not hide the regular '
-        'statistics', (tester) async {
-      await pumpRecords(
-        tester,
-        () async => _data(recent: recent, events: events),
-        challengeProgressService: _FakeChallengeProgressService(
-          throwOnMonthCalendar: true,
-        ),
-      );
-      expect(find.text('So far'), findsOneWidget);
-      expect(find.text('Records by level'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
-
-    testWidgets(
-        'shows the challenge streak, labeled separately from puzzle '
-        'streaks', (tester) async {
-      await pumpRecords(
-        tester,
-        () async => _data(recent: recent, events: events),
-        challengeProgressService: _FakeChallengeProgressService(
-          streakDays: 4,
-        ),
-      );
-      expect(find.text('4-day challenge streak'), findsOneWidget);
-    });
-
-    testWidgets(
-        'a challenge streak load failure is ignored quietly (shows 0, no '
-        'crash, other stats unaffected)', (tester) async {
-      await pumpRecords(
-        tester,
-        () async => _data(recent: recent, events: events),
-        challengeProgressService: _FakeChallengeProgressService(
-          throwOnLoad: true,
-        ),
-      );
-      expect(find.textContaining('challenge streak'), findsNothing);
-      expect(find.text('So far'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
-
-    testWidgets('selecting today opens the today challenge', (tester) async {
-      final level = SudokuLevel.levels.first;
-      final game = SudokuGame(
-        board: _puzzle(),
-        solution: _solution(),
-        emptyCells: level.emptyCells,
-        levelName: level.name,
-        gameNumber: 42,
-      );
-      await pumpRecords(
-        tester,
-        () async => _data(recent: recent, events: events),
-        homeDashboardService: _FakeHomeDashboard(
-          () async => _dashboardData(todayChallenge: game),
-        ),
-      );
-      await tapVisible(
-          tester,
-          find
-              .descendant(
-                  of: find.byKey(const Key('records_challenge_calendar')),
-                  matching: find.text('${today.day}'))
-              .first);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 200));
-      await tapVisible(
-        tester,
-        find.widgetWithText(FilledButton, "Start today's challenge"),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 600));
-
-      final screen =
-          tester.widget<SudokuGameScreen>(find.byType(SudokuGameScreen));
-      expect(screen.game.gameNumber, 42);
-      expect(
-        screen.challengeDate,
-        ChallengeProgressService.formatLocalDate(today),
-      );
-    });
-
-    testWidgets(
-        'returning from a challenge puzzle refreshes stats and the '
-        'challenge streak', (tester) async {
-      var statsLoadCount = 0;
-      final level = SudokuLevel.levels.first;
-      final game = SudokuGame(
-        board: _puzzle(),
-        solution: _solution(),
-        emptyCells: level.emptyCells,
-        levelName: level.name,
-        gameNumber: 42,
-      );
-      await pumpRecords(
-        tester,
-        () async {
-          statsLoadCount++;
-          return _data(recent: recent, events: events);
-        },
-        homeDashboardService: _FakeHomeDashboard(
-          () async => _dashboardData(todayChallenge: game),
-        ),
-        challengeProgressService: _FakeChallengeProgressService(
-          streakDays: 1,
-        ),
-      );
-      final loadsBefore = statsLoadCount;
-
-      await tapVisible(
-          tester,
-          find
-              .descendant(
-                  of: find.byKey(const Key('records_challenge_calendar')),
-                  matching: find.text('${today.day}'))
-              .first);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 200));
-      await tapVisible(
-        tester,
-        find.widgetWithText(FilledButton, "Start today's challenge"),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 600));
-      expect(find.byType(SudokuGameScreen), findsOneWidget);
-
-      await tester.tap(find.byIcon(Icons.arrow_back));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-
-      expect(statsLoadCount, greaterThan(loadsBefore));
-    });
-
-    testWidgets(
-        'selecting a past date opens its exact target with '
-        'challengeCountsForStreak false', (tester) async {
-      final pastDate = today.subtract(const Duration(days: 1));
-      final pastDateStr = ChallengeProgressService.formatLocalDate(pastDate);
-      final level = SudokuLevel.levels.first;
-      await pumpRecords(
-        tester,
-        () async => _data(recent: recent, events: events),
-        challengeProgressService: _FakeChallengeProgressService(
-          targetLevel: level.name,
-          targetGameNumber: 9,
-        ),
-      );
-      await selectPastDay(tester, pastDate);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 200));
-      await tapVisible(
-        tester,
-        find.widgetWithText(FilledButton, 'Start past challenge'),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 600));
-
-      final screen =
-          tester.widget<SudokuGameScreen>(find.byType(SudokuGameScreen));
-      expect(screen.game.gameNumber, 9);
-      expect(screen.level.name, level.name);
-      expect(screen.challengeDate, pastDateStr);
-      expect(screen.restoreSavedSession, isTrue);
-      expect(screen.challengeCountsForStreak, isFalse);
-    });
-
-    testWidgets('a past puzzle load failure shows an error, opens nothing',
-        (tester) async {
-      final pastDate = today.subtract(const Duration(days: 1));
-      await pumpRecords(
-        tester,
-        () async => _data(recent: recent, events: events),
-        databaseHelper: _FakeDatabaseHelper(failGameEntry: true),
-      );
-      await selectPastDay(tester, pastDate);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 200));
-      await tapVisible(
-        tester,
-        find.widgetWithText(FilledButton, 'Start past challenge'),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-
-      expect(find.byType(SudokuGameScreen), findsNothing);
-      expect(find.text("Couldn't load this puzzle."), findsOneWidget);
     });
   });
 }

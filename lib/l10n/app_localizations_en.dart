@@ -680,14 +680,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsEmptyAction => 'Start a puzzle';
 
   @override
-  String get recordsEmptyGeneralOnlyTitle =>
-      'You don\'t have any puzzle records yet.';
-
-  @override
-  String get recordsEmptyGeneralOnlySubtitle =>
-      'Finish a puzzle to see stats by difficulty and your activity history.';
-
-  @override
   String get recordsLevelEmpty => 'No completed puzzles at this level yet.';
 
   @override
@@ -1012,23 +1004,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get homeTodayChallengeCardDoneBody =>
-      'You finished today\'s challenge. Keep your streak going!';
-
-  @override
-  String get homeTodayChallengeCardPendingBody =>
-      'One puzzle a day—light practice, steady progress.';
-
-  @override
-  String homeTodayChallengeFooterDoneStreak(int days) {
-    return 'Today\'s challenge done · $days-day streak';
-  }
-
-  @override
-  String get homeTodayChallengeFooterPending =>
-      'Use today\'s puzzle to build a streak.';
-
-  @override
   String get homeQuickStartSectionTitle => 'Quick start';
 
   @override
@@ -1156,18 +1131,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeTodayPuzzleTitle => 'A quiet moment to focus.';
 
   @override
-  String get homeTodayChallengeStartButton => 'Start today\'s challenge';
-
-  @override
-  String get homeTodayChallengeResumeButton => 'Resume today\'s challenge';
-
-  @override
-  String get homeTodayChallengeReviewButton => 'Play today\'s puzzle again';
-
-  @override
-  String get homeTodayChallengeLoadError => 'Couldn\'t load today\'s puzzle.';
-
-  @override
   String get homeChallengeStartButton => 'Start challenge';
 
   @override
@@ -1200,9 +1163,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeChallengeLoadErrorBody => 'Please try again in a moment.';
-
-  @override
-  String get recordsChallengeTodayDone => 'Today\'s challenge done';
 
   @override
   String get homeTodayChallengeDateChanged =>
@@ -1287,16 +1247,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get levelFilterDone => 'Done';
-
-  @override
-  String levelProgressCardMessage(String levelName) {
-    return 'Start with $levelName puzzles today';
-  }
-
-  @override
-  String levelProgressCompleted(int total) {
-    return '/ $total completed';
-  }
 
   @override
   String levelPuzzleListTitle(int count) {
@@ -1478,12 +1428,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String recordsSummaryHeroSemanticLabel(int count) {
-    return 'Solved $count puzzles';
-  }
-
-  @override
-  String recordsSummaryPerfectChip(int count) {
-    return '$count mistake-free';
+    return 'Puzzles cleared: $count';
   }
 
   @override
@@ -1495,8 +1440,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsSummaryStreakToday => 'Played today';
 
   @override
-  String get challengeMonthlyDescription =>
-      'Pick a date to replay a past challenge.';
+  String recordsSummaryDaysValue(int count) {
+    return '$count';
+  }
 
   @override
   String get challengeTodayEyebrow => 'Today';
@@ -1743,58 +1689,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get gameMemoLongPressHint =>
       'Tap to toggle Notes. Long-press to auto-fill candidate notes.';
-
-  @override
-  String get challengeMonthlyTitle => 'Challenge history';
-
-  @override
-  String get challengePreviousMonth => 'Previous month';
-
-  @override
-  String get challengeBackToCurrentMonth => 'This month';
-
-  @override
-  String get challengeStatusNotCompleted => 'Not completed';
-
-  @override
-  String get challengeStatusInProgress => 'In progress';
-
-  @override
-  String get challengeStatusCompleted => 'Completed';
-
-  @override
-  String get challengeStatusPerfect => 'Perfect clear';
-
-  @override
-  String get challengeStatusFuture => 'Not available yet';
-
-  @override
-  String get challengeMonthComplete => 'Monthly complete';
-
-  @override
-  String get challengeStartPastChallenge => 'Start past challenge';
-
-  @override
-  String get challengeResumePastChallenge => 'Resume past challenge';
-
-  @override
-  String get challengeRetryPastChallenge => 'Retry past challenge';
-
-  @override
-  String get challengePuzzleLoadFailed => 'Couldn\'t load this puzzle.';
-
-  @override
-  String get challengeCalendarLoadError =>
-      'Unable to load the challenge calendar.';
-
-  @override
-  String get challengeStreakExcludedNote =>
-      'Completing a past challenge doesn\'t count toward your streak';
-
-  @override
-  String challengeDayCellSemantics(String date, String status) {
-    return '$date, $status';
-  }
 
   @override
   String get homeGreetingMorning => 'Start with a light puzzle.';

@@ -278,6 +278,211 @@ void main() {
     expect(find.text('Continue'), findsOneWidget);
   });
 
+  group('challenge card / merged card policy', () {
+    SudokuGameScreen openedScreen(WidgetTester tester) =>
+        tester.widget<SudokuGameScreen>(find.byType(SudokuGameScreen));
+
+    testWidgets(
+        'after the challenge is done, a leftover retry session is NOT merged: '
+        'continue card + completion card, no "Play again"', (tester) async {
+      await pumpHome(
+        tester,
+        _FakeDashboard(
+          () async => _data(
+            continues: [_summary(7)],
+            challengeNumber: 7,
+            challengeDone: true,
+            challengeHasSession: true,
+          ),
+        ),
+      );
+      // 이어하기 카드(재도전 진행) + 도전 카드(완료)가 따로 보인다.
+      expect(find.text('Continue'), findsOneWidget);
+      expect(find.text("Today's challenge complete!"), findsOneWidget);
+      expect(find.text('Beginner · Puzzle 7'), findsNWidgets(2));
+      // 병합 카드의 도전 라벨/진행바는 없다(완료 상태가 우선).
+      expect(find.byKey(const Key('home_challenge_progress')), findsNothing);
+      expect(find.text("Today's challenge"), findsNothing);
+      // 새로 시작하면 재도전 세션이 지워지므로 '다시 풀기'는 숨긴다.
+      expect(find.text('Play again'), findsNothing);
+    });
+
+    testWidgets('continue card resumes the saved retry session',
+        (tester) async {
+      await pumpHome(
+        tester,
+        _FakeDashboard(
+          () async => _data(
+            continues: [_summary(7)],
+            challengeNumber: 7,
+            challengeDone: true,
+            challengeHasSession: true,
+          ),
+        ),
+      );
+      await tester.tap(find.text('Continue'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(openedScreen(tester).game.gameNumber, 7);
+    });
+
+    testWidgets('done without a saved session still offers "Play again"',
+        (tester) async {
+      await pumpHome(
+        tester,
+        _FakeDashboard(() async => _data(challengeDone: true)),
+      );
+      expect(find.text('Play again'), findsOneWidget);
+      await tester.tap(find.text('Play again'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(openedScreen(tester).restoreSavedSession, isFalse);
+    });
+
+    testWidgets('merged card with notes only: notes text, no progress bar',
+        (tester) async {
+      await pumpHome(
+        tester,
+        _FakeDashboard(
+          () async => _data(
+            continues: [_summary(7, progress: 0, notes: 3)],
+            challengeNumber: 7,
+            challengeHasSession: true,
+          ),
+        ),
+      );
+      expect(find.text("Today's challenge"), findsOneWidget);
+      expect(find.text('Writing notes'), findsOneWidget);
+      expect(find.byKey(const Key('home_challenge_progress')), findsNothing);
+    });
+
+    testWidgets('standalone in-progress card: tapping the card resumes',
+        (tester) async {
+      await pumpHome(
+        tester,
+        _FakeDashboard(() async => _data(challengeHasSession: true)),
+      );
+      await tester.tap(find.text('36% done'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      final screen = openedScreen(tester);
+      expect(screen.game.gameNumber, 7);
+      expect(screen.restoreSavedSession, isTrue);
+    });
+
+    testWidgets(
+        'merged card: card tap and button open the game screen only once',
+        (tester) async {
+      await pumpHome(
+        tester,
+        _FakeDashboard(
+          () async => _data(
+            continues: [_summary(7)],
+            challengeNumber: 7,
+            challengeHasSession: true,
+          ),
+        ),
+      );
+      await tester.tap(find.text('Beginner · Puzzle 7'));
+      await tester.tap(find.text('Continue'), warnIfMissed: false);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.byType(SudokuGameScreen), findsOneWidget);
+    });
+
+    testWidgets(
+        'error card: card tap does nothing, retry reloads only once '
+        'even when tapped repeatedly', (tester) async {
+      final gate = Completer<HomeDashboardData>();
+      var calls = 0;
+      final dashboard = _FakeDashboard(() {
+        calls++;
+        if (calls == 1) return Future.value(_data(noChallenge: true));
+        return gate.future;
+      });
+      await pumpHome(tester, dashboard);
+      expect(find.text("Couldn't load today's challenge"), findsOneWidget);
+
+      // 카드 빈 영역(제목) 탭은 재조회를 일으키지 않는다.
+      await tester.tap(find.text("Couldn't load today's challenge"));
+      await tester.pump();
+      expect(dashboard.loadCount, 1);
+
+      await tester.tap(find.text('Try again'));
+      await tester.pump();
+      await tester.tap(find.byType(CircularProgressIndicator).last,
+          warnIfMissed: false);
+      await tester.pump();
+      expect(dashboard.loadCount, 2); // 재조회 중 연타해도 한 번만
+
+      gate.complete(_data());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      // 재조회 성공 → 시작 전 상태로 교체.
+      expect(find.text('Start challenge'), findsOneWidget);
+      expect(dashboard.loadCount, 2);
+    });
+
+    testWidgets('reduce motion: progress bar and state switch are instant',
+        (tester) async {
+      await pumpHome(
+        tester,
+        _FakeDashboard(() async => _data(challengeHasSession: true)),
+        reduceMotion: true,
+      );
+      final bar = find.byKey(const Key('home_challenge_progress'));
+      expect(bar, findsOneWidget);
+      expect(
+        tester
+            .widget<TweenAnimationBuilder<double>>(find.descendant(
+                of: bar, matching: find.byType(TweenAnimationBuilder<double>)))
+            .duration,
+        Duration.zero,
+      );
+      expect(
+        tester
+            .widget<AnimatedSwitcher>(find
+                .ancestor(of: bar, matching: find.byType(AnimatedSwitcher))
+                .first)
+            .duration,
+        Duration.zero,
+      );
+    });
+
+    testWidgets('motion on: bar fills over 300ms, switch is short',
+        (tester) async {
+      await pumpHome(
+        tester,
+        _FakeDashboard(() async => _data(challengeHasSession: true)),
+      );
+      final bar = find.byKey(const Key('home_challenge_progress'));
+      expect(
+        tester
+            .widget<TweenAnimationBuilder<double>>(find.descendant(
+                of: bar, matching: find.byType(TweenAnimationBuilder<double>)))
+            .duration,
+        const Duration(milliseconds: 300),
+      );
+    });
+
+    for (final entry in {
+      'done': () => _data(challengeDone: true, streakDays: 4),
+      'error': () => _data(noChallenge: true),
+      'in progress': () => _data(challengeHasSession: true),
+    }.entries) {
+      testWidgets('no overflow at 2x text on a small phone: ${entry.key}',
+          (tester) async {
+        await pumpHome(
+          tester,
+          _FakeDashboard(() async => entry.value()),
+          size: const Size(320, 568),
+          textScale: 2.0,
+        );
+        expect(tester.takeException(), isNull);
+      });
+    }
+  });
+
   testWidgets('challenge states: not started / in progress / done',
       (tester) async {
     await pumpHome(tester, _FakeDashboard(() async => _data()));

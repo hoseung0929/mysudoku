@@ -1,4 +1,3 @@
-import 'package:sudoku159/model/daily_challenge_completion_detail.dart';
 
 import 'database_manager.dart';
 import 'daily_challenge_completion_repository.dart';
@@ -199,14 +198,6 @@ class DatabaseHelper {
 
   Future<bool> hasDailyChallengeCompletionForDate(String yyyyMmDd) async {
     return _dailyChallengeCompletionRepository.hasCompletionForDate(yyyyMmDd);
-  }
-
-  Future<Map<String, DailyChallengeCompletionDetail>>
-      getDailyChallengeCompletionsForMonth(int year, int month) async {
-    return _dailyChallengeCompletionRepository.getCompletionsForMonth(
-      year,
-      month,
-    );
   }
 
   Future<List<String>> getStreakEligibleChallengeDatesDescending({

@@ -637,13 +637,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsEmptyAction => 'パズルを始める';
 
   @override
-  String get recordsEmptyGeneralOnlyTitle => 'パズルの記録はまだありません。';
-
-  @override
-  String get recordsEmptyGeneralOnlySubtitle =>
-      'パズルを完了すると、難易度別の統計と活動記録を確認できます。';
-
-  @override
   String get recordsLevelEmpty => 'このレベルの完了記録はまだありません。';
 
   @override
@@ -930,20 +923,6 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get homeTodayChallengeCardDoneBody => '今日のチャレンジを完了しました。ストリークを続けましょう！';
-
-  @override
-  String get homeTodayChallengeCardPendingBody => '毎日一問、気軽に実力を確かめましょう。';
-
-  @override
-  String homeTodayChallengeFooterDoneStreak(int days) {
-    return '今日のチャレンジ完了 · $days日連続記録';
-  }
-
-  @override
-  String get homeTodayChallengeFooterPending => '今日のパズルでストリークを作りましょう。';
-
-  @override
   String get homeQuickStartSectionTitle => 'クイックスタート';
 
   @override
@@ -1068,18 +1047,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get homeTodayPuzzleTitle => '静かに集中するひとときです。';
 
   @override
-  String get homeTodayChallengeStartButton => '今日のチャレンジを始める';
-
-  @override
-  String get homeTodayChallengeResumeButton => '今日のチャレンジを続ける';
-
-  @override
-  String get homeTodayChallengeReviewButton => '今日のパズルをもう一度';
-
-  @override
-  String get homeTodayChallengeLoadError => '今日のパズルを読み込めませんでした。';
-
-  @override
   String get homeChallengeStartButton => 'チャレンジ開始';
 
   @override
@@ -1106,9 +1073,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get homeChallengeLoadErrorBody => 'しばらくしてからもう一度お試しください。';
-
-  @override
-  String get recordsChallengeTodayDone => '今日のチャレンジ完了';
 
   @override
   String get homeTodayChallengeDateChanged => '日付が変わったため、今日のチャレンジを更新しました。';
@@ -1188,16 +1152,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get levelFilterDone => '完了';
-
-  @override
-  String levelProgressCardMessage(String levelName) {
-    return '今日は$levelNameのパズルから始めましょう';
-  }
-
-  @override
-  String levelProgressCompleted(int total) {
-    return '/ $total クリア';
-  }
 
   @override
   String levelPuzzleListTitle(int count) {
@@ -1368,12 +1322,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String recordsSummaryHeroSemanticLabel(int count) {
-    return 'パズルを$count問解きました';
-  }
-
-  @override
-  String recordsSummaryPerfectChip(int count) {
-    return 'ミスなし$count問';
+    return 'クリアしたパズル $count問';
   }
 
   @override
@@ -1385,7 +1334,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsSummaryStreakToday => '今日プレイ';
 
   @override
-  String get challengeMonthlyDescription => '日付を選んで過去のチャレンジをもう一度プレイできます。';
+  String recordsSummaryDaysValue(int count) {
+    return '$count日';
+  }
 
   @override
   String get challengeTodayEyebrow => '今日の流れ';
@@ -1603,56 +1554,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get gameMemoLongPressHint => 'タップでメモモード切り替え、長押しで自動メモ。';
-
-  @override
-  String get challengeMonthlyTitle => 'チャレンジ履歴';
-
-  @override
-  String get challengePreviousMonth => '前の月';
-
-  @override
-  String get challengeBackToCurrentMonth => '今月';
-
-  @override
-  String get challengeStatusNotCompleted => '未完了';
-
-  @override
-  String get challengeStatusInProgress => '進行中';
-
-  @override
-  String get challengeStatusCompleted => '完了';
-
-  @override
-  String get challengeStatusPerfect => 'パーフェクトクリア';
-
-  @override
-  String get challengeStatusFuture => 'まだ利用できません';
-
-  @override
-  String get challengeMonthComplete => '月間完了';
-
-  @override
-  String get challengeStartPastChallenge => '過去のチャレンジを始める';
-
-  @override
-  String get challengeResumePastChallenge => '過去のチャレンジを再開';
-
-  @override
-  String get challengeRetryPastChallenge => '過去のチャレンジをもう一度解く';
-
-  @override
-  String get challengePuzzleLoadFailed => 'この問題を読み込めませんでした。';
-
-  @override
-  String get challengeCalendarLoadError => 'チャレンジカレンダーを読み込めません。';
-
-  @override
-  String get challengeStreakExcludedNote => '過去のチャレンジ完了は連続記録に含まれません';
-
-  @override
-  String challengeDayCellSemantics(String date, String status) {
-    return '$date、$status';
-  }
 
   @override
   String get homeGreetingMorning => 'さあ、一局始めましょう。';
