@@ -50,44 +50,68 @@ class GameCompletionCoordinator {
     String? challengeDate,
     bool challengeCountsForStreak = true,
   }) async {
-    await _databaseHelper.saveClearEvent(
-      levelName: level.name,
-      gameNumber: game.gameNumber,
-      clearTime: clearTimeSeconds,
-      wrongCount: wrongCount,
-      hintsUsed: hintsUsed,
-      autoNotesUsed: autoNotesUsed,
-    );
-    final recordResult = await _gameRecordService.saveClearRecordIfBest(
-      levelName: level.name,
-      gameNumber: game.gameNumber,
-      clearTime: clearTimeSeconds,
-      wrongCount: wrongCount,
-      hintsUsed: hintsUsed,
-      autoNotesUsed: autoNotesUsed,
-    );
-    final attributionDay = await _challengeProgressService.resolveCompletionDay(
-      levelName: level.name,
-      gameNumber: game.gameNumber,
-      challengeDate: challengeDate,
-    );
-    var isNewDailyCompletion = false;
-    if (attributionDay != null) {
-      isNewDailyCompletion =
-          !await _databaseHelper.hasDailyChallengeCompletionForDate(
-        ChallengeProgressService.formatLocalDate(attributionDay),
-      );
-      // 같은 날짜의 재도전은 더 좋은 결과일 때만 세부 기록을 갱신한다.
-      await _databaseHelper.recordDailyChallengeCompletion(
-        attributionDay,
+    // 완료 이벤트, 최고 기록, 일일 도전 기록은 서로 독립적으로 시도한다: 하나가
+    // 실패해도 나머지 저장은 계속하고, 결과창은 항상 보여줄 수 있도록 어떤
+    // 예외도 밖으로 내보내지 않는다. 실패는 로그로 남긴다.
+    try {
+      await _databaseHelper.saveClearEvent(
         levelName: level.name,
         gameNumber: game.gameNumber,
         clearTime: clearTimeSeconds,
         wrongCount: wrongCount,
         hintsUsed: hintsUsed,
         autoNotesUsed: autoNotesUsed,
-        streakEligible: challengeCountsForStreak,
       );
+    } catch (e) {
+      AppLogger.error('완료 이벤트 저장 실패(계속 진행)', e);
+    }
+
+    var isNewBestRecord = false;
+    try {
+      final recordResult = await _gameRecordService.saveClearRecordIfBest(
+        levelName: level.name,
+        gameNumber: game.gameNumber,
+        clearTime: clearTimeSeconds,
+        wrongCount: wrongCount,
+        hintsUsed: hintsUsed,
+        autoNotesUsed: autoNotesUsed,
+      );
+      isNewBestRecord = recordResult.improvedPrevious;
+    } catch (e) {
+      AppLogger.error('최고 기록 저장 실패(계속 진행)', e);
+    }
+
+    String? challengeMessage;
+    try {
+      final attributionDay =
+          await _challengeProgressService.resolveCompletionDay(
+        levelName: level.name,
+        gameNumber: game.gameNumber,
+        challengeDate: challengeDate,
+      );
+      if (attributionDay != null) {
+        final isNewDailyCompletion =
+            !await _databaseHelper.hasDailyChallengeCompletionForDate(
+          ChallengeProgressService.formatLocalDate(attributionDay),
+        );
+        // 같은 날짜의 재도전은 더 좋은 결과일 때만 세부 기록을 갱신한다.
+        await _databaseHelper.recordDailyChallengeCompletion(
+          attributionDay,
+          levelName: level.name,
+          gameNumber: game.gameNumber,
+          clearTime: clearTimeSeconds,
+          wrongCount: wrongCount,
+          hintsUsed: hintsUsed,
+          autoNotesUsed: autoNotesUsed,
+          streakEligible: challengeCountsForStreak,
+        );
+        // 기록이 실제로 저장된 뒤에만 "도전 완료" 문구를 보여준다.
+        if (isNewDailyCompletion) {
+          challengeMessage = l10n.challengeCompletedToday;
+        }
+      }
+    } catch (e) {
+      AppLogger.error('일일 도전 기록 저장 실패(계속 진행)', e);
     }
     GameRecordNotifier.instance.notifyChanged();
 
@@ -120,9 +144,8 @@ class GameCompletionCoordinator {
     }
 
     return GameCompletionData(
-      isNewBestRecord: recordResult.improvedPrevious,
-      challengeMessage:
-          isNewDailyCompletion ? l10n.challengeCompletedToday : null,
+      isNewBestRecord: isNewBestRecord,
+      challengeMessage: challengeMessage,
       nextGame: nextGame,
     );
   }

@@ -172,13 +172,66 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
-  testWidgets('pausing closes an open hint', (tester) async {
-    await pumpGame(tester, const Size(390, 844));
+  testWidgets('pause and resume keep an open hint at step 1', (tester) async {
+    final presenter = await pumpGame(tester, const Size(390, 844));
+    final maxHints = presenter.hintsRemaining;
     await tester.tap(find.text('Hint'));
     await tester.pump();
+    expect(find.text('Hint · Where to look'), findsOneWidget);
+    expect(presenter.hintsRemaining, maxHints - 1);
+
+    await tester.tap(find.byTooltip('Pause'));
+    await tester.pump();
+    // 멈춘 동안은 패널을 가리지만 힌트는 사라지지 않았다.
+    expect(find.byKey(panel), findsNothing);
+    expect(presenter.hintsRemaining, maxHints - 1);
+
+    await tester.tap(find.byTooltip('Resume'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byKey(panel), findsOneWidget);
+    expect(find.text('Hint · Where to look'), findsOneWidget);
+    expect(presenter.hintsRemaining, maxHints - 1);
+    final grid = tester.widget<SudokuBoardGrid>(find.byType(SudokuBoardGrid));
+    expect(grid.hintRegionCells, hasLength(9));
+    expect(grid.hintTargetCell, isNull);
+    // 이어서 2단계와 정답 넣기도 그대로 쓸 수 있다.
+    await tester.tap(find.text('Tell me more'));
+    await tester.pump();
+    expect(find.text('Hidden single'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('pause and resume keep an open hint at step 2', (tester) async {
+    final presenter = await pumpGame(tester, const Size(390, 844));
+    final maxHints = presenter.hintsRemaining;
+    await tester.tap(find.text('Hint'));
+    await tester.pump();
+    await tester.tap(find.text('Tell me more'));
+    await tester.pump();
+    expect(find.text('Hidden single'), findsOneWidget);
+
     await tester.tap(find.byTooltip('Pause'));
     await tester.pump();
     expect(find.byKey(panel), findsNothing);
+    expect(presenter.hintsRemaining, maxHints - 1);
+
+    await tester.tap(find.byTooltip('Resume'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byKey(panel), findsOneWidget);
+    expect(find.text('Hidden single'), findsOneWidget);
+    expect(presenter.hintsRemaining, maxHints - 1);
+    expect(
+      tester
+          .widget<SudokuBoardGrid>(find.byType(SudokuBoardGrid))
+          .hintTargetCell,
+      1,
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Fill in answer'));
+    await tester.pump();
+    expect(presenter.getCellValue(0, 1), 3);
+    await tester.pump(const Duration(seconds: 1));
   });
 
   for (final locale in const [Locale('ko'), Locale('ja'), Locale('es')]) {

@@ -313,7 +313,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
 
   void _advanceHint() {
     final hint = _activeHint;
-    if (hint == null) return;
+    if (hint == null || _presenter.isPaused) return;
     _presenter.selectCell(hint.row, hint.col);
     setState(() => _hintStep = 2);
   }
@@ -324,7 +324,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
 
   void _fillHint() {
     final hint = _activeHint;
-    if (hint == null) return;
+    if (hint == null || _presenter.isPaused) return;
     setState(() => _activeHint = null);
     _cancelWrongCellTimer(hint.row, hint.col);
     _presenter.selectCell(hint.row, hint.col);
@@ -341,7 +341,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   }
 
   void _closeHint() {
-    if (_activeHint == null) return;
+    if (_activeHint == null || _presenter.isPaused) return;
     setState(() => _activeHint = null);
   }
 
@@ -356,7 +356,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   /// 다시 쓸 수 있게 한다. 패널이 있을 때는 전체 영역을 불투명 히트테스트로
   /// 막아 등장 애니메이션 중에도 빈 여백을 통해 뒤 숫자패드가 눌리지 않는다.
   Widget _withHintPanel(Widget keypad, {double bottomInset = 0}) {
-    final hint = _activeHint;
+    // 일시정지 중에는 보드가 가려져 있으므로 힌트 패널도 숨긴다(상태는 유지).
+    final hint = _presenter.isPaused ? null : _activeHint;
     final reduceMotion = _effectsController.reduceMotion;
     return Stack(
       children: [
@@ -637,7 +638,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     if (!_canTogglePause) return;
     _autoPausedByLifecycle = false;
     _effectsController.clearTransientEffects();
-    _activeHint = null;
+    // 힌트는 패널을 여는 순간 이미 차감됐으므로 일시정지로 지우지 않는다:
+    // 힌트와 단계를 그대로 두고, 멈춰 있는 동안만 패널을 가린다(재개하면 복원).
     _lockedInputNumber = null;
     _presenter.togglePause();
   }

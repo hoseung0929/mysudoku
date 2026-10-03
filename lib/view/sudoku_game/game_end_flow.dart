@@ -37,17 +37,29 @@ class GameEndFlow {
     required Future<void> Function(SudokuGame nextGame) onNextPuzzle,
   }) async {
     final l10n = AppLocalizations.of(context)!;
-    final completionData = await _completionCoordinator.prepare(
-      l10n: l10n,
-      level: level,
-      game: game,
-      clearTimeSeconds: clearTimeSeconds,
-      wrongCount: wrongCount,
-      hintsUsed: hintsUsed,
-      autoNotesUsed: autoNotesUsed,
-      challengeDate: challengeDate,
-      challengeCountsForStreak: challengeCountsForStreak,
-    );
+    // 최종 방어선: 기록 저장이 어떤 이유로든 예외를 내도 결과창은 반드시
+    // 보여준다(기본 결과로 대체).
+    GameCompletionData completionData;
+    try {
+      completionData = await _completionCoordinator.prepare(
+        l10n: l10n,
+        level: level,
+        game: game,
+        clearTimeSeconds: clearTimeSeconds,
+        wrongCount: wrongCount,
+        hintsUsed: hintsUsed,
+        autoNotesUsed: autoNotesUsed,
+        challengeDate: challengeDate,
+        challengeCountsForStreak: challengeCountsForStreak,
+      );
+    } catch (e) {
+      AppLogger.error('완료 처리 준비 실패(기본 결과로 결과창 표시)', e);
+      completionData = const GameCompletionData(
+        isNewBestRecord: false,
+        challengeMessage: null,
+        nextGame: null,
+      );
+    }
     if (!context.mounted) return;
 
     // 완료 기록은 위에서 이미 저장됐다. 결과창을 닫은 뒤, 다음 화면으로
