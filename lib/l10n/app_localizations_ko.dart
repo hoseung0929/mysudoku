@@ -266,7 +266,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gamePerfectMissed => '깨짐';
 
   @override
-  String get gameProgressShort => '진행율';
+  String get gameProgressShort => '진행률';
 
   @override
   String get gameTimeShort => '시간';
@@ -532,6 +532,38 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get recordsWeekSubtitle => '요일을 눌러 기록을 확인하세요';
+
+  @override
+  String get recordsWeeklyGoalLabel => '이번 주 목표';
+
+  @override
+  String recordsWeeklyGoalProgress(int done, int goal) {
+    String _temp0 = intl.Intl.pluralLogic(
+      goal,
+      locale: localeName,
+      other: '$done / $goal판',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recordsWeeklyGoalStart => '이번 주 첫 퍼즐을 시작해보세요';
+
+  @override
+  String recordsWeeklyGoalRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count판만 더 완료하면 목표를 달성해요',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recordsWeeklyGoalAchieved => '이번 주 목표를 달성했어요';
+
+  @override
+  String get gameResultWeeklyGoalAchieved => '이번 주 목표를 달성했어요';
 
   @override
   String get recordsPlayCalendarTitle => '요일별';
@@ -1309,8 +1341,59 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsMyRecordTitle => '지금까지';
 
   @override
-  String recordsSummaryHeroSentence(num count) {
-    return '$count개의 퍼즐을 완성했어요';
+  String recordsSummaryHeroSentence(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count개의 퍼즐을 완성했어요',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recordsSummaryHeroFirst => '첫 퍼즐을 완성했어요';
+
+  @override
+  String recordsSummaryHeroMilestone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count개 돌파! 꾸준히 쌓고 있어요',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recordsSummaryHeroGrowing(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '벌써 $count개의 퍼즐을 풀었어요',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recordsSummaryHeroStacked(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count개의 퍼즐이 차곡차곡 쌓였어요',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recordsLevelRingsTitle => '난이도별 진행';
+
+  @override
+  String recordsLevelRingSemantics(String level, int cleared, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total개 중 $cleared개 완료',
+    );
+    return '$level, $_temp0';
   }
 
   @override
@@ -1553,6 +1636,23 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get autoNotesTipMessage => '팁: 메모를 길게 누르면 후보 숫자를 한 번에 채워줘요.';
+
+  @override
+  String gameNumberLockedMessage(int number) {
+    return '$number 고정 · 칸을 눌러 연속 입력';
+  }
+
+  @override
+  String get gameNumberLockTipMessage =>
+      '숫자를 길게 누르면 같은 숫자를 여러 칸에 빠르게 입력할 수 있어요.';
+
+  @override
+  String gameNumberButtonLockedSemantics(int number) {
+    return '$number, 고정됨, 길게 눌러 해제';
+  }
+
+  @override
+  String get gameNumberButtonLockHint => '길게 눌러 고정';
 
   @override
   String get gameMemoLongPressHint => '탭하여 메모 모드 전환, 길게 눌러 자동 메모.';

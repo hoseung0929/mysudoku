@@ -100,8 +100,8 @@ class GameEffectsController {
   /// 힌트로 채운 칸 강조 대기 시간(140 + 60 = 200ms, 180~220ms 범위).
   static const Duration hintAppliedHold = Duration(milliseconds: 140);
 
-  /// 숫자 완료 보드 강조 대기 시간(190 + 60 = 250ms).
-  static const Duration digitCompleteHold = Duration(milliseconds: 190);
+  /// 숫자 완료 보드 강조 대기 시간(250 + 60 = 310ms, 300~320ms 범위).
+  static const Duration digitCompleteHold = Duration(milliseconds: 250);
 
   /// 보드 위젯이 효과 색을 등장·복원시키는 데 쓰는 공통 전환 시간.
   /// 대기 시간과 이 값의 합이 곧 사용자가 보는 전체 지속 시간이므로, 위젯도

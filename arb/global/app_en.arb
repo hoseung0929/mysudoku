@@ -302,6 +302,29 @@
   "recordsTrendTodayLabel": "Today",
   "recordsPlayInsightsTitle": "This week's activity",
   "recordsWeekSubtitle": "Tap a day to see your record",
+  "recordsWeeklyGoalLabel": "This week's goal",
+  "recordsWeeklyGoalProgress": "{goal, plural, =1{{done} / 1 puzzle} other{{done} / {goal} puzzles}}",
+  "@recordsWeeklyGoalProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "goal": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsWeeklyGoalStart": "Start your first puzzle this week",
+  "recordsWeeklyGoalRemaining": "{count, plural, =1{Just 1 more puzzle to reach your goal} other{Just {count} more puzzles to reach your goal}}",
+  "@recordsWeeklyGoalRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsWeeklyGoalAchieved": "You reached this week's goal",
+  "gameResultWeeklyGoalAchieved": "You reached this week's goal",
   "recordsPlayCalendarTitle": "By day",
   "recordsWeeklyReportTitle": "Weekly report",
   "recordsWeeklyReportBusiestDay": "Most active day",
@@ -866,7 +889,47 @@
   "@recordsSummaryHeroSentence": {
     "placeholders": {
       "count": {
-        "type": "num"
+        "type": "int"
+      }
+    }
+  },
+  "recordsSummaryHeroFirst": "You completed your first puzzle",
+  "recordsSummaryHeroMilestone": "{count, plural, =1{You've reached 1 puzzle — steady progress!} other{You've reached {count} puzzles — steady progress!}}",
+  "@recordsSummaryHeroMilestone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsSummaryHeroGrowing": "{count, plural, =1{You've already solved 1 puzzle} other{You've already solved {count} puzzles}}",
+  "@recordsSummaryHeroGrowing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsSummaryHeroStacked": "{count, plural, =1{1 puzzle solved, and your record keeps growing} other{{count} puzzles solved, and your record keeps growing}}",
+  "@recordsSummaryHeroStacked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsLevelRingsTitle": "Progress by level",
+  "recordsLevelRingSemantics": "{level}, {cleared, plural, =1{1 of {total} completed} other{{cleared} of {total} completed}}",
+  "@recordsLevelRingSemantics": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      },
+      "cleared": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
       }
     }
   },
@@ -1039,6 +1102,24 @@
   "autoNotesConfirmApply": "Refill notes",
   "autoNotesContradictionMessage": "Some cells have no possible number left, so notes were not filled in. Check your entries and try again.",
   "autoNotesTipMessage": "Tip: long-press Notes to fill in all candidate numbers at once.",
+  "gameNumberLockedMessage": "{number} locked · tap cells to fill",
+  "@gameNumberLockedMessage": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "gameNumberLockTipMessage": "Long-press a number to lock it and fill it into several cells quickly.",
+  "gameNumberButtonLockedSemantics": "{number}, locked, long press to unlock",
+  "@gameNumberButtonLockedSemantics": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "gameNumberButtonLockHint": "Long press to lock",
   "gameMemoLongPressHint": "Tap to toggle Notes. Long-press to auto-fill candidate notes.",
   "homeGreetingMorning": "Start with a light puzzle.",
   "homeGreetingAfternoon": "A focused puzzle fits now.",

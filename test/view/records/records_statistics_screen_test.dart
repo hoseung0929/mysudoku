@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/navigation/root_nav_scope.dart';
 import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
+import 'package:sudoku159/services/challenge/weekly_goal_service.dart';
 import 'package:sudoku159/services/records/records_statistics_service.dart';
 import 'package:sudoku159/theme/app_theme.dart';
 import 'package:sudoku159/theme/level_status_colors.dart';
@@ -31,6 +33,7 @@ RecordsStatisticsData _data({
   int currentStreak = 2,
   int perfectClears = 0,
   int activeDays = 12,
+  WeeklyGoalState? weeklyGoal,
 }) {
   return RecordsStatisticsData(
     overall: {
@@ -50,6 +53,7 @@ RecordsStatisticsData _data({
       'best_streak_days': 5,
     },
     events: events,
+    weeklyGoal: weeklyGoal,
   );
 }
 
@@ -144,6 +148,13 @@ void main() {
     {'level_name': '초급', 'clear_date': _date(today)},
   ];
 
+  // 난이도 이름은 진행 링과 상세 필터에 모두 나오므로, 전역 텍스트 검색 대신
+  // 항상 해당 영역의 descendant로 한정해서 찾는다.
+  Finder chip(String label) => find.descendant(
+        of: find.byKey(const Key('records_level_filter')),
+        matching: find.text(label),
+      );
+
   testWidgets(
       'no records at all: one summary-card empty state with the start '
       'button, no zero stats', (tester) async {
@@ -225,8 +236,9 @@ void main() {
       ),
     );
     expect(find.text('Master'), findsNothing);
-    expect(find.text('Beginner'), findsWidgets);
-    expect(find.text('Expert'), findsOneWidget);
+    expect(chip('Beginner'), findsOneWidget);
+    expect(chip('Expert'), findsOneWidget);
+    expect(find.byKey(const Key('records_level_ring_마스터')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -236,9 +248,9 @@ void main() {
       tester,
       () async => _data(recent: recent, events: events),
     );
-    await tester.ensureVisible(find.text('Intermediate'));
+    await tester.ensureVisible(chip('Intermediate'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Intermediate'));
+    await tester.tap(chip('Intermediate'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300)); // 크로스페이드 종료
     expect(
@@ -565,7 +577,8 @@ void main() {
         tester,
         () async => _data(recent: one, events: events),
       );
-      expect(inSummary(find.text("You've completed 1 puzzle")), findsOneWidget);
+      expect(inSummary(find.text('You completed your first puzzle')),
+          findsOneWidget);
     });
 
     testWidgets('no image or text overlap: the text stays in the left 55%',
@@ -685,6 +698,360 @@ void main() {
     expect(find.byType(MascotImage), findsNothing);
   });
 
+  group('weekly goal inside the week card', () {
+    WeeklyGoalState goalOf(int completed, {int target = 3}) => WeeklyGoalState(
+          weekStart: WeeklyGoalService.weekStartOf(today),
+          target: target,
+          completed: completed,
+        );
+    Finder goal() => find.byKey(const Key('records_weekly_goal'));
+    Finder message() => find.byKey(const Key('records_weekly_goal_message'));
+
+    testWidgets('in progress: label, "2 / 3 puzzles", bar and next step',
+        (tester) async {
+      await pumpRecords(
+        tester,
+        () async =>
+            _data(recent: recent, events: events, weeklyGoal: goalOf(2)),
+      );
+      expect(goal(), findsOneWidget);
+      expect(find.text("This week's goal"), findsOneWidget);
+      expect(find.text('2 / 3 puzzles'), findsOneWidget);
+      expect(find.byKey(const Key('records_weekly_goal_bar')), findsOneWidget);
+      expect(
+          find.text('Just 1 more puzzle to reach your goal'), findsOneWidget);
+      expect(find.byKey(const Key('records_weekly_goal_check')), findsNothing);
+      final bar = tester.widget<LinearProgressIndicator>(
+          find.byKey(const Key('records_weekly_goal_bar')));
+      expect(bar.value, closeTo(2 / 3, 0.01));
+    });
+
+    testWidgets('before the first puzzle: an invitation to start',
+        (tester) async {
+      await pumpRecords(
+        tester,
+        () async => _data(
+            recent: recent, events: events, weeklyGoal: goalOf(0, target: 5)),
+      );
+      expect(find.text('0 / 5 puzzles'), findsOneWidget);
+      expect(find.text('Start your first puzzle this week'), findsOneWidget);
+    });
+
+    testWidgets('achieved: full bar, check mark and the achieved message',
+        (tester) async {
+      await pumpRecords(
+        tester,
+        () async =>
+            _data(recent: recent, events: events, weeklyGoal: goalOf(3)),
+      );
+      expect(find.text("You reached this week's goal"), findsOneWidget);
+      expect(
+          find.byKey(const Key('records_weekly_goal_check')), findsOneWidget);
+      final bar = tester.widget<LinearProgressIndicator>(
+          find.byKey(const Key('records_weekly_goal_bar')));
+      expect(bar.value, 1.0);
+      // 목표를 넘겨도 완료 상태가 유지된다.
+      await pumpRecords(
+        tester,
+        () async =>
+            _data(recent: recent, events: events, weeklyGoal: goalOf(5)),
+      );
+      expect(find.text("You reached this week's goal"), findsOneWidget);
+      expect(find.text('5 / 3 puzzles'), findsOneWidget);
+    });
+
+    testWidgets('lives in the existing week card, not a separate card',
+        (tester) async {
+      await pumpRecords(
+        tester,
+        () async =>
+            _data(recent: recent, events: events, weeklyGoal: goalOf(2)),
+      );
+      double top(Finder f) => tester.getTopLeft(f).dy;
+      expect(top(find.text("This week's activity")), lessThan(top(goal())));
+      expect(top(find.text('Active days: 1')), lessThan(top(goal())));
+      expect(top(goal()), lessThan(top(find.text('Records by level'))));
+      // 같은 카드 안: 목표 영역이 주간 카드의 가로 범위 안에 있다.
+      final cardRect = tester.getRect(find
+          .ancestor(
+            of: find.text("This week's activity"),
+            matching: find.byType(Container),
+          )
+          .last);
+      expect(cardRect.contains(tester.getCenter(goal())), isTrue);
+    });
+
+    testWidgets('hidden when no goal could be loaded', (tester) async {
+      await pumpRecords(
+        tester,
+        () async => _data(recent: recent, events: events),
+      );
+      expect(goal(), findsNothing);
+    });
+
+    testWidgets('reduce motion fills the bar without animation',
+        (tester) async {
+      await pumpRecords(
+        tester,
+        () async =>
+            _data(recent: recent, events: events, weeklyGoal: goalOf(2)),
+        reduceMotion: true,
+      );
+      final builder = tester.widget<TweenAnimationBuilder<double>>(
+        find.ancestor(
+          of: find.byKey(const Key('records_weekly_goal_bar')),
+          matching: find.byType(TweenAnimationBuilder<double>),
+        ),
+      );
+      expect(builder.duration, Duration.zero);
+    });
+
+    for (final lang in ['en', 'ko', 'ja', 'es', 'zh']) {
+      for (final size in [const Size(390, 844), const Size(320, 568)]) {
+        for (final scale in [1.0, 2.0]) {
+          testWidgets('no overflow: $lang ${size.width.toInt()}w ${scale}x',
+              (tester) async {
+            for (final done in [0, 2, 3]) {
+              await pumpRecords(
+                tester,
+                () async => _data(
+                    recent: recent, events: events, weeklyGoal: goalOf(done)),
+                size: size,
+                textScale: scale,
+                locale: Locale(lang),
+              );
+              expect(goal(), findsOneWidget);
+              expect(tester.takeException(), isNull);
+              final rect = tester.getRect(goal());
+              expect(rect.left, greaterThanOrEqualTo(0));
+              expect(rect.right, lessThanOrEqualTo(size.width));
+              expect(
+                tester.getRect(message()).right,
+                lessThanOrEqualTo(size.width),
+              );
+            }
+          });
+        }
+      }
+    }
+  });
+
+  group('summary hero sentence by completed count', () {
+    List<Map<String, dynamic>> clears(int n) => [
+          for (var i = 0; i < n; i++) _clear('초급', i + 1, 300, 0, today),
+        ];
+    final cases = <int, String>{
+      1: 'You completed your first puzzle',
+      2: "You've completed 2 puzzles",
+      9: "You've completed 9 puzzles",
+      10: "You've reached 10 puzzles — steady progress!",
+      11: "You've already solved 11 puzzles",
+      19: "You've already solved 19 puzzles",
+      20: "You've reached 20 puzzles — steady progress!",
+      29: "You've already solved 29 puzzles",
+      30: "You've reached 30 puzzles — steady progress!",
+      31: '31 puzzles solved, and your record keeps growing',
+      57: '57 puzzles solved, and your record keeps growing',
+    };
+    for (final entry in cases.entries) {
+      testWidgets('${entry.key} cleared shows "${entry.value}"',
+          (tester) async {
+        await pumpRecords(
+          tester,
+          () async => _data(recent: clears(entry.key)),
+        );
+        expect(
+          find.descendant(
+            of: find.byKey(const Key('records_summary_card')),
+            matching: find.text(entry.value),
+          ),
+          findsOneWidget,
+        );
+      });
+    }
+
+    testWidgets('the same count always shows the same sentence',
+        (tester) async {
+      await pumpRecords(tester, () async => _data(recent: clears(13)));
+      expect(find.text("You've already solved 13 puzzles"), findsOneWidget);
+      await pumpRecords(tester, () async => _data(recent: clears(13)));
+      expect(find.text("You've already solved 13 puzzles"), findsOneWidget);
+    });
+  });
+
+  group('level progress rings (static summary)', () {
+    final data = [
+      ...recentFor('초급', [(1, 520, 1, 0), (2, 300, 0, 40)]),
+      ...recentFor('중급', [(10, 100, 0, 0)]),
+    ];
+    final levelKeys = ['초급', '중급', '고급', '전문가'];
+    Finder rings() => find.byKey(const Key('records_level_rings'));
+    Finder ring(String level) => find.byKey(Key('records_level_ring_$level'));
+    Finder inRing(String level, Finder f) =>
+        find.descendant(of: ring(level), matching: f);
+
+    testWidgets('shows the four difficulties with the completed count inside',
+        (tester) async {
+      await pumpRecords(
+        tester,
+        () async => _data(recent: data),
+        locale: const Locale('ko'),
+      );
+      expect(rings(), findsOneWidget);
+      for (final level in levelKeys) {
+        expect(ring(level), findsOneWidget);
+      }
+      expect(ring('마스터'), findsNothing);
+      expect(inRing('초급', find.text('2')), findsOneWidget);
+      expect(inRing('중급', find.text('1')), findsOneWidget);
+      expect(inRing('고급', find.text('0')), findsOneWidget);
+      expect(inRing('전문가', find.text('0')), findsOneWidget);
+      // 이름은 링 아래에 한 번만, 보조 라벨("완료" 등)은 없다.
+      expect(inRing('초급', find.text('초급')), findsOneWidget);
+      expect(inRing('초급', find.text('완료')), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('no percentage and no "2/159" style total in the card',
+        (tester) async {
+      await pumpRecords(tester, () async => _data(recent: data));
+      expect(find.descendant(of: rings(), matching: find.textContaining('%')),
+          findsNothing);
+      expect(find.descendant(of: rings(), matching: find.textContaining('/')),
+          findsNothing);
+      expect(find.descendant(of: rings(), matching: find.text('159')),
+          findsNothing);
+    });
+
+    testWidgets('rings are static: no tap handler, no selection state',
+        (tester) async {
+      await pumpRecords(tester, () async => _data(recent: data));
+      for (final type in [GestureDetector, InkWell, InkResponse]) {
+        expect(
+          find.descendant(of: rings(), matching: find.byType(type)),
+          findsNothing,
+        );
+      }
+      expect(
+        find.descendant(of: rings(), matching: find.byType(AnimatedContainer)),
+        findsNothing,
+      );
+      final handle = tester.ensureSemantics();
+      for (final label in [
+        'Beginner, 2 of 159 completed',
+        'Intermediate, 1 of 159 completed',
+      ]) {
+        final node = find.bySemanticsLabel(label);
+        expect(node, findsOneWidget);
+        expect(
+          tester.getSemantics(node),
+          isNot(isSemantics(isButton: true)),
+        );
+        expect(
+          tester.getSemantics(node),
+          isNot(isSemantics(isSelected: true)),
+        );
+      }
+
+      // 눌러도 아래 난이도별 기록의 선택은 바뀌지 않는다.
+      await tester.ensureVisible(ring('중급'));
+      await tester.pumpAndSettle();
+      await tester.tap(ring('중급'), warnIfMissed: false);
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('2 / 159'), findsOneWidget);
+      expect(find.text('1 / 159'), findsNothing);
+      handle.dispose();
+    });
+
+    testWidgets('ring animation is skipped with reduce motion', (tester) async {
+      await pumpRecords(
+        tester,
+        () async => _data(recent: data),
+        reduceMotion: true,
+      );
+      final builder = tester.widget<TweenAnimationBuilder<double>>(
+        find.descendant(
+          of: ring('초급'),
+          matching: find.byType(TweenAnimationBuilder<double>),
+        ),
+      );
+      expect(builder.duration, Duration.zero);
+    });
+
+    testWidgets('ring animation keeps 600ms with motion', (tester) async {
+      await pumpRecords(tester, () async => _data(recent: data));
+      final builder = tester.widget<TweenAnimationBuilder<double>>(
+        find.descendant(
+          of: ring('초급'),
+          matching: find.byType(TweenAnimationBuilder<double>),
+        ),
+      );
+      expect(builder.duration, const Duration(milliseconds: 600));
+    });
+
+    testWidgets('narrow screen with large text uses a 2x2 layout',
+        (tester) async {
+      await pumpRecords(
+        tester,
+        () async => _data(recent: data),
+        size: const Size(320, 568),
+        textScale: 2.0,
+        locale: const Locale('en'),
+      );
+      final tops = [for (final l in levelKeys) tester.getTopLeft(ring(l))];
+      expect(tops[0].dy, tops[1].dy);
+      expect(tops[2].dy, tops[3].dy);
+      expect(tops[2].dy, greaterThan(tops[0].dy));
+      expect(tops[0].dx, lessThan(tops[1].dx));
+      expect(tops[0].dx, tops[2].dx);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('roomy screen keeps all four in one row', (tester) async {
+      await pumpRecords(
+        tester,
+        () async => _data(recent: data),
+        locale: const Locale('ko'),
+      );
+      final tops = [for (final l in levelKeys) tester.getTopLeft(ring(l))];
+      expect(tops.map((o) => o.dy).toSet().length, 1);
+    });
+
+    for (final lang in ['en', 'ko', 'ja', 'es', 'zh']) {
+      for (final size in [const Size(390, 844), const Size(320, 568)]) {
+        for (final scale in [1.0, 2.0]) {
+          testWidgets(
+              'no overflow, labels not shrunk or clipped: $lang '
+              '${size.width.toInt()}w ${scale}x', (tester) async {
+            await pumpRecords(
+              tester,
+              () async => _data(recent: data),
+              size: size,
+              textScale: scale,
+              locale: Locale(lang),
+            );
+            final l10n = lookupAppLocalizations(Locale(lang));
+            final labels = [
+              l10n.levelBeginner,
+              l10n.levelIntermediate,
+              l10n.levelAdvanced,
+              l10n.levelExpert,
+            ];
+            for (var i = 0; i < labels.length; i++) {
+              final label = inRing(levelKeys[i], find.text(labels[i]));
+              expect(label, findsOneWidget);
+              final paragraph = tester.renderObject<RenderParagraph>(label);
+              expect(paragraph.didExceedMaxLines, isFalse);
+              expect(paragraph.textScaler, TextScaler.linear(scale));
+              expect(paragraph.text.style?.fontSize, 13);
+            }
+            expect(tester.takeException(), isNull);
+          });
+        }
+      }
+    }
+  });
+
   group('selection transitions', () {
     // 두 난이도 모두 기록이 있어, 칩을 바꿨을 때 값이 실제로 달라지는지
     // 확인할 수 있는 데이터.
@@ -744,11 +1111,6 @@ void main() {
       handle.dispose();
     });
 
-    Finder chip(String label) => find.descendant(
-          of: find.byKey(const Key('records_level_filter')),
-          matching: find.text(label),
-        );
-
     testWidgets(
         'switching between two levels with different records shows '
         'the correct numbers for each', (tester) async {
@@ -780,9 +1142,11 @@ void main() {
         () async => _data(recent: twoLevelRecent, events: events),
       );
       await tester.ensureVisible(chip('Intermediate'));
+      await tester.pumpAndSettle();
       await tester.tap(chip('Intermediate'));
       await tester.pump(); // 아직 전환 중
       await tester.ensureVisible(chip('Advanced'));
+      await tester.pumpAndSettle();
       await tester.tap(chip('Advanced'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
@@ -808,9 +1172,9 @@ void main() {
           locale: const Locale('ko'),
         );
         final before = highlightLeft(tester);
-        await tester.ensureVisible(find.text('중급'));
+        await tester.ensureVisible(chip('중급'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('중급'));
+        await tester.tap(chip('중급'));
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 300));
         expect(highlightLeft(tester), greaterThan(before));
@@ -1018,11 +1382,18 @@ void main() {
       final calendarLeftBefore =
           tester.getTopLeft(find.text('Last 26 weeks of activity')).dx;
 
-      await tester.tap(find.text('Intermediate'));
+      await tester.ensureVisible(chip('Intermediate'));
+      await tester.pumpAndSettle();
+      await tester.tap(chip('Intermediate'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
-      final dayFinder = find.bySemanticsLabel(RegExp(r'completed, Today'));
+      // 탭이 실제로 난이도를 바꿨는지 확인한다(중급 기록 1개).
+      expect(find.text('1 / 159'), findsOneWidget);
+      expect(find.text('2 / 159'), findsNothing);
       final handle = tester.ensureSemantics();
+      final dayFinder = find.bySemanticsLabel(RegExp(r'completed, Today'));
+      await tester.ensureVisible(dayFinder);
+      await tester.pumpAndSettle();
       await tester.tap(dayFinder);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));

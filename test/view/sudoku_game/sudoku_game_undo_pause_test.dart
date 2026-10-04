@@ -372,7 +372,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
     });
 
-    testWidgets('no vibration when reduce motion is on', (tester) async {
+    testWidgets('reduce motion does not turn the vibration off',
+        (tester) async {
       final calls = <MethodCall>[];
       tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
         SystemChannels.platform,
@@ -396,10 +397,12 @@ void main() {
       await tester.tap(find.text('Undo'));
       await tester.pump();
 
+      // 동작 줄이기와 진동 설정은 분리돼 있어, 진동 설정이 켜져 있으면 유지된다.
+      final vibrateCalls =
+          calls.where((c) => c.method == 'HapticFeedback.vibrate').toList();
+      expect(vibrateCalls, hasLength(1));
       expect(
-        calls.where((c) => c.method == 'HapticFeedback.vibrate'),
-        isEmpty,
-      );
+          vibrateCalls.single.arguments, 'HapticFeedbackType.selectionClick');
       await tester.pump(const Duration(milliseconds: 600));
     });
 
@@ -415,10 +418,11 @@ void main() {
       presenter.setSelectedCellValue(3); // 행 0 완성 → 정상적인 줄 완성 효과
       await tester.pump();
       expect(lineCompleteActiveOf(tester).values.any((v) => v), isTrue);
-      // 이 입력은 행0 완성과 숫자 3 전부 채움이 동시에 일어난다. 안내 칩은
-      // 하나만(최신 것만) 보여주므로, onCorrectAnswer에서 더 나중에 확정된
-      // 숫자 완료 문구가 행 완성 문구를 덮어쓴다.
-      expect(find.textContaining('filled in all the 3s'), findsOneWidget);
+      // 이 입력은 행0 완성과 숫자 3 전부 채움이 동시에 일어난다. 우선순위가
+      // 높은 행 완성 안내만 보이고 숫자 완료 문구는 생략된다.
+      // 행 0과 열 1이 함께 완성돼 라벨을 나열한 한 줄 안내가 뜬다.
+      expect(find.textContaining('cleared'), findsOneWidget);
+      expect(find.textContaining('filled in all the 3s'), findsNothing);
 
       // 효과·토스트가 자연히 사라질 때까지 기다린다.
       await tester.pump(const Duration(milliseconds: 1300));

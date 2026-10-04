@@ -92,6 +92,7 @@ class GameEndFlow {
           wrongCount: wrongCount,
           isNewBestRecord: completionData.isNewBestRecord,
           challengeMessage: completionData.challengeMessage,
+          weeklyGoalMessage: completionData.weeklyGoalMessage,
           onNextPuzzle: completionData.nextGame == null
               ? null
               : () async {

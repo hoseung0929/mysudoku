@@ -127,7 +127,8 @@ void main() {
     // 일반 정답 강조(초록 wave)는 대신 걸리지 않는다.
     expect(waveActiveOf(tester)['0,1'], isNot(true));
 
-    await tester.pump(const Duration(milliseconds: 200));
+    // 같은 입력의 숫자 완료 보드 강조(250ms)도 마저 흘려보낸다.
+    await tester.pump(const Duration(milliseconds: 300));
   });
 
   testWidgets('fades out after ~200ms', (tester) async {
@@ -141,6 +142,7 @@ void main() {
     expect(hintAppliedActiveOf(tester)['0,1'], isTrue);
     await tester.pump(const Duration(milliseconds: 100));
     expect(hintAppliedActiveOf(tester)['0,1'] ?? false, isFalse);
+    await tester.pump(const Duration(milliseconds: 100));
   });
 
   testWidgets('the answer and save are not delayed by the highlight',

@@ -530,6 +530,38 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsWeekSubtitle => '点按星期查看记录';
 
   @override
+  String get recordsWeeklyGoalLabel => '本周目标';
+
+  @override
+  String recordsWeeklyGoalProgress(int done, int goal) {
+    String _temp0 = intl.Intl.pluralLogic(
+      goal,
+      locale: localeName,
+      other: '$done / $goal 道',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recordsWeeklyGoalStart => '开始本周的第一道谜题';
+
+  @override
+  String recordsWeeklyGoalRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '再完成 $count 道即可达成目标',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recordsWeeklyGoalAchieved => '你达成了本周目标';
+
+  @override
+  String get gameResultWeeklyGoalAchieved => '你达成了本周目标';
+
+  @override
   String get recordsPlayCalendarTitle => '按天查看';
 
   @override
@@ -1298,8 +1330,59 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsMyRecordTitle => '目前为止';
 
   @override
-  String recordsSummaryHeroSentence(num count) {
-    return '你已完成 $count 道谜题';
+  String recordsSummaryHeroSentence(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '你已完成 $count 道谜题',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recordsSummaryHeroFirst => '你完成了第一道谜题';
+
+  @override
+  String recordsSummaryHeroMilestone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已突破 $count 道谜题',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recordsSummaryHeroGrowing(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已经解开 $count 道谜题了',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recordsSummaryHeroStacked(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 道谜题一点点积累起来',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recordsLevelRingsTitle => '各难度进度';
+
+  @override
+  String recordsLevelRingSemantics(String level, int cleared, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 道中已完成 $cleared 道',
+    );
+    return '$level，$_temp0';
   }
 
   @override
@@ -1533,6 +1616,22 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get autoNotesTipMessage => '提示：长按笔记可以一次性填写所有候选数字。';
+
+  @override
+  String gameNumberLockedMessage(int number) {
+    return '已固定 $number · 点按格子连续输入';
+  }
+
+  @override
+  String get gameNumberLockTipMessage => '长按数字即可锁定，并快速填入多个格子。';
+
+  @override
+  String gameNumberButtonLockedSemantics(int number) {
+    return '$number，已锁定，长按解除';
+  }
+
+  @override
+  String get gameNumberButtonLockHint => '长按锁定';
 
   @override
   String get gameMemoLongPressHint => '点击切换笔记模式，长按自动填写笔记。';

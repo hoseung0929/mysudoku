@@ -24,6 +24,8 @@ import 'package:sudoku159/view/sudoku_game/sudoku_hint_panel.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_info_card.dart';
 import 'package:sudoku159/view/sudoku_game/game_effects_controller.dart';
 import 'package:sudoku159/services/game/auto_notes_tip_service.dart';
+import 'package:sudoku159/services/game/number_lock_tip_service.dart';
+import 'package:sudoku159/view/sudoku_game/game_feedback_resolver.dart';
 import 'package:sudoku159/view/home/level_picker_screen.dart';
 import 'package:sudoku159/widgets/progressive_blur_button.dart';
 import 'package:sudoku159/widgets/waddling_penguin_icon.dart';
@@ -76,13 +78,16 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   int? _memoFocusNumber;
   int? _lockedInputNumber;
   final Set<int> _celebratedProgressMilestones = <int>{};
-  bool _lastBoardChangeCompletedLine = false;
   // 자동 메모 적용 직후 보드 전체에 짧게 강조를 준다. 트리거될 때마다 새 키를
   // 줘서 TweenAnimationBuilder가 처음부터 다시 재생하게 한다.
   Key? _autoNotesFlashKey;
   bool _autoNotesTipShown = false;
+  bool _numberLockTipShown = false;
+  InputFeedbackEvents? _feedbackEvents;
+  int _numberInputCount = 0;
   final GameEffectsController _effectsController = GameEffectsController();
   final AutoNotesTipService _autoNotesTipService = AutoNotesTipService();
+  final NumberLockTipService _numberLockTipService = NumberLockTipService();
   OverlayEntry? _completionFeedbackEntry;
   Timer? _completionFeedbackTimer;
   final Map<String, Timer> _wrongCellTimers = {};
@@ -144,7 +149,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     _completedUnitIds = _computeCompletedUnitIds();
   }
 
-  /// 새로 완성된 유닛이 있으면 펭귄이 5초간 뒤뚱거리도록 트리거합니다.
+  /// 새로 완성된 유닛이 있으면 펭귄이 짧게(약 1.8초) 뒤뚱거리도록 트리거합니다.
   void _checkForNewlyCompletedUnits() {
     final completed = _computeCompletedUnitIds();
     final hasNewCompletion = completed.difference(_completedUnitIds).isNotEmpty;
@@ -155,7 +160,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   }
 
   void _triggerPenguinBurst({
-    Duration duration = const Duration(seconds: 5),
+    Duration duration = const Duration(milliseconds: 1800),
   }) {
     _penguinActiveTimer?.cancel();
     setState(() => _isPenguinActive = true);
@@ -506,7 +511,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   }
 
   /// 방금 [row],[col]에 넣은 정답으로 어떤 숫자가 처음 9개 모두 채워졌다면
-  /// 숫자패드 팝·보드 강조·햅틱으로 짧게 알려준다.
+  /// 이 입력의 피드백 이벤트에 기록한다(숫자 고정은 여기서 푼다). 안내·진동·
+  /// 효과는 입력이 끝난 뒤 [_flushFeedback]이 우선순위대로 한 번만 실행한다.
   void _maybeCelebrateDigitCompletion(int row, int col) {
     final value = _presenter.getCellValue(row, col);
     if (value == 0 || _celebratedCompleteDigits.contains(value)) return;
@@ -516,31 +522,112 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     if (_lockedInputNumber == value) {
       setState(() => _lockedInputNumber = null);
     }
+    _recordFeedback((e) => e.completedDigit = value);
+  }
 
+  /// 숫자 버튼의 완료 팝(220ms)과 보드의 숫자 9칸 강조를 재생한다. 동작 줄이기에서는
+  /// 생략한다(배지의 체크 전환은 그대로 적용된다).
+  void _playDigitCompleteEffects(
+    int digit, {
+    required bool pop,
+    required bool boardHighlight,
+  }) {
+    if (_effectsController.reduceMotion) return;
+    if (pop) {
+      _numberPopTimer?.cancel();
+      setState(() => _numberPopDigit = digit);
+      _numberPopTimer = Timer(const Duration(milliseconds: 220), () {
+        _numberPopTimer = null;
+        if (!mounted) return;
+        setState(() => _numberPopDigit = null);
+      });
+    }
+    if (boardHighlight) {
+      _effectsController.triggerDigitCompleteEffect(
+        digit: digit,
+        board: _presenter.boardSnapshot,
+        setState: setState,
+        isMounted: () => mounted,
+      );
+    }
+  }
+
+  /// 입력 하나에서 발생한 피드백 이벤트를 모은다. 콜백들이 같은 동기 호출 안에서
+  /// 호출되므로 마이크로태스크에서 한 번에 정리하면 한 입력의 이벤트가 모두
+  /// 모인 뒤 우선순위를 적용할 수 있다.
+  void _recordFeedback(void Function(InputFeedbackEvents events) update) {
+    var events = _feedbackEvents;
+    if (events == null) {
+      events = _feedbackEvents = InputFeedbackEvents();
+      scheduleMicrotask(_flushFeedback);
+    }
+    update(events);
+  }
+
+  void _flushFeedback() {
+    final events = _feedbackEvents;
+    _feedbackEvents = null;
+    if (events == null || !mounted) return;
+    final resolved = GameFeedbackResolver.resolve(events);
+    final l10n = AppLocalizations.of(context)!;
+
+    if (resolved.hideMessage) {
+      _hideCompletionFeedback();
+    }
+    switch (resolved.message) {
+      case FeedbackMessage.none:
+        break;
+      case FeedbackMessage.line:
+        _showCompletionFeedback(events.lineDelta!);
+      case FeedbackMessage.wrong:
+        final (count, max) = events.wrongCount!;
+        _showTopFeedback(
+          '${l10n.gameWrongShort} $count/$max',
+          backgroundColor: const Color(0xFF7A3E48),
+        );
+      case FeedbackMessage.digit:
+        _showTopFeedback(
+          l10n.gameDigitCompleteSentence(events.completedDigit!),
+        );
+      case FeedbackMessage.progress:
+        _showTopFeedback(
+          '${l10n.gameProgressShort} ${events.progressMilestone}%',
+        );
+    }
+    final digit = events.completedDigit;
+    if (digit != null && (resolved.digitPop || resolved.digitBoardHighlight)) {
+      _playDigitCompleteEffects(
+        digit,
+        pop: resolved.digitPop,
+        boardHighlight: resolved.digitBoardHighlight,
+      );
+    }
+    if (resolved.progressPenguin) {
+      _triggerPenguinBurst(duration: const Duration(milliseconds: 1500));
+    }
     if (_isVibrationEnabled) {
-      unawaited(HapticFeedback.selectionClick());
+      unawaited(_performHaptic(resolved.haptic));
     }
-    _showTopFeedback(
-      AppLocalizations.of(context)!.gameDigitCompleteSentence(value),
-    );
-    if (_effectsController.reduceMotion) {
-      // 동작 줄이기: 배지의 체크 아이콘 전환(AnimatedSwitcher)만 그대로
-      // 적용되고, 숫자패드 팝·보드 강조는 재생하지 않는다.
-      return;
+  }
+
+  Future<void> _performHaptic(FeedbackHaptic haptic) async {
+    switch (haptic) {
+      case FeedbackHaptic.none:
+        return;
+      case FeedbackHaptic.selectionClick:
+        await HapticFeedback.selectionClick();
+      case FeedbackHaptic.lightImpact:
+        await HapticFeedback.lightImpact();
+      case FeedbackHaptic.mediumImpact:
+        await HapticFeedback.mediumImpact();
+      case FeedbackHaptic.heavyImpact:
+        await HapticFeedback.heavyImpact();
+      case FeedbackHaptic.gameOver:
+        // 3회 연속 강한 진동 대신 짧은 2회 패턴.
+        await HapticFeedback.heavyImpact();
+        await Future<void>.delayed(const Duration(milliseconds: 90));
+        await HapticFeedback.mediumImpact();
     }
-    _numberPopTimer?.cancel();
-    setState(() => _numberPopDigit = value);
-    _numberPopTimer = Timer(const Duration(milliseconds: 220), () {
-      _numberPopTimer = null;
-      if (!mounted) return;
-      setState(() => _numberPopDigit = null);
-    });
-    _effectsController.triggerDigitCompleteEffect(
-      digit: value,
-      board: _presenter.boardSnapshot,
-      setState: setState,
-      isMounted: () => mounted,
-    );
   }
 
   static const List<int> _progressMilestones = <int>[25, 50, 75];
@@ -560,15 +647,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         .toList();
     if (reached.isEmpty) return;
     _celebratedProgressMilestones.addAll(reached);
-    if (_lastBoardChangeCompletedLine || _presenter.isGameComplete) return;
-
     final milestone = reached.last;
-    final l10n = AppLocalizations.of(context)!;
-    _showTopFeedback('${l10n.gameProgressShort} $milestone%');
-    _triggerPenguinBurst(duration: const Duration(milliseconds: 1500));
-    if (_isVibrationEnabled && !_effectsController.reduceMotion) {
-      unawaited(HapticFeedback.selectionClick());
-    }
+    _recordFeedback((e) => e.progressMilestone = milestone);
   }
 
   void _undoLastInput() {
@@ -619,7 +699,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   }
 
   Future<void> _maybeVibrateForUndo() async {
-    if (!_isVibrationEnabled || _effectsController.reduceMotion) return;
+    if (!_isVibrationEnabled) return;
     await HapticFeedback.selectionClick();
   }
 
@@ -795,12 +875,13 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           setState: setState,
           isMounted: () => mounted,
         );
-        _lastBoardChangeCompletedLine = completionDelta.hasNewCompletion;
         setState(() {});
-        if (completionDelta.isPuzzleComplete) {
-          _hideCompletionFeedback();
-        } else {
-          _showCompletionFeedback(completionDelta);
+        if (completionDelta.hasNewCompletion ||
+            completionDelta.isPuzzleComplete) {
+          _recordFeedback((e) {
+            e.lineDelta = completionDelta;
+            if (completionDelta.isPuzzleComplete) e.puzzleComplete = true;
+          });
         }
         _scheduleSessionSave();
       },
@@ -823,6 +904,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       onGameCompleteChanged: (isComplete) {
         if (isComplete) {
           _activeHint = null;
+          _lockedInputNumber = null;
+          _recordFeedback((e) => e.puzzleComplete = true);
           _beginPuzzleCompleteSequence();
         }
         setState(() {});
@@ -833,26 +916,14 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         if (_presenterReady &&
             wrongCount > 0 &&
             wrongCount < _featurePolicy.maxWrongCount) {
-          final l10n = AppLocalizations.of(context)!;
-          _showTopFeedback(
-            '${l10n.gameWrongShort} $wrongCount/${_featurePolicy.maxWrongCount}',
-            backgroundColor: const Color(0xFF7A3E48),
-          );
+          final max = _featurePolicy.maxWrongCount;
+          _recordFeedback((e) => e.wrongCount = (wrongCount, max));
         }
       },
       onGameOver: () {
         _activeHint = null;
-        if (_isVibrationEnabled) {
-          HapticFeedback.heavyImpact()
-              .then((_) => Future<void>.delayed(
-                    const Duration(milliseconds: 80),
-                  ))
-              .then((_) => HapticFeedback.heavyImpact())
-              .then((_) => Future<void>.delayed(
-                    const Duration(milliseconds: 80),
-                  ))
-              .then((_) => HapticFeedback.heavyImpact());
-        }
+        _lockedInputNumber = null;
+        _recordFeedback((e) => e.gameOver = true);
         _showGameOverDialog();
       },
       onCorrectAnswer: (row, col) {
@@ -875,10 +946,13 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         }
         // 힌트로 채웠든 직접 입력했든, 이 입력으로 어떤 숫자가 9개 모두
         // 채워졌다면 완료 반응을 준다(둘 다 정답 입력이라는 점은 같다).
+        _recordFeedback((e) => e.correct = true);
         _maybeCelebrateDigitCompletion(row, col);
         _maybeCelebrateProgressMilestone();
       },
+      onInputProcessed: _flushFeedback,
       onIncorrectAnswer: (row, col) {
+        _recordFeedback((e) => e.wrong = true);
         _effectsController.triggerErrorEffect(
           row: row,
           col: col,
@@ -1934,10 +2008,12 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                           _presenter.selectedRow == row &&
                           _presenter.selectedCol == col;
                   final lockedNumber = _lockedInputNumber;
-                  final shouldApplyLockedNumber =
-                      lockedNumber != null && _hasEditableSelection;
+                  // 이미 숫자가 들어 있는 칸은 건너뛴다(덮어쓰지 않는다).
+                  final shouldApplyLockedNumber = lockedNumber != null &&
+                      _hasEditableSelection &&
+                      _presenter.getCellValue(row, col) == 0;
                   if (shouldApplyLockedNumber) {
-                    _insertDigit(lockedNumber);
+                    _insertDigit(lockedNumber, fromLock: true);
                   } else if (didSelectionChange && _isVibrationEnabled) {
                     unawaited(HapticFeedback.selectionClick());
                   }
@@ -2024,6 +2100,12 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     if (_isVibrationEnabled) {
       unawaited(HapticFeedback.selectionClick());
     }
+    // 고정할 때만 짧게 안내한다. 해제는 버튼 상태만 원래대로 돌아간다.
+    if (_lockedInputNumber != null) {
+      _showTopFeedback(
+        AppLocalizations.of(context)!.gameNumberLockedMessage(number),
+      );
+    }
   }
 
   void _handleNumberButtonTap(int number) {
@@ -2037,7 +2119,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   // 넘패드 탭과 아이패드 애플펜슬 필기 입력이 공유하는 실제 입력 처리.
   // 두 경로 모두 같은 검증/부수효과(진동, 오답셀 타이머, 메모 하이라이트)를
   // 거치도록 한곳에 모아둔다.
-  void _insertDigit(int number) {
+  void _insertDigit(int number, {bool fromLock = false}) {
     if (!_isNumberInputEnabled(number)) return;
     setState(() {
       _memoFocusNumber = _presenter.isMemoMode ? number : null;
@@ -2047,9 +2129,40 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         _presenter.selectedRow,
         _presenter.selectedCol,
       );
-      unawaited(_vibrateOnNumberInput(number));
     }
+    _recordFeedback((e) {
+      e.fromInput = true;
+      e.fromLock = fromLock;
+      e.memo = _presenter.isMemoMode;
+    });
+    final row = _presenter.selectedRow;
+    final col = _presenter.selectedCol;
     _presenter.setSelectedCellValue(number);
+    if (!_presenter.isMemoMode && row != null && col != null) {
+      // 오답이면 연속 오답으로 게임이 끝나지 않도록 고정을 풀어 준다.
+      final isWrong = _presenter.getCellValue(row, col) == number &&
+          number != _presenter.getCorrectValue(row, col);
+      if (isWrong && _lockedInputNumber != null) {
+        setState(() => _lockedInputNumber = null);
+      }
+    }
+    unawaited(_maybeShowNumberLockTip());
+  }
+
+  /// 숫자패드를 몇 번 써 본 사용자에게 숫자 고정을 한 번만 알려 준다.
+  Future<void> _maybeShowNumberLockTip() async {
+    if (_numberLockTipShown || _lockedInputNumber != null) return;
+    _numberInputCount++;
+    if (_numberInputCount < 5) return;
+    _numberLockTipShown = true;
+    if (await _numberLockTipService.hasShownTip()) return;
+    await _numberLockTipService.markTipShown();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.gameNumberLockTipMessage),
+      ),
+    );
   }
 
   int? _selectedInputNumber() {
@@ -2225,6 +2338,21 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         child: button,
       );
     }
+    final l10n = AppLocalizations.of(context)!;
+    if (isLockedNumber) {
+      button = Semantics(
+        button: true,
+        selected: true,
+        enabled: isEnabled,
+        label: l10n.gameNumberButtonLockedSemantics(number),
+        excludeSemantics: true,
+        onTap: isEnabled ? () => _handleNumberButtonTap(number) : null,
+        onLongPress: () => _toggleNumberLock(number),
+        child: button,
+      );
+    } else if (_canLockNumber(number)) {
+      button = Semantics(hint: l10n.gameNumberButtonLockHint, child: button);
+    }
 
     if (number != _numberPopDigit) {
       return button;
@@ -2272,29 +2400,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     final key = '$row,$col';
     _wrongCellTimers[key]?.cancel();
     _wrongCellTimers.remove(key);
-  }
-
-  Future<void> _vibrateOnNumberInput(int number) async {
-    if (!_isVibrationEnabled || !_presenterReady) return;
-
-    final selectedRow = _presenter.selectedRow;
-    final selectedCol = _presenter.selectedCol;
-    if (selectedRow == null || selectedCol == null) return;
-    if (_presenter.isCellFixed(selectedRow, selectedCol)) return;
-    if (_presenter.isHintCell(selectedRow, selectedCol)) return;
-    if (_presenter.isPaused ||
-        _presenter.isGameComplete ||
-        _presenter.isGameOver) {
-      return;
-    }
-
-    final isCorrectInput =
-        number == _presenter.getCorrectValue(selectedRow, selectedCol);
-    if (isCorrectInput) {
-      await HapticFeedback.lightImpact();
-    } else {
-      await HapticFeedback.mediumImpact();
-    }
   }
 
   Widget _buildMobileActionButton({

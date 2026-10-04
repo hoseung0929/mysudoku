@@ -1020,7 +1020,7 @@ void main() {
 
       test(
           'highlights every cell holding the given digit, then clears '
-          'within ~250ms', () {
+          'within ~310ms', () {
         fakeAsync((async) {
           final c = GameEffectsController();
           c.triggerDigitCompleteEffect(
@@ -1036,10 +1036,10 @@ void main() {
           expect(c.digitCompleteActive['8,2'], isTrue);
           expect(c.digitCompleteActive['0,2'], isNull); // 5가 아닌 칸
 
-          // 컨트롤러 쪽 대기 시간은 digitCompleteHold(190ms) — 나머지
-          // 60ms는 위젯의 AnimatedContainer 페이드로, 컨트롤러 상태와는
-          // 무관하다(다른 효과들과 같은 구조).
-          async.elapse(const Duration(milliseconds: 189));
+          // 컨트롤러 쪽 대기 시간은 digitCompleteHold(250ms) — 나머지
+          // 60ms는 위젯의 AnimatedContainer 페이드로(합계 310ms), 컨트롤러
+          // 상태와는 무관하다(다른 효과들과 같은 구조).
+          async.elapse(const Duration(milliseconds: 249));
           expect(c.digitCompleteActive['0,0'], isTrue);
           async.elapse(const Duration(milliseconds: 10));
           expect(c.digitCompleteActive['0,0'], isFalse);

@@ -4,7 +4,9 @@ import 'package:sudoku159/database/database_helper.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/model/sudoku_game.dart';
 import 'package:sudoku159/model/sudoku_level.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
+import 'package:sudoku159/services/challenge/weekly_goal_service.dart';
 import 'package:sudoku159/services/records/game_record_service.dart';
 import 'package:sudoku159/services/settings/notification_service.dart';
 import 'package:sudoku159/theme/app_theme.dart';
@@ -19,6 +21,15 @@ class _FakeDb implements DatabaseHelper {
   bool failDailyHas = false;
   bool failDailyRecord = false;
   final List<String> calls = [];
+
+  /// 주간 목표 확인에 쓰는 최근 완료 이벤트(없으면 조회 실패와 같은 빈 목록).
+  List<Map<String, dynamic>>? recentEvents;
+
+  @override
+  Future<List<Map<String, dynamic>>> getRecentClearEvents({
+    int limit = 365,
+  }) async =>
+      recentEvents ?? (throw StateError('no events'));
 
   @override
   Future<void> saveClearEvent({
@@ -134,13 +145,17 @@ void main() {
     gameNumber: 1,
   );
 
-  GameCompletionCoordinator coordinator(_FakeDb db,
-          {bool failRecord = false}) =>
+  GameCompletionCoordinator coordinator(
+    _FakeDb db, {
+    bool failRecord = false,
+    WeeklyGoalService? weeklyGoalService,
+  }) =>
       GameCompletionCoordinator(
         gameRecordService: _FakeRecordService(db, fail: failRecord),
         challengeProgressService: _FakeChallengeService(),
         notificationService: _FakeNotifications(),
         databaseHelper: db,
+        weeklyGoalService: weeklyGoalService,
       );
 
   Future<GameCompletionData> prepare(
@@ -169,6 +184,53 @@ void main() {
       challengeDate: '2026-10-03',
     );
   }
+
+  group('weekly goal celebration in the result data', () {
+    Map<String, dynamic> clear(int day) => {
+          'clear_date': WeeklyGoalService.formatDate(DateTime(2026, 10, day)),
+        };
+
+    Future<WeeklyGoalService> goalService() async {
+      SharedPreferences.setMockInitialValues({});
+      return WeeklyGoalService(
+        prefs: await SharedPreferences.getInstance(),
+        now: () => DateTime(2026, 10, 7),
+      );
+    }
+
+    testWidgets('only the clear that reaches the goal carries the message',
+        (tester) async {
+      final goal = await goalService();
+      await goal.resolve(const []); // 이번 주 3판 목표 확정
+
+      final db = _FakeDb()..recentEvents = [clear(5), clear(6)];
+      final under =
+          await prepare(tester, coordinator(db, weeklyGoalService: goal));
+      expect(under.weeklyGoalMessage, isNull);
+
+      db.recentEvents = [clear(5), clear(6), clear(7)];
+      final reached =
+          await prepare(tester, coordinator(db, weeklyGoalService: goal));
+      expect(reached.weeklyGoalMessage, "You reached this week's goal");
+
+      // 같은 주 재도전·재실행: 다시 축하하지 않는다.
+      db.recentEvents = [clear(5), clear(6), clear(7), clear(7)];
+      final again =
+          await prepare(tester, coordinator(db, weeklyGoalService: goal));
+      expect(again.weeklyGoalMessage, isNull);
+    });
+
+    testWidgets('a failing goal lookup never blocks the result',
+        (tester) async {
+      final goal = await goalService();
+      final data = await prepare(
+        tester,
+        coordinator(_FakeDb(), weeklyGoalService: goal), // 이벤트 조회 실패
+      );
+      expect(data.weeklyGoalMessage, isNull);
+      expect(data.isNewBestRecord, isTrue);
+    });
+  });
 
   group('GameCompletionCoordinator.prepare keeps going when a save fails', () {
     testWidgets('all saves succeed: every step runs, data is complete',

@@ -1,7 +1,7 @@
 # UI/UX 화면 정리 결과 (완료·실패 · 기록 · 전체 화면 검증)
 
 작업 기준일: 2026-09-20 · 브랜치 `fix/ipad-landscape-layout` · 커밋하지 않은 작업 트리 기준
-이 문서는 `docs/worklist`의 마지막 3단계 명세(완료·실패 화면 → 기록 화면 → 전체 화면 검증)와, 그 앞에서 함께 진행한 홈·퍼즐 선택 화면 변경까지 정리한다. 앞선 통합 검증은 [ux-integration-review.md](ux-integration-review.md).
+이 문서는 `docs/worklist.md`의 마지막 3단계 명세(완료·실패 화면 → 기록 화면 → 전체 화면 검증)와, 그 앞에서 함께 진행한 홈·퍼즐 선택 화면 변경까지 정리한다. 앞선 통합 검증은 [ux-integration-review.md](ux-integration-review.md).
 
 ## 1. 화면별 최종 구조
 

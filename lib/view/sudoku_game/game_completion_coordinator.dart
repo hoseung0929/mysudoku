@@ -4,6 +4,7 @@ import 'package:sudoku159/model/sudoku_game_set.dart';
 import 'package:sudoku159/model/sudoku_level.dart';
 import 'package:sudoku159/database/database_helper.dart';
 import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
+import 'package:sudoku159/services/challenge/weekly_goal_service.dart';
 import 'package:sudoku159/services/records/game_record_notifier.dart';
 import 'package:sudoku159/services/records/game_record_service.dart';
 import 'package:sudoku159/services/settings/notification_service.dart';
@@ -15,10 +16,14 @@ class GameCompletionData {
     required this.isNewBestRecord,
     required this.challengeMessage,
     required this.nextGame,
+    this.weeklyGoalMessage,
   });
 
   final bool isNewBestRecord;
   final String? challengeMessage;
+
+  /// 이번 판으로 이번 주 목표를 **처음** 달성했을 때만 채워진다.
+  final String? weeklyGoalMessage;
   final SudokuGame? nextGame;
 }
 
@@ -28,7 +33,9 @@ class GameCompletionCoordinator {
     ChallengeProgressService? challengeProgressService,
     NotificationService? notificationService,
     DatabaseHelper? databaseHelper,
-  })  : _gameRecordService = gameRecordService ?? GameRecordService(),
+    WeeklyGoalService? weeklyGoalService,
+  })  : _weeklyGoalService = weeklyGoalService ?? WeeklyGoalService(),
+        _gameRecordService = gameRecordService ?? GameRecordService(),
         _challengeProgressService =
             challengeProgressService ?? ChallengeProgressService(),
         _notificationService = notificationService ?? NotificationService(),
@@ -38,6 +45,7 @@ class GameCompletionCoordinator {
   final ChallengeProgressService _challengeProgressService;
   final NotificationService _notificationService;
   final DatabaseHelper _databaseHelper;
+  final WeeklyGoalService _weeklyGoalService;
 
   Future<GameCompletionData> prepare({
     required AppLocalizations l10n,
@@ -113,6 +121,16 @@ class GameCompletionCoordinator {
     } catch (e) {
       AppLogger.error('일일 도전 기록 저장 실패(계속 진행)', e);
     }
+    // 이번 판으로 주간 목표를 처음 채웠다면 결과 화면에서 한 번만 축하한다.
+    String? weeklyGoalMessage;
+    try {
+      final events = await _databaseHelper.getRecentClearEvents(limit: 365);
+      if (await _weeklyGoalService.consumeCelebration(events)) {
+        weeklyGoalMessage = l10n.gameResultWeeklyGoalAchieved;
+      }
+    } catch (e) {
+      AppLogger.error('주간 목표 확인 실패(계속 진행)', e);
+    }
     GameRecordNotifier.instance.notifyChanged();
 
     try {
@@ -147,6 +165,7 @@ class GameCompletionCoordinator {
       isNewBestRecord: isNewBestRecord,
       challengeMessage: challengeMessage,
       nextGame: nextGame,
+      weeklyGoalMessage: weeklyGoalMessage,
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:ui' as ui show TextDirection;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +9,7 @@ import 'package:sudoku159/l10n/sudoku_level_l10n.dart';
 import 'package:sudoku159/navigation/root_nav_scope.dart';
 import 'package:sudoku159/navigation/tab_scroll_controller.dart';
 import 'package:sudoku159/services/records/game_record_notifier.dart';
+import 'package:sudoku159/services/challenge/weekly_goal_service.dart';
 import 'package:sudoku159/services/records/records_statistics_service.dart';
 import 'package:sudoku159/theme/level_status_colors.dart';
 import 'package:sudoku159/theme/system_ui_style.dart';
@@ -107,6 +110,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   List<Map<String, dynamic>> _levels = [];
   List<Map<String, dynamic>> _recent = [];
   Map<String, dynamic> _activitySummary = {};
+  WeeklyGoalState? _weeklyGoal;
   List<Map<String, dynamic>> _events = [];
 
   @override
@@ -186,6 +190,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           _recent = data.recent;
           _activitySummary = data.activitySummary;
           _events = data.events;
+          _weeklyGoal = data.weeklyGoal;
           _hasLoaded = true;
         });
         // 히트맵을 최신 주(오른쪽 끝)로 자동 스크롤
@@ -417,6 +422,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
       valueListenable: _selectedLevel,
       builder: (context, _, __) => _buildLevelSection(l10n),
     );
+    final rings = _buildLevelRingsSection(l10n);
     final calendar = _buildCalendarSection(l10n, heatmap);
 
     return LayoutBuilder(
@@ -429,7 +435,13 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [week, const SizedBox(height: 24), levels],
+                  children: [
+                    week,
+                    const SizedBox(height: 24),
+                    rings,
+                    const SizedBox(height: 24),
+                    levels,
+                  ],
                 ),
               ),
               const SizedBox(width: 24),
@@ -446,6 +458,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             week,
+            const SizedBox(height: 20),
+            rings,
             const SizedBox(height: 20),
             levels,
             const SizedBox(height: 20),
@@ -651,7 +665,16 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
             final overlay = palette.completedBackground;
 
             // ── 문구(전체 문장은 번역 키로 받는다) ──────────────────────────
-            final heroSentence = l10n.recordsSummaryHeroSentence(totalCleared);
+            // 완료 수의 의미로 고른다: 첫 완료 → 10의 배수 달성 → 2~9 → 11~29 → 30+.
+            final heroSentence = totalCleared == 1
+                ? l10n.recordsSummaryHeroFirst
+                : (totalCleared > 0 && totalCleared % 10 == 0)
+                    ? l10n.recordsSummaryHeroMilestone(totalCleared)
+                    : totalCleared <= 9
+                        ? l10n.recordsSummaryHeroSentence(totalCleared)
+                        : totalCleared <= 29
+                            ? l10n.recordsSummaryHeroGrowing(totalCleared)
+                            : l10n.recordsSummaryHeroStacked(totalCleared);
             // 보조 문구: 가장 긍정적인 정보 우선. 실수 없이 완료가 없으면 생략.
             final String? qualityText = perfectClears <= 0
                 ? null
@@ -928,6 +951,217 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     );
   }
 
+  /// 선택된 난이도 이름. 선택이 없으면 기록이 있는 첫 난이도(없으면 첫 난이도).
+  /// 진행 링과 난이도별 기록이 같은 값을 쓴다.
+  String _resolveSelectedLevelName(List<Map<String, dynamic>> stats) {
+    return stats.any((s) => s['level_name'] == _selectedLevelName)
+        ? _selectedLevelName!
+        : (stats.firstWhere(
+            (s) => (s['cleared_count'] as int? ?? 0) > 0,
+            orElse: () => stats.first,
+          )['level_name'] as String);
+  }
+
+  // ─── 난이도별 진행 링 ─────────────────────────────────────────────────────
+
+  /// 난이도마다 완료 비율을 원형 링 하나로 보여주는 정적 요약 카드. 링 중앙에는
+  /// 완료 개수, 아래에는 난이도 이름만 둔다. 선택은 아래 난이도별 기록의
+  /// 필터가 맡으므로 누를 수 없다. 한 줄에 들어가지 않으면 2×2로 바꾼다.
+  Widget _buildLevelRingsSection(AppLocalizations l10n) {
+    final stats = _displayLevelStats;
+    if (stats.isEmpty) return const SizedBox.shrink();
+    final cs = Theme.of(context).colorScheme;
+    final palette = LevelStatusPalette.of(context);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final scaler = MediaQuery.textScalerOf(context);
+    final direction = Directionality.of(context);
+    final isTablet = MediaQuery.sizeOf(context).width > 600;
+    final maxRing = isTablet ? 84.0 : 60.0;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // 난이도마다 채움색을 달리한다(알 수 없는 난이도는 기본 보라색).
+    Color levelColor(String levelName) {
+      final (light, dark) = switch (levelName) {
+        '초급' => (const Color(0xFF3FA77A), const Color(0xFF5BC79A)),
+        '중급' => (const Color(0xFF2E78B7), const Color(0xFF5AB4ED)),
+        '고급' => (const Color(0xFFE08A2E), const Color(0xFFF0A24F)),
+        '전문가' => (const Color(0xFFD0506B), const Color(0xFFEF7C93)),
+        _ => (palette.primaryPurple, palette.primaryPurple),
+      };
+      return isDark ? dark : light;
+    }
+
+    final names = [
+      for (final st in stats)
+        (st['level_name'] as String).localizedSudokuLevelName(l10n),
+    ];
+    final labelStyle = DefaultTextStyle.of(context).style.copyWith(
+          fontSize: 13,
+          height: 1.2,
+          fontWeight: FontWeight.w600,
+          color: cs.onSurface,
+        );
+
+    return KeyedSubtree(
+      key: const Key('records_level_rings'),
+      child: _card(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _RecordCardHeader(title: l10n.recordsLevelRingsTitle),
+            const SizedBox(height: 16),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                const cellPadding = 4.0;
+                // 한 줄 배치에서 모든 이름이 2줄 안에 단어 중간이 잘리지 않고
+                // 들어오지 않으면 2×2로 바꾼다(글자는 줄이지 않는다).
+                final rowLabelWidth =
+                    constraints.maxWidth / stats.length - cellPadding * 2;
+                final useGrid = !_levelLabelsFit(
+                  names,
+                  style: labelStyle,
+                  scaler: scaler,
+                  width: rowLabelWidth,
+                  direction: direction,
+                );
+                final columns = useGrid ? 2 : stats.length;
+                final cellWidth = constraints.maxWidth / columns;
+
+                Widget ring(int i) {
+                  final stat = stats[i];
+                  final levelName = stat['level_name'] as String;
+                  final cleared = stat['cleared_count'] as int? ?? 0;
+                  final total = stat['total_count'] as int? ?? 0;
+                  final ratio =
+                      total > 0 ? (cleared / total).clamp(0.0, 1.0) : 0.0;
+                  final size =
+                      (cellWidth - cellPadding * 2).clamp(0.0, maxRing);
+                  return Semantics(
+                    container: true,
+                    label: l10n.recordsLevelRingSemantics(
+                        names[i], cleared, total),
+                    excludeSemantics: true,
+                    child: Padding(
+                      key: Key('records_level_ring_$levelName'),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: cellPadding,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0, end: ratio),
+                            duration: reduceMotion
+                                ? Duration.zero
+                                : const Duration(milliseconds: 600),
+                            curve: Curves.easeOutCubic,
+                            builder: (context, value, _) => SizedBox(
+                              width: size,
+                              height: size,
+                              child: CustomPaint(
+                                painter: _ProgressRingPainter(
+                                  progress: value,
+                                  trackColor: palette.progressTrack,
+                                  progressColor: levelColor(levelName),
+                                  strokeWidth: isTablet ? 8 : 6,
+                                ),
+                                child: Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(isTablet ? 12 : 8),
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        '$cleared',
+                                        maxLines: 1,
+                                        style: TextStyle(
+                                          fontSize: isTablet ? 17 : 15,
+                                          fontWeight: FontWeight.w700,
+                                          color: cs.onSurface,
+                                          fontFeatures: const [
+                                            FontFeature.tabularFigures()
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            names[i],
+                            // 한 줄 배치는 2줄, 2×2에서는 큰 글씨용으로 3줄까지.
+                            maxLines: useGrid ? 3 : 2,
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
+                            style: labelStyle,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                Widget row(int from, int to) => Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (var i = from; i < to; i++)
+                          Expanded(child: ring(i)),
+                      ],
+                    );
+
+                if (!useGrid) return row(0, stats.length);
+                return Column(
+                  children: [
+                    for (var i = 0; i < stats.length; i += 2) ...[
+                      if (i > 0) const SizedBox(height: 16),
+                      row(i, (i + 2).clamp(0, stats.length)),
+                    ],
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// [names]가 모두 [width] 안에서 단어 중간이 잘리지 않고 2줄 안에 들어오는가.
+  bool _levelLabelsFit(
+    List<String> names, {
+    required TextStyle style,
+    required TextScaler scaler,
+    required double width,
+    required ui.TextDirection direction,
+  }) {
+    if (width <= 0) return false;
+    for (final name in names) {
+      final painter = TextPainter(
+        text: TextSpan(text: name, style: style),
+        textDirection: direction,
+        textScaler: scaler,
+        maxLines: 2,
+        ellipsis: '\u2026',
+      )..layout(maxWidth: width);
+      final exceeds = painter.didExceedMaxLines;
+      painter.dispose();
+      if (exceeds) return false;
+      for (final word in name.split(RegExp(r'\s+'))) {
+        final wordPainter = TextPainter(
+          text: TextSpan(text: word, style: style),
+          textDirection: direction,
+          textScaler: scaler,
+          maxLines: 1,
+        )..layout();
+        final tooWide = wordPainter.width > width;
+        wordPainter.dispose();
+        if (tooWide) return false;
+      }
+    }
+    return true;
+  }
+
   // ─── 이번 주 활동 ─────────────────────────────────────────────────────────
 
   Widget _buildWeekSection(
@@ -1030,6 +1264,116 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                       ],
                     ),
             ),
+          ),
+          if (_weeklyGoal != null) ...[
+            const SizedBox(height: 14),
+            _buildWeeklyGoal(l10n, _weeklyGoal!, reduceMotion),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// 이번 주 활동 카드 안의 주간 목표: 이번 주 목표 N / M판 · 진행바 · 한 줄 안내.
+  /// 별도 카드를 만들지 않고, 달성하면 진행바가 완료 색과 체크로 바뀐다.
+  Widget _buildWeeklyGoal(
+    AppLocalizations l10n,
+    WeeklyGoalState goal,
+    bool reduceMotion,
+  ) {
+    final cs = Theme.of(context).colorScheme;
+    final palette = LevelStatusPalette.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final doneColor =
+        isDark ? const Color(0xFF5BC79A) : const Color(0xFF3FA77A);
+    final barColor = goal.isAchieved ? doneColor : palette.primaryPurple;
+    final message = goal.isAchieved
+        ? l10n.recordsWeeklyGoalAchieved
+        : goal.completed == 0
+            ? l10n.recordsWeeklyGoalStart
+            : l10n.recordsWeeklyGoalRemaining(goal.remaining);
+    final progressText =
+        l10n.recordsWeeklyGoalProgress(goal.completed, goal.target);
+
+    return Semantics(
+      container: true,
+      label: '${l10n.recordsWeeklyGoalLabel} $progressText. $message',
+      excludeSemantics: true,
+      child: Column(
+        key: const Key('records_weekly_goal'),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12,
+            runSpacing: 2,
+            children: [
+              Text(
+                l10n.recordsWeeklyGoalLabel,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: cs.onSurface,
+                ),
+              ),
+              Text(
+                progressText,
+                key: const Key('records_weekly_goal_progress'),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: cs.onSurface,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: goal.progress),
+              duration: reduceMotion
+                  ? Duration.zero
+                  : const Duration(milliseconds: 500),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, _) => LinearProgressIndicator(
+                key: const Key('records_weekly_goal_bar'),
+                value: value,
+                minHeight: 8,
+                backgroundColor: palette.progressTrack,
+                valueColor: AlwaysStoppedAnimation(barColor),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (goal.isAchieved) ...[
+                Icon(
+                  Icons.check_circle_rounded,
+                  key: const Key('records_weekly_goal_check'),
+                  size: 18,
+                  color: doneColor,
+                ),
+                const SizedBox(width: 6),
+              ],
+              Expanded(
+                child: Text(
+                  message,
+                  key: const Key('records_weekly_goal_message'),
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.3,
+                    color: goal.isAchieved ? cs.onSurface : cs.onSurfaceVariant,
+                    fontWeight:
+                        goal.isAchieved ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1279,12 +1623,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         reduceMotion ? Duration.zero : const Duration(milliseconds: 170);
     final stats = _displayLevelStats;
     if (stats.isEmpty) return const SizedBox.shrink();
-    final selectedName = stats.any((s) => s['level_name'] == _selectedLevelName)
-        ? _selectedLevelName!
-        : (stats.firstWhere(
-            (s) => (s['cleared_count'] as int? ?? 0) > 0,
-            orElse: () => stats.first,
-          )['level_name'] as String);
+    final selectedName = _resolveSelectedLevelName(stats);
     final stat = stats.firstWhere((s) => s['level_name'] == selectedName);
     final cleared = stat['cleared_count'] as int? ?? 0;
     final total = stat['total_count'] as int? ?? 0;
@@ -2112,4 +2451,45 @@ class _WeekDayCellState extends State<_WeekDayCell> {
       ),
     );
   }
+}
+
+class _ProgressRingPainter extends CustomPainter {
+  const _ProgressRingPainter({
+    required this.progress,
+    required this.trackColor,
+    required this.progressColor,
+    required this.strokeWidth,
+  });
+
+  final double progress;
+  final Color trackColor;
+  final Color progressColor;
+  final double strokeWidth;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final arcRect = rect.deflate(strokeWidth / 2);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+    canvas.drawArc(
+        arcRect, 0, 2 * 3.141592653589793, false, paint..color = trackColor);
+    if (progress > 0) {
+      canvas.drawArc(
+          arcRect,
+          -3.141592653589793 / 2,
+          2 * 3.141592653589793 * progress,
+          false,
+          paint..color = progressColor);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ProgressRingPainter old) =>
+      old.progress != progress ||
+      old.trackColor != trackColor ||
+      old.progressColor != progressColor ||
+      old.strokeWidth != strokeWidth;
 }

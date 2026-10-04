@@ -1,5 +1,6 @@
 import 'package:sudoku159/constants/records_level_filter.dart';
 import 'package:sudoku159/database/database_helper.dart';
+import 'package:sudoku159/services/challenge/weekly_goal_service.dart';
 
 class RecordsStatisticsData {
   const RecordsStatisticsData({
@@ -8,6 +9,7 @@ class RecordsStatisticsData {
     required this.recent,
     required this.activitySummary,
     required this.events,
+    this.weeklyGoal,
   });
 
   final Map<String, dynamic> overall;
@@ -17,11 +19,17 @@ class RecordsStatisticsData {
 
   /// 히트맵 표시 범위에 해당하는 클리어 이벤트
   final List<Map<String, dynamic>> events;
+
+  /// 이번 주 목표와 진행. 불러오지 못하면 null(목표 영역만 숨긴다).
+  final WeeklyGoalState? weeklyGoal;
 }
 
 class RecordsStatisticsService {
-  RecordsStatisticsService({DatabaseHelper? databaseHelper})
-      : _databaseHelper = databaseHelper ?? DatabaseHelper();
+  RecordsStatisticsService({
+    DatabaseHelper? databaseHelper,
+    WeeklyGoalService? weeklyGoalService,
+  })  : _databaseHelper = databaseHelper ?? DatabaseHelper(),
+        _weeklyGoalService = weeklyGoalService ?? WeeklyGoalService();
 
   static const List<String> levelOrder = ['초급', '중급', '고급', '전문가', '마스터'];
 
@@ -30,6 +38,7 @@ class RecordsStatisticsService {
   static const int _kTrendPastDaysInclusive = 6;
 
   final DatabaseHelper _databaseHelper;
+  final WeeklyGoalService _weeklyGoalService;
 
   Future<RecordsStatisticsData> load({
     required int selectedPeriodDays,
@@ -71,12 +80,20 @@ class RecordsStatisticsService {
       endDate: _formatDate(now),
     );
 
+    WeeklyGoalState? weeklyGoal;
+    try {
+      weeklyGoal = await _weeklyGoalService.resolve(events);
+    } catch (_) {
+      weeklyGoal = null;
+    }
+
     return RecordsStatisticsData(
       overall: overall,
       levels: levels,
       recent: recent,
       activitySummary: activitySummary,
       events: events,
+      weeklyGoal: weeklyGoal,
     );
   }
 

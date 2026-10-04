@@ -1076,6 +1076,42 @@ abstract class AppLocalizations {
   /// **'Tap a day to see your record'**
   String get recordsWeekSubtitle;
 
+  /// No description provided for @recordsWeeklyGoalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'This week\'s goal'**
+  String get recordsWeeklyGoalLabel;
+
+  /// No description provided for @recordsWeeklyGoalProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{goal, plural, =1{{done} / 1 puzzle} other{{done} / {goal} puzzles}}'**
+  String recordsWeeklyGoalProgress(int done, int goal);
+
+  /// No description provided for @recordsWeeklyGoalStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start your first puzzle this week'**
+  String get recordsWeeklyGoalStart;
+
+  /// No description provided for @recordsWeeklyGoalRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Just 1 more puzzle to reach your goal} other{Just {count} more puzzles to reach your goal}}'**
+  String recordsWeeklyGoalRemaining(int count);
+
+  /// No description provided for @recordsWeeklyGoalAchieved.
+  ///
+  /// In en, this message translates to:
+  /// **'You reached this week\'s goal'**
+  String get recordsWeeklyGoalAchieved;
+
+  /// No description provided for @gameResultWeeklyGoalAchieved.
+  ///
+  /// In en, this message translates to:
+  /// **'You reached this week\'s goal'**
+  String get gameResultWeeklyGoalAchieved;
+
   /// No description provided for @recordsPlayCalendarTitle.
   ///
   /// In en, this message translates to:
@@ -2448,7 +2484,43 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{count, plural, =1{You\'ve completed 1 puzzle} other{You\'ve completed {count} puzzles}}'**
-  String recordsSummaryHeroSentence(num count);
+  String recordsSummaryHeroSentence(int count);
+
+  /// No description provided for @recordsSummaryHeroFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'You completed your first puzzle'**
+  String get recordsSummaryHeroFirst;
+
+  /// No description provided for @recordsSummaryHeroMilestone.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{You\'ve reached 1 puzzle — steady progress!} other{You\'ve reached {count} puzzles — steady progress!}}'**
+  String recordsSummaryHeroMilestone(int count);
+
+  /// No description provided for @recordsSummaryHeroGrowing.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{You\'ve already solved 1 puzzle} other{You\'ve already solved {count} puzzles}}'**
+  String recordsSummaryHeroGrowing(int count);
+
+  /// No description provided for @recordsSummaryHeroStacked.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 puzzle solved, and your record keeps growing} other{{count} puzzles solved, and your record keeps growing}}'**
+  String recordsSummaryHeroStacked(int count);
+
+  /// No description provided for @recordsLevelRingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress by level'**
+  String get recordsLevelRingsTitle;
+
+  /// No description provided for @recordsLevelRingSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{level}, {cleared, plural, =1{1 of {total} completed} other{{cleared} of {total} completed}}'**
+  String recordsLevelRingSemantics(String level, int cleared, int total);
 
   /// No description provided for @recordsSummaryAllPerfect.
   ///
@@ -2851,6 +2923,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tip: long-press Notes to fill in all candidate numbers at once.'**
   String get autoNotesTipMessage;
+
+  /// No description provided for @gameNumberLockedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{number} locked · tap cells to fill'**
+  String gameNumberLockedMessage(int number);
+
+  /// No description provided for @gameNumberLockTipMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press a number to lock it and fill it into several cells quickly.'**
+  String get gameNumberLockTipMessage;
+
+  /// No description provided for @gameNumberButtonLockedSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{number}, locked, long press to unlock'**
+  String gameNumberButtonLockedSemantics(int number);
+
+  /// No description provided for @gameNumberButtonLockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Long press to lock'**
+  String get gameNumberButtonLockHint;
 
   /// No description provided for @gameMemoLongPressHint.
   ///

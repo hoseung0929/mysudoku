@@ -4,6 +4,7 @@ import 'package:sudoku159/model/daily_challenge_completion_detail.dart';
 import 'package:sudoku159/model/sudoku_level.dart';
 import 'package:sudoku159/model/today_challenge_target.dart';
 import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
+import 'package:sudoku159/services/challenge/weekly_goal_service.dart';
 import 'package:sudoku159/services/catalog/remote_puzzle_service.dart';
 import 'package:sudoku159/utils/app_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -43,25 +44,22 @@ void main() {
       expect(streak, 0);
     });
 
-    test('counts weekly clears within the recent seven-day window', () {
+    test('counts weekly clears from Monday of the current week', () {
       final service = ChallengeProgressService();
       final today = DateTime.now();
-      String format(DateTime value) =>
-          '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
+      final monday = WeeklyGoalService.weekStartOf(today);
+      String format(DateTime value) => WeeklyGoalService.formatDate(value);
 
       final count = service.calculateWeeklyClearCount([
         {'clear_date': format(today), 'wrong_count': 1},
+        // 이번 주 월요일(재도전으로 같은 날 두 번 완료해도 각각 센다).
+        {'clear_date': format(monday), 'wrong_count': 0},
+        {'clear_date': format(monday), 'wrong_count': 2},
+        // 지난주 일요일은 이번 주가 아니다.
         {
-          'clear_date': format(today.subtract(const Duration(days: 1))),
-          'wrong_count': 0
-        },
-        {
-          'clear_date': format(today.subtract(const Duration(days: 6))),
-          'wrong_count': 2
-        },
-        {
-          'clear_date': format(today.subtract(const Duration(days: 7))),
-          'wrong_count': 0
+          'clear_date':
+              format(DateTime(monday.year, monday.month, monday.day - 1)),
+          'wrong_count': 0,
         },
       ]);
 
@@ -93,39 +91,33 @@ void main() {
       expect(perfectCount, 2);
     });
 
-    test('personalizes weekly goal target using recent 14-day activity', () {
+    test('weekly goal target uses the two previous weeks, not this week', () {
       final service = ChallengeProgressService();
-      final today = DateTime.now();
-      String format(DateTime value) =>
-          '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
+      final monday = WeeklyGoalService.weekStartOf(DateTime.now());
+      String dayBefore(int n) => WeeklyGoalService.formatDate(
+          DateTime(monday.year, monday.month, monday.day - n));
+      List<Map<String, dynamic>> previousClears(int count) => [
+            for (var i = 0; i < count; i++)
+              {'clear_date': dayBefore(1 + i % 14), 'wrong_count': 1},
+          ];
+      // 이번 주(월요일 이후)의 플레이는 아무리 많아도 목표에 영향이 없다.
+      final thisWeek = [
+        for (var i = 0; i < 20; i++)
+          {
+            'clear_date': WeeklyGoalService.formatDate(monday),
+            'wrong_count': 0
+          },
+      ];
 
-      final lowActivityTarget = service.calculateWeeklyGoalTarget([
-        {'clear_date': format(today), 'wrong_count': 1},
-        {
-          'clear_date': format(today.subtract(const Duration(days: 2))),
-          'wrong_count': 0
-        },
-      ]);
-      final mediumActivityTarget =
-          service.calculateWeeklyGoalTarget(List.generate(
-        7,
-        (index) => {
-          'clear_date': format(today.subtract(Duration(days: index))),
-          'wrong_count': 1,
-        },
-      ));
-      final highActivityTarget =
-          service.calculateWeeklyGoalTarget(List.generate(
-        16,
-        (index) => {
-          'clear_date': format(today.subtract(Duration(days: index % 14))),
-          'wrong_count': 1,
-        },
-      ));
-
-      expect(lowActivityTarget, 3);
-      expect(mediumActivityTarget, 5);
-      expect(highActivityTarget, 7);
+      expect(service.calculateWeeklyGoalTarget(previousClears(2)), 3);
+      expect(service.calculateWeeklyGoalTarget(previousClears(4)), 3);
+      expect(service.calculateWeeklyGoalTarget(previousClears(5)), 5);
+      expect(service.calculateWeeklyGoalTarget(previousClears(14)), 5);
+      expect(service.calculateWeeklyGoalTarget(previousClears(15)), 7);
+      expect(
+        service.calculateWeeklyGoalTarget([...previousClears(2), ...thisWeek]),
+        3,
+      );
     });
 
     test('handles non-int wrong_count values safely', () {
@@ -303,13 +295,14 @@ void main() {
         recentClearEvents: [
           {'clear_date': format(today), 'wrong_count': 0},
           {
-            'clear_date': format(today.subtract(const Duration(days: 1))),
+            'clear_date': format(WeeklyGoalService.weekStartOf(today)),
             'wrong_count': 2
           },
         ],
       );
 
       expect(summary.weeklyClearCount, 2);
+      expect(summary.weeklyGoalTarget, 3);
       expect(summary.perfectClearCount, 1);
       expect(summary.lastClearDate, format(today));
     });

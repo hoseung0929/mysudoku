@@ -131,6 +131,7 @@ void main() {
       String? challenge,
       bool best = false,
       int hints = 0,
+      String? weeklyGoal,
     }) =>
         GameCompleteDialog(
           levelLabel: 'Beginner · Game 18',
@@ -139,10 +140,35 @@ void main() {
           hintsUsed: hints,
           isNewBestRecord: best,
           challengeMessage: challenge,
+          weeklyGoalMessage: weeklyGoal,
           onRestart: onRestart ?? () {},
           onGoToLevelSelection: onList ?? () {},
           onNextPuzzle: onNext,
         );
+
+    testWidgets('weekly goal celebration appears only when it is passed in',
+        (tester) async {
+      await tester.pumpWidget(_app(dialog(onNext: () {})));
+      expect(find.byKey(const Key('weekly_goal_celebration')), findsNothing);
+
+      await tester.pumpWidget(_app(dialog(
+        onNext: () {},
+        weeklyGoal: "You reached this week's goal",
+      )));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.byKey(const Key('weekly_goal_celebration')), findsOneWidget);
+      expect(find.text("You reached this week's goal"), findsOneWidget);
+      // 다른 성취 문구와 함께 있어도 둘 다 보이고 넘치지 않는다.
+      await tester.pumpWidget(_app(dialog(
+        onNext: () {},
+        challenge: 'Today challenge complete',
+        weeklyGoal: "You reached this week's goal",
+      )));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Today challenge complete'), findsOneWidget);
+      expect(find.text("You reached this week's goal"), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
 
     testWidgets('shows only real data in the specified order, no suggestions',
         (tester) async {

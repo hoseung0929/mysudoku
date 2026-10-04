@@ -533,6 +533,38 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsWeekSubtitle => '曜日をタップして記録を確認';
 
   @override
+  String get recordsWeeklyGoalLabel => '今週の目標';
+
+  @override
+  String recordsWeeklyGoalProgress(int done, int goal) {
+    String _temp0 = intl.Intl.pluralLogic(
+      goal,
+      locale: localeName,
+      other: '$done / $goal問',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recordsWeeklyGoalStart => '今週最初のパズルを始めましょう';
+
+  @override
+  String recordsWeeklyGoalRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'あと$count問で目標達成です',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recordsWeeklyGoalAchieved => '今週の目標を達成しました';
+
+  @override
+  String get gameResultWeeklyGoalAchieved => '今週の目標を達成しました';
+
+  @override
   String get recordsPlayCalendarTitle => '曜日別';
 
   @override
@@ -1304,8 +1336,59 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsMyRecordTitle => 'これまで';
 
   @override
-  String recordsSummaryHeroSentence(num count) {
-    return '$count問のパズルを完成しました';
+  String recordsSummaryHeroSentence(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count問のパズルを完成しました',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recordsSummaryHeroFirst => '最初のパズルを完成しました';
+
+  @override
+  String recordsSummaryHeroMilestone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count問を突破！コツコツ積み重ねています',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recordsSummaryHeroGrowing(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'もう$count問のパズルを解きました',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recordsSummaryHeroStacked(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count問のパズルがコツコツ積み上がりました',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recordsLevelRingsTitle => '難易度別の進行';
+
+  @override
+  String recordsLevelRingSemantics(String level, int cleared, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total問中$cleared問完了',
+    );
+    return '$level、$_temp0';
   }
 
   @override
@@ -1545,6 +1628,22 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get autoNotesTipMessage => 'ヒント: メモを長押しすると候補数字を一括で入力できます。';
+
+  @override
+  String gameNumberLockedMessage(int number) {
+    return '$numberを固定 · マスをタップして連続入力';
+  }
+
+  @override
+  String get gameNumberLockTipMessage => '数字を長押しすると、同じ数字を複数のマスにすばやく入力できます。';
+
+  @override
+  String gameNumberButtonLockedSemantics(int number) {
+    return '$number、固定中、長押しで解除';
+  }
+
+  @override
+  String get gameNumberButtonLockHint => '長押しで固定';
 
   @override
   String get gameMemoLongPressHint => 'タップでメモモード切り替え、長押しで自動メモ。';

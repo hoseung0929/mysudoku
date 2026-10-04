@@ -35,6 +35,10 @@ class SudokuGamePresenter {
   final Function(int, int)? onCorrectAnswer;
   final Function(int, int)? onIncorrectAnswer;
 
+  /// 숫자 입력·힌트 채우기 한 번의 처리가 끝난 직후(콜백이 모두 끝난 뒤) 호출된다.
+  /// 한 입력에서 발생한 여러 이벤트를 모아 한 번에 정리할 때 쓴다.
+  final void Function()? onInputProcessed;
+
   final int maxHints;
   final int maxWrongCount;
 
@@ -78,6 +82,7 @@ class SudokuGamePresenter {
     required this.onGameOver,
     this.onCorrectAnswer,
     this.onIncorrectAnswer,
+    this.onInputProcessed,
     required List<List<int>> puzzleBoard,
     required List<List<int>> initialBoard,
     required List<List<int>>? solution,
@@ -384,6 +389,7 @@ class SudokuGamePresenter {
     if (_boardController.isCellFixed(row, col)) return;
     if (_hintCells.contains('$row,$col')) return;
     _applySelectedCellValue(value);
+    onInputProcessed?.call();
   }
 
   /// 오답 자동삭제용: 특정 셀 값을 직접 클리어
@@ -477,6 +483,11 @@ class SudokuGamePresenter {
 
   /// 힌트 대상 칸에 정답을 넣고 힌트 칸으로 고정한다(남은 힌트는 줄이지 않음).
   void revealHintAt(int row, int col) {
+    _revealHintAt(row, col);
+    onInputProcessed?.call();
+  }
+
+  void _revealHintAt(int row, int col) {
     if (_isGameComplete || _isPaused || _isGameOver) return;
     if (_boardController.isCellFixed(row, col)) return;
     if (_hintCells.contains('$row,$col')) return;

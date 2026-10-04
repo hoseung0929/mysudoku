@@ -559,6 +559,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsWeekSubtitle => 'Tap a day to see your record';
 
   @override
+  String get recordsWeeklyGoalLabel => 'This week\'s goal';
+
+  @override
+  String recordsWeeklyGoalProgress(int done, int goal) {
+    String _temp0 = intl.Intl.pluralLogic(
+      goal,
+      locale: localeName,
+      other: '$done / $goal puzzles',
+      one: '$done / 1 puzzle',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recordsWeeklyGoalStart => 'Start your first puzzle this week';
+
+  @override
+  String recordsWeeklyGoalRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Just $count more puzzles to reach your goal',
+      one: 'Just 1 more puzzle to reach your goal',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recordsWeeklyGoalAchieved => 'You reached this week\'s goal';
+
+  @override
+  String get gameResultWeeklyGoalAchieved => 'You reached this week\'s goal';
+
+  @override
   String get recordsPlayCalendarTitle => 'By day';
 
   @override
@@ -1409,7 +1443,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsMyRecordTitle => 'So far';
 
   @override
-  String recordsSummaryHeroSentence(num count) {
+  String recordsSummaryHeroSentence(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
@@ -1417,6 +1451,56 @@ class AppLocalizationsEn extends AppLocalizations {
       one: 'You\'ve completed 1 puzzle',
     );
     return '$_temp0';
+  }
+
+  @override
+  String get recordsSummaryHeroFirst => 'You completed your first puzzle';
+
+  @override
+  String recordsSummaryHeroMilestone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You\'ve reached $count puzzles — steady progress!',
+      one: 'You\'ve reached 1 puzzle — steady progress!',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recordsSummaryHeroGrowing(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You\'ve already solved $count puzzles',
+      one: 'You\'ve already solved 1 puzzle',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recordsSummaryHeroStacked(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count puzzles solved, and your record keeps growing',
+      one: '1 puzzle solved, and your record keeps growing',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recordsLevelRingsTitle => 'Progress by level';
+
+  @override
+  String recordsLevelRingSemantics(String level, int cleared, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      cleared,
+      locale: localeName,
+      other: '$cleared of $total completed',
+      one: '1 of $total completed',
+    );
+    return '$level, $_temp0';
   }
 
   @override
@@ -1703,6 +1787,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get autoNotesTipMessage =>
       'Tip: long-press Notes to fill in all candidate numbers at once.';
+
+  @override
+  String gameNumberLockedMessage(int number) {
+    return '$number locked · tap cells to fill';
+  }
+
+  @override
+  String get gameNumberLockTipMessage =>
+      'Long-press a number to lock it and fill it into several cells quickly.';
+
+  @override
+  String gameNumberButtonLockedSemantics(int number) {
+    return '$number, locked, long press to unlock';
+  }
+
+  @override
+  String get gameNumberButtonLockHint => 'Long press to lock';
 
   @override
   String get gameMemoLongPressHint =>

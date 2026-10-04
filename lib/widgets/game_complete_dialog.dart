@@ -17,6 +17,7 @@ class GameCompleteDialog extends StatefulWidget {
     this.hintsUsed = 0,
     this.isNewBestRecord = false,
     this.challengeMessage,
+    this.weeklyGoalMessage,
     required this.onRestart,
     required this.onGoToLevelSelection,
     this.onNextPuzzle,
@@ -31,6 +32,9 @@ class GameCompleteDialog extends StatefulWidget {
   final int hintsUsed;
   final bool isNewBestRecord;
   final String? challengeMessage;
+
+  /// 이번 주 목표를 처음 달성한 판에서만 전달한다(짧은 축하 한 줄).
+  final String? weeklyGoalMessage;
   final VoidCallback onRestart;
   final VoidCallback onGoToLevelSelection;
 
@@ -131,6 +135,10 @@ class _GameCompleteDialogState extends State<GameCompleteDialog> {
               color: cs.onSurface,
             ),
           ),
+        ],
+        if (widget.weeklyGoalMessage != null) ...[
+          const SizedBox(height: 10),
+          _WeeklyGoalCelebration(message: widget.weeklyGoalMessage!),
         ],
       ],
       primaryLabel: hasNext ? l10n.dialogNextPuzzle : l10n.dialogBackToLevels,
@@ -310,6 +318,53 @@ class _CelebrationHeaderState extends State<_CelebrationHeader>
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 이번 주 목표를 처음 달성한 결과 화면에서만 보이는 짧은 축하 한 줄. 체크가
+/// 살짝 커지며 나타난다(동작 줄이기에서는 바로 표시).
+class _WeeklyGoalCelebration extends StatelessWidget {
+  const _WeeklyGoalCelebration({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final color = isDark ? const Color(0xFF5BC79A) : const Color(0xFF3FA77A);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+
+    return TweenAnimationBuilder<double>(
+      key: const Key('weekly_goal_celebration'),
+      tween: Tween(begin: reduceMotion ? 1 : 0, end: 1),
+      duration:
+          reduceMotion ? Duration.zero : const Duration(milliseconds: 450),
+      curve: Curves.easeOutBack,
+      builder: (context, t, child) => Opacity(
+        opacity: t.clamp(0.0, 1.0),
+        child: Transform.scale(scale: 0.9 + 0.1 * t, child: child),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.check_circle_rounded, size: 18, color: color),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

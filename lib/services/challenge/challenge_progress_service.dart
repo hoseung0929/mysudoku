@@ -6,6 +6,7 @@ import 'package:sudoku159/database/database_manager.dart';
 import 'package:sudoku159/model/sudoku_level.dart';
 import 'package:sudoku159/model/today_challenge_target.dart';
 import 'package:sudoku159/services/catalog/remote_puzzle_service.dart';
+import 'package:sudoku159/services/challenge/weekly_goal_service.dart';
 
 class ChallengeProgressSummary {
   const ChallengeProgressSummary({
@@ -151,9 +152,10 @@ class ChallengeProgressService {
       ..sort((a, b) => b.compareTo(a));
     final activityStreak =
         calculateDailyChallengeStreakFromDates(activityDates);
-    final weeklyClearCount = calculateWeeklyClearCount(clearEvents);
+    final weeklyGoal = await WeeklyGoalService().resolve(clearEvents);
+    final weeklyClearCount = weeklyGoal.completed;
     final perfectClearCount = calculatePerfectClearCount(clearEvents);
-    final weeklyGoalTarget = calculateWeeklyGoalTarget(clearEvents);
+    final weeklyGoalTarget = weeklyGoal.target;
 
     return ChallengeProgressSummary(
       streakDays: streak,
@@ -169,29 +171,13 @@ class ChallengeProgressService {
     );
   }
 
-  int calculateWeeklyGoalTarget(List<Map<String, dynamic>> recent) {
-    final today = _dateOnly(DateTime.now());
-    final earliest = today.subtract(const Duration(days: 13));
-    final recentTwoWeekClears = recent.where((record) {
-      final rawDate = record['clear_date'] as String?;
-      if (rawDate == null) {
-        return false;
-      }
-      final clearDate = _tryParseDateOnly(rawDate);
-      if (clearDate == null) {
-        return false;
-      }
-      return !clearDate.isBefore(earliest) && !clearDate.isAfter(today);
-    }).length;
-
-    if (recentTwoWeekClears <= 4) {
-      return 3;
-    }
-    if (recentTwoWeekClears >= 15) {
-      return 7;
-    }
-    return 5;
-  }
+  /// 이번 주가 시작될 때 정해지는 목표: 직전 2주(이번 주 제외)의 완료 수 기준.
+  /// 저장·고정은 [WeeklyGoalService.resolve]가 맡는다.
+  int calculateWeeklyGoalTarget(List<Map<String, dynamic>> recent) =>
+      WeeklyGoalService.targetForWeek(
+        recent,
+        WeeklyGoalService.weekStartOf(DateTime.now()),
+      );
 
   Future<void> _ensureBackfillDailyCompletions() async {
     final prefs = await SharedPreferences.getInstance();
@@ -326,21 +312,14 @@ class ChallengeProgressService {
     return target.levelName == levelName && target.gameNumber == gameNumber;
   }
 
+  /// 이번 주(월요일 00:00부터) 완료 수. 재도전 완료도 센다.
   int calculateWeeklyClearCount(List<Map<String, dynamic>> recent) {
-    final today = _dateOnly(DateTime.now());
-    final earliest = today.subtract(const Duration(days: 6));
-
-    return recent.where((record) {
-      final rawDate = record['clear_date'] as String?;
-      if (rawDate == null) {
-        return false;
-      }
-      final clearDate = _tryParseDateOnly(rawDate);
-      if (clearDate == null) {
-        return false;
-      }
-      return !clearDate.isBefore(earliest) && !clearDate.isAfter(today);
-    }).length;
+    final start = WeeklyGoalService.weekStartOf(DateTime.now());
+    return WeeklyGoalService.countClears(
+      recent,
+      start,
+      DateTime(start.year, start.month, start.day + 6),
+    );
   }
 
   int calculatePerfectClearCount(List<Map<String, dynamic>> recent) {
