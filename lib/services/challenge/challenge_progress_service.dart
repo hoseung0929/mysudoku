@@ -8,6 +8,8 @@ import 'package:sudoku159/model/today_challenge_target.dart';
 import 'package:sudoku159/services/catalog/remote_puzzle_service.dart';
 import 'package:sudoku159/services/challenge/weekly_goal_service.dart';
 
+enum ChallengeRecommendationEvent { firstChallenge, promoted }
+
 class ChallengeProgressSummary {
   const ChallengeProgressSummary({
     required this.streakDays,
@@ -16,6 +18,7 @@ class ChallengeProgressSummary {
     required this.todayChallengeLevelName,
     required this.todayChallengeGameNumber,
     this.challengeDate,
+    this.recommendationEvent,
     required this.lastClearDate,
     required this.weeklyClearCount,
     required this.weeklyGoalTarget,
@@ -33,6 +36,9 @@ class ChallengeProgressSummary {
 
   /// 위 타깃이 정해진 로컬 일자(YYYY-MM-DD).
   final String? challengeDate;
+
+  /// 오늘 타깃이 정해질 때 생긴 추천 이벤트(첫 도전·승급). 없으면 null.
+  final ChallengeRecommendationEvent? recommendationEvent;
   final String? lastClearDate;
   final int weeklyClearCount;
   final int weeklyGoalTarget;
@@ -44,11 +50,25 @@ class ChallengeProgressSummary {
       : 0;
 }
 
+class _Recommendation {
+  const _Recommendation({
+    required this.target,
+    required this.levelIndex,
+    required this.hasAnyClear,
+  });
+
+  final TodayChallengeTarget target;
+  final int levelIndex;
+  final bool hasAnyClear;
+}
+
 class ChallengeProgressService {
   ChallengeProgressService({
     DatabaseHelper? databaseHelper,
     DailyChallengeCompletionRepository? dailyChallengeCompletionRepository,
     Future<List<int>> Function(String levelName)? loadGameNumbersForLevel,
+    Future<List<int>> Function(String levelName)?
+        loadClearedGameNumbersForLevel,
     Future<List<Map<String, dynamic>>> Function({int limit})?
         loadRecentClearEvents,
     RemotePuzzleService? remotePuzzleService,
@@ -58,6 +78,8 @@ class ChallengeProgressService {
             DailyChallengeCompletionRepository(),
         _loadGameNumbersForLevel = loadGameNumbersForLevel ??
             (databaseHelper ?? DatabaseHelper()).getGameNumbersForLevel,
+        _loadClearedGameNumbersForLevel = loadClearedGameNumbersForLevel ??
+            (databaseHelper ?? DatabaseHelper()).getClearedGameNumbersForLevel,
         _loadRecentClearEvents = loadRecentClearEvents ??
             (databaseHelper ?? DatabaseHelper()).getRecentClearEvents,
         _remotePuzzleService = remotePuzzleService ?? RemotePuzzleService(),
@@ -75,6 +97,8 @@ class ChallengeProgressService {
   final DatabaseHelper _databaseHelper;
   final DailyChallengeCompletionRepository _dailyRepo;
   final Future<List<int>> Function(String levelName) _loadGameNumbersForLevel;
+  final Future<List<int>> Function(String levelName)
+      _loadClearedGameNumbersForLevel;
   final Future<List<Map<String, dynamic>>> Function({int limit})
       _loadRecentClearEvents;
   final RemotePuzzleService _remotePuzzleService;
@@ -164,6 +188,8 @@ class ChallengeProgressService {
       todayChallengeLevelName: challengeTarget.levelName,
       todayChallengeGameNumber: challengeTarget.gameNumber,
       challengeDate: challengeTarget.date,
+      recommendationEvent:
+          await _recommendationEventFor(challengeTarget.date ?? todayStr),
       lastClearDate: _firstClearDate(clearEvents) ?? _firstClearDate(recent),
       weeklyClearCount: weeklyClearCount,
       weeklyGoalTarget: weeklyGoalTarget,
@@ -194,8 +220,10 @@ class ChallengeProgressService {
       if (day == null) {
         continue;
       }
-      // 백필은 기존 로컬 규칙만 사용해 초기 로드 시 원격 왕복 비용을 줄인다.
-      final target = await _getLocalChallengeTargetForCalendarDay(day);
+      // 백필은 저장된 타깃을 먼저 보고, 없으면 기존 로컬 규칙만 사용해
+      // 초기 로드 시 원격 왕복 비용을 줄인다(추천 규칙은 적용하지 않는다).
+      final target = await _storedChallengeTarget(dateStr) ??
+          await _getLocalChallengeTargetForCalendarDay(day);
       if (row['level_name'] == target.levelName &&
           row['game_number'] == target.gameNumber) {
         await _dailyRepo.addCompletionForDate(dateStr);
@@ -206,13 +234,34 @@ class ChallengeProgressService {
 
   static const _targetCachePrefix = 'daily_challenge_target_v1_';
 
+  Future<TodayChallengeTarget?> _storedChallengeTarget(String dateKey) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final parts = prefs.getString('$_targetCachePrefix$dateKey')?.split('|');
+      final number =
+          parts != null && parts.length == 2 ? int.tryParse(parts[1]) : null;
+      if (parts == null || number == null) return null;
+      return TodayChallengeTarget(
+        levelName: parts[0],
+        gameNumber: number,
+        date: dateKey,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// 로컬 달력 일 기준으로 그날의 오늘의 도전(레벨·게임 번호)을 반환합니다.
   ///
   /// 그날 처음 확정된 타깃을 로컬에 고정한다. 이후 네트워크 상태가 바뀌어도
   /// 같은 날에는 표시·시작·완료 판정이 같은 타깃을 쓴다.
+  ///
+  /// [recommend]가 true면 저장된 타깃이 없을 때 완료 기록 기반 단계형 추천으로
+  /// 타깃을 만든다(오늘 타깃 전용). 과거 날짜·백필은 날짜 순환 규칙을 쓴다.
   Future<TodayChallengeTarget> getChallengeTargetForCalendarDay(
-    DateTime calendarDay,
-  ) async {
+    DateTime calendarDay, {
+    bool recommend = false,
+  }) async {
     final dateKey = formatLocalDate(calendarDay);
     final cacheKey = '$_targetCachePrefix$dateKey';
     SharedPreferences? prefs;
@@ -233,21 +282,130 @@ class ChallengeProgressService {
     }
 
     TodayChallengeTarget? resolved;
-    if (await _shouldUseRemoteDailyChallenge() &&
-        _remotePuzzleService.isConfigured) {
-      resolved = await _remotePuzzleService.fetchDailyChallengeTarget(
-        date: calendarDay,
-      );
+    var cacheable = true;
+    if (recommend) {
+      final recommendation = await _recommendTargetForCalendarDay(calendarDay);
+      resolved = recommendation?.target;
+      // 추천은 로컬 기록 기준이라 원격 응답(난이도 불일치 가능)은 쓰지 않는다.
+      // 카탈로그가 비어 있으면 저장하지 않고 임시 로컬 규칙을 쓴다.
+      if (resolved == null) {
+        resolved = await _getLocalChallengeTargetForCalendarDay(calendarDay);
+        cacheable = false;
+      } else if (prefs != null) {
+        await _recordRecommendationEvent(prefs, dateKey, recommendation!);
+      }
+    } else {
+      if (await _shouldUseRemoteDailyChallenge() &&
+          _remotePuzzleService.isConfigured) {
+        resolved = await _remotePuzzleService.fetchDailyChallengeTarget(
+          date: calendarDay,
+        );
+      }
+      resolved ??= await _getLocalChallengeTargetForCalendarDay(calendarDay);
     }
-    resolved ??= await _getLocalChallengeTargetForCalendarDay(calendarDay);
     final target = TodayChallengeTarget(
       levelName: resolved.levelName,
       gameNumber: resolved.gameNumber,
       date: dateKey,
     );
-    await prefs?.setString(
-        cacheKey, '${target.levelName}|${target.gameNumber}');
+    if (cacheable) {
+      await prefs?.setString(
+          cacheKey, '${target.levelName}|${target.gameNumber}');
+    }
     return target;
+  }
+
+  static const _lastLevelPrefsKey = 'daily_challenge_rec_level_v1';
+  static const _eventPrefix = 'daily_challenge_rec_event_v1_';
+  static const _promotionClears = 3;
+
+  /// 완료 기록으로 추천 난이도 인덱스를 계산한다. 자동 강등은 없다.
+  ///
+  /// 각 난이도를 3개씩 풀어 올라간 단계가 기준이고, 그 바로 한 단계 위를
+  /// 직접 1개 풀었으면 즉시 인정한다. 두 단계 이상 위의 기록은 무시한다.
+  static int recommendedLevelIndex(List<int> clearedCounts) {
+    var index = 0;
+    while (index + 1 < clearedCounts.length &&
+        clearedCounts[index] >= _promotionClears) {
+      index++;
+    }
+    if (index + 1 < clearedCounts.length && clearedCounts[index + 1] >= 1) {
+      index++;
+    }
+    return index;
+  }
+
+  /// 단계형 추천 타깃. 카탈로그가 비어 있으면 null(저장하지 않고 로컬 규칙 사용).
+  Future<_Recommendation?> _recommendTargetForCalendarDay(
+    DateTime calendarDay,
+  ) async {
+    final activeLevels =
+        SudokuLevel.levels.where((l) => !l.isMasterLevel).toList();
+    final cleared = <List<int>>[];
+    for (final level in activeLevels) {
+      cleared.add(await _loadClearedGameNumbersForLevel(level.name));
+    }
+    final index = recommendedLevelIndex([for (final c in cleared) c.length]);
+    final level = activeLevels[index];
+    final numbers = (await _loadGameNumbersForLevel(level.name))
+        .where((n) => n > 0)
+        .toList()
+      ..sort();
+    if (numbers.isEmpty) return null;
+
+    final dayOnly =
+        DateTime(calendarDay.year, calendarDay.month, calendarDay.day);
+    final daysSinceEpoch = dayOnly.difference(DateTime(2024, 1, 1)).inDays;
+    final start = daysSinceEpoch % numbers.length;
+    final done = cleared[index].toSet();
+    // 날짜 위치부터 순환하며 아직 풀지 않은 퍼즐을 찾고, 모두 풀었다면
+    // 날짜 위치의 퍼즐을 재도전으로 쓴다.
+    var chosen = numbers[start];
+    for (var offset = 0; offset < numbers.length; offset++) {
+      final candidate = numbers[(start + offset) % numbers.length];
+      if (!done.contains(candidate)) {
+        chosen = candidate;
+        break;
+      }
+    }
+    return _Recommendation(
+      target: TodayChallengeTarget(levelName: level.name, gameNumber: chosen),
+      levelIndex: index,
+      hasAnyClear: cleared.any((c) => c.isNotEmpty),
+    );
+  }
+
+  Future<void> _recordRecommendationEvent(
+    SharedPreferences prefs,
+    String dateKey,
+    _Recommendation recommendation,
+  ) async {
+    final previous = prefs.getInt(_lastLevelPrefsKey);
+    ChallengeRecommendationEvent? event;
+    if (previous == null) {
+      if (!recommendation.hasAnyClear && recommendation.levelIndex == 0) {
+        event = ChallengeRecommendationEvent.firstChallenge;
+      }
+    } else if (recommendation.levelIndex > previous) {
+      event = ChallengeRecommendationEvent.promoted;
+    }
+    await prefs.setInt(_lastLevelPrefsKey, recommendation.levelIndex);
+    if (event != null) {
+      await prefs.setString('$_eventPrefix$dateKey', event.name);
+    }
+  }
+
+  Future<ChallengeRecommendationEvent?> _recommendationEventFor(
+    String dateKey,
+  ) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString('$_eventPrefix$dateKey');
+      for (final event in ChallengeRecommendationEvent.values) {
+        if (event.name == raw) return event;
+      }
+    } catch (_) {}
+    return null;
   }
 
   Future<TodayChallengeTarget> _getLocalChallengeTargetForCalendarDay(
@@ -275,7 +433,7 @@ class ChallengeProgressService {
   }
 
   Future<TodayChallengeTarget> getTodayChallengeTarget() async {
-    return getChallengeTargetForCalendarDay(DateTime.now());
+    return getChallengeTargetForCalendarDay(DateTime.now(), recommend: true);
   }
 
   /// 완료한 게임이 어느 날의 오늘의 도전 완료로 귀속되는지 반환한다(해당 없으면 null).

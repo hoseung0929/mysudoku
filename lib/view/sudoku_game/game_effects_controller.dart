@@ -52,6 +52,7 @@ class GameEffectsController {
 
   final Map<String, bool> _waveActive = <String, bool>{};
   final Map<String, bool> _lineCompleteActive = <String, bool>{};
+
   final Map<String, bool> _errorActive = <String, bool>{};
   final Map<String, double> _errorOffset = <String, double>{};
   final Map<String, bool> _undoActive = <String, bool>{};
@@ -83,10 +84,18 @@ class GameEffectsController {
   /// 시간이 되므로(200 + 60 = 260ms), 컨트롤러 쪽만 따로 늘리지 않는다.
   static const Duration correctPulseHold = Duration(milliseconds: 200);
 
-  /// 행·열·박스 완성 강조: 칸이 켜진 뒤(각자의 파동 지연 이후) 머무는
-  /// 시간(380 + 60 = 440ms). 9칸 파동의 최대 지연(8 * 25 = 200ms)과 더해도
-  /// 마지막 칸이 640ms 안에 끝나 전체 효과가 650ms를 넘지 않는다.
+  /// 동작 줄이기에서 행·열·박스 완성 강조가 켜져 있는 시간(380ms). 평소에는
+  /// 입력한 칸에서 바깥으로 퍼졌다가 되돌아오는 파동이라 칸마다 켜져 있는
+  /// 시간이 다르다(바깥 칸일수록 짧다). 꺼진 뒤에는 [lineFadeOutDuration]만큼
+  /// 서서히 사라진다.
   static const Duration lineCompleteHold = Duration(milliseconds: 380);
+
+  /// 줄·박스 완성 강조의 등장(빠르게 올라와 이웃 칸과 겹치는) 전환 시간.
+  /// 칸 사이 간격(25ms)보다 길어야 파동이 계단이 아니라 한 줄기로 보인다.
+  static const Duration lineFadeInDuration = Duration(milliseconds: 130);
+
+  /// 줄·박스 완성 강조의 퇴장 전환 시간. 꺼진 뒤 이만큼 서서히 사라진다.
+  static const Duration lineFadeOutDuration = Duration(milliseconds: 320);
 
   /// 오답 강조(배경·흔들림) 대기 시간(140 + 60 = 200ms).
   static const Duration errorHold = Duration(milliseconds: 140);
@@ -113,7 +122,11 @@ class GameEffectsController {
   /// 애니메이션 길이와 반드시 같아야 다이얼로그가 뜨는 순간과 글로우가
   /// 사라지는 순간이 어긋나지 않는다.
   static const Duration puzzleCompleteGlowDuration =
-      Duration(milliseconds: 500);
+      Duration(milliseconds: 850);
+
+  /// 완료 햅틱을 울리는 시점. 글로우가 가장 밝은 때(전체의 35%, 약 300ms)에
+  /// 맞춘다. 동작 줄이기에서는 짧은 연출 끝에서 함께 울린다.
+  static const Duration puzzleCompleteHapticAt = Duration(milliseconds: 300);
 
   /// 동작 줄이기에서의 완료 연출 길이(짧은 단색 강조만).
   static const Duration puzzleCompleteGlowDurationReduced =
@@ -174,17 +187,25 @@ class GameEffectsController {
   /// 이전에 기록해 둔 보드와 비교해 실제 값이 바뀐 칸만 골라 그 칸의 이전
   /// 효과를 취소한다. 선택 이동이나 메모 토글처럼 [board]의 숫자 값 자체가
   /// 바뀌지 않는 변경은 건드리지 않는다.
-  void _cancelStaleEffectsForChangedCells(List<List<int>> board) {
+  ///
+  /// 값이 바뀐 칸(방금 입력한 칸)을 돌려준다. 줄·박스 완성 파동의 출발점으로
+  /// 쓰며, 바뀐 칸이 없으면 null이다.
+  ({int row, int col})? _cancelStaleEffectsForChangedCells(
+    List<List<int>> board,
+  ) {
+    ({int row, int col})? changed;
     if (_previousBoard.length == 9) {
       for (int row = 0; row < 9; row++) {
         for (int col = 0; col < 9; col++) {
           if (_previousBoard[row][col] != board[row][col]) {
             _claim('$row,$col');
+            changed ??= (row: row, col: col);
           }
         }
       }
     }
     _previousBoard = _copyBoard(board);
+    return changed;
   }
 
   void initializeCompletedLineState({
@@ -204,7 +225,7 @@ class GameEffectsController {
     required void Function(void Function()) setState,
     required bool Function() isMounted,
   }) {
-    _cancelStaleEffectsForChangedCells(board);
+    final origin = _cancelStaleEffectsForChangedCells(board);
 
     final currentCompletedRows =
         _getCompletedCorrectRows(board: board, solution: solution);
@@ -249,6 +270,7 @@ class GameEffectsController {
       rows: newlyCompletedRows,
       cols: newlyCompletedCols,
       boxes: newlyCompletedBoxes,
+      origin: origin,
       setState: setState,
       isMounted: isMounted,
     );
@@ -561,56 +583,84 @@ class GameEffectsController {
     return completedBoxes;
   }
 
-  /// 3×3 박스 안 상대 좌표(row*3+col, 0~8)를 "중앙 → 상하좌우 → 대각선
-  /// 모서리" 순서의 파동 순위(0~8)로 매핑한다. 중앙(1,1)이 0순위, 그다음
-  /// 직교 이웃 4칸, 마지막으로 대각선 모서리 4칸(둘 다 읽기 순서로 정렬).
-  static const List<int> _boxWaveRank = [5, 1, 6, 2, 0, 3, 7, 4, 8];
+  /// 파동이 칸 하나를 지나는 간격. 입력한 칸에서 바깥으로 한 칸씩 퍼진다.
+  static const int _rippleStepMs = 28;
 
-  /// 칸별 파동 지연 간격. 9칸 기준 최대 지연은 8 * 25 = 200ms로, 대기
-  /// 시간·페이드와 합쳐도 전체가 650ms 안에 끝난다.
-  static const int _lineWaveStaggerMs = 25;
+  /// 파동이 가장 먼 칸에 닿은 뒤 되돌아오기 전까지 머무는 시간.
+  static const int _rippleTurnaroundMs = 160;
 
   void _triggerLineCompletionEffect({
     required Set<int> rows,
     required Set<int> cols,
     required Set<int> boxes,
+    required ({int row, int col})? origin,
     required void Function(void Function()) setState,
     required bool Function() isMounted,
   }) {
     final generation = _effectGeneration;
-    // 칸별 시작 지연(ms). 여러 줄·박스에 동시에 걸리면 "가장 빠른 시작
-    // 시점 하나만" 쓴다 — 더 작은 지연으로 덮어쓴다.
-    final delays = <String, int>{};
-    void considerDelay(String key, int delayMs) {
-      final existing = delays[key];
-      if (existing == null || delayMs < existing) {
-        delays[key] = delayMs;
-      }
+    // 칸별 켜지는 시점(ms)과 꺼지는 시점(ms). 파동은 입력한 칸(출발점)에서
+    // 바깥으로 퍼졌다가 같은 순서의 거꾸로, 바깥 칸부터 출발점으로 되돌아오며
+    // 꺼진다. 여러 줄·박스에 동시에 걸리면 가장 먼저 켜지고 가장 늦게 꺼진다.
+    final onAt = <String, int>{};
+    final offAt = <String, int>{};
+    void considerSpan(String key, int on, int off) {
+      final existingOn = onAt[key];
+      if (existingOn == null || on < existingOn) onAt[key] = on;
+      final existingOff = offAt[key];
+      if (existingOff == null || off > existingOff) offAt[key] = off;
     }
 
-    // 동작 줄이기에서는 순차 파동 없이 대상 전체를 동시에(지연 0) 켠다.
+    // 동작 줄이기에서는 퍼짐 없이 대상 전체를 동시에 켜고 같은 시간 뒤에 끈다.
     final wave = !reduceMotion;
+    final holdMs = lineCompleteHold.inMilliseconds;
+    // [distance]: 출발점에서 이 칸까지 거리, [maxDistance]: 그 줄·박스에서
+    // 가장 먼 칸까지의 거리.
+    void considerCell(int row, int col, int distance, int maxDistance) {
+      final on = wave ? distance * _rippleStepMs : 0;
+      final off = wave
+          ? _rippleTurnaroundMs + (2 * maxDistance - distance) * _rippleStepMs
+          : holdMs;
+      considerSpan('$row,$col', on, off);
+    }
+
     for (final row in rows) {
+      final from = origin != null && origin.row == row ? origin.col : 0;
+      final far = from > 8 - from ? from : 8 - from;
       for (int col = 0; col < 9; col++) {
-        considerDelay('$row,$col', wave ? col * _lineWaveStaggerMs : 0);
+        considerCell(row, col, (col - from).abs(), far);
       }
     }
     for (final col in cols) {
+      final from = origin != null && origin.col == col ? origin.row : 0;
+      final far = from > 8 - from ? from : 8 - from;
       for (int row = 0; row < 9; row++) {
-        considerDelay('$row,$col', wave ? row * _lineWaveStaggerMs : 0);
+        considerCell(row, col, (row - from).abs(), far);
       }
     }
     for (final boxIndex in boxes) {
       final startRow = (boxIndex ~/ 3) * 3;
       final startCol = (boxIndex % 3) * 3;
-      for (int r = 0; r < 3; r++) {
-        for (int c = 0; c < 3; c++) {
-          final key = '${startRow + r},${startCol + c}';
-          final rank = _boxWaveRank[r * 3 + c];
-          considerDelay(key, wave ? rank * _lineWaveStaggerMs : 0);
+      final inside = origin != null &&
+          origin.row >= startRow &&
+          origin.row < startRow + 3 &&
+          origin.col >= startCol &&
+          origin.col < startCol + 3;
+      final fromRow = inside ? origin.row : startRow;
+      final fromCol = inside ? origin.col : startCol;
+      var far = 0;
+      for (int r = startRow; r < startRow + 3; r++) {
+        for (int c = startCol; c < startCol + 3; c++) {
+          final d = (r - fromRow).abs() + (c - fromCol).abs();
+          if (d > far) far = d;
+        }
+      }
+      for (int r = startRow; r < startRow + 3; r++) {
+        for (int c = startCol; c < startCol + 3; c++) {
+          considerCell(r, c, (r - fromRow).abs() + (c - fromCol).abs(), far);
         }
       }
     }
+    final delays = onAt;
     if (delays.isEmpty) {
       return;
     }
@@ -624,7 +674,8 @@ class GameEffectsController {
     };
 
     void scheduleOff(String key, int token) {
-      Future.delayed(lineCompleteHold, () {
+      final lit = offAt[key]! - onAt[key]!;
+      Future.delayed(Duration(milliseconds: lit), () {
         if (!_stillValid(isMounted, generation)) {
           return;
         }

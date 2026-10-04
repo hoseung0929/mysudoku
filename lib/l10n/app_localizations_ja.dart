@@ -274,34 +274,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gameNumberInputTitle => '数字入力';
 
   @override
-  String get gameLineWaveRowLabel => '横列';
-
-  @override
-  String get gameLineWaveColLabel => '縦列';
-
-  @override
-  String get gameLineWaveBoxLabel => '3×3ブロック';
-
-  @override
-  String gameLineWaveAnnounce(String parts) {
-    return '$partsクリア';
-  }
-
-  @override
-  String get gameLineWaveRowSentence => '横列を完成させました';
-
-  @override
-  String get gameLineWaveColSentence => '縦列を完成させました';
-
-  @override
-  String get gameLineWaveBoxSentence => '3×3ブロックを完成させました';
-
-  @override
-  String gameDigitCompleteSentence(int number) {
-    return '数字の$numberをすべて埋めました';
-  }
-
-  @override
   String get gamePause => '一時停止';
 
   @override
@@ -356,7 +328,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get dialogElapsedTime => 'タイム';
 
   @override
-  String get dialogWrongCount => 'ミス回数';
+  String get dialogWrongCount => 'ミス';
 
   @override
   String dialogWrongCountValue(int count) {
@@ -386,25 +358,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String dialogHintsUsed(int count) {
-    return 'ヒント $count回使用';
-  }
-
-  @override
-  String dialogCompletionTimeSentenceMinutes(int minutes, int seconds) {
-    return '$minutes分$seconds秒で解けました';
-  }
-
-  @override
-  String dialogCompletionTimeSentenceSeconds(int seconds) {
-    return '$seconds秒で解けました';
-  }
-
-  @override
-  String get dialogCompletionNoMistakes => 'ミスなく解けました';
-
-  @override
-  String dialogCompletionMistakeCount(num count) {
-    return 'ミスは$count回でした';
+    return 'ヒント $count回';
   }
 
   @override
@@ -1082,12 +1036,20 @@ class AppLocalizationsJa extends AppLocalizations {
   String get homeChallengeNotStarted => 'まだ始めていません';
 
   @override
+  String get homeChallengeFirstLine => '最初のチャレンジは初級から始めましょう';
+
+  @override
+  String homeChallengePromotedLine(String level) {
+    return '今日は$levelに挑戦してみませんか？';
+  }
+
+  @override
   String homeChallengeProgress(int percent) {
     return '$percent%進行';
   }
 
   @override
-  String get homeChallengeCompleteTitle => '今日のチャレンジ完了！';
+  String get homeChallengeDoneLine => '今日のチャレンジ完了！';
 
   @override
   String homeChallengeStreak(num days) {
@@ -1194,10 +1156,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get levelNoResults => '該当なし';
 
   @override
-  String get levelReplayTitle => 'このパズルをもう一度解きますか？';
+  String levelReplayTitle(int number) {
+    return '$number番のパズルをもう一度解きますか？';
+  }
 
   @override
-  String get levelReplayBody => '完了記録は保持され、より良い結果の場合のみ更新されます。';
+  String get levelReplayBody => '完了記録はそのまま残ります。より良い記録で完了した場合のみ、ベスト記録が更新されます。';
 
   @override
   String get levelReplayConfirm => '再挑戦';
@@ -1528,74 +1492,70 @@ class AppLocalizationsJa extends AppLocalizations {
   String get beginnerTutorialPromptTitle => '数独は初めてですか?';
 
   @override
-  String get beginnerTutorialPromptBody => '問題を解く前に短いガイド練習をしてみましょう。１分で終わります。';
+  String get beginnerTutorialPromptBody => '短い練習で基本のルールと操作を覚えましょう。';
 
   @override
-  String get beginnerTutorialStart => 'ガイドを始める';
+  String get beginnerTutorialStart => '練習を始める';
 
   @override
   String get beginnerTutorialSkip => 'スキップ';
 
   @override
   String beginnerTutorialStepIndicator(int current, int total) {
-    return 'ステップ $current/$total';
+    return '$current / $total';
   }
 
   @override
-  String get beginnerTutorialStepRowTitle => 'ルール: 横の列';
+  String get beginnerTutorialPracticeTitle => '練習パズル';
 
   @override
-  String get beginnerTutorialStepRowBody => '各横の列には1から9までの数字が1回ずつ入ります。';
+  String get beginnerTutorialStepRulesTitle => '基本ルール';
 
   @override
-  String get beginnerTutorialStepColumnTitle => 'ルール: 縦の列';
+  String get beginnerTutorialStepRulesBody =>
+      '横の列・縦の列・3×3ブロックには、1から9までの数字が1回ずつ入ります。';
 
   @override
-  String get beginnerTutorialStepColumnBody => '縦の列にも1から9までの数字が1回ずつ入ります。';
+  String get beginnerTutorialRuleRow => '横の列';
 
   @override
-  String get beginnerTutorialStepBoxTitle => 'ルール: 3×3のブロック';
+  String get beginnerTutorialRuleColumn => '縦の列';
 
   @override
-  String get beginnerTutorialStepBoxBody => '3×3のブロックにも1から9までの数字が1回ずつ入ります。';
+  String get beginnerTutorialRuleBox => '3×3ブロック';
 
   @override
   String get beginnerTutorialStepInputTitle => '数字を入力する';
 
   @override
-  String get beginnerTutorialStepInputBody =>
-      '強調されたマスに入る数字は1つだけです。マスをタップしてから正しい数字をタップしましょう。';
+  String get beginnerTutorialStepInputBody => '強調されたマスをタップして、入る数字を選びましょう。';
 
   @override
   String get beginnerTutorialStepInputWrongHint =>
-      'その数字は同じ列やブロックにすでにあります。別の数字を試してください。';
+      '同じ横の列・縦の列・3×3ブロックにある数字は入れられません。';
 
   @override
-  String get beginnerTutorialStepMemoTitle => 'メモと消去';
+  String get beginnerTutorialStepMemoTitle => '候補の数字をメモする';
 
   @override
   String get beginnerTutorialStepMemoAddBody =>
-      'メモモードをオンにしてこのマスをタップし、候補の数字をタップしてメモしましょう。';
+      'メモをオンにして、強調されたマスに候補の数字を書き込みましょう。';
 
   @override
-  String get beginnerTutorialStepMemoEraseBody => '同じ数字をもう一度タップしてメモを消しましょう。';
+  String get beginnerTutorialStepMemoEraseBody => '同じ数字をもう一度タップするとメモを消せます。';
 
   @override
-  String get beginnerTutorialStepHintTitle => 'ヒント';
+  String get beginnerTutorialStepHintTitle => 'ヒントを使う';
 
   @override
   String get beginnerTutorialStepHintBody =>
-      'ヒントをタップすると、実際のヒント回数を消費せずに、どこを見るべきか教えてくれます。';
+      '行き詰まったらヒントをタップすると、見るべきマスと理由を教えてくれます。';
 
   @override
-  String get beginnerTutorialStepHintButton => 'ヒントを開く';
+  String get beginnerTutorialStepDoneTitle => '準備完了です！';
 
   @override
-  String get beginnerTutorialStepDoneTitle => '準備完了!';
-
-  @override
-  String get beginnerTutorialStepDoneBody =>
-      '行・列・ブロックのルール、数字の入力、メモ、ヒントの基本を学びました。';
+  String get beginnerTutorialStepDoneBody => '数字の入力、メモ、ヒントの使い方を覚えました。';
 
   @override
   String get beginnerTutorialFirstPuzzleButton => '最初の問題を始める';
@@ -1628,11 +1588,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get autoNotesTipMessage => 'ヒント: メモを長押しすると候補数字を一括で入力できます。';
-
-  @override
-  String gameNumberLockedMessage(int number) {
-    return '$numberを固定 · マスをタップして連続入力';
-  }
 
   @override
   String get gameNumberLockTipMessage => '数字を長押しすると、同じ数字を複数のマスにすばやく入力できます。';

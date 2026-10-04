@@ -177,6 +177,109 @@ void main() {
       expect(holeyGameNumbers, contains(target.gameNumber));
     });
 
+    group('stepwise recommendation for today', () {
+      ChallengeProgressService build(
+        Map<String, List<int>> cleared, {
+        List<int> numbers = const [1, 2, 3, 4, 5],
+      }) =>
+          ChallengeProgressService(
+            loadGameNumbersForLevel: (_) async => numbers,
+            loadClearedGameNumbersForLevel: (level) async =>
+                cleared[level] ?? const [],
+            shouldUseRemoteDailyChallenge: () async => false,
+          );
+
+      test('recommendedLevelIndex follows counts and direct completions', () {
+        expect(ChallengeProgressService.recommendedLevelIndex([0, 0, 0, 0]), 0);
+        expect(ChallengeProgressService.recommendedLevelIndex([2, 0, 0, 0]), 0);
+        expect(ChallengeProgressService.recommendedLevelIndex([3, 0, 0, 0]), 1);
+        expect(ChallengeProgressService.recommendedLevelIndex([3, 3, 0, 0]), 2);
+        expect(ChallengeProgressService.recommendedLevelIndex([3, 3, 3, 0]), 3);
+        expect(ChallengeProgressService.recommendedLevelIndex([9, 9, 9, 9]), 3);
+        // 한 단계 위를 직접 1개 완료하면 즉시 인정, 강등은 없다.
+        expect(ChallengeProgressService.recommendedLevelIndex([0, 1, 0, 0]), 1);
+        expect(ChallengeProgressService.recommendedLevelIndex([3, 0, 1, 0]), 2);
+        // 두 단계 이상 위의 기록은 무시한다.
+        expect(ChallengeProgressService.recommendedLevelIndex([0, 0, 0, 1]), 0);
+        expect(ChallengeProgressService.recommendedLevelIndex([0, 0, 1, 0]), 0);
+        expect(ChallengeProgressService.recommendedLevelIndex([1, 0, 0, 1]), 0);
+      });
+
+      test('new user starts at the first level with a first-challenge event',
+          () async {
+        SharedPreferences.setMockInitialValues({});
+        final service = build({});
+        final target = await service.getTodayChallengeTarget();
+        expect(target.levelName, SudokuLevel.levels.first.name);
+        final prefs = await SharedPreferences.getInstance();
+        final key = prefs
+            .getKeys()
+            .firstWhere((k) => k.startsWith('daily_challenge_rec_event_v1_'));
+        expect(prefs.getString(key), 'firstChallenge');
+      });
+
+      test('skips already cleared puzzles and wraps around', () async {
+        SharedPreferences.setMockInitialValues({});
+        final level = SudokuLevel.levels.first.name;
+        final day = DateTime(2026, 4, 12);
+        final start = day.difference(DateTime(2024, 1, 1)).inDays % 5;
+        final cleared = [for (var i = 0; i < 2; i++) (start + i) % 5 + 1];
+        final target = await build({level: cleared})
+            .getChallengeTargetForCalendarDay(day, recommend: true);
+        expect(cleared, isNot(contains(target.gameNumber)));
+        expect(target.levelName, level);
+      });
+
+      test('replays the date position when the whole level is cleared',
+          () async {
+        SharedPreferences.setMockInitialValues({});
+        final names = SudokuLevel.levels
+            .where((l) => !l.isMasterLevel)
+            .map((l) => l.name)
+            .toList();
+        final all = [1, 2, 3, 4, 5];
+        final day = DateTime(2026, 4, 12);
+        final target = await build({for (final n in names) n: all})
+            .getChallengeTargetForCalendarDay(day, recommend: true);
+        expect(target.levelName, names.last);
+        expect(target.gameNumber,
+            all[day.difference(DateTime(2024, 1, 1)).inDays % 5]);
+      });
+
+      test('promotion applies from the next day and pins today', () async {
+        SharedPreferences.setMockInitialValues({});
+        final first = SudokuLevel.levels.first.name;
+        final cleared = <String, List<int>>{};
+        final service = build(cleared);
+        final today = DateTime(2026, 4, 12);
+        final before = await service.getChallengeTargetForCalendarDay(today,
+            recommend: true);
+        cleared[first] = [1, 2, 3];
+        final after = await service.getChallengeTargetForCalendarDay(today,
+            recommend: true);
+        expect(after.levelName, before.levelName);
+        final next = await service.getChallengeTargetForCalendarDay(
+          DateTime(2026, 4, 13),
+          recommend: true,
+        );
+        expect(next.levelName, SudokuLevel.levels[1].name);
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getString('daily_challenge_rec_event_v1_2026-04-13'),
+            'promoted');
+      });
+
+      test('does not pin a target while the catalog is empty', () async {
+        SharedPreferences.setMockInitialValues({});
+        final service = build({}, numbers: const []);
+        await service.getChallengeTargetForCalendarDay(
+          DateTime(2026, 4, 12),
+          recommend: true,
+        );
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getString('daily_challenge_target_v1_2026-04-12'), isNull);
+      });
+    });
+
     test('pins the first resolved target for the day (offline then online)',
         () async {
       SharedPreferences.setMockInitialValues({});
@@ -255,6 +358,7 @@ void main() {
         dailyChallengeCompletionRepository:
             _FakeDailyChallengeCompletionRepository(),
         loadGameNumbersForLevel: (_) async => [1],
+        loadClearedGameNumbersForLevel: (_) async => const [],
         shouldUseRemoteDailyChallenge: () async => false,
       );
       final today = DateTime.now();
@@ -284,6 +388,7 @@ void main() {
         dailyChallengeCompletionRepository:
             _FakeDailyChallengeCompletionRepository(),
         loadGameNumbersForLevel: (_) async => [1],
+        loadClearedGameNumbersForLevel: (_) async => const [],
         shouldUseRemoteDailyChallenge: () async => false,
       );
       final today = DateTime.now();

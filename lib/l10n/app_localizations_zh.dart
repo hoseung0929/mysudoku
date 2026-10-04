@@ -273,34 +273,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gameNumberInputTitle => '数字输入';
 
   @override
-  String get gameLineWaveRowLabel => '横排';
-
-  @override
-  String get gameLineWaveColLabel => '竖排';
-
-  @override
-  String get gameLineWaveBoxLabel => '3×3 宫';
-
-  @override
-  String gameLineWaveAnnounce(String parts) {
-    return '$parts完成';
-  }
-
-  @override
-  String get gameLineWaveRowSentence => '你完成了一行';
-
-  @override
-  String get gameLineWaveColSentence => '你完成了一列';
-
-  @override
-  String get gameLineWaveBoxSentence => '你完成了一个 3×3 宫';
-
-  @override
-  String gameDigitCompleteSentence(int number) {
-    return '你填满了所有的 $number';
-  }
-
-  @override
   String get gamePause => '暂停';
 
   @override
@@ -355,7 +327,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dialogElapsedTime => '用时';
 
   @override
-  String get dialogWrongCount => '错误次数';
+  String get dialogWrongCount => '失误';
 
   @override
   String dialogWrongCountValue(int count) {
@@ -385,25 +357,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String dialogHintsUsed(int count) {
-    return '使用提示 $count 次';
-  }
-
-  @override
-  String dialogCompletionTimeSentenceMinutes(int minutes, int seconds) {
-    return '用时 $minutes 分 $seconds 秒解开';
-  }
-
-  @override
-  String dialogCompletionTimeSentenceSeconds(int seconds) {
-    return '用时 $seconds 秒解开';
-  }
-
-  @override
-  String get dialogCompletionNoMistakes => '全程没有失误';
-
-  @override
-  String dialogCompletionMistakeCount(num count) {
-    return '失误了 $count 次';
+    return '提示 $count 次';
   }
 
   @override
@@ -1077,12 +1031,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeChallengeNotStarted => '尚未开始';
 
   @override
+  String get homeChallengeFirstLine => '第一次挑战从初级开始';
+
+  @override
+  String homeChallengePromotedLine(String level) {
+    return '今天来挑战$level吧？';
+  }
+
+  @override
   String homeChallengeProgress(int percent) {
     return '已完成 $percent%';
   }
 
   @override
-  String get homeChallengeCompleteTitle => '今日挑战完成！';
+  String get homeChallengeDoneLine => '今日挑战已完成！';
 
   @override
   String homeChallengeStreak(num days) {
@@ -1188,10 +1150,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get levelNoResults => '暂无结果。';
 
   @override
-  String get levelReplayTitle => '要重新挑战这道题吗？';
+  String levelReplayTitle(int number) {
+    return '要重新挑战第$number题吗？';
+  }
 
   @override
-  String get levelReplayBody => '已完成的记录会保留，只有取得更好成绩时才会更新。';
+  String get levelReplayBody => '已完成的记录会保留。若以更好成绩完成，只会更新最佳记录。';
 
   @override
   String get levelReplayConfirm => '重新挑战';
@@ -1520,71 +1484,67 @@ class AppLocalizationsZh extends AppLocalizations {
   String get beginnerTutorialPromptTitle => '第一次玩数独吗?';
 
   @override
-  String get beginnerTutorialPromptBody => '开始解题前先做一个简短的引导练习吧，只需一分钟。';
+  String get beginnerTutorialPromptBody => '通过简短练习熟悉基本规则和操作吧。';
 
   @override
-  String get beginnerTutorialStart => '开始引导';
+  String get beginnerTutorialStart => '开始练习';
 
   @override
   String get beginnerTutorialSkip => '跳过';
 
   @override
   String beginnerTutorialStepIndicator(int current, int total) {
-    return '第 $current/$total 步';
+    return '$current / $total';
   }
 
   @override
-  String get beginnerTutorialStepRowTitle => '规则：行';
+  String get beginnerTutorialPracticeTitle => '练习题';
 
   @override
-  String get beginnerTutorialStepRowBody => '每一行必须包含 1 到 9 的数字，且不能重复。';
+  String get beginnerTutorialStepRulesTitle => '基本规则';
 
   @override
-  String get beginnerTutorialStepColumnTitle => '规则：列';
+  String get beginnerTutorialStepRulesBody =>
+      '每一行、每一列和每个 3×3 宫格都必须包含 1 到 9 的数字，且不能重复。';
 
   @override
-  String get beginnerTutorialStepColumnBody => '每一列同样必须包含 1 到 9 的数字，且不能重复。';
+  String get beginnerTutorialRuleRow => '行';
 
   @override
-  String get beginnerTutorialStepBoxTitle => '规则：3×3 宫格';
+  String get beginnerTutorialRuleColumn => '列';
 
   @override
-  String get beginnerTutorialStepBoxBody => '每个 3×3 宫格也必须包含 1 到 9 的数字，且不能重复。';
+  String get beginnerTutorialRuleBox => '3×3 宫格';
 
   @override
   String get beginnerTutorialStepInputTitle => '输入数字';
 
   @override
-  String get beginnerTutorialStepInputBody => '高亮的格子里只能填一个数字。点击格子，再点击正确的数字。';
+  String get beginnerTutorialStepInputBody => '点击高亮的格子，再选择合适的数字。';
 
   @override
-  String get beginnerTutorialStepInputWrongHint =>
-      '这个数字已经出现在同一行、列或宫格中，请试试其他数字。';
+  String get beginnerTutorialStepInputWrongHint => '同一行、列或 3×3 宫格里已有的数字不能再填。';
 
   @override
-  String get beginnerTutorialStepMemoTitle => '笔记与擦除';
+  String get beginnerTutorialStepMemoTitle => '记录候选数字';
 
   @override
-  String get beginnerTutorialStepMemoAddBody => '打开笔记模式，点击这个格子，再点击候选数字记下来。';
+  String get beginnerTutorialStepMemoAddBody => '打开笔记，在高亮的格子里记下候选数字。';
 
   @override
-  String get beginnerTutorialStepMemoEraseBody => '现在再次点击同一个数字，把这个笔记擦掉。';
+  String get beginnerTutorialStepMemoEraseBody => '再次点击同一个数字即可擦除笔记。';
 
   @override
-  String get beginnerTutorialStepHintTitle => '提示';
+  String get beginnerTutorialStepHintTitle => '使用提示';
 
   @override
-  String get beginnerTutorialStepHintBody => '点击提示可以查看该看哪里、为什么，而不会消耗真正的提示次数。';
+  String get beginnerTutorialStepHintBody => '卡住时点击提示，会告诉你该看哪个格子以及原因。';
 
   @override
-  String get beginnerTutorialStepHintButton => '打开提示';
+  String get beginnerTutorialStepDoneTitle => '准备好了！';
 
   @override
-  String get beginnerTutorialStepDoneTitle => '准备好了!';
-
-  @override
-  String get beginnerTutorialStepDoneBody =>
-      '你已经学会了基础知识：行、列、宫格规则，以及输入数字、笔记和提示。';
+  String get beginnerTutorialStepDoneBody => '你已经学会输入数字、记笔记和使用提示。';
 
   @override
   String get beginnerTutorialFirstPuzzleButton => '开始我的第一道题';
@@ -1616,11 +1576,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get autoNotesTipMessage => '提示：长按笔记可以一次性填写所有候选数字。';
-
-  @override
-  String gameNumberLockedMessage(int number) {
-    return '已固定 $number · 点按格子连续输入';
-  }
 
   @override
   String get gameNumberLockTipMessage => '长按数字即可锁定，并快速填入多个格子。';

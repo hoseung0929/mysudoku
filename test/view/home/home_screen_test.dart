@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -98,6 +99,7 @@ HomeDashboardData _data({
   String? lastClearDate,
   SudokuGame? challenge,
   bool noChallenge = false,
+  ChallengeRecommendationEvent? recommendationEvent,
 }) {
   final date = ChallengeProgressService.formatLocalDate(DateTime.now());
   return HomeDashboardData(
@@ -116,6 +118,7 @@ HomeDashboardData _data({
       todayChallengeLevelName: '초급',
       todayChallengeGameNumber: challengeNumber,
       challengeDate: date,
+      recommendationEvent: recommendationEvent,
       lastClearDate: lastClearDate,
       weeklyClearCount: 0,
       weeklyGoalTarget: 3,
@@ -210,6 +213,29 @@ void main() {
     expect(find.text('Start your first puzzle'), findsNothing);
   });
 
+  testWidgets('recommendation events replace the not-started line',
+      (tester) async {
+    await pumpHome(
+      tester,
+      _FakeDashboard(() async => _data(
+            lastClearDate: '2026-09-01',
+            recommendationEvent: ChallengeRecommendationEvent.firstChallenge,
+          )),
+    );
+    expect(
+        find.text('Your first challenge starts at Beginner'), findsOneWidget);
+    expect(find.text('Not started yet'), findsNothing);
+
+    await pumpHome(
+      tester,
+      _FakeDashboard(() async => _data(
+            lastClearDate: '2026-09-01',
+            recommendationEvent: ChallengeRecommendationEvent.promoted,
+          )),
+    );
+    expect(find.text('Try Beginner today?'), findsOneWidget);
+  });
+
   testWidgets('one in-progress game: continue is the primary action',
       (tester) async {
     await pumpHome(
@@ -302,6 +328,7 @@ void main() {
       expect(find.text('Beginner · Puzzle 7'), findsNWidgets(2));
       // 병합 카드의 도전 라벨/진행바는 없다(완료 상태가 우선).
       expect(find.byKey(const Key('home_challenge_progress')), findsNothing);
+      // 완료 카드에는 "오늘의 도전" 머리줄이 없다(제목이 완료 문구).
       expect(find.text("Today's challenge"), findsNothing);
       // 새로 시작하면 재도전 세션이 지워지므로 '다시 풀기'는 숨긴다.
       expect(find.text('Play again'), findsNothing);
@@ -326,17 +353,14 @@ void main() {
       expect(openedScreen(tester).game.gameNumber, 7);
     });
 
-    testWidgets('done without a saved session still offers "Play again"',
+    testWidgets('done without a saved session has no "Play again" either',
         (tester) async {
       await pumpHome(
         tester,
         _FakeDashboard(() async => _data(challengeDone: true)),
       );
-      expect(find.text('Play again'), findsOneWidget);
-      await tester.tap(find.text('Play again'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 600));
-      expect(openedScreen(tester).restoreSavedSession, isFalse);
+      expect(find.text('Play again'), findsNothing);
+      expect(find.byType(SudokuGameScreen), findsNothing);
     });
 
     testWidgets('merged card with notes only: notes text, no progress bar',
@@ -504,32 +528,46 @@ void main() {
     expect(find.text("Today's challenge complete!"), findsOneWidget);
     expect(find.text('Beginner · Puzzle 7'), findsOneWidget);
     expect(find.byKey(const Key('home_challenge_progress')), findsNothing);
-    // 완료 시에는 강조 버튼이 아니라 보조 버튼.
-    expect(
-      find.widgetWithText(OutlinedButton, 'Play again'),
-      findsOneWidget,
-    );
+    // 완료 카드에는 재도전 버튼이 없다.
+    expect(find.text('Play again'), findsNothing);
+    expect(find.widgetWithText(FilledButton, 'Start challenge'), findsNothing);
   });
 
-  testWidgets('challenge streak line: only for 2+ days, always says challenge',
+  testWidgets(
+      'the done challenge card is 20-30pt shorter than the not-started card',
       (tester) async {
-    await pumpHome(
-      tester,
-      _FakeDashboard(() async => _data(challengeDone: true, streakDays: 4)),
-    );
-    expect(find.text('4-day challenge streak'), findsOneWidget);
+    Future<Rect> measure(bool done) async {
+      await pumpHome(
+        tester,
+        _FakeDashboard(() async => _data(challengeDone: done)),
+      );
+      return tester.getRect(
+        find.byKey(const Key('home_today_challenge_artwork')),
+      );
+    }
 
-    await pumpHome(
-      tester,
-      _FakeDashboard(() async => _data(challengeDone: true, streakDays: 1)),
-    );
-    expect(find.textContaining('streak'), findsNothing);
+    final start = await measure(false);
+    final done = await measure(true);
+    expect(start.height - done.height, inInclusiveRange(20, 30));
+    expect(done.top, start.top);
+    expect(find.text('Beginner · Puzzle 7'), findsOneWidget);
+    expect(find.text("Today's challenge"), findsNothing);
+  });
 
+  testWidgets('done card exposes status and puzzle without button semantics',
+      (tester) async {
+    final handle = tester.ensureSemantics();
     await pumpHome(
       tester,
-      _FakeDashboard(() async => _data(challengeDone: true, streakDays: 0)),
+      _FakeDashboard(() async => _data(challengeDone: true)),
     );
-    expect(find.textContaining('streak'), findsNothing);
+    final node = tester.getSemantics(
+      find.bySemanticsLabel("Today's challenge complete! Beginner · Puzzle 7"),
+    );
+    final data = node.getSemanticsData();
+    expect(data.flagsCollection.isButton, isFalse);
+    expect(data.hasAction(SemanticsAction.tap), isFalse);
+    handle.dispose();
   });
 
   testWidgets('challenge card tap: starts from anywhere on the card',

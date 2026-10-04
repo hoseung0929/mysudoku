@@ -93,28 +93,6 @@
   "gameProgressShort": "进度",
   "gameTimeShort": "用时",
   "gameNumberInputTitle": "数字输入",
-  "gameLineWaveRowLabel": "横排",
-  "gameLineWaveColLabel": "竖排",
-  "gameLineWaveBoxLabel": "3×3 宫",
-  "gameLineWaveAnnounce": "{parts}完成",
-  "@gameLineWaveAnnounce": {
-    "placeholders": {
-      "parts": {
-        "type": "String"
-      }
-    }
-  },
-  "gameLineWaveRowSentence": "你完成了一行",
-  "gameLineWaveColSentence": "你完成了一列",
-  "gameLineWaveBoxSentence": "你完成了一个 3×3 宫",
-  "gameDigitCompleteSentence": "你填满了所有的 {number}",
-  "@gameDigitCompleteSentence": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
   "gamePause": "暂停",
   "gameResume": "继续",
   "gameAnswerPreview": "答案",
@@ -161,7 +139,7 @@
   "dialogSudokuComplete": "你完成了这个数独！",
   "dialogNewBadges": "获得新徽章",
   "dialogElapsedTime": "用时",
-  "dialogWrongCount": "错误次数",
+  "dialogWrongCount": "失误",
   "dialogWrongCountValue": "{count} 次",
   "@dialogWrongCountValue": {
     "placeholders": {
@@ -177,35 +155,7 @@
   "dialogPlayAgain": "重新解题",
   "dialogPuzzleCompleteTitle": "你完成了谜题",
   "dialogNewBestMessage": "刷新了最佳记录",
-  "dialogHintsUsed": "使用提示 {count} 次",
-  "dialogCompletionTimeSentenceMinutes": "用时 {minutes} 分 {seconds} 秒解开",
-  "@dialogCompletionTimeSentenceMinutes": {
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      },
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
-  "dialogCompletionTimeSentenceSeconds": "用时 {seconds} 秒解开",
-  "@dialogCompletionTimeSentenceSeconds": {
-    "placeholders": {
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
-  "dialogCompletionNoMistakes": "全程没有失误",
-  "dialogCompletionMistakeCount": "失误了 {count} 次",
-  "@dialogCompletionMistakeCount": {
-    "placeholders": {
-      "count": {
-        "type": "num"
-      }
-    }
-  },
+  "dialogHintsUsed": "提示 {count} 次",
   "dialogSolveSameAgain": "重新解这道谜题",
   "dialogNextPuzzle": "下一题",
   "updateRequiredTitle": "需要更新",
@@ -608,8 +558,10 @@
   "homeChallengeStartButton": "开始挑战",
   "homeChallengeReplayButton": "再玩一次",
   "homeChallengeNotStarted": "尚未开始",
+  "homeChallengeFirstLine": "第一次挑战从初级开始",
+  "homeChallengePromotedLine": "今天来挑战{level}吧？",
   "homeChallengeProgress": "已完成 {percent}%",
-  "homeChallengeCompleteTitle": "今日挑战完成！",
+  "homeChallengeDoneLine": "今日挑战已完成！",
   "homeChallengeStreak": "挑战连续 {days} 天",
   "homeChallengeLoadErrorTitle": "无法加载今日挑战",
   "homeChallengeLoadErrorBody": "请稍后再试。",
@@ -658,8 +610,8 @@
   "levelRecentBadge": "最近",
   "levelStatusInProgress": "进行中",
   "levelNoResults": "暂无结果。",
-  "levelReplayTitle": "要重新挑战这道题吗？",
-  "levelReplayBody": "已完成的记录会保留，只有取得更好成绩时才会更新。",
+  "levelReplayTitle": "要重新挑战第{number}题吗？",
+  "levelReplayBody": "已完成的记录会保留。若以更好成绩完成，只会更新最佳记录。",
   "levelReplayConfirm": "重新挑战",
   "levelInProgressLimitTitle": "有 {maxCount} 道谜题进行中",
   "@levelInProgressLimitTitle": {
@@ -756,10 +708,10 @@
   "notificationOptInDenied": "未获得通知权限。请在设备设置中允许后，再在设置中开启提醒。",
   "notificationSetupFailed": "无法设置提醒。请稍后在设置中重试。",
   "beginnerTutorialPromptTitle": "第一次玩数独吗?",
-  "beginnerTutorialPromptBody": "开始解题前先做一个简短的引导练习吧，只需一分钟。",
-  "beginnerTutorialStart": "开始引导",
+  "beginnerTutorialPromptBody": "通过简短练习熟悉基本规则和操作吧。",
+  "beginnerTutorialStart": "开始练习",
   "beginnerTutorialSkip": "跳过",
-  "beginnerTutorialStepIndicator": "第 {current}/{total} 步",
+  "beginnerTutorialStepIndicator": "{current} / {total}",
   "@beginnerTutorialStepIndicator": {
     "placeholders": {
       "current": {
@@ -770,23 +722,22 @@
       }
     }
   },
-  "beginnerTutorialStepRowTitle": "规则：行",
-  "beginnerTutorialStepRowBody": "每一行必须包含 1 到 9 的数字，且不能重复。",
-  "beginnerTutorialStepColumnTitle": "规则：列",
-  "beginnerTutorialStepColumnBody": "每一列同样必须包含 1 到 9 的数字，且不能重复。",
-  "beginnerTutorialStepBoxTitle": "规则：3×3 宫格",
-  "beginnerTutorialStepBoxBody": "每个 3×3 宫格也必须包含 1 到 9 的数字，且不能重复。",
+  "beginnerTutorialPracticeTitle": "练习题",
+  "beginnerTutorialStepRulesTitle": "基本规则",
+  "beginnerTutorialStepRulesBody": "每一行、每一列和每个 3×3 宫格都必须包含 1 到 9 的数字，且不能重复。",
+  "beginnerTutorialRuleRow": "行",
+  "beginnerTutorialRuleColumn": "列",
+  "beginnerTutorialRuleBox": "3×3 宫格",
   "beginnerTutorialStepInputTitle": "输入数字",
-  "beginnerTutorialStepInputBody": "高亮的格子里只能填一个数字。点击格子，再点击正确的数字。",
-  "beginnerTutorialStepInputWrongHint": "这个数字已经出现在同一行、列或宫格中，请试试其他数字。",
-  "beginnerTutorialStepMemoTitle": "笔记与擦除",
-  "beginnerTutorialStepMemoAddBody": "打开笔记模式，点击这个格子，再点击候选数字记下来。",
-  "beginnerTutorialStepMemoEraseBody": "现在再次点击同一个数字，把这个笔记擦掉。",
-  "beginnerTutorialStepHintTitle": "提示",
-  "beginnerTutorialStepHintBody": "点击提示可以查看该看哪里、为什么，而不会消耗真正的提示次数。",
-  "beginnerTutorialStepHintButton": "打开提示",
-  "beginnerTutorialStepDoneTitle": "准备好了!",
-  "beginnerTutorialStepDoneBody": "你已经学会了基础知识：行、列、宫格规则，以及输入数字、笔记和提示。",
+  "beginnerTutorialStepInputBody": "点击高亮的格子，再选择合适的数字。",
+  "beginnerTutorialStepInputWrongHint": "同一行、列或 3×3 宫格里已有的数字不能再填。",
+  "beginnerTutorialStepMemoTitle": "记录候选数字",
+  "beginnerTutorialStepMemoAddBody": "打开笔记，在高亮的格子里记下候选数字。",
+  "beginnerTutorialStepMemoEraseBody": "再次点击同一个数字即可擦除笔记。",
+  "beginnerTutorialStepHintTitle": "使用提示",
+  "beginnerTutorialStepHintBody": "卡住时点击提示，会告诉你该看哪个格子以及原因。",
+  "beginnerTutorialStepDoneTitle": "准备好了！",
+  "beginnerTutorialStepDoneBody": "你已经学会输入数字、记笔记和使用提示。",
   "beginnerTutorialFirstPuzzleButton": "开始我的第一道题",
   "beginnerTutorialNextButton": "下一步",
   "beginnerTutorialCloseButton": "完成",
@@ -797,7 +748,6 @@
   "autoNotesConfirmApply": "重新填写笔记",
   "autoNotesContradictionMessage": "有些格子已经没有任何可能的数字，因此未能填写笔记。请检查你的输入内容后重试。",
   "autoNotesTipMessage": "提示：长按笔记可以一次性填写所有候选数字。",
-  "gameNumberLockedMessage": "已固定 {number} · 点按格子连续输入",
   "gameNumberLockTipMessage": "长按数字即可锁定，并快速填入多个格子。",
   "gameNumberButtonLockedSemantics": "{number}，已锁定，长按解除",
   "gameNumberButtonLockHint": "长按锁定",

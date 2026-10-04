@@ -46,16 +46,20 @@ void main() {
         expect(delta.completedCols, 1);
         expect(delta.completedBoxes, 1);
         expect(delta.hasNewCompletion, isTrue);
-        // (0,0)·(0,2)·(1,1)은 행0/박스0 파동에서 지연 0(맨 앞)이라
-        // 동기적으로 바로 켜진다.
-        expect(controller.lineCompleteActive['0,0'], isTrue);
+        // 파동은 방금 입력한 칸 (0,2)에서 바깥으로 퍼진다(칸당 28ms).
+        // 출발점은 동기적으로 바로 켜진다.
         expect(controller.lineCompleteActive['0,2'], isTrue);
+        // (0,0)·(1,1)은 출발점에서 두 칸 떨어져 있어 56ms 뒤에 켜진다.
+        expect(controller.lineCompleteActive['0,0'], isNull);
+        expect(controller.lineCompleteActive['1,1'], isNull);
+        async.elapse(const Duration(milliseconds: 56));
+        expect(controller.lineCompleteActive['0,0'], isTrue);
         expect(controller.lineCompleteActive['1,1'], isTrue);
-        // (8,2)는 열2 파동에서 8행째(맨 끝)라 25ms * 8 = 200ms 뒤에 켜진다.
+        // (8,2)는 열2에서 가장 먼 칸(여덟 칸 떨어짐)이라 224ms 뒤에 켜진다.
         expect(controller.lineCompleteActive['8,2'], isNull);
-        async.elapse(const Duration(milliseconds: 200));
+        async.elapse(const Duration(milliseconds: 168));
         expect(controller.lineCompleteActive['8,2'], isTrue);
-        async.elapse(const Duration(seconds: 1));
+        async.elapse(const Duration(seconds: 2));
       });
     });
 
@@ -597,16 +601,18 @@ void main() {
           );
 
           // A는 더 이상 일반 정답 색이 아니라 줄 완성 강조로 보여야 한다.
-          // (0,1)은 행0 파동에서 1번째 칸이라 25ms 뒤에 켜진다.
+          // 파동은 방금 입력한 B (0,5)에서 퍼지고, A (0,1)는 네 칸 떨어져
+          // 있어 112ms 뒤에 켜진다.
           expect(c.waveActive['0,1'], isNull);
           expect(c.lineCompleteActive['0,1'], isNull);
-          async.elapse(const Duration(milliseconds: 25));
+          async.elapse(const Duration(milliseconds: 112));
           expect(c.lineCompleteActive['0,1'], isTrue);
 
           // A의 옛 펄스가 원래 사라졌을 시점이 지나도 줄 완성 강조는
           // 그대로다.
-          async.elapse(const Duration(milliseconds: 100));
+          async.elapse(const Duration(milliseconds: 20));
           expect(c.lineCompleteActive['0,1'], isTrue);
+          async.elapse(const Duration(seconds: 2));
         });
       });
 
@@ -628,17 +634,17 @@ void main() {
             setState: run,
             isMounted: () => true,
           );
-          // (1,0)은 박스0 파동에서 2번째(지연 50ms), (0,0)은 5번째(지연
-          // 125ms)라 아직 둘 다 켜지지 않았다.
+          // 파동은 입력한 (2,2)에서 퍼진다: (1,0)은 세 칸 떨어져 84ms,
+          // (0,0)은 네 칸 떨어져 112ms 뒤에 켜진다.
           expect(c.lineCompleteActive['1,0'], isNull);
           expect(c.lineCompleteActive['0,0'], isNull);
-          async.elapse(const Duration(milliseconds: 50));
+          async.elapse(const Duration(milliseconds: 84));
           expect(c.lineCompleteActive['1,0'], isTrue); // 박스0 전용 칸
 
-          // 100ms 뒤(절대 T=100), 이벤트 2: 행0을 완성한다(공유 칸
-          // (0,0)(0,1)(0,2) 포함). (0,0)은 행0 파동에서 맨 앞(지연 0)이라
-          // 이벤트1이 아직 켜기 전이었던 자신의 예약을 선점해 곧바로 켜진다.
-          async.elapse(const Duration(milliseconds: 50));
+          // 16ms 뒤(절대 T=100), 이벤트 2: (0,7)을 채워 행0을 완성한다(공유
+          // 칸 (0,0) 포함). (0,0)은 새 출발점에서 일곱 칸 떨어져 있어 이벤트2가
+          // 선점해 196ms 뒤(절대 T=296)에 켜지고, 이벤트1의 옛 예약은 무효다.
+          async.elapse(const Duration(milliseconds: 16));
           board[0][7] = solved[0][7];
           c.handleBoardChanged(
             board: board,
@@ -646,20 +652,76 @@ void main() {
             setState: run,
             isMounted: () => true,
           );
-          expect(c.lineCompleteActive['0,0'], isTrue); // 이벤트2가 새로 켬
-          expect(c.lineCompleteActive['0,7'], isTrue); // 열7 파동 맨 앞(지연 0)
+          expect(c.lineCompleteActive['0,0'], isNull);
+          expect(c.lineCompleteActive['0,7'], isTrue); // 새 출발점은 바로 켜짐
 
-          // 절대 T=460: 이벤트1의 전용 칸(1,0)은 T=430에 이미 꺼졌지만,
-          // (0,0)은 이벤트2가 T=100에 새로 켠 뒤라 아직 켜져 있어야 한다.
-          async.elapse(const Duration(milliseconds: 360));
+          // 이벤트1의 전용 칸 (1,0)은 켜진 지 216ms 뒤(절대 T=300)에 꺼지지만,
+          // 공유 칸 (0,0)은 이벤트2가 T=296에 새로 켜서 계속 켜져 있어야 한다.
+          async.elapse(const Duration(milliseconds: 210)); // 절대 T=310
           expect(c.lineCompleteActive['1,0'], isFalse);
           expect(c.lineCompleteActive['0,0'], isTrue);
 
-          // 절대 T=490: 이벤트2가 끝나는 시점(T=100+380=480)을 지나 공유
-          // 칸도 함께 꺼진다.
-          async.elapse(const Duration(milliseconds: 30));
+          // 절대 T=460: 이벤트2가 (0,0)을 끄는 시점(T=100+356=456)을 지나
+          // 공유 칸도 꺼진다. 출발점 (0,7)은 가장 오래(T=708까지) 켜져 있다.
+          async.elapse(const Duration(milliseconds: 150));
           expect(c.lineCompleteActive['0,0'], isFalse);
+          expect(c.lineCompleteActive['0,7'], isTrue);
+          async.elapse(const Duration(milliseconds: 260)); // 절대 T=720
           expect(c.lineCompleteActive['0,7'], isFalse);
+        });
+      });
+
+      test(
+          'the ripple spreads out from the entered cell and comes back in '
+          '(farthest cells turn off first)', () {
+        fakeAsync((async) {
+          final board = copy();
+          board[0][8] = 0; // 행0의 유일한 빈 칸
+          board[8][8] = 0; // 퍼즐 전체 완료를 막는다
+          final c = fresh(board);
+          board[0][8] = solved[0][8];
+          c.handleBoardChanged(
+            board: board,
+            solution: solved,
+            setState: run,
+            isMounted: () => true,
+          );
+          // 출발점 (0,8)은 바로 켜지고, 가장 먼 (0,0)은 8칸 * 28ms = 224ms 뒤.
+          expect(c.lineCompleteActive['0,8'], isTrue);
+          expect(c.lineCompleteActive['0,0'], isNull);
+          async.elapse(const Duration(milliseconds: 224));
+          expect(c.lineCompleteActive['0,0'], isTrue);
+          // 되돌아오는 파동: 가장 먼 (0,0)이 먼저(켜진 지 160ms 뒤) 꺼지고
+          // 출발점은 마지막(608ms)에 꺼진다.
+          async.elapse(const Duration(milliseconds: 170)); // 절대 T=394
+          expect(c.lineCompleteActive['0,0'], isFalse);
+          expect(c.lineCompleteActive['0,8'], isTrue);
+          async.elapse(const Duration(milliseconds: 220)); // 절대 T=614
+          expect(c.lineCompleteActive['0,8'], isFalse);
+          async.elapse(const Duration(seconds: 1));
+        });
+      });
+
+      test('reduce motion lights the whole line at once, no ripple', () {
+        fakeAsync((async) {
+          final board = copy();
+          board[0][8] = 0;
+          board[8][8] = 0;
+          final c = fresh(board)..reduceMotion = true;
+          board[0][8] = solved[0][8];
+          c.handleBoardChanged(
+            board: board,
+            solution: solved,
+            setState: run,
+            isMounted: () => true,
+          );
+          for (var col = 0; col < 9; col++) {
+            expect(c.lineCompleteActive['0,$col'], isTrue);
+          }
+          async.elapse(GameEffectsController.lineCompleteHold);
+          for (var col = 0; col < 9; col++) {
+            expect(c.lineCompleteActive['0,$col'], isFalse);
+          }
         });
       });
 

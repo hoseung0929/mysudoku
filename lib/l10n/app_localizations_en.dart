@@ -284,34 +284,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gameNumberInputTitle => 'Number input';
 
   @override
-  String get gameLineWaveRowLabel => 'Row';
-
-  @override
-  String get gameLineWaveColLabel => 'Column';
-
-  @override
-  String get gameLineWaveBoxLabel => '3×3 box';
-
-  @override
-  String gameLineWaveAnnounce(String parts) {
-    return '$parts cleared';
-  }
-
-  @override
-  String get gameLineWaveRowSentence => 'You completed a row';
-
-  @override
-  String get gameLineWaveColSentence => 'You completed a column';
-
-  @override
-  String get gameLineWaveBoxSentence => 'You completed a 3×3 box';
-
-  @override
-  String gameDigitCompleteSentence(int number) {
-    return 'You filled in all the ${number}s';
-  }
-
-  @override
   String get gamePause => 'Pause';
 
   @override
@@ -396,31 +368,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String dialogHintsUsed(int count) {
-    return 'Hints used: $count';
-  }
-
-  @override
-  String dialogCompletionTimeSentenceMinutes(int minutes, int seconds) {
-    return 'Solved in $minutes min $seconds sec';
-  }
-
-  @override
-  String dialogCompletionTimeSentenceSeconds(int seconds) {
-    return 'Solved in $seconds sec';
-  }
-
-  @override
-  String get dialogCompletionNoMistakes => 'Finished with no mistakes';
-
-  @override
-  String dialogCompletionMistakeCount(num count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'You made $count mistakes',
-      one: 'You made $count mistake',
-    );
-    return '$_temp0';
+    return 'Hints: $count';
   }
 
   @override
@@ -1167,12 +1115,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeChallengeNotStarted => 'Not started yet';
 
   @override
+  String get homeChallengeFirstLine =>
+      'Your first challenge starts at Beginner';
+
+  @override
+  String homeChallengePromotedLine(String level) {
+    return 'Try $level today?';
+  }
+
+  @override
   String homeChallengeProgress(int percent) {
     return '$percent% done';
   }
 
   @override
-  String get homeChallengeCompleteTitle => 'Today\'s challenge complete!';
+  String get homeChallengeDoneLine => 'Today\'s challenge complete!';
 
   @override
   String homeChallengeStreak(num days) {
@@ -1290,11 +1247,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get levelNoResults => 'No results.';
 
   @override
-  String get levelReplayTitle => 'Replay this puzzle?';
+  String levelReplayTitle(int number) {
+    return 'Replay puzzle $number?';
+  }
 
   @override
   String get levelReplayBody =>
-      'Your completed record is kept, and it updates only if the new result is better.';
+      'Your completed record stays as it is. If you finish with a better result, only your best record is updated.';
 
   @override
   String get levelReplayConfirm => 'Replay';
@@ -1682,78 +1641,73 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get beginnerTutorialPromptBody =>
-      'Try a quick, guided practice puzzle before you start solving — it only takes a minute.';
+      'Try a short practice to learn the basic rules and controls.';
 
   @override
-  String get beginnerTutorialStart => 'Start the guide';
+  String get beginnerTutorialStart => 'Start practice';
 
   @override
   String get beginnerTutorialSkip => 'Skip';
 
   @override
   String beginnerTutorialStepIndicator(int current, int total) {
-    return 'Step $current of $total';
+    return '$current / $total';
   }
 
   @override
-  String get beginnerTutorialStepRowTitle => 'Rule: rows';
+  String get beginnerTutorialPracticeTitle => 'Practice puzzle';
 
   @override
-  String get beginnerTutorialStepRowBody =>
-      'Each row must contain every number from 1 to 9, with no repeats.';
+  String get beginnerTutorialStepRulesTitle => 'Basic rules';
 
   @override
-  String get beginnerTutorialStepColumnTitle => 'Rule: columns';
+  String get beginnerTutorialStepRulesBody =>
+      'Each row, column, and 3×3 box holds the numbers 1 to 9 exactly once.';
 
   @override
-  String get beginnerTutorialStepColumnBody =>
-      'Each column must also contain every number from 1 to 9, with no repeats.';
+  String get beginnerTutorialRuleRow => 'Row';
 
   @override
-  String get beginnerTutorialStepBoxTitle => 'Rule: 3×3 boxes';
+  String get beginnerTutorialRuleColumn => 'Column';
 
   @override
-  String get beginnerTutorialStepBoxBody =>
-      'Each 3×3 box must contain every number from 1 to 9, with no repeats.';
+  String get beginnerTutorialRuleBox => '3×3 box';
 
   @override
   String get beginnerTutorialStepInputTitle => 'Enter a number';
 
   @override
   String get beginnerTutorialStepInputBody =>
-      'Only one number can go in this highlighted cell. Tap the cell, then tap the correct number.';
+      'Tap the highlighted cell, then choose the number that fits.';
 
   @override
   String get beginnerTutorialStepInputWrongHint =>
-      'That number is already used in this row, column, or box. Try another number.';
+      'A number already in the same row, column, or 3×3 box can\'t go here.';
 
   @override
-  String get beginnerTutorialStepMemoTitle => 'Notes and erasing';
+  String get beginnerTutorialStepMemoTitle => 'Note candidates';
 
   @override
   String get beginnerTutorialStepMemoAddBody =>
-      'Turn on Notes, tap this cell, then tap a candidate number to jot it down.';
+      'Turn on Notes, then jot candidate numbers in the highlighted cell.';
 
   @override
   String get beginnerTutorialStepMemoEraseBody =>
-      'Now tap that same number again to erase the note.';
+      'Tap the same number again to erase a note.';
 
   @override
-  String get beginnerTutorialStepHintTitle => 'Hints';
+  String get beginnerTutorialStepHintTitle => 'Use a hint';
 
   @override
   String get beginnerTutorialStepHintBody =>
-      'Tap Hint to see where to look and why, without spending one of your real hints.';
-
-  @override
-  String get beginnerTutorialStepHintButton => 'Open hint';
+      'When you\'re stuck, tap Hint to see which cell to look at and why.';
 
   @override
   String get beginnerTutorialStepDoneTitle => 'You\'re ready!';
 
   @override
   String get beginnerTutorialStepDoneBody =>
-      'You\'ve learned the basics: rows, columns, boxes, entering numbers, notes, and hints.';
+      'You\'ve learned entering numbers, notes, and hints.';
 
   @override
   String get beginnerTutorialFirstPuzzleButton => 'Start my first puzzle';
@@ -1787,11 +1741,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get autoNotesTipMessage =>
       'Tip: long-press Notes to fill in all candidate numbers at once.';
-
-  @override
-  String gameNumberLockedMessage(int number) {
-    return '$number locked · tap cells to fill';
-  }
 
   @override
   String get gameNumberLockTipMessage =>

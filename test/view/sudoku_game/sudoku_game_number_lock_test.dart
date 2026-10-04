@@ -111,8 +111,8 @@ void main() {
     await lock(tester, 3);
     await tester.pump();
     expect(pin(3), findsOneWidget);
-    // 고정 안내(짧은 문구)가 한 번 뜬다.
-    expect(find.text('3 locked · tap cells to fill'), findsOneWidget);
+    // 상단 안내 문구는 없고 버튼의 고정 표시만 보인다.
+    expect(find.textContaining('locked ·'), findsNothing);
 
     tapCell(tester, 0, 1);
     await tester.pump();

@@ -104,6 +104,78 @@ void main() {
     }
   });
 
+  AnimatedOpacity lineLayer(WidgetTester tester) =>
+      tester.widget(find.byKey(const ValueKey('cell-line-0-0')));
+
+  testWidgets(
+      'line completion fades by opacity: quick in, slow out, no color lerp',
+      (tester) async {
+    final presenters = <SudokuGamePresenter>[];
+    await tester.pumpWidget(
+        _app(grid(presenters, lineCompleteActive: const {'0,0': true})));
+    expect(lineLayer(tester).opacity, 1);
+    expect(
+        lineLayer(tester).duration, GameEffectsController.lineFadeInDuration);
+    // 칸 사이 파동 간격(25ms)보다 길어야 계단이 아니라 한 줄기로 이어진다.
+    expect(GameEffectsController.lineFadeInDuration.inMilliseconds,
+        greaterThan(25 * 2));
+    // 투명도 전환이라 효과 색 층은 줄 완성 색으로 보간되지 않는다.
+    final overlayBox = tester.widget<DecoratedBox>(find.descendant(
+      of: find.byKey(const ValueKey('cell-effect-0-0')),
+      matching: find.byType(DecoratedBox),
+    ));
+    expect((overlayBox.decoration as BoxDecoration).color,
+        anyOf(isNull, Colors.transparent));
+
+    await tester.pumpWidget(
+        _app(grid(presenters, lineCompleteActive: const {'0,0': false})));
+    expect(lineLayer(tester).opacity, 0);
+    expect(
+        lineLayer(tester).duration, GameEffectsController.lineFadeOutDuration);
+    expect(GameEffectsController.lineFadeOutDuration,
+        greaterThan(GameEffectsController.lineFadeInDuration));
+
+    // 다른 효과(오답)가 이 칸을 차지하면 줄 완성 층은 끈다.
+    await tester.pumpWidget(_app(grid(
+      presenters,
+      lineCompleteActive: const {'0,0': true},
+      errorActive: const {'0,0': true},
+    )));
+    expect(lineLayer(tester).opacity, 0);
+    for (final p in presenters) {
+      p.dispose();
+    }
+  });
+
+  testWidgets('the line completion color is clearly visible, not near-white',
+      (tester) async {
+    final presenters = <SudokuGamePresenter>[];
+    await tester.pumpWidget(
+        _app(grid(presenters, lineCompleteActive: const {'0,0': true})));
+    final fill = tester.widget<ColoredBox>(find.descendant(
+        of: find.byKey(const ValueKey('cell-line-0-0')),
+        matching: find.byType(ColoredBox)));
+    // 흰 배경 위에서 눈으로 구분될 만큼(초록 채널이 충분히 낮은) 보라 계열.
+    final blended = Color.alphaBlend(fill.color, Colors.white);
+    expect(blended.g * 255, lessThan(225));
+    expect(blended.b, greaterThanOrEqualTo(blended.r));
+    for (final p in presenters) {
+      p.dispose();
+    }
+  });
+
+  testWidgets('reduce motion makes the line fade instant too', (tester) async {
+    final presenters = <SudokuGamePresenter>[];
+    await tester.pumpWidget(_app(
+      grid(presenters, lineCompleteActive: const {'0,0': true}),
+      reduceMotion: true,
+    ));
+    expect(lineLayer(tester).duration, Duration.zero);
+    for (final p in presenters) {
+      p.dispose();
+    }
+  });
+
   testWidgets('reduce motion collapses both transition layers to zero',
       (tester) async {
     final presenters = <SudokuGamePresenter>[];
@@ -176,6 +248,12 @@ void main() {
           for (final r in solved) [...r]
         ];
     void setStateVia(StateSetter setter, void Function() fn) => setter(fn);
+
+    // 줄·박스 완성 강조 층의 목표 투명도(켜짐 1, 꺼짐 0). 이 층은 색을
+    // 보간하지 않고 투명도만 바꾼다.
+    double lineTarget(WidgetTester tester, {int row = 0, int col = 0}) => tester
+        .widget<AnimatedOpacity>(find.byKey(ValueKey('cell-line-$row-$col')))
+        .opacity;
 
     // 효과 오버레이 칸의 실제로 렌더링된 색상. AnimatedContainer(color: ...)는
     // 내부적으로 DecoratedBox 하나로 그려진다.
@@ -259,12 +337,12 @@ void main() {
     });
 
     testWidgets(
-        'a line/box completion colors in (after its wave delay), then fully '
-        'restores', (tester) async {
+        'a line completion ripples out from the entered cell and comes back '
+        'in', (tester) async {
       final presenter = _presenter();
       final controller = GameEffectsController();
       final board = copy();
-      board[0][8] = 0; // 행0·열8·박스2의 유일한 빈 칸
+      board[0][8] = 0; // 행0·박스2의 유일한 빈 칸(열8은 아래 (8,8) 때문에 미완성)
       board[8][8] = 0; // 계속 비워 둬 퍼즐 전체 완료로 번지지 않게 한다
       controller.resetForBoard(board: board, solution: solved);
       final setState = await pumpBoard(tester, presenter, controller);
@@ -281,30 +359,29 @@ void main() {
       setState(() {});
       await tester.pump();
 
-      // (8,8)을 계속 비워 둬서 열8은 완성되지 않고, 행0·박스2만 완성된다.
-      // (0,8)은 박스2 파동에서 지연 150ms(행0 쪽 지연 200ms보다 빠른
-      // 박스2가 이긴다) — 활성화 전까지는 계속 투명하다.
-      await tester.pump(const Duration(milliseconds: 100)); // 누적 100ms
-      expect(effectColor(tester, row: 0, col: 8), Colors.transparent);
+      // 출발점 (0,8)은 바로 켜지고, 가장 먼 (0,0)은 아직 꺼져 있다.
+      expect(lineTarget(tester, row: 0, col: 8), 1);
+      expect(lineTarget(tester, row: 0, col: 0), 0);
 
-      await tester.pump(const Duration(milliseconds: 50)); // 누적 150ms, 활성화
-      await tester.pump(); // 새 목표(강조색) 등록
-      await tester.pump(const Duration(milliseconds: 60)); // 누적 210ms
-      expect(effectColor(tester, row: 0, col: 8), isNot(Colors.transparent));
-
-      // 대기 시간(활성화 후 380ms, 누적 530ms)이 끝나기 전에는 계속
-      // 강조색이어야 한다.
-      await tester.pump(const Duration(milliseconds: 300)); // 누적 510ms
-      expect(effectColor(tester, row: 0, col: 8), isNot(Colors.transparent));
-
-      // 대기 시간이 끝나는 경계(누적 530ms)를 넘긴 뒤 새 목표(투명)를
-      // 등록할 프레임을 한 번 더 그리고 위젯 전환 시간만큼 흘려보낸다.
-      await tester.pump(const Duration(milliseconds: 22)); // 누적 532ms
+      // 퍼짐: (0,0)은 8칸 * 28ms = 224ms 뒤에 켜진다.
+      await tester.pump(const Duration(milliseconds: 230));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 60)); // 누적 592ms
-      expect(effectColor(tester, row: 0, col: 8), Colors.transparent);
+      expect(lineTarget(tester, row: 0, col: 0), 1);
+      expect(lineTarget(tester, row: 0, col: 8), 1);
 
-      // 컨트롤러가 예약해 둔 타이머(취소돼 아무 것도 안 하는 것 포함)를 모두 흘려보내 테스트 종료 시 남은 타이머가 없게 한다.
+      // 되돌아옴: 가장 먼 (0,0)이 먼저(켜진 지 160ms 뒤) 꺼지고 출발점은 남는다.
+      await tester.pump(const Duration(milliseconds: 170)); // 누적 400ms
+      await tester.pump();
+      expect(lineTarget(tester, row: 0, col: 0), 0);
+      expect(lineTarget(tester, row: 0, col: 8), 1);
+
+      // 출발점이 마지막(608ms)에 꺼지고, 서서히 사라지는 시간이 지나면 끝난다.
+      await tester.pump(const Duration(milliseconds: 215)); // 누적 615ms
+      await tester.pump();
+      expect(lineTarget(tester, row: 0, col: 8), 0);
+      await tester.pump(GameEffectsController.lineFadeOutDuration);
+
+      // 컨트롤러가 예약해 둔 타이머를 모두 흘려보내 남은 타이머가 없게 한다.
       await tester.pump(const Duration(seconds: 1));
       presenter.dispose();
     });
@@ -360,10 +437,9 @@ void main() {
       await tester.pump(const Duration(milliseconds: 220));
       await tester.pump(const Duration(milliseconds: 60));
 
-      final lineColor = effectColor(tester, row: 0, col: 1);
-      expect(lineColor, isNot(Colors.transparent));
-      // 이전 일반 정답 색과 달라야 줄 완성 색이 실제로 우선한 것이 보인다.
-      expect(lineColor, isNot(waveColor));
+      // 줄 완성 층이 켜지고, 이전 일반 정답 색은 효과 층에서 치워진다.
+      expect(lineTarget(tester, row: 0, col: 1), 1);
+      expect(effectColor(tester, row: 0, col: 1), isNot(waveColor));
 
       // 컨트롤러가 예약해 둔 타이머(취소돼 아무 것도 안 하는 것 포함)를 모두 흘려보내 테스트 종료 시 남은 타이머가 없게 한다.
       await tester.pump(const Duration(seconds: 1));
@@ -421,16 +497,16 @@ void main() {
       // 각 꺼짐 경계마다 딱 맞춰 한 프레임을 그려 목표를 등록한 뒤 위젯
       // 전환 시간(60ms)만큼 흘려보내야 실제로 다 사라진 상태를 본다.
       await tester.pump(const Duration(milliseconds: 330)); // 누적 430ms
-      await tester.pump(); // (1,0) 목표(투명) 등록
-      await tester.pump(const Duration(milliseconds: 60)); // 누적 490ms
-      expect(effectColor(tester, row: 1, col: 0), Colors.transparent);
-      // (0,0)은 T=480에 꺼졌지만 위젯이 막 그 시점을 인지한 참이라 아직
-      // 이전(강조) 색 그대로다 — 공유 칸이 살아 있다는 것만 확인한다.
-      expect(effectColor(tester, row: 0, col: 0), isNot(Colors.transparent));
+      await tester.pump(); // (1,0) 꺼짐 목표 등록
+      expect(lineTarget(tester, row: 1, col: 0), 0);
+      // (0,0)은 이벤트2가 새로 켜서 T=480에 꺼진다 — 이벤트1의 오래된 종료가
+      // 새 완성이 차지한 공유 칸을 먼저 끄지 않았다.
+      expect(lineTarget(tester, row: 0, col: 0), 1);
 
-      await tester.pump(); // (0,0) 목표(투명) 등록
-      await tester.pump(const Duration(milliseconds: 60)); // 누적 550ms
-      expect(effectColor(tester, row: 0, col: 0), Colors.transparent);
+      await tester.pump(const Duration(milliseconds: 60)); // 누적 490ms
+      await tester.pump();
+      expect(lineTarget(tester, row: 0, col: 0), 0);
+      await tester.pump(GameEffectsController.lineFadeOutDuration);
 
       // 컨트롤러가 예약해 둔 타이머(취소돼 아무 것도 안 하는 것 포함)를 모두 흘려보내 테스트 종료 시 남은 타이머가 없게 한다.
       await tester.pump(const Duration(seconds: 1));

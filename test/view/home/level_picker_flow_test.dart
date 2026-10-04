@@ -282,6 +282,27 @@ void main() {
     await goBack(tester);
   });
 
+  testWidgets('replay confirm: numbered title, kept-record body, cancel stays',
+      (tester) async {
+    await pumpPicker(tester, cleared: {1});
+    await tester.tap(find.text('001').first);
+    await settle(tester);
+    expect(find.text('Replay puzzle 1?'), findsOneWidget);
+    expect(find.textContaining('only your best record is updated'),
+        findsOneWidget);
+    // 주 버튼은 전체 폭, 취소는 그 아래 텍스트 버튼.
+    final replay = tester.getRect(find.widgetWithText(FilledButton, 'Replay'));
+    final cancel = tester.getRect(find.widgetWithText(TextButton, 'Cancel'));
+    expect(replay.height, 48);
+    expect(cancel.top, greaterThan(replay.bottom));
+    expect(cancel.width, replay.width);
+
+    await tester.tap(find.text('Cancel'));
+    await settle(tester);
+    expect(find.text('Replay puzzle 1?'), findsNothing);
+    expect(find.byType(SudokuGameScreen), findsNothing);
+  });
+
   testWidgets('G: rapid double tap opens a single game screen', (tester) async {
     await pumpPicker(tester);
     final start = find.text('Start puzzle');

@@ -96,9 +96,15 @@ class SudokuBoardGrid extends StatelessWidget {
     final waveCellColor = isDark
         ? const Color(0xFF2A3A2E)
         : AppTheme.mintColor.withValues(alpha: 0.22);
+    // 줄·박스 완성: 선택 음영(보라 12~25%) 위에서도 보이도록 흰색을 섞은 밝은
+    // 라벤더. 최종 완료 글로우(진한 브랜드 보라)와 같은 계열 안에서 위계를
+    // 둔다. 색을 보간하지 않고 투명도만 바꾸는 전용 층에 쓴다(투명 → 색
+    // 보간은 중간에 어두운 회색이 비친다).
     final lineCompleteCellColor = isDark
-        ? const Color(0xFF3A3020)
-        : AppTheme.yellowColor.withValues(alpha: 0.26);
+        ? Color.lerp(levelPalette.primaryPurple, Colors.white, 0.25)!
+            .withValues(alpha: 0.41)
+        : Color.lerp(levelPalette.primaryPurple, Colors.white, 0.45)!
+            .withValues(alpha: 0.33);
     final hiddenSingleColor = isDark
         ? const Color(0xFF2B3F50)
         : AppTheme.lightBlueColor.withValues(alpha: 0.24);
@@ -122,7 +128,7 @@ class SudokuBoardGrid extends StatelessWidget {
         ? const Color(0xFF3A4145).withValues(alpha: 0.72)
         : const Color(0xFFDCE4E8).withValues(alpha: 0.82);
     // 힌트로 채운 칸 강조: 보드 안 힌트 숫자 색(파란 계열)과 어울리되 배경으로
-    // 쓰기엔 채도를 낮춘 톤. 정답(민트)·오답(핑크)·줄 완성(노랑)·되돌리기(보라)와
+    // 쓰기엔 채도를 낮춘 톤. 정답(민트)·오답(핑크)·줄 완성(라벤더)·되돌리기(보라)와
     // 겹치지 않는 별도 키로 관리한다.
     final hintAppliedColor = isDark
         ? const Color(0xFF2E4A57).withValues(alpha: 0.75)
@@ -346,7 +352,34 @@ class SudokuBoardGrid extends StatelessWidget {
                                               : Colors.transparent,
                                     ),
                                   ),
-                                  // 정답·오답·줄 완성 색은 기본 배경과 분리된
+                                  // 줄·박스 완성 강조: 켜질 때 빠르게 올라오고 꺼질 때
+                                  // 서서히 사라진다(투명도 전환, 동작 줄이기는 즉시).
+                                  Positioned.fill(
+                                    child: IgnorePointer(
+                                      child: AnimatedOpacity(
+                                        key: ValueKey('cell-line-$row-$col'),
+                                        duration: reduceMotion
+                                            ? Duration.zero
+                                            : isLineComplete
+                                                ? GameEffectsController
+                                                    .lineFadeInDuration
+                                                : GameEffectsController
+                                                    .lineFadeOutDuration,
+                                        curve: isLineComplete
+                                            ? Curves.easeOut
+                                            : Curves.easeInOut,
+                                        opacity: isLineComplete &&
+                                                !isErrorActive &&
+                                                !isWave
+                                            ? 1
+                                            : 0,
+                                        child: ColoredBox(
+                                          color: lineCompleteCellColor,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  // 정답·오답 등 나머지 효과 색은 기본 배경과 분리된
                                   // 자신만의 짧은 전환 시간을 써서, 컨트롤러의
                                   // 대기 시간에 위젯 전환 시간이 더해지며 전체
                                   // 지속 시간이 늘어나지 않게 한다.
@@ -359,18 +392,16 @@ class SudokuBoardGrid extends StatelessWidget {
                                           ? errorActiveCellColor
                                           : isWave
                                               ? waveCellColor
-                                              : isLineComplete
-                                                  ? lineCompleteCellColor
-                                                  : isHintApplied
-                                                      ? hintAppliedColor
-                                                      : isUndoActive
-                                                          ? undoHighlightColor
-                                                          : isEraseActive
-                                                              ? eraseHighlightColor
-                                                              : isDigitComplete
-                                                                  ? digitCompleteColor
-                                                                  : Colors
-                                                                      .transparent,
+                                              : isHintApplied
+                                                  ? hintAppliedColor
+                                                  : isUndoActive
+                                                      ? undoHighlightColor
+                                                      : isEraseActive
+                                                          ? eraseHighlightColor
+                                                          : isDigitComplete
+                                                              ? digitCompleteColor
+                                                              : Colors
+                                                                  .transparent,
                                     ),
                                   ),
                                   Center(
@@ -612,7 +643,7 @@ class _PuzzleCompleteOverlay extends StatelessWidget {
                   gradient: RadialGradient(
                     radius: glowRadius,
                     colors: [
-                      color.withValues(alpha: glowOpacity * 0.30),
+                      color.withValues(alpha: glowOpacity * 0.35),
                       color.withValues(alpha: 0),
                     ],
                   ),

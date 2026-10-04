@@ -238,7 +238,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     if (_isGameTransitioning || !mounted) return;
     final kind = _puzzleCardKind(gameNumber);
     if (kind == _PuzzleCardKind.completed) {
-      final shouldReplay = await _confirmReplayCompletedPuzzle();
+      final shouldReplay = await _confirmReplayCompletedPuzzle(gameNumber);
       if (!mounted || shouldReplay != true) return;
     }
     if (kind == _PuzzleCardKind.fresh &&
@@ -315,24 +315,27 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     }
   }
 
-  Future<bool?> _confirmReplayCompletedPuzzle() {
-    return showDialog<bool>(
+  Future<bool?> _confirmReplayCompletedPuzzle(int gameNumber) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return showGeneralDialog<bool>(
       context: context,
-      builder: (dialogContext) {
-        final l10n = AppLocalizations.of(dialogContext)!;
-        return AlertDialog(
-          title: Text(l10n.levelReplayTitle),
-          content: Text(l10n.levelReplayBody),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(l10n.commonCancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(l10n.levelReplayConfirm),
-            ),
-          ],
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      transitionDuration:
+          reduceMotion ? Duration.zero : const Duration(milliseconds: 180),
+      pageBuilder: (dialogContext, _, __) =>
+          _ReplayConfirmDialog(gameNumber: gameNumber),
+      transitionBuilder: (context, animation, _, child) {
+        if (reduceMotion) return child;
+        final curved =
+            CurvedAnimation(parent: animation, curve: Curves.easeOut);
+        return FadeTransition(
+          opacity: curved,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.96, end: 1).animate(curved),
+            child: child,
+          ),
         );
       },
     );
@@ -1778,6 +1781,126 @@ class _CatalogStatusBar extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 완료한 퍼즐을 다시 풀기 전 확인창: 라벤더 아이콘, 전체 폭 보라 주 버튼,
+/// 아래 텍스트 취소 버튼의 세로 구조(삭제 동작이 아니므로 경고색을 쓰지 않는다).
+class _ReplayConfirmDialog extends StatefulWidget {
+  const _ReplayConfirmDialog({required this.gameNumber});
+
+  final int gameNumber;
+
+  @override
+  State<_ReplayConfirmDialog> createState() => _ReplayConfirmDialogState();
+}
+
+class _ReplayConfirmDialogState extends State<_ReplayConfirmDialog> {
+  bool _answered = false;
+
+  void _answer(bool value) {
+    // 연타로 화면 전환이 두 번 일어나지 않게 첫 응답만 받는다.
+    if (_answered) return;
+    _answered = true;
+    Navigator.of(context).pop(value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = LevelStatusPalette.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Dialog(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      elevation: 3,
+      shadowColor: Colors.black.withValues(alpha: 0.2),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: colors.completedBorder),
+      ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 340),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: ExcludeSemantics(
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: colors.completedBackground,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.replay_rounded,
+                      size: 24,
+                      color: colors.primaryPurple,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.levelReplayTitle(widget.gameNumber),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: colors.primaryText,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                l10n.levelReplayBody,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.45,
+                  color: colors.secondaryText,
+                ),
+              ),
+              const SizedBox(height: 20),
+              FilledButton(
+                onPressed: () => _answer(true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: colors.primaryPurple,
+                  foregroundColor:
+                      isDark ? const Color(0xFF1F1B3A) : Colors.white,
+                  minimumSize: const Size.fromHeight(48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                child:
+                    Text(l10n.levelReplayConfirm, textAlign: TextAlign.center),
+              ),
+              const SizedBox(height: 4),
+              TextButton(
+                onPressed: () => _answer(false),
+                style: TextButton.styleFrom(
+                  foregroundColor: colors.secondaryText,
+                  minimumSize: const Size.fromHeight(44),
+                  textStyle: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                child: Text(l10n.commonCancel),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

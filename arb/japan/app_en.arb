@@ -113,28 +113,6 @@
   "gameProgressShort": "Progress",
   "gameTimeShort": "Time",
   "gameNumberInputTitle": "Number input",
-  "gameLineWaveRowLabel": "Row",
-  "gameLineWaveColLabel": "Column",
-  "gameLineWaveBoxLabel": "3×3 box",
-  "gameLineWaveAnnounce": "{parts} cleared",
-  "@gameLineWaveAnnounce": {
-    "placeholders": {
-      "parts": {
-        "type": "String"
-      }
-    }
-  },
-  "gameLineWaveRowSentence": "You completed a row",
-  "gameLineWaveColSentence": "You completed a column",
-  "gameLineWaveBoxSentence": "You completed a 3×3 box",
-  "gameDigitCompleteSentence": "You filled in all the {number}s",
-  "@gameDigitCompleteSentence": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
   "gamePause": "Pause",
   "gameResume": "Resume",
   "gameAnswerPreview": "Answer",
@@ -197,35 +175,7 @@
   "dialogPlayAgain": "Solve again",
   "dialogPuzzleCompleteTitle": "You solved the puzzle",
   "dialogNewBestMessage": "New best record!",
-  "dialogHintsUsed": "Hints used: {count}",
-  "dialogCompletionTimeSentenceMinutes": "Solved in {minutes} min {seconds} sec",
-  "@dialogCompletionTimeSentenceMinutes": {
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      },
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
-  "dialogCompletionTimeSentenceSeconds": "Solved in {seconds} sec",
-  "@dialogCompletionTimeSentenceSeconds": {
-    "placeholders": {
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
-  "dialogCompletionNoMistakes": "Finished with no mistakes",
-  "dialogCompletionMistakeCount": "{count, plural, one{You made {count} mistake} other{You made {count} mistakes}}",
-  "@dialogCompletionMistakeCount": {
-    "placeholders": {
-      "count": {
-        "type": "num"
-      }
-    }
-  },
+  "dialogHintsUsed": "Hints: {count}",
   "@dialogHintsUsed": {
     "placeholders": {
       "count": {
@@ -700,6 +650,15 @@
   "homeChallengeStartButton": "Start challenge",
   "homeChallengeReplayButton": "Play again",
   "homeChallengeNotStarted": "Not started yet",
+  "homeChallengeFirstLine": "Your first challenge starts at Beginner",
+  "homeChallengePromotedLine": "Try {level} today?",
+  "@homeChallengePromotedLine": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
   "homeChallengeProgress": "{percent}% done",
   "@homeChallengeProgress": {
     "placeholders": {
@@ -708,7 +667,7 @@
       }
     }
   },
-  "homeChallengeCompleteTitle": "Today's challenge complete!",
+  "homeChallengeDoneLine": "Today's challenge complete!",
   "homeChallengeStreak": "{days, plural, =1{1-day challenge streak} other{{days}-day challenge streak}}",
   "@homeChallengeStreak": {
     "placeholders": {
@@ -778,8 +737,15 @@
   "levelRecentBadge": "Recent",
   "levelStatusInProgress": "In progress",
   "levelNoResults": "No results.",
-  "levelReplayTitle": "Replay this puzzle?",
-  "levelReplayBody": "Your completed record is kept, and it updates only if the new result is better.",
+  "levelReplayTitle": "Replay puzzle {number}?",
+  "@levelReplayTitle": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "levelReplayBody": "Your completed record stays as it is. If you finish with a better result, only your best record is updated.",
   "levelReplayConfirm": "Replay",
   "levelInProgressLimitTitle": "{maxCount} puzzles in progress",
   "@levelInProgressLimitTitle": {
@@ -1061,10 +1027,10 @@
   "notificationOptInDenied": "Notifications aren't allowed. Allow them in your device settings, then turn reminders on in Settings.",
   "notificationSetupFailed": "We couldn't set up reminders. Please try again later in Settings.",
   "beginnerTutorialPromptTitle": "New to Sudoku?",
-  "beginnerTutorialPromptBody": "Try a quick, guided practice puzzle before you start solving — it only takes a minute.",
-  "beginnerTutorialStart": "Start the guide",
+  "beginnerTutorialPromptBody": "Try a short practice to learn the basic rules and controls.",
+  "beginnerTutorialStart": "Start practice",
   "beginnerTutorialSkip": "Skip",
-  "beginnerTutorialStepIndicator": "Step {current} of {total}",
+  "beginnerTutorialStepIndicator": "{current} / {total}",
   "@beginnerTutorialStepIndicator": {
     "placeholders": {
       "current": {
@@ -1075,23 +1041,22 @@
       }
     }
   },
-  "beginnerTutorialStepRowTitle": "Rule: rows",
-  "beginnerTutorialStepRowBody": "Each row must contain every number from 1 to 9, with no repeats.",
-  "beginnerTutorialStepColumnTitle": "Rule: columns",
-  "beginnerTutorialStepColumnBody": "Each column must also contain every number from 1 to 9, with no repeats.",
-  "beginnerTutorialStepBoxTitle": "Rule: 3×3 boxes",
-  "beginnerTutorialStepBoxBody": "Each 3×3 box must contain every number from 1 to 9, with no repeats.",
+  "beginnerTutorialPracticeTitle": "Practice puzzle",
+  "beginnerTutorialStepRulesTitle": "Basic rules",
+  "beginnerTutorialStepRulesBody": "Each row, column, and 3×3 box holds the numbers 1 to 9 exactly once.",
+  "beginnerTutorialRuleRow": "Row",
+  "beginnerTutorialRuleColumn": "Column",
+  "beginnerTutorialRuleBox": "3×3 box",
   "beginnerTutorialStepInputTitle": "Enter a number",
-  "beginnerTutorialStepInputBody": "Only one number can go in this highlighted cell. Tap the cell, then tap the correct number.",
-  "beginnerTutorialStepInputWrongHint": "That number is already used in this row, column, or box. Try another number.",
-  "beginnerTutorialStepMemoTitle": "Notes and erasing",
-  "beginnerTutorialStepMemoAddBody": "Turn on Notes, tap this cell, then tap a candidate number to jot it down.",
-  "beginnerTutorialStepMemoEraseBody": "Now tap that same number again to erase the note.",
-  "beginnerTutorialStepHintTitle": "Hints",
-  "beginnerTutorialStepHintBody": "Tap Hint to see where to look and why, without spending one of your real hints.",
-  "beginnerTutorialStepHintButton": "Open hint",
+  "beginnerTutorialStepInputBody": "Tap the highlighted cell, then choose the number that fits.",
+  "beginnerTutorialStepInputWrongHint": "A number already in the same row, column, or 3×3 box can't go here.",
+  "beginnerTutorialStepMemoTitle": "Note candidates",
+  "beginnerTutorialStepMemoAddBody": "Turn on Notes, then jot candidate numbers in the highlighted cell.",
+  "beginnerTutorialStepMemoEraseBody": "Tap the same number again to erase a note.",
+  "beginnerTutorialStepHintTitle": "Use a hint",
+  "beginnerTutorialStepHintBody": "When you're stuck, tap Hint to see which cell to look at and why.",
   "beginnerTutorialStepDoneTitle": "You're ready!",
-  "beginnerTutorialStepDoneBody": "You've learned the basics: rows, columns, boxes, entering numbers, notes, and hints.",
+  "beginnerTutorialStepDoneBody": "You've learned entering numbers, notes, and hints.",
   "beginnerTutorialFirstPuzzleButton": "Start my first puzzle",
   "beginnerTutorialNextButton": "Next",
   "beginnerTutorialCloseButton": "Done",
@@ -1102,14 +1067,6 @@
   "autoNotesConfirmApply": "Refill notes",
   "autoNotesContradictionMessage": "Some cells have no possible number left, so notes were not filled in. Check your entries and try again.",
   "autoNotesTipMessage": "Tip: long-press Notes to fill in all candidate numbers at once.",
-  "gameNumberLockedMessage": "{number} locked · tap cells to fill",
-  "@gameNumberLockedMessage": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
   "gameNumberLockTipMessage": "Long-press a number to lock it and fill it into several cells quickly.",
   "gameNumberButtonLockedSemantics": "{number}, locked, long press to unlock",
   "@gameNumberButtonLockedSemantics": {

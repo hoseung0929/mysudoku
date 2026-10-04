@@ -6,8 +6,9 @@ import 'package:sudoku159/widgets/game_result_dialog_frame.dart';
 
 /// 게임 완료 다이얼로그.
 ///
-/// 위에서 아래로: 작은 축하 이미지 → 제목 → 난이도·번호 → 시간·실수 →
-/// (조건부) 성취 메시지 한 줄 → 주요 버튼 → 보조 버튼.
+/// 위에서 아래로: 작은 축하 이미지 → 제목 → 난이도·번호 → 시간·실수 카드 →
+/// (조건부) 힌트 → 성취 메시지(최대 두 줄: 도전/최고 기록 + 주간 목표) →
+/// 주요 버튼 → 보조 버튼. 같은 값을 문장으로 한 번 더 풀어 쓰지 않는다.
 class GameCompleteDialog extends StatefulWidget {
   const GameCompleteDialog({
     super.key,
@@ -47,19 +48,6 @@ class GameCompleteDialog extends StatefulWidget {
   State<GameCompleteDialog> createState() => _GameCompleteDialogState();
 }
 
-/// "8분 24초 만에 풀었어요"처럼 자연스러운 문장용 시간 표기. 상세 라벨의
-/// 08:24 같은 디지털 표기와는 별개로, 1시간을 넘는 드문 경우는 분으로
-/// 뭉쳐 표시한다(그 경우에도 상세 라벨 쪽은 정확한 H:MM:SS를 유지한다).
-String _timeSentence(AppLocalizations l10n, int totalSeconds) {
-  final total = totalSeconds < 0 ? 0 : totalSeconds;
-  final minutes = total ~/ 60;
-  final seconds = total % 60;
-  if (minutes == 0) {
-    return l10n.dialogCompletionTimeSentenceSeconds(seconds);
-  }
-  return l10n.dialogCompletionTimeSentenceMinutes(minutes, seconds);
-}
-
 class _GameCompleteDialogState extends State<GameCompleteDialog> {
   // 빠르게 반복해서 눌러도 화면 이동/팝이 한 번만 일어나게 한다.
   bool _handled = false;
@@ -93,21 +81,6 @@ class _GameCompleteDialogState extends State<GameCompleteDialog> {
           widget.levelLabel,
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
-        ),
-        const SizedBox(height: 14),
-        // 대표 결과를 짧은 문장 두 줄로 먼저 보여준다 — 아래 상세 라벨과
-        // 같은 값을 다루지만, 목적이 달라(느낌 대 스캔) 둘 다 유지한다.
-        Text(
-          _timeSentence(l10n, widget.timeInSeconds),
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 15, color: cs.onSurface),
-        ),
-        Text(
-          widget.wrongCount == 0
-              ? l10n.dialogCompletionNoMistakes
-              : l10n.dialogCompletionMistakeCount(widget.wrongCount),
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 15, color: cs.onSurface),
         ),
         const SizedBox(height: 16),
         _ResultSummary(
@@ -333,7 +306,8 @@ class _WeeklyGoalCelebration extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final color = isDark ? const Color(0xFF5BC79A) : const Color(0xFF3FA77A);
+    // 흰 배경에서 14px 글자로 읽히도록 대비를 확보한 초록(약 5:1).
+    final color = isDark ? const Color(0xFF5BC79A) : const Color(0xFF2E7D5B);
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
     return TweenAnimationBuilder<double>(

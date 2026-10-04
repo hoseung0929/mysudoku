@@ -1209,11 +1209,10 @@ class _HomeScreenState extends State<HomeScreen> {
         !isError && (_challengeProgress?.isTodayChallengeCleared ?? false);
     final inProgress = !isError && !done && session != null;
     final busy = _isOpeningGame || _isRetryingTodayChallenge;
-    // 완료 후 다시 풀다 중단한 재도전 세션이 있으면 '다시 풀기'를 숨긴다: 새로
-    // 시작하면 그 세션이 지워지므로, 이어서 풀기는 이어하기 카드가 맡는다.
-    final showButton = !(done && session != null);
+    // 완료 카드는 성과만 보여 주는 상태 카드다: 재도전 버튼과 탭 동작이 없어
+    // 저장된 재도전 세션은 이어하기 카드에서만 다룬다.
+    final showButton = !done;
     final tappable = !isError && !done;
-    final streakDays = _challengeProgress?.streakDays ?? 0;
 
     final puzzleTitle = isError
         ? ''
@@ -1225,16 +1224,26 @@ class _HomeScreenState extends State<HomeScreen> {
     } else if (inProgress) {
       sub = _challengeProgressText(l10n, session);
     } else {
-      sub = l10n.homeChallengeNotStarted;
+      // 추천 이벤트(첫 도전·승급)가 있는 날의 시작 전 상태에만 안내 문구를 쓴다.
+      switch (_challengeProgress?.recommendationEvent) {
+        case ChallengeRecommendationEvent.firstChallenge:
+          sub = l10n.homeChallengeFirstLine;
+          break;
+        case ChallengeRecommendationEvent.promoted:
+          sub = l10n.homeChallengePromotedLine(
+            game.levelName.localizedSudokuLevelName(l10n),
+          );
+          break;
+        case null:
+          sub = l10n.homeChallengeNotStarted;
+      }
     }
     final progressPct = inProgress ? (session.progress * 100).round() : 0;
     final buttonLabel = isError
         ? l10n.levelTryAgain
-        : done
-            ? l10n.homeChallengeReplayButton
-            : inProgress
-                ? l10n.levelContinueButton
-                : l10n.homeChallengeStartButton;
+        : inProgress
+            ? l10n.levelContinueButton
+            : l10n.homeChallengeStartButton;
     final showArtwork = !isError &&
         MediaQuery.sizeOf(context).width >= 300 &&
         MediaQuery.textScalerOf(context).scale(1.0) <= 1.3;
@@ -1271,36 +1280,54 @@ class _HomeScreenState extends State<HomeScreen> {
         );
 
     final List<Widget> textChildren;
-    if (isError) {
+    if (done) {
+      // 체크 아이콘은 장식이고, 완료 상태는 텍스트로 전달한다.
+      textChildren = [
+        Semantics(
+          container: true,
+          excludeSemantics: true,
+          label: '${l10n.homeChallengeDoneLine} $puzzleTitle',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  FadeInOnce(
+                    enabled: _challengeJustCompleted,
+                    onEnd: _finishChallengeCompleteFade,
+                    child: Icon(
+                      Icons.check_circle_rounded,
+                      size: 20,
+                      color: palette.primaryPurple,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(child: titleText(l10n.homeChallengeDoneLine)),
+                ],
+              ),
+              const SizedBox(height: 4),
+              subText(puzzleTitle),
+            ],
+          ),
+        ),
+      ];
+    } else if (isError) {
       textChildren = [
         titleText(l10n.homeChallengeLoadErrorTitle),
         const SizedBox(height: 2),
         subText(sub),
       ];
-    } else if (done) {
-      textChildren = [
-        Row(
-          children: [
-            FadeInOnce(
-              enabled: _challengeJustCompleted,
-              onEnd: _finishChallengeCompleteFade,
-              child:
-                  Icon(Icons.check_circle_rounded, size: 20, color: cs.primary),
-            ),
-            const SizedBox(width: 6),
-            Expanded(child: titleText(l10n.homeChallengeCompleteTitle)),
-          ],
-        ),
-        const SizedBox(height: 2),
-        subText(puzzleTitle),
-        // 일반 활동 연속(홈 헤더)과 구분되도록 '도전'을 붙이고, 2일 이상일 때만.
-        if (streakDays >= 2) subText(l10n.homeChallengeStreak(streakDays)),
-      ];
     } else {
+      // 시작 전·진행 중은 같은 구조(머리줄 / 퍼즐 이름 / 보조 한 줄)를 써서
+      // 상태가 바뀌어도 카드 높이와 버튼 위치가 달라지지 않는다.
       textChildren = [
         Row(
           children: [
-            Icon(Icons.calendar_today_rounded, size: 16, color: headingColor),
+            Icon(
+              Icons.calendar_today_rounded,
+              size: 16,
+              color: headingColor,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -1332,77 +1359,74 @@ class _HomeScreenState extends State<HomeScreen> {
     final content = Padding(
       key: ValueKey(stateKey),
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: FractionallySizedBox(
-              widthFactor: showArtwork ? 0.62 : 1,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: textChildren,
+      child: ConstrainedBox(
+        // 완료 카드는 버튼이 빠져도 그림이 답답하지 않도록 최소 높이를 두고
+        // 시작 전 카드보다 약 25pt 낮게 맞춘다.
+        constraints: BoxConstraints(minHeight: done && showArtwork ? 146 : 0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FractionallySizedBox(
+                widthFactor: showArtwork ? 0.62 : 1,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: textChildren,
+                ),
               ),
             ),
-          ),
-          if (showButton) const SizedBox(height: 8),
-          // 오른쪽 그림(펭귄·편지)을 가리지 않도록 버튼 폭을 왼쪽으로 제한한다.
-          // 좁아서 글이 잘릴 수 있으면 전체 폭으로 되돌린다.
-          if (showButton)
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final narrow =
-                    showArtwork && constraints.maxWidth * 0.62 >= 180;
-                final VoidCallback? onPressed = busy
-                    ? null
-                    : isError
-                        ? _openTodayChallenge
-                        : _startChallengeWithHaptic;
-                final button = PressScaleListener(
-                  child: done
-                      ? OutlinedButton(
-                          onPressed: onPressed,
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(44),
+            if (showButton) const SizedBox(height: 8),
+            // 오른쪽 그림(펭귄·편지)을 가리지 않도록 버튼 폭을 왼쪽으로 제한한다.
+            // 좁아서 글이 잘릴 수 있으면 전체 폭으로 되돌린다.
+            if (showButton)
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final narrow =
+                      showArtwork && constraints.maxWidth * 0.62 >= 180;
+                  final VoidCallback? onPressed = busy
+                      ? null
+                      : isError
+                          ? _openTodayChallenge
+                          : _startChallengeWithHaptic;
+                  // '난이도 선택'(주 버튼, 검은색)과 위계를 구분하기 위해 연한 보라색
+                  // 배경의 보조 버튼으로 모든 상태에서 같게 표시한다.
+                  final button = PressScaleListener(
+                    child: FilledButton(
+                      onPressed: onPressed,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: palette.completedBackground,
+                        foregroundColor: palette.primaryPurple,
+                        // 탭 직후 busy 상태에서도 배경이 비치지 않도록 유지한다.
+                        disabledBackgroundColor: palette.completedBackground,
+                        disabledForegroundColor: palette.primaryPurple,
+                        minimumSize: const Size.fromHeight(44),
+                      ),
+                      child: isError && _isRetryingTodayChallenge
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(buttonLabel, textAlign: TextAlign.center),
+                    ),
+                  );
+                  return narrow
+                      ? Align(
+                          alignment: Alignment.centerLeft,
+                          child: FractionallySizedBox(
+                            widthFactor: 0.62,
+                            child: button,
                           ),
-                          child: Text(buttonLabel, textAlign: TextAlign.center),
                         )
-                      // '난이도 선택'(주 버튼, 검은색)과 위계를 구분하기 위해 연한
-                      // 보라색 배경의 보조 버튼으로 표시한다.
-                      : FilledButton(
-                          onPressed: onPressed,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: palette.completedBackground,
-                            foregroundColor: palette.primaryPurple,
-                            // 탭 직후 busy 상태에서도 배경이 비치지 않도록 유지한다.
-                            disabledBackgroundColor:
-                                palette.completedBackground,
-                            disabledForegroundColor: palette.primaryPurple,
-                            minimumSize: const Size.fromHeight(44),
-                          ),
-                          child: isError && _isRetryingTodayChallenge
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Text(buttonLabel, textAlign: TextAlign.center),
-                        ),
-                );
-                return narrow
-                    ? Align(
-                        alignment: Alignment.centerLeft,
-                        child: FractionallySizedBox(
-                          widthFactor: 0.62,
-                          child: button,
-                        ),
-                      )
-                    : button;
-              },
-            ),
-        ],
+                      : button;
+                },
+              ),
+          ],
+        ),
       ),
     );
 

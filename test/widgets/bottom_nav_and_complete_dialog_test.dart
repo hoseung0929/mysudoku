@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -178,7 +179,7 @@ void main() {
       expect(find.text('Beginner · Game 18'), findsOneWidget);
       expect(find.text('1:02:05'), findsOneWidget);
       expect(find.text('2 times'), findsOneWidget);
-      expect(find.text('Hints used: 1'), findsOneWidget);
+      expect(find.text('Hints: 1'), findsOneWidget);
       // 제안 카드·알림·다른 난이도 유도는 없다.
       expect(find.text('Set tomorrow reminder'), findsNothing);
       expect(find.text('Try another level'), findsNothing);
@@ -189,6 +190,59 @@ void main() {
       expect(y('Beginner · Game 18'), lessThan(y('1:02:05')));
       expect(y('1:02:05'), lessThan(y('Next puzzle')));
       expect(y('Next puzzle'), lessThan(y('Puzzle list')));
+    });
+
+    testWidgets(
+        'time and mistakes appear once, in the summary card only, with one '
+        'wording ("Mistakes")', (tester) async {
+      await tester.pumpWidget(_app(dialog(onNext: () {}, hints: 3)));
+      // 문장으로 풀어 쓴 같은 값은 없다(3725초는 1시간이 넘어 "62 min"처럼
+      // 어색하게 보일 수 있던 부분).
+      expect(find.textContaining('Solved in'), findsNothing);
+      expect(find.textContaining('min '), findsNothing);
+      expect(find.textContaining('You made'), findsNothing);
+      expect(find.textContaining('no mistakes'), findsNothing);
+      expect(find.text('1:02:05'), findsOneWidget);
+      expect(find.text('Time'), findsOneWidget);
+      expect(find.text('Mistakes'), findsOneWidget);
+      expect(find.text('2 times'), findsOneWidget);
+      expect(find.textContaining('Wrong answers'), findsNothing);
+      expect(find.text('Hints: 3'), findsOneWidget);
+    });
+
+    testWidgets('the weekly goal text is readable on white (contrast >= 4.5)',
+        (tester) async {
+      await tester.pumpWidget(_app(dialog(
+        onNext: () {},
+        weeklyGoal: "You reached this week's goal",
+      )));
+      await tester.pump(const Duration(milliseconds: 500));
+      final text =
+          tester.widget<Text>(find.text("You reached this week's goal"));
+      final color = text.style!.color!;
+      double lum(Color c) {
+        double ch(double v) => v <= 0.03928
+            ? v / 12.92
+            : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
+        return 0.2126 * ch(c.r) + 0.7152 * ch(c.g) + 0.0722 * ch(c.b);
+      }
+
+      final ratio = (lum(Colors.white) + 0.05) / (lum(color) + 0.05);
+      expect(ratio, greaterThanOrEqualTo(4.5));
+    });
+
+    testWidgets('achievements are capped at two lines', (tester) async {
+      await tester.pumpWidget(_app(dialog(
+        onNext: () {},
+        challenge: 'Today challenge complete',
+        best: true,
+        weeklyGoal: "You reached this week's goal",
+      )));
+      await tester.pump(const Duration(milliseconds: 500));
+      // 도전 완료가 최고 기록보다 우선하고, 주간 목표와 합쳐 두 줄까지만.
+      expect(find.text('Today challenge complete'), findsOneWidget);
+      expect(find.text('New best record!'), findsNothing);
+      expect(find.text("You reached this week's goal"), findsOneWidget);
     });
 
     testWidgets('celebration mascot shows normally, is dropped at extreme text',
@@ -211,7 +265,7 @@ void main() {
 
     testWidgets('hint line is hidden when no hints were used', (tester) async {
       await tester.pumpWidget(_app(dialog(onNext: () {})));
-      expect(find.textContaining('Hints used'), findsNothing);
+      expect(find.textContaining('Hints'), findsNothing);
     });
 
     testWidgets('at most one achievement message: challenge beats best record',

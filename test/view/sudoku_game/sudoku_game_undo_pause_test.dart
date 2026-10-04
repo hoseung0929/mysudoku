@@ -245,7 +245,7 @@ void main() {
     await tester.longPress(find.text('Undo'));
     await tester.pump();
     expect(presenter.getCellValue(0, 1), 3);
-    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump(const Duration(milliseconds: 1200));
   });
 
   testWidgets('selecting a number first locks it and a cell tap enters it',
@@ -267,7 +267,7 @@ void main() {
     await tester.pump();
     expect(presenter.getCellValue(0, 1), 3);
     expect(find.byKey(const ValueKey('number-lock-3')), findsNothing);
-    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump(const Duration(milliseconds: 1200));
   });
 
   group('undo result-cell highlight', () {
@@ -290,7 +290,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
       expect(undoActiveOf(tester)['0,1'] ?? false, isFalse);
       // (0,1) 입력이 세로줄도 완성시켜 예약된 줄 완성 타이머를 마저 흘려보낸다.
-      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 1200));
     });
 
     testWidgets(
@@ -313,7 +313,7 @@ void main() {
           undoActiveOf(tester).entries.where((e) => e.value).map((e) => e.key);
       expect(active, ['0,1']);
       // 행 0 완성으로 예약된 줄 완성 타이머(490ms)를 마저 흘려보낸다.
-      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump(const Duration(milliseconds: 1200));
     });
 
     testWidgets('no highlight or vibration when there is nothing to undo',
@@ -369,7 +369,7 @@ void main() {
       expect(vibrateCalls, hasLength(1));
       expect(
           vibrateCalls.single.arguments, 'HapticFeedbackType.selectionClick');
-      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump(const Duration(milliseconds: 1200));
     });
 
     testWidgets('reduce motion does not turn the vibration off',
@@ -403,12 +403,12 @@ void main() {
       expect(vibrateCalls, hasLength(1));
       expect(
           vibrateCalls.single.arguments, 'HapticFeedbackType.selectionClick');
-      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump(const Duration(milliseconds: 1200));
     });
 
     testWidgets(
         'restoring a value that completes a row does not replay the line '
-        'completion effect or toast', (tester) async {
+        'completion effect', (tester) async {
       final presenter = await pumpSafeGame(tester, const Size(390, 844));
 
       // 행 0을 8/9까지 채운다: (0,2)=4(정답), 그다음 (0,1)=3(정답)으로 완성.
@@ -418,13 +418,11 @@ void main() {
       presenter.setSelectedCellValue(3); // 행 0 완성 → 정상적인 줄 완성 효과
       await tester.pump();
       expect(lineCompleteActiveOf(tester).values.any((v) => v), isTrue);
-      // 이 입력은 행0 완성과 숫자 3 전부 채움이 동시에 일어난다. 우선순위가
-      // 높은 행 완성 안내만 보이고 숫자 완료 문구는 생략된다.
-      // 행 0과 열 1이 함께 완성돼 라벨을 나열한 한 줄 안내가 뜬다.
-      expect(find.textContaining('cleared'), findsOneWidget);
+      // 상단 안내 문구는 더 이상 없다.
+      expect(find.textContaining('cleared'), findsNothing);
       expect(find.textContaining('filled in all the 3s'), findsNothing);
 
-      // 효과·토스트가 자연히 사라질 때까지 기다린다.
+      // 효과가 자연히 사라질 때까지 기다린다.
       await tester.pump(const Duration(milliseconds: 1300));
       expect(lineCompleteActiveOf(tester).values.any((v) => v), isFalse);
       expect(find.textContaining('filled in all the 3s'), findsNothing);
@@ -435,7 +433,7 @@ void main() {
       expect(presenter.getCellValue(0, 1), 0);
       expect(lineCompleteActiveOf(tester).values.any((v) => v), isFalse);
 
-      // 되돌리기로 (0,1)이 복원되며 행이 다시 완성되지만, 효과·토스트는
+      // 되돌리기로 (0,1)이 복원되며 행이 다시 완성되지만, 효과는
       // 재실행되지 않는다.
       await tester.tap(find.text('Undo'));
       await tester.pump();
@@ -443,7 +441,7 @@ void main() {
       expect(lineCompleteActiveOf(tester).values.any((v) => v), isFalse);
       expect(find.textContaining('filled in all the 3s'), findsNothing);
       expect(undoActiveOf(tester)['0,1'], isTrue);
-      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump(const Duration(milliseconds: 1200));
     });
 
     testWidgets('no effect while paused, completed, or game-over',
@@ -458,7 +456,7 @@ void main() {
       expect(buttonWithLabel(tester, 'Undo').onPressed, isNull);
       expect(undoActiveOf(tester).values.any((v) => v), isFalse);
       // (0,1) 입력이 세로줄을 완성시켜 예약된 줄 완성 타이머를 마저 흘려보낸다.
-      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump(const Duration(milliseconds: 1200));
     });
 
     testWidgets('a stale undo-highlight timer does not crash after dispose',
@@ -472,7 +470,7 @@ void main() {
 
       // 강조 타이머(140ms)가 끝나기 전에 화면을 통째로 치운다.
       await tester.pumpWidget(const SizedBox());
-      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump(const Duration(milliseconds: 1200));
       expect(tester.takeException(), isNull);
     });
   });

@@ -156,7 +156,7 @@ void main() {
     expect(presenter.getCellValue(0, 1), 3);
     expect(presenter.isHintCell(0, 1), isTrue);
 
-    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump(const Duration(milliseconds: 1200));
   });
 
   testWidgets('reduce motion still shows the highlight state instantly',

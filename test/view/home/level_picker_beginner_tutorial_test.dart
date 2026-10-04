@@ -143,7 +143,7 @@ void main() {
     await pumpPicker(tester);
     await tester.tap(find.text('Start puzzle'));
     await tester.pump();
-    await tester.tap(find.text('Start the guide'));
+    await tester.tap(find.text('Start practice'));
     await settle(tester);
 
     expect(find.byType(BeginnerTutorialScreen), findsOneWidget);

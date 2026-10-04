@@ -86,7 +86,7 @@ class GameEndFlow {
       builder: (dialogContext) {
         return GameCompleteDialog(
           levelLabel:
-              '${level.localizedName(l10n)} · ${l10n.gameNumberLabel(game.gameNumber)}',
+              '${level.localizedName(l10n)} · ${l10n.levelPuzzleNumber(game.gameNumber)}',
           hintsUsed: hintsUsed,
           timeInSeconds: clearTimeSeconds,
           wrongCount: wrongCount,

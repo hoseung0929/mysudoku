@@ -338,6 +338,16 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    testWidgets('labels the puzzle in natural wording, not "Game N"',
+        (tester) async {
+      await pumpHost(
+        tester,
+        GameEndFlow(completionCoordinator: _ThrowingCoordinator()),
+      );
+      expect(find.text('Beginner · Puzzle 1'), findsOneWidget);
+      expect(find.textContaining('Game 1'), findsNothing);
+    });
+
     testWidgets('when the clear-event save fails', (tester) async {
       final db = _FakeDb()..failEvent = true;
       await pumpHost(

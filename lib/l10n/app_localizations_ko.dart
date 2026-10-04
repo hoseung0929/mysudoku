@@ -275,34 +275,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gameNumberInputTitle => '숫자 입력';
 
   @override
-  String get gameLineWaveRowLabel => '가로줄';
-
-  @override
-  String get gameLineWaveColLabel => '세로줄';
-
-  @override
-  String get gameLineWaveBoxLabel => '3×3 박스';
-
-  @override
-  String gameLineWaveAnnounce(String parts) {
-    return '$parts 완성';
-  }
-
-  @override
-  String get gameLineWaveRowSentence => '가로줄을 완성했어요';
-
-  @override
-  String get gameLineWaveColSentence => '세로줄을 완성했어요';
-
-  @override
-  String get gameLineWaveBoxSentence => '3×3 박스를 완성했어요';
-
-  @override
-  String gameDigitCompleteSentence(int number) {
-    return '숫자 $number를 모두 채웠어요';
-  }
-
-  @override
   String get gamePause => '일시정지';
 
   @override
@@ -357,7 +329,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get dialogElapsedTime => '소요 시간';
 
   @override
-  String get dialogWrongCount => '오답 횟수';
+  String get dialogWrongCount => '실수';
 
   @override
   String dialogWrongCountValue(int count) {
@@ -387,25 +359,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String dialogHintsUsed(int count) {
-    return '힌트 $count회 사용';
-  }
-
-  @override
-  String dialogCompletionTimeSentenceMinutes(int minutes, int seconds) {
-    return '$minutes분 $seconds초 만에 풀었어요';
-  }
-
-  @override
-  String dialogCompletionTimeSentenceSeconds(int seconds) {
-    return '$seconds초 만에 풀었어요';
-  }
-
-  @override
-  String get dialogCompletionNoMistakes => '실수 없이 마무리했어요';
-
-  @override
-  String dialogCompletionMistakeCount(num count) {
-    return '실수는 $count번 있었어요';
+    return '힌트 $count회';
   }
 
   @override
@@ -1086,12 +1040,20 @@ class AppLocalizationsKo extends AppLocalizations {
   String get homeChallengeNotStarted => '아직 시작 전';
 
   @override
+  String get homeChallengeFirstLine => '첫 도전은 초급부터 시작해요';
+
+  @override
+  String homeChallengePromotedLine(String level) {
+    return '오늘은 $level에 도전해볼까요?';
+  }
+
+  @override
   String homeChallengeProgress(int percent) {
     return '$percent% 진행';
   }
 
   @override
-  String get homeChallengeCompleteTitle => '오늘의 도전 완료!';
+  String get homeChallengeDoneLine => '오늘의 도전 완료!';
 
   @override
   String homeChallengeStreak(num days) {
@@ -1199,10 +1161,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get levelNoResults => '해당 항목이 없습니다.';
 
   @override
-  String get levelReplayTitle => '완료한 퍼즐을 다시 풀까요?';
+  String levelReplayTitle(int number) {
+    return '$number번 퍼즐을 다시 풀까요?';
+  }
 
   @override
-  String get levelReplayBody => '완료 기록은 유지되고, 더 좋은 결과일 때만 업데이트돼요.';
+  String get levelReplayBody =>
+      '기존 완료 기록은 그대로 유지돼요. 더 좋은 기록으로 완료하면 최고 기록만 업데이트돼요.';
 
   @override
   String get levelReplayConfirm => '다시 풀기';
@@ -1533,77 +1498,68 @@ class AppLocalizationsKo extends AppLocalizations {
   String get beginnerTutorialPromptTitle => '스도쿠가 처음이신가요?';
 
   @override
-  String get beginnerTutorialPromptBody =>
-      '문제를 풀기 전에 짧은 안내 연습을 해볼까요? 1분이면 충분해요.';
+  String get beginnerTutorialPromptBody => '짧은 연습으로 기본 규칙과 조작 방법을 익혀볼까요?';
 
   @override
-  String get beginnerTutorialStart => '가이드 시작';
+  String get beginnerTutorialStart => '연습 시작';
 
   @override
   String get beginnerTutorialSkip => '건너뛰기';
 
   @override
   String beginnerTutorialStepIndicator(int current, int total) {
-    return '$current / $total 단계';
+    return '$current / $total';
   }
 
   @override
-  String get beginnerTutorialStepRowTitle => '규칙: 가로줄';
+  String get beginnerTutorialPracticeTitle => '연습 퍼즐';
 
   @override
-  String get beginnerTutorialStepRowBody => '한 가로줄에는 1부터 9까지 숫자가 한 번씩만 들어가요.';
+  String get beginnerTutorialStepRulesTitle => '기본 규칙';
 
   @override
-  String get beginnerTutorialStepColumnTitle => '규칙: 세로줄';
+  String get beginnerTutorialStepRulesBody =>
+      '가로줄·세로줄·3×3 박스에는 1부터 9까지 숫자가 한 번씩만 들어가요.';
 
   @override
-  String get beginnerTutorialStepColumnBody =>
-      '세로줄도 마찬가지로 1부터 9까지 숫자가 한 번씩만 들어가요.';
+  String get beginnerTutorialRuleRow => '가로줄';
 
   @override
-  String get beginnerTutorialStepBoxTitle => '규칙: 3×3 박스';
+  String get beginnerTutorialRuleColumn => '세로줄';
 
   @override
-  String get beginnerTutorialStepBoxBody =>
-      '3×3 박스 안에도 1부터 9까지 숫자가 한 번씩만 들어가요.';
+  String get beginnerTutorialRuleBox => '3×3 박스';
 
   @override
   String get beginnerTutorialStepInputTitle => '숫자 입력하기';
 
   @override
-  String get beginnerTutorialStepInputBody =>
-      '강조된 칸에는 들어갈 수 있는 숫자가 하나뿐이에요. 칸을 누르고 정답 숫자를 눌러보세요.';
+  String get beginnerTutorialStepInputBody => '강조된 칸을 누른 뒤 들어갈 숫자를 선택해보세요.';
 
   @override
   String get beginnerTutorialStepInputWrongHint =>
-      '그 숫자는 이미 같은 줄이나 박스에 있어요. 다른 숫자를 눌러보세요.';
+      '같은 가로줄·세로줄·3×3 박스에 있는 숫자는 넣을 수 없어요.';
 
   @override
-  String get beginnerTutorialStepMemoTitle => '메모와 지우기';
+  String get beginnerTutorialStepMemoTitle => '후보 숫자 메모하기';
 
   @override
-  String get beginnerTutorialStepMemoAddBody =>
-      '메모 모드를 켜고 이 칸을 누른 뒤 후보 숫자를 눌러 메모해보세요.';
+  String get beginnerTutorialStepMemoAddBody => '메모를 켜고 강조된 칸에 후보 숫자를 적어보세요.';
 
   @override
-  String get beginnerTutorialStepMemoEraseBody => '이번엔 같은 숫자를 다시 눌러 메모를 지워보세요.';
+  String get beginnerTutorialStepMemoEraseBody => '같은 숫자를 다시 누르면 메모를 지울 수 있어요.';
 
   @override
-  String get beginnerTutorialStepHintTitle => '힌트';
+  String get beginnerTutorialStepHintTitle => '힌트 사용하기';
 
   @override
-  String get beginnerTutorialStepHintBody =>
-      '힌트를 누르면 실제 힌트를 차감하지 않고 어디를 봐야 하는지 알려줘요.';
+  String get beginnerTutorialStepHintBody => '막혔을 때 힌트를 누르면 살펴볼 칸과 이유를 알려줘요.';
 
   @override
-  String get beginnerTutorialStepHintButton => '힌트 열기';
+  String get beginnerTutorialStepDoneTitle => '이제 준비됐어요!';
 
   @override
-  String get beginnerTutorialStepDoneTitle => '준비 완료!';
-
-  @override
-  String get beginnerTutorialStepDoneBody =>
-      '가로줄, 세로줄, 박스 규칙과 숫자 입력, 메모, 힌트까지 모두 배웠어요.';
+  String get beginnerTutorialStepDoneBody => '숫자 입력과 메모, 힌트 사용 방법을 익혔어요.';
 
   @override
   String get beginnerTutorialFirstPuzzleButton => '첫 문제 시작';
@@ -1636,11 +1592,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get autoNotesTipMessage => '팁: 메모를 길게 누르면 후보 숫자를 한 번에 채워줘요.';
-
-  @override
-  String gameNumberLockedMessage(int number) {
-    return '$number 고정 · 칸을 눌러 연속 입력';
-  }
 
   @override
   String get gameNumberLockTipMessage =>

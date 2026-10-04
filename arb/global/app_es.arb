@@ -93,28 +93,6 @@
   "gameProgressShort": "Progreso",
   "gameTimeShort": "Tiempo",
   "gameNumberInputTitle": "Entrada de números",
-  "gameLineWaveRowLabel": "Fila",
-  "gameLineWaveColLabel": "Columna",
-  "gameLineWaveBoxLabel": "Caja de 3×3",
-  "gameLineWaveAnnounce": "{parts} completada",
-  "@gameLineWaveAnnounce": {
-    "placeholders": {
-      "parts": {
-        "type": "String"
-      }
-    }
-  },
-  "gameLineWaveRowSentence": "Completaste una fila",
-  "gameLineWaveColSentence": "Completaste una columna",
-  "gameLineWaveBoxSentence": "Completaste una caja de 3×3",
-  "gameDigitCompleteSentence": "Rellenaste todos los {number}",
-  "@gameDigitCompleteSentence": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
   "gamePause": "Pausa",
   "gameResume": "Reanudar",
   "gameAnswerPreview": "Respuesta",
@@ -177,35 +155,7 @@
   "dialogPlayAgain": "Resolver de nuevo",
   "dialogPuzzleCompleteTitle": "Completaste el puzle",
   "dialogNewBestMessage": "¡Nuevo mejor registro!",
-  "dialogHintsUsed": "Pistas usadas: {count}",
-  "dialogCompletionTimeSentenceMinutes": "Resuelto en {minutes} min {seconds} s",
-  "@dialogCompletionTimeSentenceMinutes": {
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      },
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
-  "dialogCompletionTimeSentenceSeconds": "Resuelto en {seconds} s",
-  "@dialogCompletionTimeSentenceSeconds": {
-    "placeholders": {
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
-  "dialogCompletionNoMistakes": "Terminaste sin errores",
-  "dialogCompletionMistakeCount": "{count, plural, one{Tuviste {count} error} other{Tuviste {count} errores}}",
-  "@dialogCompletionMistakeCount": {
-    "placeholders": {
-      "count": {
-        "type": "num"
-      }
-    }
-  },
+  "dialogHintsUsed": "Pistas: {count}",
   "dialogSolveSameAgain": "Resolver este puzle de nuevo",
   "dialogNextPuzzle": "Siguiente puzle",
   "updateRequiredTitle": "Actualización necesaria",
@@ -608,8 +558,10 @@
   "homeChallengeStartButton": "Empezar desafío",
   "homeChallengeReplayButton": "Jugar de nuevo",
   "homeChallengeNotStarted": "Aún sin empezar",
+  "homeChallengeFirstLine": "Tu primer desafío empieza en Principiante",
+  "homeChallengePromotedLine": "¿Probamos {level} hoy?",
   "homeChallengeProgress": "{percent}% completado",
-  "homeChallengeCompleteTitle": "¡Desafío de hoy completado!",
+  "homeChallengeDoneLine": "¡Desafío de hoy completado!",
   "homeChallengeStreak": "{days, plural, =1{Racha de desafíos: 1 día} other{Racha de desafíos: {days} días}}",
   "homeChallengeLoadErrorTitle": "No se pudo cargar el desafío de hoy",
   "homeChallengeLoadErrorBody": "Inténtalo de nuevo en un momento.",
@@ -658,8 +610,8 @@
   "levelRecentBadge": "Reciente",
   "levelStatusInProgress": "En curso",
   "levelNoResults": "Sin resultados.",
-  "levelReplayTitle": "¿Volver a jugar este puzle?",
-  "levelReplayBody": "Tu registro completado se conserva y solo se actualiza si el nuevo resultado es mejor.",
+  "levelReplayTitle": "¿Volver a jugar el puzle {number}?",
+  "levelReplayBody": "Tu registro completado se mantiene. Si lo terminas con un mejor resultado, solo se actualiza tu mejor registro.",
   "levelReplayConfirm": "Repetir",
   "levelInProgressLimitTitle": "{maxCount} puzles en curso",
   "@levelInProgressLimitTitle": {
@@ -756,10 +708,10 @@
   "notificationOptInDenied": "No se permiten las notificaciones. Actívalas en los ajustes del dispositivo y luego enciende los recordatorios en Ajustes.",
   "notificationSetupFailed": "No pudimos configurar los recordatorios. Inténtalo de nuevo más tarde en Ajustes.",
   "beginnerTutorialPromptTitle": "¿Eres nuevo en el sudoku?",
-  "beginnerTutorialPromptBody": "Prueba una breve práctica guiada antes de empezar a resolver. Solo toma un minuto.",
-  "beginnerTutorialStart": "Iniciar la guía",
+  "beginnerTutorialPromptBody": "Prueba una práctica corta para aprender las reglas básicas y los controles.",
+  "beginnerTutorialStart": "Empezar práctica",
   "beginnerTutorialSkip": "Omitir",
-  "beginnerTutorialStepIndicator": "Paso {current} de {total}",
+  "beginnerTutorialStepIndicator": "{current} / {total}",
   "@beginnerTutorialStepIndicator": {
     "placeholders": {
       "current": {
@@ -770,23 +722,22 @@
       }
     }
   },
-  "beginnerTutorialStepRowTitle": "Regla: filas",
-  "beginnerTutorialStepRowBody": "Cada fila debe contener los números del 1 al 9, sin repetir.",
-  "beginnerTutorialStepColumnTitle": "Regla: columnas",
-  "beginnerTutorialStepColumnBody": "Cada columna también debe contener los números del 1 al 9, sin repetir.",
-  "beginnerTutorialStepBoxTitle": "Regla: cuadros de 3×3",
-  "beginnerTutorialStepBoxBody": "Cada cuadro de 3×3 debe contener los números del 1 al 9, sin repetir.",
+  "beginnerTutorialPracticeTitle": "Puzle de práctica",
+  "beginnerTutorialStepRulesTitle": "Reglas básicas",
+  "beginnerTutorialStepRulesBody": "Cada fila, columna y cuadro de 3×3 contiene los números del 1 al 9 una sola vez.",
+  "beginnerTutorialRuleRow": "Fila",
+  "beginnerTutorialRuleColumn": "Columna",
+  "beginnerTutorialRuleBox": "Cuadro 3×3",
   "beginnerTutorialStepInputTitle": "Introduce un número",
-  "beginnerTutorialStepInputBody": "Solo un número puede ir en esta casilla resaltada. Tócala y luego toca el número correcto.",
-  "beginnerTutorialStepInputWrongHint": "Ese número ya se usa en esta fila, columna o cuadro. Prueba con otro número.",
-  "beginnerTutorialStepMemoTitle": "Notas y borrado",
-  "beginnerTutorialStepMemoAddBody": "Activa las notas, toca esta casilla y luego toca un número candidato para anotarlo.",
-  "beginnerTutorialStepMemoEraseBody": "Ahora toca ese mismo número otra vez para borrar la nota.",
-  "beginnerTutorialStepHintTitle": "Pistas",
-  "beginnerTutorialStepHintBody": "Toca Pista para ver dónde mirar y por qué, sin gastar una pista real.",
-  "beginnerTutorialStepHintButton": "Abrir pista",
+  "beginnerTutorialStepInputBody": "Toca la casilla resaltada y elige el número que encaja.",
+  "beginnerTutorialStepInputWrongHint": "No puedes poner un número que ya está en la misma fila, columna o cuadro de 3×3.",
+  "beginnerTutorialStepMemoTitle": "Anota candidatos",
+  "beginnerTutorialStepMemoAddBody": "Activa las notas y anota números candidatos en la casilla resaltada.",
+  "beginnerTutorialStepMemoEraseBody": "Toca el mismo número otra vez para borrar una nota.",
+  "beginnerTutorialStepHintTitle": "Usa una pista",
+  "beginnerTutorialStepHintBody": "Si te atascas, toca Pista para ver qué casilla mirar y por qué.",
   "beginnerTutorialStepDoneTitle": "¡Listo!",
-  "beginnerTutorialStepDoneBody": "Aprendiste lo básico: filas, columnas, cuadros, cómo introducir números, notas y pistas.",
+  "beginnerTutorialStepDoneBody": "Ya sabes introducir números, usar notas y pedir pistas.",
   "beginnerTutorialFirstPuzzleButton": "Empezar mi primer puzzle",
   "beginnerTutorialNextButton": "Siguiente",
   "beginnerTutorialCloseButton": "Listo",
@@ -797,7 +748,6 @@
   "autoNotesConfirmApply": "Rellenar notas",
   "autoNotesContradictionMessage": "Algunas casillas se quedaron sin ningún número posible, así que no se rellenaron las notas. Revisa tus entradas e inténtalo de nuevo.",
   "autoNotesTipMessage": "Consejo: mantén pulsado Notas para rellenar todos los candidatos a la vez.",
-  "gameNumberLockedMessage": "{number} fijado · toca casillas para rellenar",
   "gameNumberLockTipMessage": "Mantén pulsado un número para fijarlo y rellenarlo en varias casillas rápidamente.",
   "gameNumberButtonLockedSemantics": "{number}, fijado, mantén pulsado para soltar",
   "gameNumberButtonLockHint": "Mantén pulsado para fijar",

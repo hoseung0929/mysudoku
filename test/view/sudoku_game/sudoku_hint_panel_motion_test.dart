@@ -203,7 +203,7 @@ void main() {
 
     // (0,1)을 채우면 세로줄도 함께 완성되어 예약된 줄 완성 타이머(490ms)가
     // 남는다. 테스트가 끝나기 전에 마저 흘려보낸다.
-    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump(const Duration(milliseconds: 1200));
   });
 
   testWidgets('closing the panel right away does not crash after dispose',

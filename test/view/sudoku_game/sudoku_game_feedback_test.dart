@@ -66,6 +66,8 @@ void main() {
     bool reduceMotion = false,
     bool vibration = true,
     Size size = const Size(390, 844),
+    double textScale = 1.0,
+    ThemeData? theme,
   }) async {
     SharedPreferences.setMockInitialValues({
       'vibration_enabled': vibration,
@@ -77,7 +79,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.lightTheme(),
+        theme: theme ?? AppTheme.lightTheme(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('en'),
@@ -163,23 +165,23 @@ void main() {
     await settle(tester);
   });
 
-  testWidgets('a completed digit: its message and one medium impact',
+  testWidgets('a completed digit: no top message, one medium impact',
       (tester) async {
     await pumpGame(tester);
     final haptics = trackHaptics(tester);
     await input(tester, haptics, 8, 7, 7);
-    expect(find.text('You filled in all the 7s'), findsOneWidget);
+    expect(find.text('You filled in all the 7s'), findsNothing);
     expect(haptics, ['mediumImpact']);
     await settle(tester);
   });
 
   testWidgets(
-      'a column and a digit at once: only the column message, one '
+      'a column and a digit at once: no top message, one '
       'haptic', (tester) async {
     await pumpGame(tester);
     final haptics = trackHaptics(tester);
     await input(tester, haptics, 3, 2, 9);
-    expect(find.textContaining('cleared'), findsOneWidget);
+    expect(find.textContaining('cleared'), findsNothing);
     expect(find.textContaining('filled in all the 9s'), findsNothing);
     expect(haptics, ['mediumImpact']);
     // 숫자 9칸 전체 강조는 생략된다.
@@ -188,14 +190,14 @@ void main() {
     await settle(tester);
   });
 
-  testWidgets('a wrong answer: its message and one medium impact',
+  testWidgets('a wrong answer: no top message, one medium impact',
       (tester) async {
     final presenter = await pumpGame(tester);
     final haptics = trackHaptics(tester);
     await input(tester, haptics, 7, 7, 5);
     expect(presenter.wrongCount, 1);
     expect(haptics, ['mediumImpact']);
-    expect(find.textContaining('1/$maxWrong'), findsOneWidget);
+    expect(find.byKey(const Key('game-feedback-pill')), findsNothing);
     await settle(tester);
   });
 
@@ -258,7 +260,8 @@ void main() {
     await settle(tester);
   });
 
-  testWidgets('puzzle complete: no lower feedback, one heavy impact at the end',
+  testWidgets(
+      'puzzle complete: no lower feedback, one heavy impact at the peak',
       (tester) async {
     final lastBlank = solution.map((r) => List<int>.from(r)).toList()
       ..[8][7] = 0;
@@ -269,7 +272,13 @@ void main() {
     expect(find.textContaining('filled in all'), findsNothing);
     expect(find.textContaining('cleared'), findsNothing);
     expect(haptics, isEmpty); // 입력 자체에서는 하위 진동 없음
-    await tester.pump(const Duration(milliseconds: 700));
+    // 글로우 정점(약 300ms) 전에는 울리지 않고, 그 직후 한 번 울린다.
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(haptics, isEmpty);
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(haptics, ['heavyImpact']);
+    // 결과창이 열린 뒤에도 더 울리지 않는다.
+    await tester.pump(const Duration(milliseconds: 600));
     expect(haptics, ['heavyImpact']);
     await settle(tester);
   });

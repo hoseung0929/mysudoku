@@ -32,6 +32,8 @@ import 'package:sudoku159/widgets/waddling_penguin_icon.dart';
 
 /// 스도쿠 게임의 메인 화면
 /// MVP 패턴에서 View 역할을 수행하며, 사용자 인터페이스를 담당
+/// 게임 중 상단 알약 피드백의 종류. 색으로 성격을 구분한다.
+
 class SudokuGameScreen extends StatefulWidget {
   final SudokuGame game;
   final SudokuLevel level;
@@ -88,8 +90,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   final GameEffectsController _effectsController = GameEffectsController();
   final AutoNotesTipService _autoNotesTipService = AutoNotesTipService();
   final NumberLockTipService _numberLockTipService = NumberLockTipService();
-  OverlayEntry? _completionFeedbackEntry;
-  Timer? _completionFeedbackTimer;
   final Map<String, Timer> _wrongCellTimers = {};
   Set<int> _completedUnitIds = {};
   bool _isPenguinActive = false;
@@ -470,6 +470,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   /// 열려는 시도를 막는다.
   Timer? _completionSequenceTimer;
 
+  /// 글로우 정점에 완료 햅틱을 울리는 예약 작업([_completionSequenceTimer]와
+  /// 함께 취소한다).
+  Timer? _completionHapticTimer;
+
   /// 마지막 칸의 정답 강조 → 보드 글로우+박스 강조 → 햅틱 1회 → 결과
   /// 다이얼로그 순서로 진행하는 퍼즐 완료 연출을 시작한다.
   void _beginPuzzleCompleteSequence() {
@@ -479,13 +483,19 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         ? GameEffectsController.puzzleCompleteGlowDurationReduced
         : GameEffectsController.puzzleCompleteGlowDuration;
     setState(() => _showCompletionGlow = true);
+    final hapticAt = duration < GameEffectsController.puzzleCompleteHapticAt
+        ? duration
+        : GameEffectsController.puzzleCompleteHapticAt;
+    _completionHapticTimer = Timer(hapticAt, () {
+      _completionHapticTimer = null;
+      if (mounted && _isVibrationEnabled) {
+        unawaited(HapticFeedback.heavyImpact());
+      }
+    });
     _completionSequenceTimer = Timer(duration, () {
       _completionSequenceTimer = null;
       if (!mounted) return;
       setState(() => _showCompletionGlow = false);
-      if (_isVibrationEnabled) {
-        unawaited(HapticFeedback.heavyImpact());
-      }
       _showGameCompleteDialog();
     });
   }
@@ -569,31 +579,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     _feedbackEvents = null;
     if (events == null || !mounted) return;
     final resolved = GameFeedbackResolver.resolve(events);
-    final l10n = AppLocalizations.of(context)!;
-
-    if (resolved.hideMessage) {
-      _hideCompletionFeedback();
-    }
-    switch (resolved.message) {
-      case FeedbackMessage.none:
-        break;
-      case FeedbackMessage.line:
-        _showCompletionFeedback(events.lineDelta!);
-      case FeedbackMessage.wrong:
-        final (count, max) = events.wrongCount!;
-        _showTopFeedback(
-          '${l10n.gameWrongShort} $count/$max',
-          backgroundColor: const Color(0xFF7A3E48),
-        );
-      case FeedbackMessage.digit:
-        _showTopFeedback(
-          l10n.gameDigitCompleteSentence(events.completedDigit!),
-        );
-      case FeedbackMessage.progress:
-        _showTopFeedback(
-          '${l10n.gameProgressShort} ${events.progressMilestone}%',
-        );
-    }
     final digit = events.completedDigit;
     if (digit != null && (resolved.digitPop || resolved.digitBoardHighlight)) {
       _playDigitCompleteEffects(
@@ -1005,156 +990,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     }
   }
 
-  void _showCompletionFeedback(BoardCompletionDelta completionDelta) {
-    if (!mounted || !completionDelta.hasNewCompletion) {
-      return;
-    }
-
-    final l10n = AppLocalizations.of(context)!;
-    // 한 가지 영역만 완성됐으면 자연스러운 문장으로, 여러 영역이 동시에
-    // 완성되면 문장으로 억지로 합치지 않고 짧은 라벨을 나열한다(완성은
-    // 한 번만 붙인다). 완성 개수(행 2개 등)는 어느 쪽이든 보여주지 않는다.
-    final completedKinds = [
-      if (completionDelta.completedRows > 0) _LineWaveKind.row,
-      if (completionDelta.completedCols > 0) _LineWaveKind.col,
-      if (completionDelta.completedBoxes > 0) _LineWaveKind.box,
-    ];
-    if (completedKinds.isEmpty) {
-      return;
-    }
-
-    if (completedKinds.length == 1) {
-      final message = switch (completedKinds.single) {
-        _LineWaveKind.row => l10n.gameLineWaveRowSentence,
-        _LineWaveKind.col => l10n.gameLineWaveColSentence,
-        _LineWaveKind.box => l10n.gameLineWaveBoxSentence,
-      };
-      _showTopFeedback(message);
-      return;
-    }
-
-    final parts = completedKinds.map((kind) => switch (kind) {
-          _LineWaveKind.row => l10n.gameLineWaveRowLabel,
-          _LineWaveKind.col => l10n.gameLineWaveColLabel,
-          _LineWaveKind.box => l10n.gameLineWaveBoxLabel,
-        });
-    _showTopFeedback(l10n.gameLineWaveAnnounce(parts.join(' · ')));
-  }
-
-  /// 완성 안내 칩의 등장/퇴장 페이드 길이.
-  static const Duration _completionFeedbackFade = Duration(milliseconds: 120);
-
-  /// 완전히 보이는 상태로 머무는 시간(페이드 제외).
-  static const Duration _completionFeedbackHold = Duration(milliseconds: 900);
-
-  /// 완전히 보이는 상태인지. OverlayEntry의 builder가 매 rebuild마다 이
-  /// 값을 읽어 [AnimatedOpacity]의 목표값으로 쓴다.
-  bool _completionFeedbackVisible = false;
-
-  void _showTopFeedback(
-    String message, {
-    Color backgroundColor = const Color(0xFF242B2D),
-  }) {
-    if (!mounted) {
-      return;
-    }
-
-    // 연속 입력으로 이전 안내가 남아 있다면 즉시(페이드 없이) 치우고
-    // 최신 안내 하나만 보여준다.
-    _hideCompletionFeedback();
-    final overlay = Overlay.maybeOf(context);
-    if (overlay == null) {
-      return;
-    }
-
-    // 앱바(toolbarHeight 50) 바로 아래, 상태바를 가리지 않는 위치.
-    final mediaQuery = MediaQuery.of(context);
-    final topOffset = mediaQuery.padding.top + 50 + 10;
-    final fadeDuration = _effectsController.reduceMotion
-        ? Duration.zero
-        : _completionFeedbackFade;
-
-    _completionFeedbackVisible = false;
-    _completionFeedbackEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        top: topOffset,
-        left: 16,
-        right: 16,
-        child: IgnorePointer(
-          child: Material(
-            color: Colors.transparent,
-            child: Center(
-              child: AnimatedOpacity(
-                opacity: _completionFeedbackVisible ? 1 : 0,
-                duration: fadeDuration,
-                curve: Curves.easeOut,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 340),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: backgroundColor,
-                      borderRadius: BorderRadius.circular(999),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.16),
-                          blurRadius: 14,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      child: Text(
-                        message,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.notoSans(
-                          fontSize: 13,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-    overlay.insert(_completionFeedbackEntry!);
-    // 다음 프레임에 표시 상태로 바꿔야 AnimatedOpacity가 0→1 페이드인을
-    // 실제로 재생한다(삽입과 같은 프레임이면 애니메이션 없이 바로 1로 그려짐).
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_completionFeedbackEntry == null || !mounted) return;
-      _completionFeedbackVisible = true;
-      _completionFeedbackEntry!.markNeedsBuild();
-    });
-
-    _completionFeedbackTimer = Timer(_completionFeedbackHold, () {
-      if (_completionFeedbackEntry == null) return;
-      _completionFeedbackVisible = false;
-      _completionFeedbackEntry!.markNeedsBuild();
-      _completionFeedbackTimer = Timer(fadeDuration, () {
-        _completionFeedbackEntry?.remove();
-        _completionFeedbackEntry = null;
-      });
-    });
-  }
-
-  void _hideCompletionFeedback() {
-    _completionFeedbackTimer?.cancel();
-    _completionFeedbackTimer = null;
-    _completionFeedbackVisible = false;
-    _completionFeedbackEntry?.remove();
-    _completionFeedbackEntry = null;
-  }
-
   Future<void> _clearCurrentGameState() async {
     await _sessionController.clear(
       level: widget.level,
@@ -1167,6 +1002,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     if (!mounted) return;
     _completionSequenceTimer?.cancel();
     _completionSequenceTimer = null;
+    _completionHapticTimer?.cancel();
+    _completionHapticTimer = null;
     _numberPopTimer?.cancel();
     _numberPopTimer = null;
     setState(() {
@@ -1250,12 +1087,12 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     _sessionController.dispose();
     unawaited(_settingsController.dispose());
     _effectsController.dispose();
-    _hideCompletionFeedback();
     for (final t in _wrongCellTimers.values) {
       t.cancel();
     }
     _wrongCellTimers.clear();
     _completionSequenceTimer?.cancel();
+    _completionHapticTimer?.cancel();
     _numberPopTimer?.cancel();
     _penguinActiveTimer?.cancel();
     _timeNotifier.dispose();
@@ -2100,12 +1937,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     if (_isVibrationEnabled) {
       unawaited(HapticFeedback.selectionClick());
     }
-    // 고정할 때만 짧게 안내한다. 해제는 버튼 상태만 원래대로 돌아간다.
-    if (_lockedInputNumber != null) {
-      _showTopFeedback(
-        AppLocalizations.of(context)!.gameNumberLockedMessage(number),
-      );
-    }
   }
 
   void _handleNumberButtonTap(int number) {
@@ -2688,9 +2519,6 @@ enum _DeveloperCheatAction {
   fillSelected,
   autoSolve,
 }
-
-/// 완성 안내 칩의 문구를 고르기 위한 완성 영역 종류.
-enum _LineWaveKind { row, col, box }
 
 class _MobileGameLayoutMetrics {
   const _MobileGameLayoutMetrics({

@@ -8,6 +8,7 @@ import 'package:sudoku159/utils/app_logger.dart';
 import 'package:sudoku159/view/onboarding/beginner_tutorial_screen.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_board_grid.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_hint_panel.dart';
+import 'package:sudoku159/widgets/progressive_blur_button.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -63,95 +64,180 @@ void main() {
     await tester.tap(finder);
   }
 
-  testWidgets('rule steps advance with Next and highlight a region each time',
+  Finder numberKey(int n) => find.byKey(ValueKey('tutorial-number-$n'));
+
+  /// 실제 게임처럼 대상 칸을 직접 눌러 선택한다.
+  Future<void> tapCell(WidgetTester tester, int row, int col) async {
+    final box = tester.getRect(find.byType(SudokuBoardGrid));
+    final cell = box.width / 9;
+    await tester.tapAt(Offset(
+      box.left + cell * (col + 0.5),
+      box.top + cell * (row + 0.5),
+    ));
+    await tester.pump();
+  }
+
+  Future<void> tapMemoButton(WidgetTester tester) async {
+    await tapV(tester, find.byIcon(Icons.edit_note));
+  }
+
+  testWidgets('shows the practice title and a 1 / 5 progress label',
       (tester) async {
     await pumpTutorial(tester);
-    expect(find.text('Rule: rows'), findsOneWidget);
-    var grid = tester.widget<SudokuBoardGrid>(find.byType(SudokuBoardGrid));
-    expect(grid.hintRegionCells, isNotEmpty);
-    final rowRegion = grid.hintRegionCells;
+    expect(find.text('Practice puzzle'), findsOneWidget);
+    expect(find.text('1 / 5'), findsOneWidget);
+    // 타이머·일시정지·더보기는 연습에 필요 없다.
+    expect(find.byTooltip('Pause'), findsNothing);
+    expect(find.byTooltip('More options'), findsNothing);
+    // 별도 구현한 작은 OutlinedButton 숫자패드는 더 이상 없다.
+    expect(find.byType(OutlinedButton), findsNothing);
+    for (var n = 1; n <= 9; n++) {
+      expect(numberKey(n), findsOneWidget);
+    }
+  });
 
-    await tapV(tester, find.text('Next'));
+  testWidgets('basic rules: one step, region buttons change the highlight',
+      (tester) async {
+    await pumpTutorial(tester);
+    expect(find.text('Basic rules'), findsOneWidget);
+    var grid = tester.widget<SudokuBoardGrid>(find.byType(SudokuBoardGrid));
+    final rowRegion = grid.hintRegionCells;
+    expect(rowRegion, isNotEmpty);
+
+    await tapV(tester, find.byKey(const ValueKey('tutorial-rule-column')));
     await tester.pump();
-    expect(find.text('Rule: columns'), findsOneWidget);
     grid = tester.widget<SudokuBoardGrid>(find.byType(SudokuBoardGrid));
+    final columnRegion = grid.hintRegionCells;
+    expect(columnRegion, isNot(rowRegion));
+
+    await tapV(tester, find.byKey(const ValueKey('tutorial-rule-box')));
+    await tester.pump();
+    grid = tester.widget<SudokuBoardGrid>(find.byType(SudokuBoardGrid));
+    expect(grid.hintRegionCells, isNot(columnRegion));
     expect(grid.hintRegionCells, isNot(rowRegion));
 
-    await tapV(tester, find.text('Next'));
-    await tester.pump();
-    expect(find.text('Rule: 3×3 boxes'), findsOneWidget);
-
+    // 세 항목을 모두 확인하지 않아도 다음으로 진행할 수 있다.
     await tapV(tester, find.text('Next'));
     await tester.pump();
     expect(find.text('Enter a number'), findsOneWidget);
+    expect(find.text('2 / 5'), findsOneWidget);
   });
 
   Future<void> goToInputStep(WidgetTester tester) async {
     await tapV(tester, find.text('Next'));
     await tester.pump();
-    await tapV(tester, find.text('Next'));
-    await tester.pump();
-    await tapV(tester, find.text('Next'));
-    await tester.pump();
   }
+
+  testWidgets('input step does not select the cell for the user',
+      (tester) async {
+    await pumpTutorial(tester);
+    await goToInputStep(tester);
+    // 칸을 고르지 않고 숫자만 눌러도 진행되지 않는다.
+    await tapV(tester, numberKey(5));
+    await tester.pump();
+    expect(find.text('Enter a number'), findsOneWidget);
+    expect(find.text('Note candidates'), findsNothing);
+    // 강조 칸이 아닌 다른 칸을 눌러도 진행되지 않는다.
+    await tapCell(tester, 3, 3);
+    await tapV(tester, numberKey(5));
+    await tester.pump();
+    expect(find.text('Enter a number'), findsOneWidget);
+  });
 
   testWidgets('wrong digit shows an explanation, correct digit advances',
       (tester) async {
     await pumpTutorial(tester);
     await goToInputStep(tester);
-    expect(find.text('Enter a number'), findsOneWidget);
+    await tapCell(tester, 0, 0);
 
     // (0,0)의 정답은 5. 다른 숫자를 넣으면 왜 안 되는지 안내만 하고 실수로
     // 세지 않는다(연습 세션은 실수 제한 자체가 사실상 무제한).
-    await tapV(tester, find.widgetWithText(OutlinedButton, '3'));
+    await tapV(tester, numberKey(3));
     await tester.pump();
     expect(
       find.text(
-        'That number is already used in this row, column, or box. Try another number.',
+        "A number already in the same row, column, or 3×3 box can't go here.",
       ),
       findsOneWidget,
     );
 
-    await tapV(tester, find.widgetWithText(OutlinedButton, '5'));
+    await tapV(tester, numberKey(5));
     await tester.pump();
-    expect(find.text('Notes and erasing'), findsOneWidget);
+    expect(find.text('Note candidates'), findsOneWidget);
+    expect(find.text('3 / 5'), findsOneWidget);
+  });
+
+  Future<void> goToMemoStep(WidgetTester tester) async {
+    await goToInputStep(tester);
+    await tapCell(tester, 0, 0);
+    await tapV(tester, numberKey(5));
+    await tester.pump();
+  }
+
+  testWidgets('memo step needs the real memo button and a chosen cell',
+      (tester) async {
+    await pumpTutorial(tester);
+    await goToMemoStep(tester);
+    expect(find.text('Note candidates'), findsOneWidget);
+
+    const erased = 'Tap the same number again to erase a note.';
+
+    // 메모를 켰어도 칸을 직접 선택하지 않았다면 입력되지 않는다.
+    await tapMemoButton(tester);
+    await tester.pump();
+    await tapV(tester, numberKey(7));
+    await tester.pump();
+    expect(find.text(erased), findsNothing);
+
+    // 메모를 끈 채로 칸을 선택해 숫자를 눌러도 후보가 적히지 않는다
+    // (자동으로 메모가 켜지지도 않는다).
+    await tapMemoButton(tester);
+    await tester.pump();
+    await tapCell(tester, 4, 4);
+    await tapV(tester, numberKey(7));
+    await tester.pump();
+    expect(find.text(erased), findsNothing);
   });
 
   testWidgets('adding then erasing a note advances to the hint step',
       (tester) async {
     await pumpTutorial(tester);
-    await goToInputStep(tester);
-    await tapV(tester, find.widgetWithText(OutlinedButton, '5'));
+    await goToMemoStep(tester);
+    await tapMemoButton(tester);
     await tester.pump();
-    expect(find.text('Notes and erasing'), findsOneWidget);
+    await tapCell(tester, 4, 4);
 
-    await tapV(tester, find.widgetWithText(OutlinedButton, '7'));
+    await tapV(tester, numberKey(7));
     await tester.pump();
-    expect(find.text('Now tap that same number again to erase the note.'),
+    expect(find.text('Tap the same number again to erase a note.'),
         findsOneWidget);
 
-    await tapV(tester, find.widgetWithText(OutlinedButton, '7'));
+    await tapV(tester, numberKey(7));
     await tester.pump();
-    expect(find.text('Hints'), findsOneWidget);
+    expect(find.text('Use a hint'), findsOneWidget);
+    expect(find.text('4 / 5'), findsOneWidget);
   });
 
   Future<void> goToHintStep(WidgetTester tester) async {
-    await goToInputStep(tester);
-    await tapV(tester, find.widgetWithText(OutlinedButton, '5'));
+    await goToMemoStep(tester);
+    await tapMemoButton(tester);
     await tester.pump();
-    await tapV(tester, find.widgetWithText(OutlinedButton, '7'));
+    await tapCell(tester, 4, 4);
+    await tapV(tester, numberKey(7));
     await tester.pump();
-    await tapV(tester, find.widgetWithText(OutlinedButton, '7'));
+    await tapV(tester, numberKey(7));
     await tester.pump();
   }
+
+  Finder hintButton() => find.byIcon(Icons.lightbulb_outline);
 
   testWidgets('opening and filling the hint completes the guide',
       (tester) async {
     await pumpTutorial(tester);
     await goToHintStep(tester);
-    expect(find.text('Hints'), findsOneWidget);
+    expect(find.text('Use a hint'), findsOneWidget);
 
-    await tapV(tester, find.text('Open hint'));
+    await tapV(tester, hintButton());
     await tester.pump();
     expect(find.byType(SudokuHintPanel), findsOneWidget);
 
@@ -159,6 +245,93 @@ void main() {
     await tester.pump();
     expect(find.text("You're ready!"), findsOneWidget);
     expect(find.text('Start my first puzzle'), findsOneWidget);
+    expect(find.text('5 / 5'), findsOneWidget);
+  });
+
+  testWidgets('controls are enabled only for the current step', (tester) async {
+    await pumpTutorial(tester);
+    bool enabled(Finder f) =>
+        tester
+            .widget<ProgressiveBlurButton>(find.ancestor(
+                of: f, matching: find.byType(ProgressiveBlurButton)))
+            .onPressed !=
+        null;
+    // 규칙 단계: 숫자·메모·힌트 모두 비활성.
+    expect(
+        tester.widget<ProgressiveBlurButton>(numberKey(1)).onPressed, isNull);
+    expect(enabled(find.byIcon(Icons.edit_note)), isFalse);
+    expect(enabled(find.byIcon(Icons.lightbulb_outline)), isFalse);
+
+    await goToInputStep(tester);
+    expect(tester.widget<ProgressiveBlurButton>(numberKey(1)).onPressed,
+        isNotNull);
+    expect(enabled(find.byIcon(Icons.edit_note)), isFalse);
+
+    await tapCell(tester, 0, 0);
+    await tapV(tester, numberKey(5));
+    await tester.pump();
+    expect(enabled(find.byIcon(Icons.edit_note)), isTrue);
+    expect(enabled(find.byIcon(Icons.lightbulb_outline)), isFalse);
+    // 되돌리기·지우기는 연습에서 쓰지 않는다.
+    expect(enabled(find.byIcon(Icons.undo_rounded)), isFalse);
+    expect(enabled(find.byIcon(Icons.backspace_outlined)), isFalse);
+  });
+
+  for (final size in const [Size(390, 844), Size(393, 852), Size(430, 932)]) {
+    testWidgets('fits on one screen without scrolling: $size', (tester) async {
+      await pumpTutorial(tester, size: size);
+      final scrollable = tester.state<ScrollableState>(
+        find
+            .descendant(
+              of: find.byType(Scaffold),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      expect(scrollable.position.maxScrollExtent, 0);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('small screens scroll to every control without overflow',
+      (tester) async {
+    await pumpTutorial(tester, size: const Size(320, 568));
+    expect(tester.takeException(), isNull);
+    await goToInputStep(tester);
+    for (final finder in [
+      numberKey(9),
+      find.byIcon(Icons.edit_note),
+      find.byIcon(Icons.lightbulb_outline),
+      find.byIcon(Icons.backspace_outlined),
+    ]) {
+      await tester.ensureVisible(finder);
+      await tester.pump();
+      expect(finder, findsOneWidget);
+    }
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('reduce motion swaps the guide card instantly', (tester) async {
+    await pumpTutorial(tester, reduceMotion: true);
+    await tapV(tester, find.text('Next'));
+    await tester.pump();
+    expect(find.text('Enter a number'), findsOneWidget);
+    expect(find.text('Basic rules'), findsNothing);
+  });
+
+  testWidgets('practice never touches records or saved games', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await pumpTutorial(tester, resetPrefs: false);
+    await goToHintStep(tester);
+    await tapV(tester, hintButton());
+    await tester.pump();
+    await tapV(tester, find.widgetWithText(TextButton, 'Fill in answer'));
+    await tester.pump();
+    final prefs = await SharedPreferences.getInstance();
+    expect(
+      prefs.getKeys().where((k) => k.startsWith('game_')),
+      isEmpty,
+    );
   });
 
   testWidgets('completing the guide marks it completed and pops',
@@ -188,7 +361,7 @@ void main() {
     await tapV(tester, find.text('open'));
     await tester.pumpAndSettle();
     await goToHintStep(tester);
-    await tapV(tester, find.text('Open hint'));
+    await tapV(tester, hintButton());
     await tester.pump();
     await tapV(tester, find.widgetWithText(TextButton, 'Fill in answer'));
     await tester.pump();
@@ -235,7 +408,7 @@ void main() {
       (tester) async {
     await pumpTutorial(tester, isReplay: true);
     await goToHintStep(tester);
-    await tapV(tester, find.text('Open hint'));
+    await tapV(tester, hintButton());
     await tester.pump();
     await tapV(tester, find.widgetWithText(TextButton, 'Fill in answer'));
     await tester.pump();
@@ -263,7 +436,7 @@ void main() {
       (tester) async {
     await pumpTutorial(tester, reduceMotion: true);
     await goToHintStep(tester);
-    await tapV(tester, find.text('Open hint'));
+    await tapV(tester, hintButton());
     await tester.pump();
     await tapV(tester, find.widgetWithText(TextButton, 'Fill in answer'));
     await tester.pump();
@@ -306,7 +479,7 @@ void main() {
         resetPrefs: false,
       );
       await goToHintStep(tester);
-      await tapV(tester, find.text('Open hint'));
+      await tapV(tester, hintButton());
       await tester.pump();
       await tapV(tester, find.widgetWithText(TextButton, 'Fill in answer'));
       await tester.pump();
@@ -341,7 +514,7 @@ void main() {
         resetPrefs: false,
       );
       await goToHintStep(tester);
-      await tapV(tester, find.text('Open hint'));
+      await tapV(tester, hintButton());
       await tester.pump();
       await tapV(tester, find.widgetWithText(TextButton, 'Fill in answer'));
       await tester.pump();

@@ -620,54 +620,6 @@ abstract class AppLocalizations {
   /// **'Number input'**
   String get gameNumberInputTitle;
 
-  /// No description provided for @gameLineWaveRowLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Row'**
-  String get gameLineWaveRowLabel;
-
-  /// No description provided for @gameLineWaveColLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Column'**
-  String get gameLineWaveColLabel;
-
-  /// No description provided for @gameLineWaveBoxLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'3×3 box'**
-  String get gameLineWaveBoxLabel;
-
-  /// No description provided for @gameLineWaveAnnounce.
-  ///
-  /// In en, this message translates to:
-  /// **'{parts} cleared'**
-  String gameLineWaveAnnounce(String parts);
-
-  /// No description provided for @gameLineWaveRowSentence.
-  ///
-  /// In en, this message translates to:
-  /// **'You completed a row'**
-  String get gameLineWaveRowSentence;
-
-  /// No description provided for @gameLineWaveColSentence.
-  ///
-  /// In en, this message translates to:
-  /// **'You completed a column'**
-  String get gameLineWaveColSentence;
-
-  /// No description provided for @gameLineWaveBoxSentence.
-  ///
-  /// In en, this message translates to:
-  /// **'You completed a 3×3 box'**
-  String get gameLineWaveBoxSentence;
-
-  /// No description provided for @gameDigitCompleteSentence.
-  ///
-  /// In en, this message translates to:
-  /// **'You filled in all the {number}s'**
-  String gameDigitCompleteSentence(int number);
-
   /// No description provided for @gamePause.
   ///
   /// In en, this message translates to:
@@ -821,32 +773,8 @@ abstract class AppLocalizations {
   /// No description provided for @dialogHintsUsed.
   ///
   /// In en, this message translates to:
-  /// **'Hints used: {count}'**
+  /// **'Hints: {count}'**
   String dialogHintsUsed(int count);
-
-  /// No description provided for @dialogCompletionTimeSentenceMinutes.
-  ///
-  /// In en, this message translates to:
-  /// **'Solved in {minutes} min {seconds} sec'**
-  String dialogCompletionTimeSentenceMinutes(int minutes, int seconds);
-
-  /// No description provided for @dialogCompletionTimeSentenceSeconds.
-  ///
-  /// In en, this message translates to:
-  /// **'Solved in {seconds} sec'**
-  String dialogCompletionTimeSentenceSeconds(int seconds);
-
-  /// No description provided for @dialogCompletionNoMistakes.
-  ///
-  /// In en, this message translates to:
-  /// **'Finished with no mistakes'**
-  String get dialogCompletionNoMistakes;
-
-  /// No description provided for @dialogCompletionMistakeCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, one{You made {count} mistake} other{You made {count} mistakes}}'**
-  String dialogCompletionMistakeCount(num count);
 
   /// No description provided for @dialogSolveSameAgain.
   ///
@@ -2036,17 +1964,29 @@ abstract class AppLocalizations {
   /// **'Not started yet'**
   String get homeChallengeNotStarted;
 
+  /// No description provided for @homeChallengeFirstLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Your first challenge starts at Beginner'**
+  String get homeChallengeFirstLine;
+
+  /// No description provided for @homeChallengePromotedLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Try {level} today?'**
+  String homeChallengePromotedLine(String level);
+
   /// No description provided for @homeChallengeProgress.
   ///
   /// In en, this message translates to:
   /// **'{percent}% done'**
   String homeChallengeProgress(int percent);
 
-  /// No description provided for @homeChallengeCompleteTitle.
+  /// No description provided for @homeChallengeDoneLine.
   ///
   /// In en, this message translates to:
   /// **'Today\'s challenge complete!'**
-  String get homeChallengeCompleteTitle;
+  String get homeChallengeDoneLine;
 
   /// No description provided for @homeChallengeStreak.
   ///
@@ -2237,13 +2177,13 @@ abstract class AppLocalizations {
   /// No description provided for @levelReplayTitle.
   ///
   /// In en, this message translates to:
-  /// **'Replay this puzzle?'**
-  String get levelReplayTitle;
+  /// **'Replay puzzle {number}?'**
+  String levelReplayTitle(int number);
 
   /// No description provided for @levelReplayBody.
   ///
   /// In en, this message translates to:
-  /// **'Your completed record is kept, and it updates only if the new result is better.'**
+  /// **'Your completed record stays as it is. If you finish with a better result, only your best record is updated.'**
   String get levelReplayBody;
 
   /// No description provided for @levelReplayConfirm.
@@ -2741,13 +2681,13 @@ abstract class AppLocalizations {
   /// No description provided for @beginnerTutorialPromptBody.
   ///
   /// In en, this message translates to:
-  /// **'Try a quick, guided practice puzzle before you start solving — it only takes a minute.'**
+  /// **'Try a short practice to learn the basic rules and controls.'**
   String get beginnerTutorialPromptBody;
 
   /// No description provided for @beginnerTutorialStart.
   ///
   /// In en, this message translates to:
-  /// **'Start the guide'**
+  /// **'Start practice'**
   String get beginnerTutorialStart;
 
   /// No description provided for @beginnerTutorialSkip.
@@ -2759,44 +2699,44 @@ abstract class AppLocalizations {
   /// No description provided for @beginnerTutorialStepIndicator.
   ///
   /// In en, this message translates to:
-  /// **'Step {current} of {total}'**
+  /// **'{current} / {total}'**
   String beginnerTutorialStepIndicator(int current, int total);
 
-  /// No description provided for @beginnerTutorialStepRowTitle.
+  /// No description provided for @beginnerTutorialPracticeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Rule: rows'**
-  String get beginnerTutorialStepRowTitle;
+  /// **'Practice puzzle'**
+  String get beginnerTutorialPracticeTitle;
 
-  /// No description provided for @beginnerTutorialStepRowBody.
+  /// No description provided for @beginnerTutorialStepRulesTitle.
   ///
   /// In en, this message translates to:
-  /// **'Each row must contain every number from 1 to 9, with no repeats.'**
-  String get beginnerTutorialStepRowBody;
+  /// **'Basic rules'**
+  String get beginnerTutorialStepRulesTitle;
 
-  /// No description provided for @beginnerTutorialStepColumnTitle.
+  /// No description provided for @beginnerTutorialStepRulesBody.
   ///
   /// In en, this message translates to:
-  /// **'Rule: columns'**
-  String get beginnerTutorialStepColumnTitle;
+  /// **'Each row, column, and 3×3 box holds the numbers 1 to 9 exactly once.'**
+  String get beginnerTutorialStepRulesBody;
 
-  /// No description provided for @beginnerTutorialStepColumnBody.
+  /// No description provided for @beginnerTutorialRuleRow.
   ///
   /// In en, this message translates to:
-  /// **'Each column must also contain every number from 1 to 9, with no repeats.'**
-  String get beginnerTutorialStepColumnBody;
+  /// **'Row'**
+  String get beginnerTutorialRuleRow;
 
-  /// No description provided for @beginnerTutorialStepBoxTitle.
+  /// No description provided for @beginnerTutorialRuleColumn.
   ///
   /// In en, this message translates to:
-  /// **'Rule: 3×3 boxes'**
-  String get beginnerTutorialStepBoxTitle;
+  /// **'Column'**
+  String get beginnerTutorialRuleColumn;
 
-  /// No description provided for @beginnerTutorialStepBoxBody.
+  /// No description provided for @beginnerTutorialRuleBox.
   ///
   /// In en, this message translates to:
-  /// **'Each 3×3 box must contain every number from 1 to 9, with no repeats.'**
-  String get beginnerTutorialStepBoxBody;
+  /// **'3×3 box'**
+  String get beginnerTutorialRuleBox;
 
   /// No description provided for @beginnerTutorialStepInputTitle.
   ///
@@ -2807,50 +2747,44 @@ abstract class AppLocalizations {
   /// No description provided for @beginnerTutorialStepInputBody.
   ///
   /// In en, this message translates to:
-  /// **'Only one number can go in this highlighted cell. Tap the cell, then tap the correct number.'**
+  /// **'Tap the highlighted cell, then choose the number that fits.'**
   String get beginnerTutorialStepInputBody;
 
   /// No description provided for @beginnerTutorialStepInputWrongHint.
   ///
   /// In en, this message translates to:
-  /// **'That number is already used in this row, column, or box. Try another number.'**
+  /// **'A number already in the same row, column, or 3×3 box can\'t go here.'**
   String get beginnerTutorialStepInputWrongHint;
 
   /// No description provided for @beginnerTutorialStepMemoTitle.
   ///
   /// In en, this message translates to:
-  /// **'Notes and erasing'**
+  /// **'Note candidates'**
   String get beginnerTutorialStepMemoTitle;
 
   /// No description provided for @beginnerTutorialStepMemoAddBody.
   ///
   /// In en, this message translates to:
-  /// **'Turn on Notes, tap this cell, then tap a candidate number to jot it down.'**
+  /// **'Turn on Notes, then jot candidate numbers in the highlighted cell.'**
   String get beginnerTutorialStepMemoAddBody;
 
   /// No description provided for @beginnerTutorialStepMemoEraseBody.
   ///
   /// In en, this message translates to:
-  /// **'Now tap that same number again to erase the note.'**
+  /// **'Tap the same number again to erase a note.'**
   String get beginnerTutorialStepMemoEraseBody;
 
   /// No description provided for @beginnerTutorialStepHintTitle.
   ///
   /// In en, this message translates to:
-  /// **'Hints'**
+  /// **'Use a hint'**
   String get beginnerTutorialStepHintTitle;
 
   /// No description provided for @beginnerTutorialStepHintBody.
   ///
   /// In en, this message translates to:
-  /// **'Tap Hint to see where to look and why, without spending one of your real hints.'**
+  /// **'When you\'re stuck, tap Hint to see which cell to look at and why.'**
   String get beginnerTutorialStepHintBody;
-
-  /// No description provided for @beginnerTutorialStepHintButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Open hint'**
-  String get beginnerTutorialStepHintButton;
 
   /// No description provided for @beginnerTutorialStepDoneTitle.
   ///
@@ -2861,7 +2795,7 @@ abstract class AppLocalizations {
   /// No description provided for @beginnerTutorialStepDoneBody.
   ///
   /// In en, this message translates to:
-  /// **'You\'ve learned the basics: rows, columns, boxes, entering numbers, notes, and hints.'**
+  /// **'You\'ve learned entering numbers, notes, and hints.'**
   String get beginnerTutorialStepDoneBody;
 
   /// No description provided for @beginnerTutorialFirstPuzzleButton.
@@ -2923,12 +2857,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tip: long-press Notes to fill in all candidate numbers at once.'**
   String get autoNotesTipMessage;
-
-  /// No description provided for @gameNumberLockedMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'{number} locked · tap cells to fill'**
-  String gameNumberLockedMessage(int number);
 
   /// No description provided for @gameNumberLockTipMessage.
   ///

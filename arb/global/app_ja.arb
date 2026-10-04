@@ -93,28 +93,6 @@
   "gameProgressShort": "進捗",
   "gameTimeShort": "タイム",
   "gameNumberInputTitle": "数字入力",
-  "gameLineWaveRowLabel": "横列",
-  "gameLineWaveColLabel": "縦列",
-  "gameLineWaveBoxLabel": "3×3ブロック",
-  "gameLineWaveAnnounce": "{parts}クリア",
-  "@gameLineWaveAnnounce": {
-    "placeholders": {
-      "parts": {
-        "type": "String"
-      }
-    }
-  },
-  "gameLineWaveRowSentence": "横列を完成させました",
-  "gameLineWaveColSentence": "縦列を完成させました",
-  "gameLineWaveBoxSentence": "3×3ブロックを完成させました",
-  "gameDigitCompleteSentence": "数字の{number}をすべて埋めました",
-  "@gameDigitCompleteSentence": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
   "gamePause": "一時停止",
   "gameResume": "再開",
   "gameAnswerPreview": "解答",
@@ -161,7 +139,7 @@
   "dialogSudokuComplete": "数独を完成させました！",
   "dialogNewBadges": "新しいバッジ獲得",
   "dialogElapsedTime": "タイム",
-  "dialogWrongCount": "ミス回数",
+  "dialogWrongCount": "ミス",
   "dialogWrongCountValue": "{count}回",
   "@dialogWrongCountValue": {
     "placeholders": {
@@ -177,35 +155,7 @@
   "dialogPlayAgain": "もう一度解く",
   "dialogPuzzleCompleteTitle": "パズルを完成させました",
   "dialogNewBestMessage": "ベスト記録を更新しました",
-  "dialogHintsUsed": "ヒント {count}回使用",
-  "dialogCompletionTimeSentenceMinutes": "{minutes}分{seconds}秒で解けました",
-  "@dialogCompletionTimeSentenceMinutes": {
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      },
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
-  "dialogCompletionTimeSentenceSeconds": "{seconds}秒で解けました",
-  "@dialogCompletionTimeSentenceSeconds": {
-    "placeholders": {
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
-  "dialogCompletionNoMistakes": "ミスなく解けました",
-  "dialogCompletionMistakeCount": "ミスは{count}回でした",
-  "@dialogCompletionMistakeCount": {
-    "placeholders": {
-      "count": {
-        "type": "num"
-      }
-    }
-  },
+  "dialogHintsUsed": "ヒント {count}回",
   "dialogSolveSameAgain": "同じパズルをもう一度解く",
   "dialogNextPuzzle": "次のパズル",
   "updateRequiredTitle": "アップデートが必要です",
@@ -608,8 +558,10 @@
   "homeChallengeStartButton": "チャレンジ開始",
   "homeChallengeReplayButton": "もう一度解く",
   "homeChallengeNotStarted": "まだ始めていません",
+  "homeChallengeFirstLine": "最初のチャレンジは初級から始めましょう",
+  "homeChallengePromotedLine": "今日は{level}に挑戦してみませんか？",
   "homeChallengeProgress": "{percent}%進行",
-  "homeChallengeCompleteTitle": "今日のチャレンジ完了！",
+  "homeChallengeDoneLine": "今日のチャレンジ完了！",
   "homeChallengeStreak": "チャレンジ{days}日連続",
   "homeChallengeLoadErrorTitle": "今日のチャレンジを読み込めませんでした",
   "homeChallengeLoadErrorBody": "しばらくしてからもう一度お試しください。",
@@ -658,8 +610,8 @@
   "levelRecentBadge": "最近",
   "levelStatusInProgress": "進行中",
   "levelNoResults": "該当なし",
-  "levelReplayTitle": "このパズルをもう一度解きますか？",
-  "levelReplayBody": "完了記録は保持され、より良い結果の場合のみ更新されます。",
+  "levelReplayTitle": "{number}番のパズルをもう一度解きますか？",
+  "levelReplayBody": "完了記録はそのまま残ります。より良い記録で完了した場合のみ、ベスト記録が更新されます。",
   "levelReplayConfirm": "再挑戦",
   "levelInProgressLimitTitle": "進行中のパズルが{maxCount}件あります",
   "@levelInProgressLimitTitle": {
@@ -756,10 +708,10 @@
   "notificationOptInDenied": "通知が許可されていません。端末の設定で許可してから、設定で通知をオンにできます。",
   "notificationSetupFailed": "通知を設定できませんでした。しばらくしてから設定でもう一度お試しください。",
   "beginnerTutorialPromptTitle": "数独は初めてですか?",
-  "beginnerTutorialPromptBody": "問題を解く前に短いガイド練習をしてみましょう。１分で終わります。",
-  "beginnerTutorialStart": "ガイドを始める",
+  "beginnerTutorialPromptBody": "短い練習で基本のルールと操作を覚えましょう。",
+  "beginnerTutorialStart": "練習を始める",
   "beginnerTutorialSkip": "スキップ",
-  "beginnerTutorialStepIndicator": "ステップ {current}/{total}",
+  "beginnerTutorialStepIndicator": "{current} / {total}",
   "@beginnerTutorialStepIndicator": {
     "placeholders": {
       "current": {
@@ -770,23 +722,22 @@
       }
     }
   },
-  "beginnerTutorialStepRowTitle": "ルール: 横の列",
-  "beginnerTutorialStepRowBody": "各横の列には1から9までの数字が1回ずつ入ります。",
-  "beginnerTutorialStepColumnTitle": "ルール: 縦の列",
-  "beginnerTutorialStepColumnBody": "縦の列にも1から9までの数字が1回ずつ入ります。",
-  "beginnerTutorialStepBoxTitle": "ルール: 3×3のブロック",
-  "beginnerTutorialStepBoxBody": "3×3のブロックにも1から9までの数字が1回ずつ入ります。",
+  "beginnerTutorialPracticeTitle": "練習パズル",
+  "beginnerTutorialStepRulesTitle": "基本ルール",
+  "beginnerTutorialStepRulesBody": "横の列・縦の列・3×3ブロックには、1から9までの数字が1回ずつ入ります。",
+  "beginnerTutorialRuleRow": "横の列",
+  "beginnerTutorialRuleColumn": "縦の列",
+  "beginnerTutorialRuleBox": "3×3ブロック",
   "beginnerTutorialStepInputTitle": "数字を入力する",
-  "beginnerTutorialStepInputBody": "強調されたマスに入る数字は1つだけです。マスをタップしてから正しい数字をタップしましょう。",
-  "beginnerTutorialStepInputWrongHint": "その数字は同じ列やブロックにすでにあります。別の数字を試してください。",
-  "beginnerTutorialStepMemoTitle": "メモと消去",
-  "beginnerTutorialStepMemoAddBody": "メモモードをオンにしてこのマスをタップし、候補の数字をタップしてメモしましょう。",
-  "beginnerTutorialStepMemoEraseBody": "同じ数字をもう一度タップしてメモを消しましょう。",
-  "beginnerTutorialStepHintTitle": "ヒント",
-  "beginnerTutorialStepHintBody": "ヒントをタップすると、実際のヒント回数を消費せずに、どこを見るべきか教えてくれます。",
-  "beginnerTutorialStepHintButton": "ヒントを開く",
-  "beginnerTutorialStepDoneTitle": "準備完了!",
-  "beginnerTutorialStepDoneBody": "行・列・ブロックのルール、数字の入力、メモ、ヒントの基本を学びました。",
+  "beginnerTutorialStepInputBody": "強調されたマスをタップして、入る数字を選びましょう。",
+  "beginnerTutorialStepInputWrongHint": "同じ横の列・縦の列・3×3ブロックにある数字は入れられません。",
+  "beginnerTutorialStepMemoTitle": "候補の数字をメモする",
+  "beginnerTutorialStepMemoAddBody": "メモをオンにして、強調されたマスに候補の数字を書き込みましょう。",
+  "beginnerTutorialStepMemoEraseBody": "同じ数字をもう一度タップするとメモを消せます。",
+  "beginnerTutorialStepHintTitle": "ヒントを使う",
+  "beginnerTutorialStepHintBody": "行き詰まったらヒントをタップすると、見るべきマスと理由を教えてくれます。",
+  "beginnerTutorialStepDoneTitle": "準備完了です！",
+  "beginnerTutorialStepDoneBody": "数字の入力、メモ、ヒントの使い方を覚えました。",
   "beginnerTutorialFirstPuzzleButton": "最初の問題を始める",
   "beginnerTutorialNextButton": "次へ",
   "beginnerTutorialCloseButton": "完了",
@@ -797,7 +748,6 @@
   "autoNotesConfirmApply": "メモを再計算",
   "autoNotesContradictionMessage": "候補が一つも残らないマスがあるため、メモを入力できませんでした。入力内容を確認してもう一度試してください。",
   "autoNotesTipMessage": "ヒント: メモを長押しすると候補数字を一括で入力できます。",
-  "gameNumberLockedMessage": "{number}を固定 · マスをタップして連続入力",
   "gameNumberLockTipMessage": "数字を長押しすると、同じ数字を複数のマスにすばやく入力できます。",
   "gameNumberButtonLockedSemantics": "{number}、固定中、長押しで解除",
   "gameNumberButtonLockHint": "長押しで固定",

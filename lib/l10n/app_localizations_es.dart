@@ -286,34 +286,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get gameNumberInputTitle => 'Entrada de números';
 
   @override
-  String get gameLineWaveRowLabel => 'Fila';
-
-  @override
-  String get gameLineWaveColLabel => 'Columna';
-
-  @override
-  String get gameLineWaveBoxLabel => 'Caja de 3×3';
-
-  @override
-  String gameLineWaveAnnounce(String parts) {
-    return '$parts completada';
-  }
-
-  @override
-  String get gameLineWaveRowSentence => 'Completaste una fila';
-
-  @override
-  String get gameLineWaveColSentence => 'Completaste una columna';
-
-  @override
-  String get gameLineWaveBoxSentence => 'Completaste una caja de 3×3';
-
-  @override
-  String gameDigitCompleteSentence(int number) {
-    return 'Rellenaste todos los $number';
-  }
-
-  @override
   String get gamePause => 'Pausa';
 
   @override
@@ -398,31 +370,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String dialogHintsUsed(int count) {
-    return 'Pistas usadas: $count';
-  }
-
-  @override
-  String dialogCompletionTimeSentenceMinutes(int minutes, int seconds) {
-    return 'Resuelto en $minutes min $seconds s';
-  }
-
-  @override
-  String dialogCompletionTimeSentenceSeconds(int seconds) {
-    return 'Resuelto en $seconds s';
-  }
-
-  @override
-  String get dialogCompletionNoMistakes => 'Terminaste sin errores';
-
-  @override
-  String dialogCompletionMistakeCount(num count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Tuviste $count errores',
-      one: 'Tuviste $count error',
-    );
-    return '$_temp0';
+    return 'Pistas: $count';
   }
 
   @override
@@ -1178,12 +1126,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get homeChallengeNotStarted => 'Aún sin empezar';
 
   @override
+  String get homeChallengeFirstLine =>
+      'Tu primer desafío empieza en Principiante';
+
+  @override
+  String homeChallengePromotedLine(String level) {
+    return '¿Probamos $level hoy?';
+  }
+
+  @override
   String homeChallengeProgress(int percent) {
     return '$percent% completado';
   }
 
   @override
-  String get homeChallengeCompleteTitle => '¡Desafío de hoy completado!';
+  String get homeChallengeDoneLine => '¡Desafío de hoy completado!';
 
   @override
   String homeChallengeStreak(num days) {
@@ -1302,11 +1259,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get levelNoResults => 'Sin resultados.';
 
   @override
-  String get levelReplayTitle => '¿Volver a jugar este puzle?';
+  String levelReplayTitle(int number) {
+    return '¿Volver a jugar el puzle $number?';
+  }
 
   @override
   String get levelReplayBody =>
-      'Tu registro completado se conserva y solo se actualiza si el nuevo resultado es mejor.';
+      'Tu registro completado se mantiene. Si lo terminas con un mejor resultado, solo se actualiza tu mejor registro.';
 
   @override
   String get levelReplayConfirm => 'Repetir';
@@ -1695,78 +1654,73 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get beginnerTutorialPromptBody =>
-      'Prueba una breve práctica guiada antes de empezar a resolver. Solo toma un minuto.';
+      'Prueba una práctica corta para aprender las reglas básicas y los controles.';
 
   @override
-  String get beginnerTutorialStart => 'Iniciar la guía';
+  String get beginnerTutorialStart => 'Empezar práctica';
 
   @override
   String get beginnerTutorialSkip => 'Omitir';
 
   @override
   String beginnerTutorialStepIndicator(int current, int total) {
-    return 'Paso $current de $total';
+    return '$current / $total';
   }
 
   @override
-  String get beginnerTutorialStepRowTitle => 'Regla: filas';
+  String get beginnerTutorialPracticeTitle => 'Puzle de práctica';
 
   @override
-  String get beginnerTutorialStepRowBody =>
-      'Cada fila debe contener los números del 1 al 9, sin repetir.';
+  String get beginnerTutorialStepRulesTitle => 'Reglas básicas';
 
   @override
-  String get beginnerTutorialStepColumnTitle => 'Regla: columnas';
+  String get beginnerTutorialStepRulesBody =>
+      'Cada fila, columna y cuadro de 3×3 contiene los números del 1 al 9 una sola vez.';
 
   @override
-  String get beginnerTutorialStepColumnBody =>
-      'Cada columna también debe contener los números del 1 al 9, sin repetir.';
+  String get beginnerTutorialRuleRow => 'Fila';
 
   @override
-  String get beginnerTutorialStepBoxTitle => 'Regla: cuadros de 3×3';
+  String get beginnerTutorialRuleColumn => 'Columna';
 
   @override
-  String get beginnerTutorialStepBoxBody =>
-      'Cada cuadro de 3×3 debe contener los números del 1 al 9, sin repetir.';
+  String get beginnerTutorialRuleBox => 'Cuadro 3×3';
 
   @override
   String get beginnerTutorialStepInputTitle => 'Introduce un número';
 
   @override
   String get beginnerTutorialStepInputBody =>
-      'Solo un número puede ir en esta casilla resaltada. Tócala y luego toca el número correcto.';
+      'Toca la casilla resaltada y elige el número que encaja.';
 
   @override
   String get beginnerTutorialStepInputWrongHint =>
-      'Ese número ya se usa en esta fila, columna o cuadro. Prueba con otro número.';
+      'No puedes poner un número que ya está en la misma fila, columna o cuadro de 3×3.';
 
   @override
-  String get beginnerTutorialStepMemoTitle => 'Notas y borrado';
+  String get beginnerTutorialStepMemoTitle => 'Anota candidatos';
 
   @override
   String get beginnerTutorialStepMemoAddBody =>
-      'Activa las notas, toca esta casilla y luego toca un número candidato para anotarlo.';
+      'Activa las notas y anota números candidatos en la casilla resaltada.';
 
   @override
   String get beginnerTutorialStepMemoEraseBody =>
-      'Ahora toca ese mismo número otra vez para borrar la nota.';
+      'Toca el mismo número otra vez para borrar una nota.';
 
   @override
-  String get beginnerTutorialStepHintTitle => 'Pistas';
+  String get beginnerTutorialStepHintTitle => 'Usa una pista';
 
   @override
   String get beginnerTutorialStepHintBody =>
-      'Toca Pista para ver dónde mirar y por qué, sin gastar una pista real.';
-
-  @override
-  String get beginnerTutorialStepHintButton => 'Abrir pista';
+      'Si te atascas, toca Pista para ver qué casilla mirar y por qué.';
 
   @override
   String get beginnerTutorialStepDoneTitle => '¡Listo!';
 
   @override
   String get beginnerTutorialStepDoneBody =>
-      'Aprendiste lo básico: filas, columnas, cuadros, cómo introducir números, notas y pistas.';
+      'Ya sabes introducir números, usar notas y pedir pistas.';
 
   @override
   String get beginnerTutorialFirstPuzzleButton => 'Empezar mi primer puzzle';
@@ -1800,11 +1754,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get autoNotesTipMessage =>
       'Consejo: mantén pulsado Notas para rellenar todos los candidatos a la vez.';
-
-  @override
-  String gameNumberLockedMessage(int number) {
-    return '$number fijado · toca casillas para rellenar';
-  }
 
   @override
   String get gameNumberLockTipMessage =>
