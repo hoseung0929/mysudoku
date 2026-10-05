@@ -346,7 +346,11 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
   /// 가이드를 시작해 완료(또는 중간에 닫아도) 화면에서 돌아오면 역시 true를
   /// 돌려줘 원래 선택한 문제를 연다. 반환값이 false면 아무것도 하지 않는다
   /// (이 함수 자체는 항상 true를 반환하지만, mounted 가드를 위해 bool로 둔다).
+  /// 첫 초급 퍼즐 앞의 연습 퍼즐 안내(팝업) 노출 여부. 현재는 숨기고 바로 퍼즐을 연다.
+  static const bool _showBeginnerTutorialPrompt = false;
+
   Future<bool> _maybeShowBeginnerTutorial() async {
+    if (!_showBeginnerTutorialPrompt) return true;
     final state = await _tutorialService.getState();
     if (!mounted) return false;
     if (state != BeginnerTutorialState.unseen) return true;

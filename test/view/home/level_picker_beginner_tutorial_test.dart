@@ -111,65 +111,20 @@ void main() {
 
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets(
-      'first fresh beginner puzzle shows the guide prompt before opening',
+  testWidgets('the first fresh beginner puzzle opens directly, no guide prompt',
       (tester) async {
-    await pumpPicker(tester);
-    await tester.tap(find.text('Start puzzle'));
-    await tester.pump();
-    expect(find.text('New to Sudoku?'), findsOneWidget);
-    expect(find.byType(SudokuGameScreen), findsNothing);
-  });
-
-  testWidgets('skipping the prompt opens the originally chosen puzzle',
-      (tester) async {
-    await pumpPicker(tester);
-    await tester.tap(find.text('Start puzzle'));
-    await tester.pump();
-    await tester.tap(find.text('Skip'));
-    await settle(tester);
-
-    expect(find.byType(SudokuGameScreen), findsOneWidget);
-    expect(find.byType(BeginnerTutorialScreen), findsNothing);
-    expect(
-      await BeginnerTutorialService().getState(),
-      BeginnerTutorialState.dismissed,
-    );
-  });
-
-  testWidgets(
-      'starting the guide opens the tutorial; finishing it opens the puzzle',
-      (tester) async {
-    await pumpPicker(tester);
-    await tester.tap(find.text('Start puzzle'));
-    await tester.pump();
-    await tester.tap(find.text('Start practice'));
-    await settle(tester);
-
-    expect(find.byType(BeginnerTutorialScreen), findsOneWidget);
-    expect(find.byType(SudokuGameScreen), findsNothing);
-
-    await tester.tap(find.byIcon(Icons.close));
-    await settle(tester);
-
-    expect(find.byType(BeginnerTutorialScreen), findsNothing);
-    expect(find.byType(SudokuGameScreen), findsOneWidget);
-  });
-
-  testWidgets('once dismissed, opening another fresh puzzle asks no more',
-      (tester) async {
-    await SharedPreferences.getInstance().then(
-      (prefs) => prefs.setString(
-        BeginnerTutorialService.stateKey,
-        'dismissed',
-      ),
-    );
     await pumpPicker(tester);
     await tester.tap(find.text('Start puzzle'));
     await settle(tester);
 
     expect(find.text('New to Sudoku?'), findsNothing);
+    expect(find.byType(BeginnerTutorialScreen), findsNothing);
     expect(find.byType(SudokuGameScreen), findsOneWidget);
+    // 안내를 보여 주지 않았으므로 완료/건너뜀으로 기록하지 않는다.
+    expect(
+      await BeginnerTutorialService().getState(),
+      BeginnerTutorialState.unseen,
+    );
   });
 
   testWidgets('replaying a completed puzzle never shows the prompt',

@@ -63,7 +63,14 @@ class _BeginnerTutorialScreenState extends State<BeginnerTutorialScreen> {
   bool _finished = false;
 
   /// 안내 카드의 고정 높이. 단계가 바뀌어도 보드·조작부 위치가 움직이지 않게 한다.
-  static const double _guideCardHeight = 164;
+  static const double _guideCardBaseHeight = 164;
+
+  /// 큰 글씨에서는 카드 안 글자·버튼이 잘리지 않도록 글자 배율만큼 카드를 키운다
+  /// (보드가 그만큼 줄고, 그래도 모자라면 화면 전체가 스크롤된다).
+  double get _guideCardHeight {
+    final scale = MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.8);
+    return _guideCardBaseHeight + (scale - 1) * 290;
+  }
 
   static final Map<_RuleRegion, Set<int>> _ruleCells = {
     _RuleRegion.row: {for (var c = 0; c < 9; c++) 1 * 9 + c},
@@ -388,7 +395,12 @@ class _BeginnerTutorialScreenState extends State<BeginnerTutorialScreen> {
     final boardSize =
         (maxHeight - _guideCardHeight - controlsHeight - sectionGap * 3 - 12)
             .clamp(256.0, boardMax);
-    final numberWidth = (boardSize - numberGap * 3) / 3;
+    // 큰 글씨에서는 보드가 줄어도 안내 카드가 좁아져 글자가 세로로 쪼개지지
+    // 않도록 카드·조작부를 화면 폭 전체로 쓴다.
+    final controlsWidth = MediaQuery.textScalerOf(context).scale(1.0) > 1.15
+        ? contentWidth
+        : boardSize;
+    final numberWidth = (controlsWidth - numberGap * 3) / 3;
 
     final content = Padding(
       padding: EdgeInsets.fromLTRB(horizontalPadding, 0, horizontalPadding, 8),
@@ -397,7 +409,7 @@ class _BeginnerTutorialScreenState extends State<BeginnerTutorialScreen> {
           _board(boardSize),
           const SizedBox(height: sectionGap),
           SizedBox(
-            width: boardSize,
+            width: controlsWidth,
             child: _hintOr(
               height: _guideCardHeight + sectionGap + controlsHeight,
               child: Column(

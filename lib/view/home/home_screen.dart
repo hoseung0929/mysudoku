@@ -810,7 +810,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// 프로필(아바타·이름)·연속 기록·설정 버튼을 담은 축소 앱바. 화면 위에
+  /// 프로필(아바타·이름)을 담은 축소 앱바. 화면 위에
   /// 항상 고정되며, 히어로 이미지가 보이는 동안은 사진 위 투명 오버레이(흰
   /// 글자)로, 히어로가 스크롤로 넘어가면 작은 불투명 앱바(테마 글자색)로
   /// 전환된다.
@@ -822,9 +822,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final trimmedName = _profileName?.trim() ?? '';
     final displayName =
         trimmedName.isNotEmpty ? trimmedName : l10n.homeGuestTitle;
-    final streakDays = _challengeProgress?.activityStreakDays ?? 0;
-    final streakPlayedToday = _challengeProgress?.lastClearDate ==
-        ChallengeProgressService.formatLocalDate(DateTime.now());
     final onPhoto = _isTop;
     final contentColor = onPhoto ? Colors.white : colorScheme.onSurface;
     final textShadows =
@@ -907,15 +904,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-                if (streakDays > 0) ...[
-                  const SizedBox(width: 4),
-                  _HeroStreakBadge(
-                    days: streakDays,
-                    playedToday: streakPlayedToday,
-                    l10n: l10n,
-                    onPhoto: onPhoto,
-                  ),
-                ],
               ],
             ),
           ),
@@ -2113,90 +2101,6 @@ class _DifficultyIcon extends StatelessWidget {
                 child: Icon(badgeIcon,
                     size: badgeSize, color: badgeColor ?? color),
               ),
-      ),
-    );
-  }
-}
-
-/// 홈 히어로 배너용 연속 기록 배지. `ProfileGlassHeader`의 연속 기록 칩과
-/// 같은 데이터(연속 일수/오늘 완료 여부)를 쓰지만, 밝은 카드 배경이 아니라
-/// 사진 위에 올라가므로 반투명 검정 배경 + 흰 글자로 색만 다르게 맞춘다.
-class _HeroStreakBadge extends StatelessWidget {
-  const _HeroStreakBadge({
-    required this.days,
-    required this.playedToday,
-    required this.l10n,
-    required this.onPhoto,
-  });
-
-  final int days;
-  final bool playedToday;
-  final AppLocalizations l10n;
-
-  /// true면 히어로 사진 위(반투명 검정 알약 + 흰 글자), false면 축소된
-  /// 불투명 앱바 위(테마 색 알약 + 테마 글자)에 맞춘 배색을 쓴다.
-  final bool onPhoto;
-
-  static const _flameColor = Color(0xFFE8833A);
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final message =
-        playedToday ? l10n.homeStreakActive(days) : l10n.homeStreakAtRisk(days);
-    final pillColor = onPhoto
-        ? Colors.black.withValues(alpha: 0.38)
-        : (playedToday
-            ? _flameColor.withValues(alpha: 0.14)
-            : Colors.transparent);
-    final borderColor = onPhoto
-        ? Colors.white.withValues(alpha: 0.4)
-        : (playedToday ? Colors.transparent : colorScheme.outlineVariant);
-    final textColor = onPhoto
-        ? Colors.white
-        : (playedToday ? colorScheme.onSurface : colorScheme.onSurfaceVariant);
-    final iconColor = onPhoto
-        ? (playedToday ? _flameColor : Colors.white70)
-        : (playedToday
-            ? _flameColor
-            : colorScheme.onSurfaceVariant.withValues(alpha: 0.7));
-    return Tooltip(
-      message: message,
-      triggerMode: TooltipTriggerMode.tap,
-      child: Semantics(
-        container: true,
-        label: message,
-        excludeSemantics: true,
-        child: MediaQuery.withClampedTextScaling(
-          maxScaleFactor: 1.3,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: pillColor,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: borderColor),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.local_fire_department_rounded,
-                  size: 16,
-                  color: iconColor,
-                ),
-                const SizedBox(width: 3),
-                Text(
-                  l10n.homeStreakChip(days),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: textColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

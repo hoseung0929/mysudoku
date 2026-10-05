@@ -194,6 +194,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// 설정의 "게임 방법"(연습 퍼즐 다시 보기) 항목 노출 여부. 현재는 숨긴다.
+  static const bool _showHowToPlay = false;
+
   Future<void> _openBeginnerTutorial() async {
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -502,15 +505,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ]),
                       SizedBox(height: isTablet ? 20 : 16),
                       _buildSettingsSection([
-                        _buildSettingsTile(
-                          icon: Icons.school_outlined,
-                          iconColor: const Color(0xFF5B8DD9),
-                          title: AppLocalizations.of(context)!
-                              .settingsHowToPlayTitle,
-                          subtitle: AppLocalizations.of(context)!
-                              .settingsHowToPlaySubtitle,
-                          onTap: _openBeginnerTutorial,
-                        ),
+                        if (_showHowToPlay)
+                          _buildSettingsTile(
+                            icon: Icons.school_outlined,
+                            iconColor: const Color(0xFF5B8DD9),
+                            title: AppLocalizations.of(context)!
+                                .settingsHowToPlayTitle,
+                            subtitle: AppLocalizations.of(context)!
+                                .settingsHowToPlaySubtitle,
+                            onTap: _openBeginnerTutorial,
+                          ),
                         _buildSettingsTile(
                           icon: Icons.info_outline,
                           iconColor: const Color(0xFF9E9E9E),

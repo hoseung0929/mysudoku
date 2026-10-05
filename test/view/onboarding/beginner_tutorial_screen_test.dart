@@ -293,6 +293,22 @@ void main() {
     });
   }
 
+  testWidgets('large text grows the guide card so the rule buttons stay inside',
+      (tester) async {
+    await pumpTutorial(tester, textScale: 1.6);
+    final chip = tester.getRect(
+      find.byKey(const ValueKey('tutorial-rule-box')),
+    );
+    final cardContent = tester.getRect(find
+        .ancestor(
+          of: find.byKey(const ValueKey('tutorial-rule-box')),
+          matching: find.byType(SingleChildScrollView),
+        )
+        .first);
+    expect(chip.bottom, lessThanOrEqualTo(cardContent.bottom + 0.5));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('small screens scroll to every control without overflow',
       (tester) async {
     await pumpTutorial(tester, size: const Size(320, 568));

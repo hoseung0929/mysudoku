@@ -2066,8 +2066,17 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                               for (final label
                                   in _spacedMonthLabels(monthLabels))
                                 Positioned(
-                                  left: (label['week_index'] as int) *
-                                      (cellSize + gap),
+                                  // 오른쪽 끝 열에서 시작하는 달 라벨은 잘리지 않게
+                                  // 오른쪽 끝에 맞춘다.
+                                  left: (label['week_index'] as int) >=
+                                          weeks.length - 2
+                                      ? null
+                                      : (label['week_index'] as int) *
+                                          (cellSize + gap),
+                                  right: (label['week_index'] as int) >=
+                                          weeks.length - 2
+                                      ? 0
+                                      : null,
                                   child: Text(
                                     _formatHeatmapMonthLabel(
                                         label['date'] as DateTime),
