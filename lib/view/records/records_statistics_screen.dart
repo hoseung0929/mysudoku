@@ -14,6 +14,7 @@ import 'package:sudoku159/services/records/records_statistics_service.dart';
 import 'package:sudoku159/theme/level_status_colors.dart';
 import 'package:sudoku159/theme/system_ui_style.dart';
 import 'package:sudoku159/utils/time_format.dart';
+import 'package:sudoku159/widgets/keep_words_text.dart';
 import 'package:sudoku159/widgets/loading_skeleton.dart';
 import 'package:sudoku159/widgets/press_scale.dart';
 
@@ -391,10 +392,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
             bottom: 20,
             child: Semantics(
               header: true,
-              child: Text(
+              child: KeepWordsText(
                 l10n.recordsHeroImageSubtitle,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 20,
@@ -715,7 +714,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 children: [
                   Text(l10n.recordsSummaryEmptyTitle, style: labelStyle),
                   const SizedBox(height: 6),
-                  Text(
+                  KeepWordsText(
                     l10n.recordsSummaryEmptyBody,
                     style: TextStyle(
                       fontSize: 14,

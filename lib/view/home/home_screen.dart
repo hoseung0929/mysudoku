@@ -31,6 +31,7 @@ import 'package:sudoku159/widgets/app_snackbar.dart';
 import 'package:sudoku159/widgets/profile_editor_sheet.dart';
 import 'package:sudoku159/theme/level_status_colors.dart';
 import 'package:sudoku159/theme/system_ui_style.dart';
+import 'package:sudoku159/widgets/keep_words_text.dart';
 import 'package:sudoku159/widgets/profile_glass_header.dart';
 import 'package:sudoku159/widgets/sudoku_motif.dart';
 
@@ -790,10 +791,8 @@ class _HomeScreenState extends State<HomeScreen> {
             left: 20,
             right: isTablet ? 240 : 130,
             bottom: 18,
-            child: Text(
+            child: KeepWordsText(
               greeting,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,

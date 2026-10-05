@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:sudoku159/widgets/keep_words_text.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -171,8 +172,9 @@ void main() {
     expect(
       find.descendant(
           of: card,
-          matching:
-              find.text('Finish a puzzle and your records will build up here')),
+          matching: find.byWidgetPredicate((w) =>
+              w is KeepWordsText &&
+              w.text == 'Finish a puzzle and your records will build up here')),
       findsOneWidget,
     );
     // 0개를 크게 보이지 않고, 별도 빈 상태 카드도 없다(시작 버튼은 한 곳).
