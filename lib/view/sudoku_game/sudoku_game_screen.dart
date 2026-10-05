@@ -1036,8 +1036,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   /// 앱바 위젯
   PreferredSizeWidget _buildAppBar() {
     final l10n = AppLocalizations.of(context)!;
+    // 짧고 일관된 제목: "중급 001"(번호는 최소 3자리, 1000 이상은 그대로).
+    final levelName = widget.level.localizedName(l10n);
     final titleText =
-        '${widget.level.localizedName(l10n)} · ${l10n.gameNumberLabel(widget.game.gameNumber)}';
+        '$levelName ${widget.game.gameNumber.toString().padLeft(3, '0')}';
     return AppBar(
       toolbarHeight: 50,
       backgroundColor: context.colors.surface,
@@ -1053,12 +1055,21 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         onLongPress: kDebugMode ? _toggleDeveloperAnswerPreview : null,
         child: MediaQuery.withClampedTextScaling(
           maxScaleFactor: 1.3,
-          child: Text(
-            titleText,
-            style: GoogleFonts.notoSans(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: context.colors.textPrimary,
+          // 스크린리더에는 "중급, 1번 퍼즐"처럼 자연스러운 표현을 읽어 준다.
+          child: Semantics(
+            header: true,
+            label:
+                '$levelName, ${l10n.levelPuzzleNumber(widget.game.gameNumber)}',
+            excludeSemantics: true,
+            child: Text(
+              titleText,
+              maxLines: 1,
+              softWrap: false,
+              style: GoogleFonts.notoSans(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: context.colors.textPrimary,
+              ),
             ),
           ),
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
@@ -49,7 +50,9 @@ void main() {
     WidgetTester tester,
     Size size, {
     double textScale = 1.0,
+    SudokuLevel? gameLevel,
   }) async {
+    final selectedLevel = gameLevel ?? level;
     SharedPreferences.setMockInitialValues({});
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
@@ -58,8 +61,8 @@ void main() {
     final game = SudokuGame(
       board: puzzleBoard,
       solution: solution,
-      emptyCells: level.emptyCells,
-      levelName: level.name,
+      emptyCells: selectedLevel.emptyCells,
+      levelName: selectedLevel.name,
       gameNumber: 1,
     );
     await tester.pumpWidget(
@@ -72,7 +75,7 @@ void main() {
               .copyWith(textScaler: TextScaler.linear(textScale)),
           child: child!,
         ),
-        home: SudokuGameScreen(game: game, level: level),
+        home: SudokuGameScreen(game: game, level: selectedLevel),
       ),
     );
     await tester.pump();
@@ -269,6 +272,55 @@ void main() {
     expect(find.byKey(const ValueKey('game-action-hint')), findsOneWidget);
     expect(tester.takeException(), isNull);
     expect(find.textContaining('OVERFLOWED'), findsNothing);
+  });
+
+  testWidgets('title is "level NNN": short, one line, no dot or "Game" word',
+      (tester) async {
+    // 테스트 빌드는 디버그 아이콘까지 있어 릴리스보다 제목 자리가 좁다.
+    await pumpGame(
+      tester,
+      const Size(390, 844),
+      gameLevel: SudokuLevel.levels[1],
+    );
+
+    final title = find.text('Intermediate 001');
+    expect(title, findsOneWidget);
+    expect(find.textContaining('Game'), findsNothing);
+    expect(find.textContaining('·'), findsNothing);
+    final paragraph = tester.renderObject<RenderParagraph>(title);
+    // 한 줄로 그려진다(테스트 글꼴은 실제보다 넓어 줄 수 초과 여부 대신 높이로 본다).
+    expect(paragraph.size.height, lessThan(24));
+    // 글자 크기는 16 그대로이고 자동 축소(FittedBox)는 쓰지 않는다.
+    expect(tester.widget<Text>(title).style!.fontSize, 16);
+    expect(
+      find.ancestor(of: title, matching: find.byType(FittedBox)),
+      findsNothing,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('large text keeps the short title without layout errors',
+      (tester) async {
+    await pumpGame(
+      tester,
+      const Size(390, 844),
+      textScale: 1.3,
+      gameLevel: SudokuLevel.levels[1],
+    );
+    expect(find.text('Intermediate 001'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('screen readers hear a natural level and puzzle number',
+      (tester) async {
+    final handle = tester.ensureSemantics();
+    await pumpGame(
+      tester,
+      const Size(390, 844),
+      gameLevel: SudokuLevel.levels[1],
+    );
+    expect(find.bySemanticsLabel('Intermediate, Puzzle 1'), findsOneWidget);
+    handle.dispose();
   });
 
   testWidgets(
