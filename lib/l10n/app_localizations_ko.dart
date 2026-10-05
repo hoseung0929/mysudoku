@@ -236,16 +236,33 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gameEraseShort => '지우기';
 
   @override
-  String get gameMoreOptions => '더보기';
-
-  @override
-  String get gameMemoOnShort => '메모 ON';
+  String get gameMemoStateOff => 'OFF';
 
   @override
   String get gameMemoStateOn => 'ON';
 
   @override
-  String get gameMemoStateOff => 'OFF';
+  String get gameMemoModeOffSemantics => '메모 모드 꺼짐';
+
+  @override
+  String get gameMemoModeOnSemantics => '메모 모드 켜짐';
+
+  @override
+  String gameHintSemanticsRemaining(int count) {
+    return '힌트, $count개 남음';
+  }
+
+  @override
+  String get gameHintSemanticsNone => '힌트 없음';
+
+  @override
+  String get gameEraseSemanticsSelected => '선택한 칸 지우기';
+
+  @override
+  String get gameMoreOptions => '더보기';
+
+  @override
+  String get gameMemoOnShort => '메모 ON';
 
   @override
   String get gameMemoFocusShort => '탐색';
@@ -273,12 +290,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get gameNumberInputTitle => '숫자 입력';
-
-  @override
-  String get gamePause => '일시정지';
-
-  @override
-  String get gameResume => '계속';
 
   @override
   String get gameAnswerPreview => '정답';
@@ -1266,14 +1277,20 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get gameResetDialogTitle => '처음부터 다시 풀기';
+  String get gameRestartMenuTitle => '처음부터 다시 풀기';
 
   @override
-  String get gameResetDialogBody =>
-      '입력한 숫자, 메모, 힌트, 오답 횟수와 시간을 모두 지우고 처음 상태로 돌아갈까요? 이전 완료 기록은 유지돼요.';
+  String get gameRestartMenuDescription => '입력한 내용을 지우고 처음 상태로 돌아가요';
 
   @override
-  String get gameResetConfirm => '다시 풀기';
+  String get gameRestartDialogTitle => '처음부터 다시 풀까요?';
+
+  @override
+  String get gameRestartDialogBody =>
+      '입력한 숫자와 메모, 시간·힌트 사용·실수 횟수가 모두 초기화돼요. 기존 완료 기록은 유지돼요.';
+
+  @override
+  String get gameRestartConfirm => '다시 풀기';
 
   @override
   String get gameNumberInputLegend => '작은 숫자는 남은 개수, 체크는 완료된 숫자예요.';
@@ -1387,12 +1404,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get challengeTodayEyebrow => '오늘의 흐름';
-
-  @override
-  String get gamePausedTitle => '일시정지됨';
-
-  @override
-  String get gamePausedBody => '타이머가 멈추고 보드는 잠시 가려져요.';
 
   @override
   String homeStreakChip(int count) {

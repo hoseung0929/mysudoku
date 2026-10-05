@@ -84,6 +84,11 @@ flutter:
 
   assets:
     - assets/images/app_logo.png
+    - assets/images/game_control_memo_off.png
+    - assets/images/game_control_memo_on.png
+    - assets/images/game_control_hint_available.png
+    - assets/images/game_control_hint_exhausted.png
+    - assets/images/game_control_erase.png
     - assets/images/character.png
     - assets/images/home_hero.webp
     - assets/images/home_daily_challenge_card_bg.png

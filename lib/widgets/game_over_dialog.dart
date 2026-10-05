@@ -60,7 +60,7 @@ class _GameOverDialogState extends State<GameOverDialog> {
               TextStyle(fontSize: 14, height: 1.4, color: cs.onSurfaceVariant),
         ),
       ],
-      primaryLabel: l10n.gameResetDialogTitle,
+      primaryLabel: l10n.gameRestartMenuTitle,
       onPrimary: _once(widget.onRestart),
       secondaryLabel: l10n.dialogBackToLevels,
       onSecondary: _once(widget.onGoToLevelSelection),

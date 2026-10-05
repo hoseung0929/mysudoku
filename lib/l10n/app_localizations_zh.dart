@@ -234,16 +234,33 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gameEraseShort => '擦除';
 
   @override
-  String get gameMoreOptions => '更多选项';
-
-  @override
-  String get gameMemoOnShort => '备注 开';
+  String get gameMemoStateOff => '关';
 
   @override
   String get gameMemoStateOn => '开';
 
   @override
-  String get gameMemoStateOff => '关';
+  String get gameMemoModeOffSemantics => '笔记模式已关闭';
+
+  @override
+  String get gameMemoModeOnSemantics => '笔记模式已开启';
+
+  @override
+  String gameHintSemanticsRemaining(int count) {
+    return '提示，剩余 $count 次';
+  }
+
+  @override
+  String get gameHintSemanticsNone => '没有提示了';
+
+  @override
+  String get gameEraseSemanticsSelected => '擦除所选格子';
+
+  @override
+  String get gameMoreOptions => '更多选项';
+
+  @override
+  String get gameMemoOnShort => '备注 开';
 
   @override
   String get gameMemoFocusShort => '聚焦';
@@ -271,12 +288,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get gameNumberInputTitle => '数字输入';
-
-  @override
-  String get gamePause => '暂停';
-
-  @override
-  String get gameResume => '继续';
 
   @override
   String get gameAnswerPreview => '答案';
@@ -1254,14 +1265,19 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get gameResetDialogTitle => '从头重新开始';
+  String get gameRestartMenuTitle => '从头开始';
 
   @override
-  String get gameResetDialogBody =>
-      '要清除已输入的数字、笔记、提示、错误次数和用时，并回到初始棋盘吗？以往的通关记录会保留。';
+  String get gameRestartMenuDescription => '清除已输入的内容，回到初始状态';
 
   @override
-  String get gameResetConfirm => '重新开始';
+  String get gameRestartDialogTitle => '要从头开始吗？';
+
+  @override
+  String get gameRestartDialogBody => '已输入的数字和笔记、用时、提示使用和错误次数都会重置。已有的完成记录会保留。';
+
+  @override
+  String get gameRestartConfirm => '重新开始';
 
   @override
   String get gameNumberInputLegend => '小数字表示剩余数量，打勾表示已完成的数字。';
@@ -1375,12 +1391,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get challengeTodayEyebrow => '今日动态';
-
-  @override
-  String get gamePausedTitle => '已暂停';
-
-  @override
-  String get gamePausedBody => '计时已停止，棋盘暂时隐藏。';
 
   @override
   String homeStreakChip(int count) {

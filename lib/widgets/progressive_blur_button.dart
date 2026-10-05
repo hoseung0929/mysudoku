@@ -18,6 +18,14 @@ class ProgressiveBlurButton extends StatefulWidget {
   /// 그대로 유지하고, 게임 숫자패드처럼 명시적으로 요청한 곳에서만 켠다.
   final bool enablePressScale;
 
+  /// 선택 인자(기본값은 기존과 같은 동작). 활성 상태의 배경·테두리 색을 직접 정한다.
+  final Color? activeBackgroundColor;
+  final Color? activeBorderColor;
+
+  /// 비활성(onPressed == null)일 때 내용 투명도와 배경색을 직접 정한다.
+  final double? disabledContentOpacity;
+  final Color? disabledBackgroundColor;
+
   const ProgressiveBlurButton({
     super.key,
     this.onPressed,
@@ -29,6 +37,10 @@ class ProgressiveBlurButton extends StatefulWidget {
     this.borderRadius = 28,
     this.isActive = false,
     this.enablePressScale = false,
+    this.activeBackgroundColor,
+    this.activeBorderColor,
+    this.disabledContentOpacity,
+    this.disabledBackgroundColor,
   });
 
   @override
@@ -51,21 +63,22 @@ class _ProgressiveBlurButtonState extends State<ProgressiveBlurButton> {
     final baseColor = Theme.of(context).colorScheme.surface;
     final baseBorderColor = context.colors.border;
     final surfaceColor = widget.isActive
-        ? Color.lerp(baseColor, widget.backgroundColor, isDark ? 0.78 : 0.48)!
+        ? widget.activeBackgroundColor ??
+            Color.lerp(baseColor, widget.backgroundColor, isDark ? 0.78 : 0.48)!
         : isEnabled
             ? Color.lerp(
                 baseColor, widget.backgroundColor, isDark ? 0.40 : 0.22)!
-            : context.colors.surfaceSubtle;
+            : widget.disabledBackgroundColor ?? context.colors.surfaceSubtle;
     final borderColor = widget.isActive
-        ? Color.lerp(baseBorderColor, effectiveBlurColor, isDark ? 1.0 : 0.86)!
+        ? widget.activeBorderColor ??
+            Color.lerp(
+                baseBorderColor, effectiveBlurColor, isDark ? 1.0 : 0.86)!
         : isEnabled
             ? Color.lerp(baseBorderColor, effectiveBlurColor, 0.28)!
             : context.colors.border;
     final contentOpacity = isEnabled
         ? 1.0
-        : widget.isActive
-            ? 0.72
-            : 0.36;
+        : widget.disabledContentOpacity ?? (widget.isActive ? 0.72 : 0.36);
 
     final button = SizedBox(
       width: widget.width,

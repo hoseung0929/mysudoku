@@ -77,6 +77,7 @@ void main() {
             gameNumber: 1,
           ),
           level: level,
+          showUndoButton: true,
         ),
       ),
     );
@@ -185,22 +186,26 @@ void main() {
     await settle(tester);
   });
 
-  testWidgets('pause releases the lock', (tester) async {
+  testWidgets('backgrounding and resuming keep the lock', (tester) async {
     await pumpGame(tester);
     await lock(tester, 3);
     await tester.pump();
     expect(pin(3), findsOneWidget);
-    await tester.tap(find.byTooltip('Pause'));
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
     await tester.pump();
-    expect(pin(3), findsNothing);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(pin(3), findsOneWidget);
     await settle(tester);
   });
 
-  testWidgets('starting a hint releases the lock', (tester) async {
-    await pumpGame(tester);
+  testWidgets('using a hint releases the lock', (tester) async {
+    final presenter = await pumpGame(tester);
     await lock(tester, 3);
     await tester.pump();
-    await tester.tap(find.text('Hint'));
+    presenter.selectCell(0, 1); // 칸을 직접 선택해야 힌트를 쓸 수 있다.
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('game-action-hint')));
     await tester.pump();
     expect(pin(3), findsNothing);
     await settle(tester);
@@ -280,7 +285,7 @@ void main() {
     expect(presenter.getCellValue(0, 1), 3);
     expect(pin(3), findsOneWidget);
 
-    await tester.tap(find.text('Undo'));
+    await tester.tap(find.byKey(const ValueKey('game-action-undo')));
     await tester.pump();
     expect(presenter.getCellValue(0, 1), 0);
     expect(pin(3), findsOneWidget);
@@ -292,7 +297,7 @@ void main() {
 
     presenter.selectCell(0, 1);
     await tester.pump();
-    await tester.tap(find.text('Erase'));
+    await tester.tap(find.byKey(const ValueKey('game-action-erase')));
     await tester.pump();
     expect(presenter.getCellValue(0, 1), 0);
     expect(pin(3), findsOneWidget);

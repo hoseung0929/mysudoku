@@ -542,6 +542,48 @@ abstract class AppLocalizations {
   /// **'Erase'**
   String get gameEraseShort;
 
+  /// No description provided for @gameMemoStateOff.
+  ///
+  /// In en, this message translates to:
+  /// **'OFF'**
+  String get gameMemoStateOff;
+
+  /// No description provided for @gameMemoStateOn.
+  ///
+  /// In en, this message translates to:
+  /// **'ON'**
+  String get gameMemoStateOn;
+
+  /// No description provided for @gameMemoModeOffSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes mode off'**
+  String get gameMemoModeOffSemantics;
+
+  /// No description provided for @gameMemoModeOnSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes mode on'**
+  String get gameMemoModeOnSemantics;
+
+  /// No description provided for @gameHintSemanticsRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Hint, {count} left'**
+  String gameHintSemanticsRemaining(int count);
+
+  /// No description provided for @gameHintSemanticsNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No hints left'**
+  String get gameHintSemanticsNone;
+
+  /// No description provided for @gameEraseSemanticsSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase selected cell'**
+  String get gameEraseSemanticsSelected;
+
   /// No description provided for @gameMoreOptions.
   ///
   /// In en, this message translates to:
@@ -553,18 +595,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Memo ON'**
   String get gameMemoOnShort;
-
-  /// No description provided for @gameMemoStateOn.
-  ///
-  /// In en, this message translates to:
-  /// **'ON'**
-  String get gameMemoStateOn;
-
-  /// No description provided for @gameMemoStateOff.
-  ///
-  /// In en, this message translates to:
-  /// **'OFF'**
-  String get gameMemoStateOff;
 
   /// No description provided for @gameMemoFocusShort.
   ///
@@ -619,18 +649,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Number input'**
   String get gameNumberInputTitle;
-
-  /// No description provided for @gamePause.
-  ///
-  /// In en, this message translates to:
-  /// **'Pause'**
-  String get gamePause;
-
-  /// No description provided for @gameResume.
-  ///
-  /// In en, this message translates to:
-  /// **'Resume'**
-  String get gameResume;
 
   /// No description provided for @gameAnswerPreview.
   ///
@@ -2342,23 +2360,35 @@ abstract class AppLocalizations {
   /// **'Puzzle {number}, {status}'**
   String levelCellSemantics(String number, String status);
 
-  /// No description provided for @gameResetDialogTitle.
+  /// No description provided for @gameRestartMenuTitle.
   ///
   /// In en, this message translates to:
   /// **'Restart from the beginning'**
-  String get gameResetDialogTitle;
+  String get gameRestartMenuTitle;
 
-  /// No description provided for @gameResetDialogBody.
+  /// No description provided for @gameRestartMenuDescription.
   ///
   /// In en, this message translates to:
-  /// **'Clear entered numbers, notes, hints, mistakes, and time, then return to the starting board? Your past clear records are kept.'**
-  String get gameResetDialogBody;
+  /// **'Clear your input and go back to the starting board'**
+  String get gameRestartMenuDescription;
 
-  /// No description provided for @gameResetConfirm.
+  /// No description provided for @gameRestartDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start this puzzle over?'**
+  String get gameRestartDialogTitle;
+
+  /// No description provided for @gameRestartDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your numbers, notes, time, hint usage, and mistakes are all reset. Your existing completion records are kept.'**
+  String get gameRestartDialogBody;
+
+  /// No description provided for @gameRestartConfirm.
   ///
   /// In en, this message translates to:
   /// **'Restart'**
-  String get gameResetConfirm;
+  String get gameRestartConfirm;
 
   /// No description provided for @gameNumberInputLegend.
   ///
@@ -2503,18 +2533,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Today'**
   String get challengeTodayEyebrow;
-
-  /// No description provided for @gamePausedTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Paused'**
-  String get gamePausedTitle;
-
-  /// No description provided for @gamePausedBody.
-  ///
-  /// In en, this message translates to:
-  /// **'The timer is stopped and the board is hidden.'**
-  String get gamePausedBody;
 
   /// Compact streak chip in the home header (consecutive days with at least one cleared puzzle).
   ///

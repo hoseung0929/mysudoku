@@ -100,10 +100,22 @@
   "gameCellHint": "hint",
   "gameCellWrong": "incorrect",
   "gameEraseShort": "Erase",
+  "gameMemoStateOff": "OFF",
+  "gameMemoStateOn": "ON",
+  "gameMemoModeOffSemantics": "Notes mode off",
+  "gameMemoModeOnSemantics": "Notes mode on",
+  "gameHintSemanticsRemaining": "Hint, {count} left",
+  "@gameHintSemanticsRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "gameHintSemanticsNone": "No hints left",
+  "gameEraseSemanticsSelected": "Erase selected cell",
   "gameMoreOptions": "More options",
   "gameMemoOnShort": "Memo ON",
-  "gameMemoStateOn": "ON",
-  "gameMemoStateOff": "OFF",
   "gameMemoFocusShort": "Focus",
   "gameMemoFocusIdle": "None",
   "gameWrongShort": "Wrong",
@@ -113,8 +125,6 @@
   "gameProgressShort": "Progress",
   "gameTimeShort": "Time",
   "gameNumberInputTitle": "Number input",
-  "gamePause": "Pause",
-  "gameResume": "Resume",
   "gameAnswerPreview": "Answer",
   "challengeCompletedToday": "You completed today’s challenge!",
   "shareCopySuccess": "Result copied to clipboard.",
@@ -838,9 +848,11 @@
       }
     }
   },
-  "gameResetDialogTitle": "Restart from the beginning",
-  "gameResetDialogBody": "Clear entered numbers, notes, hints, mistakes, and time, then return to the starting board? Your past clear records are kept.",
-  "gameResetConfirm": "Restart",
+  "gameRestartMenuTitle": "Restart from the beginning",
+  "gameRestartMenuDescription": "Clear your input and go back to the starting board",
+  "gameRestartDialogTitle": "Start this puzzle over?",
+  "gameRestartDialogBody": "Your numbers, notes, time, hint usage, and mistakes are all reset. Your existing completion records are kept.",
+  "gameRestartConfirm": "Restart",
   "gameNumberInputLegend": "Small numbers show what remains, checks mean completed.",
   "dialogSuggestedNextStep": "Suggested next step",
   "dialogSetTomorrowReminder": "Set tomorrow reminder",
@@ -927,8 +939,6 @@
   "recordsSummaryEmptyTitle": "Ready to make your first record?",
   "recordsSummaryEmptyBody": "Finish a puzzle and your records will build up here",
   "challengeTodayEyebrow": "Today",
-  "gamePausedTitle": "Paused",
-  "gamePausedBody": "The timer is stopped and the board is hidden.",
   "homeStreakChip": "{count, plural, =1{1 day} other{{count} days}}",
   "@homeStreakChip": {
     "description": "Compact streak chip in the home header (consecutive days with at least one cleared puzzle).",

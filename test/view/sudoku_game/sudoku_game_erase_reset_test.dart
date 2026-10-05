@@ -95,10 +95,7 @@ void main() {
 
   ProgressiveBlurButton buttonWithLabel(WidgetTester tester, String label) {
     return tester.widget<ProgressiveBlurButton>(
-      find.ancestor(
-        of: find.text(label),
-        matching: find.byType(ProgressiveBlurButton),
-      ),
+      find.byKey(ValueKey('game-action-${label.toLowerCase()}')),
     );
   }
 
@@ -106,10 +103,60 @@ void main() {
     await tester.tap(find.byTooltip('More options'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
+    // `⋮` 팝업 메뉴의 "처음부터 다시 풀기"를 고르면 확인창이 이어서 열린다.
+    expect(find.text('Clear your input and go back to the starting board'),
+        findsOneWidget);
     await tester.tap(find.text('Restart from the beginning'));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 400));
   }
+
+  testWidgets('menu: styled popup, tapping outside closes without a dialog',
+      (tester) async {
+    final presenter = await pumpGame(tester, const Size(390, 844));
+    await selectCell(tester, presenter, 1);
+    presenter.setSelectedCellValue(3);
+    await tester.pump();
+
+    await tester.tap(find.byTooltip('More options'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Restart from the beginning'), findsOneWidget);
+    expect(find.byIcon(Icons.replay_rounded), findsOneWidget);
+    expect(find.text('Close'), findsNothing); // 별도 닫기 항목은 없다
+
+    await tester.tapAt(const Offset(20, 600)); // 메뉴 밖
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Restart from the beginning'), findsNothing);
+    expect(find.text('Start this puzzle over?'), findsNothing);
+    expect(presenter.getCellValue(0, 1), 3);
+    await tester.pump(const Duration(milliseconds: 1500));
+  });
+
+  testWidgets('double-tapping the confirm button restarts exactly once',
+      (tester) async {
+    final presenter = await pumpGame(tester, const Size(390, 844));
+    await selectCell(tester, presenter, 1);
+    presenter.setSelectedCellValue(3);
+    await tester.pump();
+    final hintsAtStart = presenter.hintsRemaining;
+
+    await openRestartDialog(tester);
+    expect(find.text('Start this puzzle over?'), findsOneWidget);
+    final confirm = find.widgetWithText(FilledButton, 'Restart');
+    await tester.tap(confirm);
+    await tester.tap(confirm, warnIfMissed: false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Start this puzzle over?'), findsNothing);
+    expect(presenter.getCellValue(0, 1), 0);
+    expect(presenter.hintsRemaining, hintsAtStart);
+    expect(presenter.wrongCount, 0);
+    expect(presenter.isMemoMode, isFalse);
+    expect(tester.takeException(), isNull);
+  });
 
   const sizes = {
     'phone': Size(390, 844),
@@ -122,8 +169,8 @@ void main() {
           'erase button is labeled, disabled without something to erase',
           (tester) async {
         final presenter = await pumpGame(tester, entry.value);
-        expect(find.text('Erase'), findsOneWidget);
-        expect(find.text('Memo'), findsOneWidget);
+        expect(find.byKey(const ValueKey('game-action-erase')), findsOneWidget);
+        expect(find.byKey(const ValueKey('game-action-memo')), findsOneWidget);
         expect(buttonWithLabel(tester, 'Erase').onPressed, isNull);
 
         await selectCell(tester, presenter, 1); // 빈 칸이지만 지울 내용 없음
@@ -147,7 +194,7 @@ void main() {
         await selectCell(tester, presenter, 1);
         // 오답 자동삭제 전에 지우기 (800ms 타이머 취소 확인)
         expect(buttonWithLabel(tester, 'Erase').onPressed, isNotNull);
-        await tester.tap(find.text('Erase'));
+        await tester.tap(find.byKey(const ValueKey('game-action-erase')));
         await tester.pump();
 
         expect(find.byType(AlertDialog), findsNothing);
@@ -161,9 +208,10 @@ void main() {
       testWidgets('erase clears notes only of the selected cell and persists',
           (tester) async {
         final presenter = await pumpGame(tester, entry.value);
-        await tester.tap(find.text('Memo'));
+        await tester.tap(find.byKey(const ValueKey('game-action-memo')));
         await tester.pump();
-        expect(find.text('Memo ON'), findsOneWidget); // 색상 외 텍스트로 구분
+        expect(find.byKey(const ValueKey('game-action-memo')),
+            findsOneWidget); // 색상 외 텍스트로 구분
         await selectCell(tester, presenter, 1);
         presenter.setSelectedCellValue(3);
         presenter.setSelectedCellValue(4);
@@ -171,7 +219,7 @@ void main() {
         presenter.setSelectedCellValue(4);
         await selectCell(tester, presenter, 1);
 
-        await tester.tap(find.text('Erase'));
+        await tester.tap(find.byKey(const ValueKey('game-action-erase')));
         await tester.pump();
         expect(presenter.getCellNotes(0, 1), isEmpty);
         expect(presenter.getCellNotes(0, 2), {4});
@@ -196,7 +244,8 @@ void main() {
         await tester.pump();
 
         await openRestartDialog(tester);
-        expect(find.byType(AlertDialog), findsOneWidget);
+        expect(find.text('Start this puzzle over?'), findsOneWidget);
+        expect(find.byType(AlertDialog), findsNothing); // 기본 AlertDialog가 아니다
         await tester.tap(find.text('Cancel'));
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 300));
@@ -208,7 +257,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 300));
         expect(presenter.getCellValue(0, 1), 0);
         expect(presenter.wrongCount, 0);
-        expect(find.byType(AlertDialog), findsNothing);
+        expect(find.text('Start this puzzle over?'), findsNothing);
       });
     });
   }
@@ -216,8 +265,8 @@ void main() {
   testWidgets('large text and narrow width do not overflow action labels',
       (tester) async {
     await pumpGame(tester, const Size(320, 568), textScale: 2.0);
-    expect(find.text('Erase'), findsOneWidget);
-    expect(find.text('Hint'), findsOneWidget);
+    expect(find.byKey(const ValueKey('game-action-erase')), findsOneWidget);
+    expect(find.byKey(const ValueKey('game-action-hint')), findsOneWidget);
     expect(tester.takeException(), isNull);
     expect(find.textContaining('OVERFLOWED'), findsNothing);
   });

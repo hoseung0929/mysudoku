@@ -153,25 +153,25 @@ void main() {
   Future<void> settle(WidgetTester tester) =>
       tester.pump(const Duration(seconds: 5));
 
-  testWidgets('plain correct input: one light impact, no message',
+  testWidgets('plain correct input: one medium impact, no message',
       (tester) async {
     final presenter = await pumpGame(tester);
     final haptics = trackHaptics(tester);
     await input(tester, haptics, 7, 7, 3);
     expect(presenter.getCellValue(7, 7), 3);
-    expect(haptics, ['lightImpact']);
+    expect(haptics, ['mediumImpact']);
     expect(find.textContaining('completed'), findsNothing);
     expect(find.textContaining('filled in all'), findsNothing);
     await settle(tester);
   });
 
-  testWidgets('a completed digit: no top message, one medium impact',
+  testWidgets('a completed digit: no top message, one heavy impact',
       (tester) async {
     await pumpGame(tester);
     final haptics = trackHaptics(tester);
     await input(tester, haptics, 8, 7, 7);
     expect(find.text('You filled in all the 7s'), findsNothing);
-    expect(haptics, ['mediumImpact']);
+    expect(haptics, ['heavyImpact']);
     await settle(tester);
   });
 
@@ -183,20 +183,20 @@ void main() {
     await input(tester, haptics, 3, 2, 9);
     expect(find.textContaining('cleared'), findsNothing);
     expect(find.textContaining('filled in all the 9s'), findsNothing);
-    expect(haptics, ['mediumImpact']);
+    expect(haptics, ['heavyImpact']);
     // 숫자 9칸 전체 강조는 생략된다.
     final grid = tester.widget<SudokuBoardGrid>(find.byType(SudokuBoardGrid));
     expect(grid.digitCompleteActive.values.any((v) => v), isFalse);
     await settle(tester);
   });
 
-  testWidgets('a wrong answer: no top message, one medium impact',
+  testWidgets('a wrong answer: no top message, one heavy impact',
       (tester) async {
     final presenter = await pumpGame(tester);
     final haptics = trackHaptics(tester);
     await input(tester, haptics, 7, 7, 5);
     expect(presenter.wrongCount, 1);
-    expect(haptics, ['mediumImpact']);
+    expect(haptics, ['heavyImpact']);
     expect(find.byKey(const Key('game-feedback-pill')), findsNothing);
     await settle(tester);
   });
@@ -219,14 +219,14 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
     expect(presenter.isGameOver, isTrue);
     expect(haptics, [
-      for (var i = 0; i < maxWrong - 1; i++) 'mediumImpact', // 오답
+      for (var i = 0; i < maxWrong - 1; i++) 'heavyImpact', // 오답
       'heavyImpact', 'mediumImpact', // 게임 오버: 짧은 2회 패턴
     ]);
     await settle(tester);
   });
 
   testWidgets(
-      'number-lock input after a plain correct is only a selection '
+      'number-lock input is a light impact, distinct from a cell-selection '
       'click', (tester) async {
     final presenter = await pumpGame(tester);
     final haptics = trackHaptics(tester);
@@ -239,7 +239,7 @@ void main() {
     tapCell(tester, 7, 7);
     await tester.pump();
     expect(presenter.getCellValue(7, 7), 3);
-    expect(haptics, ['selectionClick']);
+    expect(haptics, ['lightImpact']);
     await settle(tester);
   });
 
@@ -247,7 +247,96 @@ void main() {
     await pumpGame(tester, reduceMotion: true);
     final haptics = trackHaptics(tester);
     await input(tester, haptics, 7, 7, 3);
+    expect(haptics, ['mediumImpact']);
+    await settle(tester);
+  });
+
+  testWidgets('notes input: one selection click, not an impact',
+      (tester) async {
+    final presenter = await pumpGame(tester);
+    final haptics = trackHaptics(tester);
+    await tester.tap(find.byKey(const ValueKey('game-action-memo')));
+    await tester.pump();
+    haptics.clear(); // 메모 모드 전환 자체의 진동은 따로 본다.
+    tapCell(tester, 7, 7);
+    await tester.pump();
+    haptics.clear(); // 칸 선택 진동
+    await tester.tap(find.byKey(const ValueKey('number-button-3')),
+        warnIfMissed: false);
+    await tester.pump();
+    expect(presenter.getCellNotes(7, 7), {3});
+    expect(haptics, ['selectionClick']);
+    await settle(tester);
+  });
+
+  testWidgets('a progress milestone alone: one light impact', (tester) async {
+    // 41칸을 비운 보드: 진행률은 (채운 칸 / 41). 줄·열·박스·숫자가 완성되지 않는
+    // 칸만 골라 10칸을 채우고(24.4%), 11번째 입력으로 25%를 넘긴다.
+    final checker = solution.map((row) => List<int>.from(row)).toList();
+    for (var r = 0; r < 9; r++) {
+      for (var c = 0; c < 9; c++) {
+        if ((r + c) % 2 == 0) checker[r][c] = 0;
+      }
+    }
+    final presenter = await pumpGame(tester, board: checker);
+    for (final (r, c) in [
+      (0, 0),
+      (0, 2),
+      (0, 4),
+      (2, 0),
+      (2, 2),
+      (2, 4),
+      (4, 0),
+      (4, 4),
+      (6, 0),
+      (6, 2),
+    ]) {
+      presenter.selectCell(r, c);
+      presenter.setSelectedCellValue(solution[r][c]);
+      await tester.pump();
+    }
+    expect(presenter.progress, lessThan(0.25));
+    final haptics = trackHaptics(tester);
+    await input(tester, haptics, 8, 2, solution[8][2]);
+    expect(presenter.progress, greaterThanOrEqualTo(0.25));
     expect(haptics, ['lightImpact']);
+    await settle(tester);
+  });
+
+  testWidgets('a column completed alone: one heavy impact', (tester) async {
+    final presenter = await pumpGame(tester);
+    final haptics = trackHaptics(tester);
+    await input(tester, haptics, 0, 1, 3);
+    expect(presenter.getCellValue(0, 1), 3);
+    expect(haptics, ['heavyImpact']);
+    await settle(tester);
+  });
+
+  testWidgets('vibration off: a wrong answer is silent too', (tester) async {
+    final presenter = await pumpGame(tester, vibration: false);
+    final haptics = trackHaptics(tester);
+    await input(tester, haptics, 7, 7, 5);
+    expect(presenter.wrongCount, 1);
+    expect(haptics, isEmpty);
+    await settle(tester);
+  });
+
+  testWidgets('reduce motion keeps the strong haptics', (tester) async {
+    await pumpGame(tester, reduceMotion: true);
+    final haptics = trackHaptics(tester);
+    await input(tester, haptics, 7, 7, 5); // 오답
+    expect(haptics, ['heavyImpact']);
+    await settle(tester);
+  });
+
+  testWidgets('the undo button is hidden by default; the other actions stay',
+      (tester) async {
+    await pumpGame(tester);
+    expect(find.byKey(const ValueKey('game-action-undo')), findsNothing);
+    expect(find.byIcon(Icons.undo_rounded), findsNothing);
+    expect(find.byKey(const ValueKey('game-action-memo')), findsWidgets);
+    expect(find.byKey(const ValueKey('game-action-hint')), findsWidgets);
+    expect(find.byKey(const ValueKey('game-action-erase')), findsWidgets);
     await settle(tester);
   });
 

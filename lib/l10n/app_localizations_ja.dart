@@ -235,16 +235,33 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gameEraseShort => '消す';
 
   @override
-  String get gameMoreOptions => 'その他';
-
-  @override
-  String get gameMemoOnShort => 'メモ ON';
+  String get gameMemoStateOff => 'OFF';
 
   @override
   String get gameMemoStateOn => 'ON';
 
   @override
-  String get gameMemoStateOff => 'OFF';
+  String get gameMemoModeOffSemantics => 'メモモード オフ';
+
+  @override
+  String get gameMemoModeOnSemantics => 'メモモード オン';
+
+  @override
+  String gameHintSemanticsRemaining(int count) {
+    return 'ヒント、残り$count回';
+  }
+
+  @override
+  String get gameHintSemanticsNone => 'ヒントなし';
+
+  @override
+  String get gameEraseSemanticsSelected => '選択したマスを消す';
+
+  @override
+  String get gameMoreOptions => 'その他';
+
+  @override
+  String get gameMemoOnShort => 'メモ ON';
 
   @override
   String get gameMemoFocusShort => 'フォーカス';
@@ -272,12 +289,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get gameNumberInputTitle => '数字入力';
-
-  @override
-  String get gamePause => '一時停止';
-
-  @override
-  String get gameResume => '再開';
 
   @override
   String get gameAnswerPreview => '解答';
@@ -1260,14 +1271,20 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get gameResetDialogTitle => '最初からやり直す';
+  String get gameRestartMenuTitle => '最初からやり直す';
 
   @override
-  String get gameResetDialogBody =>
-      '入力した数字、メモ、ヒント、ミス回数、時間をすべて消して最初の状態に戻しますか？これまでのクリア記録は残ります。';
+  String get gameRestartMenuDescription => '入力した内容を消して最初の状態に戻します';
 
   @override
-  String get gameResetConfirm => 'やり直す';
+  String get gameRestartDialogTitle => '最初からやり直しますか？';
+
+  @override
+  String get gameRestartDialogBody =>
+      '入力した数字とメモ、時間・ヒントの使用・ミスの回数がすべてリセットされます。これまでの完了記録は残ります。';
+
+  @override
+  String get gameRestartConfirm => 'やり直す';
 
   @override
   String get gameNumberInputLegend => '小さい数字は残り個数、チェックは完了した数字です。';
@@ -1381,12 +1398,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get challengeTodayEyebrow => '今日の流れ';
-
-  @override
-  String get gamePausedTitle => '一時停止中';
-
-  @override
-  String get gamePausedBody => 'タイマーを止めて、盤面を隠しています。';
 
   @override
   String homeStreakChip(int count) {

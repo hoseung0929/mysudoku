@@ -245,16 +245,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gameEraseShort => 'Erase';
 
   @override
-  String get gameMoreOptions => 'More options';
-
-  @override
-  String get gameMemoOnShort => 'Memo ON';
+  String get gameMemoStateOff => 'OFF';
 
   @override
   String get gameMemoStateOn => 'ON';
 
   @override
-  String get gameMemoStateOff => 'OFF';
+  String get gameMemoModeOffSemantics => 'Notes mode off';
+
+  @override
+  String get gameMemoModeOnSemantics => 'Notes mode on';
+
+  @override
+  String gameHintSemanticsRemaining(int count) {
+    return 'Hint, $count left';
+  }
+
+  @override
+  String get gameHintSemanticsNone => 'No hints left';
+
+  @override
+  String get gameEraseSemanticsSelected => 'Erase selected cell';
+
+  @override
+  String get gameMoreOptions => 'More options';
+
+  @override
+  String get gameMemoOnShort => 'Memo ON';
 
   @override
   String get gameMemoFocusShort => 'Focus';
@@ -282,12 +299,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gameNumberInputTitle => 'Number input';
-
-  @override
-  String get gamePause => 'Pause';
-
-  @override
-  String get gameResume => 'Resume';
 
   @override
   String get gameAnswerPreview => 'Answer';
@@ -1360,14 +1371,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get gameResetDialogTitle => 'Restart from the beginning';
+  String get gameRestartMenuTitle => 'Restart from the beginning';
 
   @override
-  String get gameResetDialogBody =>
-      'Clear entered numbers, notes, hints, mistakes, and time, then return to the starting board? Your past clear records are kept.';
+  String get gameRestartMenuDescription =>
+      'Clear your input and go back to the starting board';
 
   @override
-  String get gameResetConfirm => 'Restart';
+  String get gameRestartDialogTitle => 'Start this puzzle over?';
+
+  @override
+  String get gameRestartDialogBody =>
+      'Your numbers, notes, time, hint usage, and mistakes are all reset. Your existing completion records are kept.';
+
+  @override
+  String get gameRestartConfirm => 'Restart';
 
   @override
   String get gameNumberInputLegend =>
@@ -1507,12 +1525,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get challengeTodayEyebrow => 'Today';
-
-  @override
-  String get gamePausedTitle => 'Paused';
-
-  @override
-  String get gamePausedBody => 'The timer is stopped and the board is hidden.';
 
   @override
   String homeStreakChip(int count) {

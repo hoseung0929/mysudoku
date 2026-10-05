@@ -114,51 +114,40 @@ void main() {
     }
   }
 
-  testWidgets('closing the hint panel and leaving keeps the hint used',
+  testWidgets(
+      'using a hint and leaving keeps the hint used and the filled cell',
       (tester) async {
     final presenter = await pumpGame(tester, const Size(390, 844));
     final maxHints = presenter.hintsRemaining;
-    await tester.tap(find.text('Hint'));
+    presenter.selectCell(0, 1);
+    await tester.pump(); // 선택이 반영되어 힌트 버튼이 켜진다.
+    await tester.tap(find.byKey(const ValueKey('game-action-hint')));
     await tester.pump();
-    await tester.tap(find.byTooltip('Close hint'));
-    await tester.pump();
+    expect(presenter.getCellValue(0, 1), 3);
     await leaveGame(tester);
 
     final saved = await loadSaved(tester);
     expect(saved!.hintsRemaining, maxHints - 1);
-    expect(saved.isResumable(userFilledCells: 0, emptyCells: 2), isTrue);
+    expect(saved.hintCells, contains('0,1'));
+    expect(saved.board[0][1], 3);
 
-    // 다시 열면 차감된 힌트 수가 그대로 복원된다.
-    // 첫 화면을 pop해 비어 있는 Navigator를 새 앱 트리로 교체한다.
+    // 다시 열면 차감된 힌트 수와 채워진 칸이 그대로 복원된다.
     await tester.pumpWidget(const SizedBox());
     final reopened =
         await pumpGame(tester, const Size(390, 844), restore: true);
     expect(reopened.hintsRemaining, maxHints - 1);
-    expect(reopened.getCellValue(0, 1), 0);
+    expect(reopened.getCellValue(0, 1), 3);
+    expect(reopened.isHintCell(0, 1), isTrue);
     await tester.pump(const Duration(seconds: 1));
-  });
-
-  testWidgets('leaving from hint step two without filling keeps it used',
-      (tester) async {
-    final presenter = await pumpGame(tester, const Size(390, 844));
-    final maxHints = presenter.hintsRemaining;
-    await tester.tap(find.text('Hint'));
-    await tester.pump();
-    await tester.tap(find.text('Tell me more'));
-    await tester.pump();
-    await leaveGame(tester);
-
-    final saved = await loadSaved(tester);
-    expect(saved!.hintsRemaining, maxHints - 1);
-    expect(saved.hintCells, isEmpty);
-    expect(saved.board[0][1], 0);
   });
 
   testWidgets('hint used then app backgrounded is saved immediately',
       (tester) async {
     final presenter = await pumpGame(tester, const Size(390, 844));
     final maxHints = presenter.hintsRemaining;
-    await tester.tap(find.text('Hint'));
+    presenter.selectCell(0, 1);
+    await tester.pump(); // 선택이 반영되어 힌트 버튼이 켜진다.
+    await tester.tap(find.byKey(const ValueKey('game-action-hint')));
     await tester.pump();
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);

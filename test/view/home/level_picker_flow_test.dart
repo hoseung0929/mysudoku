@@ -145,7 +145,7 @@ void main() {
     final presenter = presenterOf(tester);
     presenter.selectCell(0, 0);
     await tester.pump();
-    await tester.tap(find.text('Memo'));
+    await tester.tap(find.byKey(const ValueKey('game-action-memo')));
     await tester.pump();
     presenter.setSelectedCellValue(3);
     presenter.setSelectedCellValue(5);
@@ -204,7 +204,7 @@ void main() {
     presenter.selectCell(0, 0);
     presenter.setSelectedCellValue(_solution()[0][0]);
     presenter.selectCell(0, 1);
-    await tester.tap(find.text('Memo'));
+    await tester.tap(find.byKey(const ValueKey('game-action-memo')));
     await tester.pump();
     presenter.setSelectedCellValue(7);
     presenter.selectCell(0, 2);
@@ -213,11 +213,11 @@ void main() {
 
     presenter.selectCell(0, 0);
     await tester.pump();
-    await tester.tap(find.text('Erase'));
+    await tester.tap(find.byKey(const ValueKey('game-action-erase')));
     await tester.pump();
     presenter.selectCell(0, 2);
     await tester.pump();
-    await tester.tap(find.text('Erase'));
+    await tester.tap(find.byKey(const ValueKey('game-action-erase')));
     await tester.pump();
     await goBack(tester);
 

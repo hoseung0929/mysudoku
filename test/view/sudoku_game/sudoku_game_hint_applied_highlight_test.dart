@@ -106,9 +106,9 @@ void main() {
       tester.widget<SudokuBoardGrid>(find.byType(SudokuBoardGrid)).waveActive;
 
   Future<void> openAndFillHint(WidgetTester tester) async {
-    await tester.tap(find.text('Hint'));
+    // 선택한 칸의 정답이 바로 들어간다(설명 패널·`정답 넣기` 단계는 없다).
     await tester.pump();
-    await tester.tap(find.widgetWithText(TextButton, 'Fill in answer'));
+    await tester.tap(find.byKey(const ValueKey('game-action-hint')));
     await tester.pump();
   }
 
@@ -148,9 +148,9 @@ void main() {
   testWidgets('the answer and save are not delayed by the highlight',
       (tester) async {
     final presenter = await pumpGame(tester, const Size(390, 844));
-    await tester.tap(find.text('Hint'));
-    await tester.pump();
-    await tester.tap(find.widgetWithText(TextButton, 'Fill in answer'));
+    presenter.selectCell(0, 1);
+    await tester.pump(); // 선택이 반영되어 힌트 버튼이 켜진다.
+    await tester.tap(find.byKey(const ValueKey('game-action-hint')));
     // 애니메이션이 끝나기 전, 바로 다음 프레임에서 이미 반영돼 있다.
     await tester.pump();
     expect(presenter.getCellValue(0, 1), 3);

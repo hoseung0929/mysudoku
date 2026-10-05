@@ -76,7 +76,10 @@ class ResolvedFeedback {
 
 /// 피드백 우선순위: 퍼즐 완료 > 게임 오버·오답 > 행·열·박스 완성 > 숫자 1종 완료
 /// > 진행률 > 일반 정답. 상위 이벤트가 있는 입력에서는 하위 이벤트의 안내
-/// 문구와 진동을 생략한다.
+/// 문구와 진동을 생략한다(한 입력에는 진동이 한 번만 나간다).
+///
+/// 진동 세기: 완성·오답 heavy, 일반 정답 medium, 숫자 고정 정답·진행률 light,
+/// 메모 후보·칸 선택·지우기·되돌리기 selectionClick.
 abstract final class GameFeedbackResolver {
   static ResolvedFeedback resolve(InputFeedbackEvents e) {
     if (e.puzzleComplete) {
@@ -90,13 +93,13 @@ abstract final class GameFeedbackResolver {
       return ResolvedFeedback(
         message:
             e.wrongCount == null ? FeedbackMessage.none : FeedbackMessage.wrong,
-        haptic: FeedbackHaptic.mediumImpact,
+        haptic: FeedbackHaptic.heavyImpact,
       );
     }
     if (e.hasNewLine) {
       return ResolvedFeedback(
         message: FeedbackMessage.line,
-        haptic: FeedbackHaptic.mediumImpact,
+        haptic: FeedbackHaptic.heavyImpact,
         // 숫자 버튼의 팝·체크는 허용하되 9칸 전체 강조는 생략한다.
         digitPop: e.completedDigit != null,
       );
@@ -104,7 +107,7 @@ abstract final class GameFeedbackResolver {
     if (e.completedDigit != null) {
       return const ResolvedFeedback(
         message: FeedbackMessage.digit,
-        haptic: FeedbackHaptic.mediumImpact,
+        haptic: FeedbackHaptic.heavyImpact,
         digitBoardHighlight: true,
         digitPop: true,
       );
@@ -112,15 +115,17 @@ abstract final class GameFeedbackResolver {
     if (e.progressMilestone != null) {
       return const ResolvedFeedback(
         message: FeedbackMessage.progress,
-        haptic: FeedbackHaptic.selectionClick,
+        haptic: FeedbackHaptic.lightImpact,
         progressPenguin: true,
       );
     }
     if (e.correct && e.fromInput) {
       return ResolvedFeedback(
+        // 일반 정답은 중간 세기, 숫자 고정 입력은 칸 선택(selectionClick)과
+        // 구분되도록 가벼운 impact로 한다. heavy는 완성·오답에만 쓴다.
         haptic: e.fromLock
-            ? FeedbackHaptic.selectionClick
-            : FeedbackHaptic.lightImpact,
+            ? FeedbackHaptic.lightImpact
+            : FeedbackHaptic.mediumImpact,
       );
     }
     if (e.memo && e.fromInput) {

@@ -15,20 +15,20 @@ void main() {
     return GameFeedbackResolver.resolve(e);
   }
 
-  test('plain correct input: one light impact and no message', () {
+  test('plain correct input: one medium impact and no message', () {
     final r = resolve((e) => e
       ..fromInput = true
       ..correct = true);
-    expect(r.haptic, FeedbackHaptic.lightImpact);
+    expect(r.haptic, FeedbackHaptic.mediumImpact);
     expect(r.message, FeedbackMessage.none);
   });
 
-  test('plain correct input from a number lock is only a selection click', () {
+  test('correct input from a number lock is a light impact, not a click', () {
     final r = resolve((e) => e
       ..fromInput = true
       ..fromLock = true
       ..correct = true);
-    expect(r.haptic, FeedbackHaptic.selectionClick);
+    expect(r.haptic, FeedbackHaptic.lightImpact);
   });
 
   test('a hint fill is not a plain-input haptic', () {
@@ -43,14 +43,13 @@ void main() {
     expect(r.haptic, FeedbackHaptic.selectionClick);
   });
 
-  test('a completed digit: its message, one medium impact, board highlight',
-      () {
+  test('a completed digit: its message, one heavy impact, board highlight', () {
     final r = resolve((e) => e
       ..fromInput = true
       ..correct = true
       ..completedDigit = 7);
     expect(r.message, FeedbackMessage.digit);
-    expect(r.haptic, FeedbackHaptic.mediumImpact);
+    expect(r.haptic, FeedbackHaptic.heavyImpact);
     expect(r.digitBoardHighlight, isTrue);
     expect(r.digitPop, isTrue);
   });
@@ -63,7 +62,7 @@ void main() {
       ..lineDelta = rowDelta
       ..completedDigit = 7);
     expect(r.message, FeedbackMessage.line);
-    expect(r.haptic, FeedbackHaptic.mediumImpact);
+    expect(r.haptic, FeedbackHaptic.heavyImpact);
     expect(r.digitBoardHighlight, isFalse);
     expect(r.digitPop, isTrue); // 숫자 버튼 팝은 허용
   });
@@ -75,7 +74,7 @@ void main() {
       ..lineDelta = rowDelta
       ..progressMilestone = 50);
     expect(r.message, FeedbackMessage.line);
-    expect(r.haptic, FeedbackHaptic.mediumImpact);
+    expect(r.haptic, FeedbackHaptic.heavyImpact);
     expect(r.progressPenguin, isFalse);
   });
 
@@ -89,23 +88,23 @@ void main() {
     expect(r.progressPenguin, isFalse);
   });
 
-  test('a progress milestone alone: message, selection click, penguin', () {
+  test('a progress milestone alone: message, light impact, penguin', () {
     final r = resolve((e) => e
       ..fromInput = true
       ..correct = true
       ..progressMilestone = 75);
     expect(r.message, FeedbackMessage.progress);
-    expect(r.haptic, FeedbackHaptic.selectionClick);
+    expect(r.haptic, FeedbackHaptic.lightImpact);
     expect(r.progressPenguin, isTrue);
   });
 
-  test('a wrong answer: its message and one medium impact only', () {
+  test('a wrong answer: its message and one heavy impact only', () {
     final r = resolve((e) => e
       ..fromInput = true
       ..wrong = true
       ..wrongCount = (1, 3));
     expect(r.message, FeedbackMessage.wrong);
-    expect(r.haptic, FeedbackHaptic.mediumImpact);
+    expect(r.haptic, FeedbackHaptic.heavyImpact);
   });
 
   test('game over beats a wrong answer and has its own short pattern', () {

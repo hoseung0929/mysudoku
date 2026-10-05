@@ -10,6 +10,7 @@ import 'package:sudoku159/theme/app_theme.dart';
 import 'package:sudoku159/utils/app_logger.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_board_grid.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_game_screen.dart';
+import 'package:sudoku159/widgets/waddling_penguin_icon.dart';
 import 'package:sudoku159/widgets/progressive_blur_button.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:wakelock_plus_platform_interface/wakelock_plus_platform_interface.dart';
@@ -75,7 +76,8 @@ void main() {
           ),
           child: child!,
         ),
-        home: SudokuGameScreen(game: game, level: level),
+        // 되돌리기 버튼은 기본적으로 숨겨져 있어, 되돌리기 동작 테스트는 버튼을 켜서 돌린다.
+        home: SudokuGameScreen(game: game, level: level, showUndoButton: true),
       ),
     );
     await tester.pump();
@@ -131,6 +133,7 @@ void main() {
             gameNumber: 1,
           ),
           level: level,
+          showUndoButton: true,
         ),
       ),
     );
@@ -153,10 +156,7 @@ void main() {
 
   ProgressiveBlurButton buttonWithLabel(WidgetTester tester, String label) {
     return tester.widget<ProgressiveBlurButton>(
-      find.ancestor(
-        of: find.text(label),
-        matching: find.byType(ProgressiveBlurButton),
-      ),
+      find.byKey(ValueKey('game-action-${label.toLowerCase()}')),
     );
   }
 
@@ -171,7 +171,7 @@ void main() {
       testWidgets('undo button reverts the last input without refunding',
           (tester) async {
         final presenter = await pumpGame(tester, entry.value);
-        expect(find.text('Undo'), findsOneWidget);
+        expect(find.byKey(const ValueKey('game-action-undo')), findsOneWidget);
         expect(buttonWithLabel(tester, 'Undo').onPressed, isNull);
 
         await selectCell(tester, presenter, 1);
@@ -180,7 +180,7 @@ void main() {
         expect(presenter.wrongCount, 1);
         expect(buttonWithLabel(tester, 'Undo').onPressed, isNotNull);
 
-        await tester.tap(find.text('Undo'));
+        await tester.tap(find.byKey(const ValueKey('game-action-undo')));
         await tester.pump();
         expect(presenter.getCellValue(0, 1), 0);
         expect(presenter.wrongCount, 1);
@@ -194,42 +194,42 @@ void main() {
         expect(find.textContaining('OVERFLOWED'), findsNothing);
       });
 
-      testWidgets('pause hides the board, stops input, and resumes',
-          (tester) async {
+      testWidgets(
+          'the timer is plain info (no pause button); backgrounding still '
+          'pauses and resumes it', (tester) async {
         final presenter = await pumpGame(tester, entry.value);
         await selectCell(tester, presenter, 1);
         presenter.setSelectedCellValue(3);
         await tester.pump();
 
-        await tester.tap(find.byTooltip('Pause'));
+        // 수동 일시정지 UI는 없다: 툴팁·아이콘·덮개가 모두 없고 타이머를 눌러도 멈추지 않는다.
+        expect(find.byTooltip('Pause'), findsNothing);
+        expect(find.byTooltip('Resume'), findsNothing);
+        expect(find.byIcon(Icons.pause_rounded), findsNothing);
+        expect(find.byIcon(Icons.play_arrow_rounded), findsNothing);
+        expect(find.byKey(const ValueKey('game-pause-cover')), findsNothing);
+        await tester.tap(find.byType(WaddlingPenguinIcon), warnIfMissed: false);
+        await tester.pump();
+        expect(presenter.isPaused, isFalse);
+
+        // 앱 생명주기에 따른 자동 정지·재개는 그대로다(보드는 가리지 않는다).
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
         await tester.pump();
         expect(presenter.isPaused, isTrue);
-        expect(find.byKey(const ValueKey('game-pause-cover')), findsOneWidget);
-        expect(find.text('Paused'), findsOneWidget);
-        expect(buttonWithLabel(tester, 'Undo').onPressed, isNull);
+        expect(find.byKey(const ValueKey('game-pause-cover')), findsNothing);
         expect(buttonWithLabel(tester, 'Memo').onPressed, isNull);
-
         final secondsAtPause = presenter.seconds;
         await tester.pump(const Duration(seconds: 3));
         expect(presenter.seconds, secondsAtPause);
 
-        await tester.tap(find.widgetWithText(FilledButton, 'Resume'));
+        tester.binding
+            .handleAppLifecycleStateChanged(AppLifecycleState.resumed);
         await tester.pump();
         expect(presenter.isPaused, isFalse);
-        expect(find.byKey(const ValueKey('game-pause-cover')), findsNothing);
         expect(tester.takeException(), isNull);
       });
     });
   }
-
-  testWidgets('pause cover fits a small board with large text', (tester) async {
-    await pumpGame(tester, const Size(320, 568), textScale: 2.0);
-    await tester.tap(find.byTooltip('Pause'));
-    await tester.pump();
-    expect(find.byKey(const ValueKey('game-pause-cover')), findsOneWidget);
-    expect(tester.takeException(), isNull);
-    expect(find.textContaining('OVERFLOWED'), findsNothing);
-  });
 
   testWidgets('long-pressing Undo reapplies the last undone input',
       (tester) async {
@@ -238,11 +238,11 @@ void main() {
     presenter.setSelectedCellValue(3);
     await tester.pump();
 
-    await tester.tap(find.text('Undo'));
+    await tester.tap(find.byKey(const ValueKey('game-action-undo')));
     await tester.pump();
     expect(presenter.getCellValue(0, 1), 0);
 
-    await tester.longPress(find.text('Undo'));
+    await tester.longPress(find.byKey(const ValueKey('game-action-undo')));
     await tester.pump();
     expect(presenter.getCellValue(0, 1), 3);
     await tester.pump(const Duration(milliseconds: 1200));
@@ -278,7 +278,7 @@ void main() {
       presenter.setSelectedCellValue(3);
       await tester.pump();
 
-      await tester.tap(find.text('Undo'));
+      await tester.tap(find.byKey(const ValueKey('game-action-undo')));
       await tester.pump();
       final active =
           undoActiveOf(tester).entries.where((e) => e.value).map((e) => e.key);
@@ -303,11 +303,13 @@ void main() {
       presenter.setSelectedCellValue(4); // 행 0 완성(퍼즐은 (4,4)가 남아 안 끝남)
       await tester.pump();
 
-      await tester.tap(find.text('Undo')); // (0,2) 되돌림
+      await tester
+          .tap(find.byKey(const ValueKey('game-action-undo'))); // (0,2) 되돌림
       await tester.pump();
       expect(undoActiveOf(tester)['0,2'], isTrue);
 
-      await tester.tap(find.text('Undo')); // (0,1) 되돌림
+      await tester
+          .tap(find.byKey(const ValueKey('game-action-undo'))); // (0,1) 되돌림
       await tester.pump();
       final active =
           undoActiveOf(tester).entries.where((e) => e.value).map((e) => e.key);
@@ -361,7 +363,7 @@ void main() {
       await tester.pump();
       calls.clear();
 
-      await tester.tap(find.text('Undo'));
+      await tester.tap(find.byKey(const ValueKey('game-action-undo')));
       await tester.pump();
 
       final vibrateCalls =
@@ -394,7 +396,7 @@ void main() {
       await tester.pump();
       calls.clear();
 
-      await tester.tap(find.text('Undo'));
+      await tester.tap(find.byKey(const ValueKey('game-action-undo')));
       await tester.pump();
 
       // 동작 줄이기와 진동 설정은 분리돼 있어, 진동 설정이 켜져 있으면 유지된다.
@@ -428,14 +430,14 @@ void main() {
       expect(find.textContaining('filled in all the 3s'), findsNothing);
 
       // (0,1)을 지워 행을 다시 미완성으로 만든다.
-      await tester.tap(find.text('Erase'));
+      await tester.tap(find.byKey(const ValueKey('game-action-erase')));
       await tester.pump();
       expect(presenter.getCellValue(0, 1), 0);
       expect(lineCompleteActiveOf(tester).values.any((v) => v), isFalse);
 
       // 되돌리기로 (0,1)이 복원되며 행이 다시 완성되지만, 효과는
       // 재실행되지 않는다.
-      await tester.tap(find.text('Undo'));
+      await tester.tap(find.byKey(const ValueKey('game-action-undo')));
       await tester.pump();
       expect(presenter.getCellValue(0, 1), 3);
       expect(lineCompleteActiveOf(tester).values.any((v) => v), isFalse);
@@ -451,7 +453,7 @@ void main() {
       presenter.setSelectedCellValue(3);
       await tester.pump();
 
-      await tester.tap(find.byTooltip('Pause'));
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
       await tester.pump();
       expect(buttonWithLabel(tester, 'Undo').onPressed, isNull);
       expect(undoActiveOf(tester).values.any((v) => v), isFalse);
@@ -465,7 +467,7 @@ void main() {
       await selectCell(tester, presenter, 1);
       presenter.setSelectedCellValue(3);
       await tester.pump();
-      await tester.tap(find.text('Undo'));
+      await tester.tap(find.byKey(const ValueKey('game-action-undo')));
       await tester.pump(const Duration(milliseconds: 30));
 
       // 강조 타이머(140ms)가 끝나기 전에 화면을 통째로 치운다.

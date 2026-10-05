@@ -6,6 +6,7 @@ import 'package:sudoku159/model/sudoku_game.dart';
 import 'package:sudoku159/model/sudoku_level.dart';
 import 'package:sudoku159/presenter/game/sudoku_game_presenter.dart';
 import 'package:sudoku159/services/game/auto_notes_tip_service.dart';
+import 'package:sudoku159/services/game/game_state_service.dart';
 import 'package:sudoku159/theme/app_theme.dart';
 import 'package:sudoku159/utils/app_logger.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_board_grid.dart';
@@ -49,8 +50,9 @@ void main() {
     WidgetTester tester, {
     Size size = const Size(390, 844),
     bool reduceMotion = false,
+    bool restore = false,
   }) async {
-    SharedPreferences.setMockInitialValues({});
+    if (!restore) SharedPreferences.setMockInitialValues({});
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -74,6 +76,7 @@ void main() {
             gameNumber: 1,
           ),
           level: level,
+          restoreSavedSession: restore,
         ),
       ),
     );
@@ -100,147 +103,137 @@ void main() {
   /// 메모 버튼을 실제로 눌러서(프레젠터를 직접 건드리지 않고) 라벨이
   /// "Memo"↔"Memo ON"으로 정상적으로 다시 그려지게 한다.
   Future<void> tapMemoButton(WidgetTester tester) async {
-    final onFinder = find.text('Memo ON');
+    final onFinder = find.byKey(const ValueKey('game-action-memo'));
     final finder = onFinder.evaluate().isNotEmpty
         ? onFinder.first
-        : find.text('Memo').first;
+        : find.byKey(const ValueKey('game-action-memo'));
     await tapV(tester, finder);
     await tester.pump();
   }
 
-  testWidgets('long-pressing Memo with no existing notes fills all blanks',
+  // 자동 메모는 향후 유료 편의 기능으로 보존만 하고 사용자에게는 노출하지 않는다
+  // (`_autoNotesEnabled = false`). 후보 계산·`applyAutoNotes()` 단위 테스트는
+  // test/presenter/game/auto_notes_test.dart에서 그대로 유지한다.
+  const confirmTitle = 'Refill all notes?';
+  const tipText =
+      'Tip: long-press Notes to fill in all candidate numbers at once.';
+
+  testWidgets('long-pressing Memo does nothing: no notes, no dialog',
       (tester) async {
     final presenter = await pumpGame(tester);
-    await longPressV(tester, find.text('Memo').first);
+    await longPressV(tester, find.byKey(const ValueKey('game-action-memo')));
     await tester.pump();
 
-    expect(presenter.getCellNotes(0, 1), isNotEmpty);
-    expect(presenter.getCellNotes(0, 2), isNotEmpty);
-    expect(presenter.getCellNotes(4, 4), isNotEmpty);
-    expect(presenter.autoNotesUsed, isTrue);
-    expect(find.byIcon(Icons.auto_awesome), findsWidgets);
-  });
-
-  testWidgets(
-      'long-pressing Memo with existing notes asks to confirm; cancel keeps them',
-      (tester) async {
-    final presenter = await pumpGame(tester);
-    await tapMemoButton(tester); // 메모 모드 ON
-    presenter.selectCell(0, 1);
-    presenter.setSelectedCellValue(7);
-    final priorNotes = presenter.getCellNotes(0, 1);
-    expect(priorNotes, {7});
-
-    await longPressV(tester, find.text('Memo ON').first);
-    await tester.pump();
-    expect(find.text('Refill all notes?'), findsOneWidget);
-
-    await tapV(tester, find.text('Cancel'));
-    await tester.pumpAndSettle();
-    expect(presenter.getCellNotes(0, 1), priorNotes);
+    for (final cell in [(0, 1), (0, 2), (4, 4)]) {
+      expect(presenter.getCellNotes(cell.$1, cell.$2), isEmpty);
+    }
     expect(presenter.autoNotesUsed, isFalse);
+    expect(find.text(confirmTitle), findsNothing);
+    expect(find.byType(SnackBar), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 
-  testWidgets('confirming the refill replaces existing notes', (tester) async {
+  testWidgets('long-press with existing notes shows no confirm dialog',
+      (tester) async {
     final presenter = await pumpGame(tester);
     await tapMemoButton(tester); // 메모 모드 ON
     presenter.selectCell(0, 1);
     presenter.setSelectedCellValue(7);
     expect(presenter.getCellNotes(0, 1), {7});
 
-    await longPressV(tester, find.text('Memo ON').first);
+    await longPressV(tester, find.byKey(const ValueKey('game-action-memo')));
     await tester.pump();
-    await tapV(tester, find.text('Refill notes'));
-    await tester.pumpAndSettle();
-
-    expect(presenter.getCellNotes(0, 1), isNot({7}));
-    expect(presenter.autoNotesUsed, isTrue);
+    expect(find.text(confirmTitle), findsNothing);
+    expect(presenter.getCellNotes(0, 1), {7}); // 직접 쓴 메모는 그대로
+    expect(presenter.autoNotesUsed, isFalse);
   });
 
-  testWidgets('blocked while the hint panel is open', (tester) async {
-    final presenter = await pumpGame(tester);
-    await tapV(tester, find.text('Hint'));
-    await tester.pump();
-
-    // 힌트 패널이 열려 있으면 `_canUseAutoNotes`가 false가 되어
-    // `_buildMobileActionButton`이 메모 버튼을 감싸는 길게 누르기용
-    // GestureDetector 자체를 만들지 않는다(onLongPress가 null이면 감싸지
-    // 않음). 힌트 패널이 그 영역 전체를 히트테스트 차단 레이어로 덮고
-    // 있어 실제로 long-press를 실행하면 좌표가 다른 위젯에 맞아 hit-test
-    // 경고가 나므로, 대신 "길게 누르기 콜백이 아예 연결되지 않았는지"를
-    // 위젯 트리로 직접 확인한다.
-    final memoText = find.text('Memo').first;
+  testWidgets('the memo button has no auto-notes badge or long-press hook',
+      (tester) async {
+    await pumpGame(tester);
+    expect(find.byIcon(Icons.auto_awesome), findsNothing);
     final longPressWrapper = find.ancestor(
-      of: memoText,
+      of: find.byKey(const ValueKey('game-action-memo')),
       matching: find.byWidgetPredicate(
         (widget) => widget is GestureDetector && widget.onLongPress != null,
       ),
     );
     expect(longPressWrapper, findsNothing);
-
-    expect(presenter.autoNotesUsed, isFalse);
-    expect(find.text('Refill all notes?'), findsNothing);
-    expect(tester.takeException(), isNull);
   });
 
-  testWidgets('reduce motion applies instantly without errors', (tester) async {
-    final presenter = await pumpGame(tester, reduceMotion: true);
-    await longPressV(tester, find.text('Memo').first);
-    await tester.pump();
-    expect(presenter.autoNotesUsed, isTrue);
-    expect(tester.takeException(), isNull);
+  testWidgets('the memo button has no long-press accessibility hint',
+      (tester) async {
+    final handle = tester.ensureSemantics();
+    await pumpGame(tester);
+    final node =
+        tester.getSemantics(find.bySemanticsLabel('Notes mode off').first);
+    expect(node.hint, isNot(contains('long')));
+    expect(node.hint, isEmpty);
+    handle.dispose();
   });
 
-  testWidgets('closing the screen right after long-press does not crash',
+  testWidgets('normal memo mode toggling and manual candidates still work',
+      (tester) async {
+    final presenter = await pumpGame(tester);
+    expect(presenter.isMemoMode, isFalse);
+    await tapMemoButton(tester);
+    expect(presenter.isMemoMode, isTrue);
+    expect(find.byKey(const ValueKey('game-action-memo')), findsWidgets);
+
+    presenter.selectCell(0, 1);
+    presenter.setSelectedCellValue(7);
+    presenter.setSelectedCellValue(9);
+    expect(presenter.getCellNotes(0, 1), {7, 9});
+    presenter.setSelectedCellValue(7);
+    expect(presenter.getCellNotes(0, 1), {9});
+
+    await tapMemoButton(tester);
+    expect(presenter.isMemoMode, isFalse);
+  });
+
+  testWidgets('turning memo mode on no longer shows the auto-notes tip',
       (tester) async {
     await pumpGame(tester);
-    await longPressV(tester, find.text('Memo').first);
-    await tester.pump(const Duration(milliseconds: 20));
-    await tester.pumpWidget(const SizedBox());
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('turning memo mode on shows a one-time tip', (tester) async {
-    await pumpGame(tester);
-    await tapMemoButton(tester); // OFF -> ON, 최초 1회
-    await tester.pump();
-    expect(
-      find.text(
-        'Tip: long-press Notes to fill in all candidate numbers at once.',
-      ),
-      findsOneWidget,
-    );
-    expect(await AutoNotesTipService().hasShownTip(), isTrue);
-  });
-
-  testWidgets('the tip is not shown again once already recorded as seen',
-      (tester) async {
-    // 이전 세션에서 이미 안내를 봤다고 가정한다(별도 화면 인스턴스로 확인해
-    // SnackBar가 사라지는 타이밍에 기대지 않는다).
-    await pumpGame(tester);
-    await AutoNotesTipService().markTipShown();
     await tapMemoButton(tester); // OFF -> ON
     await tester.pump();
-    expect(
-      find.text(
-        'Tip: long-press Notes to fill in all candidate numbers at once.',
-      ),
-      findsNothing,
+    expect(find.text(tipText), findsNothing);
+    expect(find.byType(SnackBar), findsNothing);
+    // 안내를 봤다고 기록하지도 않는다(유료 기능 재개 때 처음부터 안내할 수 있게).
+    expect(await AutoNotesTipService().hasShownTip(), isFalse);
+  });
+
+  testWidgets('a saved session with autoNotesUsed restores without errors',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await GameStateService().saveSession(
+      levelName: level.name,
+      gameNumber: 1,
+      board: safeBoard,
+      notes: List.generate(9, (_) => List.generate(9, (_) => <int>{})),
+      elapsedSeconds: 40,
+      hintsRemaining: 3,
+      wrongCount: 0,
+      isMemoMode: false,
+      autoNotesUsed: true,
     );
+    final presenter = await pumpGame(tester, restore: true);
+    expect(presenter.autoNotesUsed, isTrue);
+    expect(find.byIcon(Icons.auto_awesome), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('small screen with large text has no overflow', (tester) async {
     await pumpGame(tester, size: const Size(320, 568));
-    await longPressV(tester, find.text('Memo').first);
+    await longPressV(tester, find.byKey(const ValueKey('game-action-memo')));
     await tester.pump();
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('tablet landscape has no overflow', (tester) async {
+  testWidgets('tablet landscape has no overflow and no badge', (tester) async {
     await pumpGame(tester, size: const Size(1024, 768));
-    await longPressV(tester, find.text('Memo').first);
+    await longPressV(tester, find.byKey(const ValueKey('game-action-memo')));
     await tester.pump();
+    expect(find.byIcon(Icons.auto_awesome), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }

@@ -247,16 +247,33 @@ class AppLocalizationsEs extends AppLocalizations {
   String get gameEraseShort => 'Borrar';
 
   @override
-  String get gameMoreOptions => 'Más opciones';
-
-  @override
-  String get gameMemoOnShort => 'Notas ON';
+  String get gameMemoStateOff => 'OFF';
 
   @override
   String get gameMemoStateOn => 'ON';
 
   @override
-  String get gameMemoStateOff => 'OFF';
+  String get gameMemoModeOffSemantics => 'Modo de notas desactivado';
+
+  @override
+  String get gameMemoModeOnSemantics => 'Modo de notas activado';
+
+  @override
+  String gameHintSemanticsRemaining(int count) {
+    return 'Pista, quedan $count';
+  }
+
+  @override
+  String get gameHintSemanticsNone => 'Sin pistas';
+
+  @override
+  String get gameEraseSemanticsSelected => 'Borrar la casilla seleccionada';
+
+  @override
+  String get gameMoreOptions => 'Más opciones';
+
+  @override
+  String get gameMemoOnShort => 'Notas ON';
 
   @override
   String get gameMemoFocusShort => 'Foco';
@@ -284,12 +301,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get gameNumberInputTitle => 'Entrada de números';
-
-  @override
-  String get gamePause => 'Pausa';
-
-  @override
-  String get gameResume => 'Reanudar';
 
   @override
   String get gameAnswerPreview => 'Respuesta';
@@ -1372,14 +1383,21 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get gameResetDialogTitle => 'Empezar de nuevo';
+  String get gameRestartMenuTitle => 'Empezar de nuevo';
 
   @override
-  String get gameResetDialogBody =>
-      '¿Borrar los números, notas, pistas, errores y el tiempo, y volver al tablero inicial? Tus registros de partidas completadas se conservan.';
+  String get gameRestartMenuDescription =>
+      'Borra lo que has introducido y vuelve al tablero inicial';
 
   @override
-  String get gameResetConfirm => 'Reiniciar';
+  String get gameRestartDialogTitle => '¿Empezar este puzle de nuevo?';
+
+  @override
+  String get gameRestartDialogBody =>
+      'Se reinician tus números y notas, el tiempo, el uso de pistas y los errores. Tus registros completados se conservan.';
+
+  @override
+  String get gameRestartConfirm => 'Empezar de nuevo';
 
   @override
   String get gameNumberInputLegend =>
@@ -1520,12 +1538,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get challengeTodayEyebrow => 'Hoy';
-
-  @override
-  String get gamePausedTitle => 'En pausa';
-
-  @override
-  String get gamePausedBody => 'El tiempo está detenido y el tablero, oculto.';
 
   @override
   String homeStreakChip(int count) {
