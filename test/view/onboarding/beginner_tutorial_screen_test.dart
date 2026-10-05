@@ -299,13 +299,9 @@ void main() {
     final chip = tester.getRect(
       find.byKey(const ValueKey('tutorial-rule-box')),
     );
-    final cardContent = tester.getRect(find
-        .ancestor(
-          of: find.byKey(const ValueKey('tutorial-rule-box')),
-          matching: find.byType(SingleChildScrollView),
-        )
-        .first);
-    expect(chip.bottom, lessThanOrEqualTo(cardContent.bottom + 0.5));
+    // 규칙 버튼이 카드 안에 있고, 아래 숫자패드와 겹치지 않는다.
+    final pad = tester.getRect(find.byKey(const ValueKey('tutorial-number-1')));
+    expect(chip.bottom, lessThanOrEqualTo(pad.top));
     expect(tester.takeException(), isNull);
   });
 

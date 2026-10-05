@@ -63,7 +63,7 @@ class _BeginnerTutorialScreenState extends State<BeginnerTutorialScreen> {
   bool _finished = false;
 
   /// 안내 카드의 고정 높이. 단계가 바뀌어도 보드·조작부 위치가 움직이지 않게 한다.
-  static const double _guideCardBaseHeight = 164;
+  static const double _guideCardBaseHeight = 176;
 
   /// 큰 글씨에서는 카드 안 글자·버튼이 잘리지 않도록 글자 배율만큼 카드를 키운다
   /// (보드가 그만큼 줄고, 그래도 모자라면 화면 전체가 스크롤된다).
@@ -518,7 +518,9 @@ class _BeginnerTutorialScreenState extends State<BeginnerTutorialScreen> {
       label: '${content.title}. ${content.body}',
       child: Container(
         width: double.infinity,
-        height: height,
+        // 기본은 고정 높이처럼 보이지만, 긴 문구(스페인어 등)나 좁은 폭에서는 내용만큼
+        // 늘어나 글자·버튼이 잘리지 않는다(모자란 높이는 화면 스크롤이 맡는다).
+        constraints: BoxConstraints(minHeight: height),
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
         decoration: BoxDecoration(
           color: colors.surface,
@@ -532,9 +534,8 @@ class _BeginnerTutorialScreenState extends State<BeginnerTutorialScreen> {
             alignment: Alignment.topLeft,
             children: [...previous, if (current != null) current],
           ),
-          child: SingleChildScrollView(
+          child: KeyedSubtree(
             key: ValueKey('$_step-$_showWrongInputHint-$_memoNoteAdded'),
-            physics: const ClampingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
