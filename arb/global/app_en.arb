@@ -849,7 +849,6 @@
     }
   },
   "gameRestartMenuTitle": "Restart from the beginning",
-  "gameRestartMenuDescription": "Clear your input and go back to the starting board",
   "gameRestartDialogTitle": "Start this puzzle over?",
   "gameRestartDialogBody": "Your numbers, notes, time, hint usage, and mistakes are all reset. Your existing completion records are kept.",
   "gameRestartConfirm": "Restart",

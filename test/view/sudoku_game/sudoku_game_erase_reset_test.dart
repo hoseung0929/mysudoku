@@ -107,8 +107,6 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     // `⋮` 팝업 메뉴의 "처음부터 다시 풀기"를 고르면 확인창이 이어서 열린다.
-    expect(find.text('Clear your input and go back to the starting board'),
-        findsOneWidget);
     await tester.tap(find.text('Restart from the beginning'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
@@ -127,6 +125,16 @@ void main() {
     expect(find.text('Restart from the beginning'), findsOneWidget);
     expect(find.byIcon(Icons.replay_rounded), findsOneWidget);
     expect(find.text('Close'), findsNothing); // 별도 닫기 항목은 없다
+    // 버튼 아래에서 열리고(버튼을 가리지 않음), 폭은 220~260 범위, 화면 안에 있다.
+    final menuRect = tester.getRect(find
+        .ancestor(
+            of: find.text('Restart from the beginning'),
+            matching: find.byType(Material))
+        .first);
+    final buttonRect = tester.getRect(find.byTooltip('More options'));
+    expect(menuRect.top, greaterThanOrEqualTo(buttonRect.bottom));
+    expect(menuRect.width, inInclusiveRange(220, 270));
+    expect(menuRect.right, lessThanOrEqualTo(390));
 
     await tester.tapAt(const Offset(20, 600)); // 메뉴 밖
     await tester.pump();

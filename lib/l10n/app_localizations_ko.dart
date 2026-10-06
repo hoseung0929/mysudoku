@@ -1280,9 +1280,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gameRestartMenuTitle => '처음부터 다시 풀기';
 
   @override
-  String get gameRestartMenuDescription => '입력한 내용을 지우고 처음 상태로 돌아가요';
-
-  @override
   String get gameRestartDialogTitle => '처음부터 다시 풀까요?';
 
   @override

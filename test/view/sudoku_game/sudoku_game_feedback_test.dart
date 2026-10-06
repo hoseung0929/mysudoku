@@ -350,7 +350,7 @@ void main() {
   });
 
   testWidgets(
-      'puzzle complete: no lower feedback, one heavy impact at the peak',
+      'puzzle complete: medium at input, heavy at the glow peak, popup after hold',
       (tester) async {
     final lastBlank = solution.map((r) => List<int>.from(r)).toList()
       ..[8][7] = 0;
@@ -360,15 +360,25 @@ void main() {
     expect(presenter.isGameComplete, isTrue);
     expect(find.textContaining('filled in all'), findsNothing);
     expect(find.textContaining('cleared'), findsNothing);
-    expect(haptics, isEmpty); // 입력 자체에서는 하위 진동 없음
-    // 글로우 정점(약 300ms) 전에는 울리지 않고, 그 직후 한 번 울린다.
-    await tester.pump(const Duration(milliseconds: 250));
-    expect(haptics, isEmpty);
+    expect(haptics, ['mediumImpact']); // 마지막 숫자 확정 순간
+    // 첫 번째 확산 정점(약 475ms) 전에는 더 울리지 않고, 그 직후 heavy 한 번.
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(haptics, ['mediumImpact']);
     await tester.pump(const Duration(milliseconds: 100));
-    expect(haptics, ['heavyImpact']);
+    expect(haptics, ['mediumImpact', 'heavyImpact']);
+    // 연출 중(1.3초)에는 오버레이가 있고 결과창은 아직 없다. 입력·뒤로 가기도 막힌다.
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(
+        find.byKey(const ValueKey('puzzle-complete-overlay')), findsOneWidget);
+    expect(find.byType(Dialog), findsNothing);
+    // 오버레이가 사라진 뒤 약 100ms 동안 완성된 보드만 보인다(팝업은 약 1.4초).
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(find.byKey(const ValueKey('puzzle-complete-overlay')), findsNothing);
+    expect(find.byType(Dialog), findsNothing);
+    await tester.pump(const Duration(milliseconds: 100));
     // 결과창이 열린 뒤에도 더 울리지 않는다.
     await tester.pump(const Duration(milliseconds: 600));
-    expect(haptics, ['heavyImpact']);
+    expect(haptics, ['mediumImpact', 'heavyImpact']);
     await settle(tester);
   });
 }

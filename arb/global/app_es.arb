@@ -656,7 +656,6 @@
   "levelBestTime": "Mejor tiempo {time}",
   "levelCellSemantics": "Puzle {number}, {status}",
   "gameRestartMenuTitle": "Empezar de nuevo",
-  "gameRestartMenuDescription": "Borra lo que has introducido y vuelve al tablero inicial",
   "gameRestartDialogTitle": "¿Empezar este puzle de nuevo?",
   "gameRestartDialogBody": "Se reinician tus números y notas, el tiempo, el uso de pistas y los errores. Tus registros completados se conservan.",
   "gameRestartConfirm": "Empezar de nuevo",

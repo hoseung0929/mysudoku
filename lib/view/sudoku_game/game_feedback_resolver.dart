@@ -83,8 +83,12 @@ class ResolvedFeedback {
 abstract final class GameFeedbackResolver {
   static ResolvedFeedback resolve(InputFeedbackEvents e) {
     if (e.puzzleComplete) {
-      // 완료 진동(heavy)은 결과 화면 직전 연출에서 따로 한 번 실행한다.
-      return const ResolvedFeedback(hideMessage: true);
+      // 마지막 숫자 확정 진동(medium). 글로우 정점의 heavy는 완료 연출에서
+      // 따로 한 번 실행한다.
+      return const ResolvedFeedback(
+        hideMessage: true,
+        haptic: FeedbackHaptic.mediumImpact,
+      );
     }
     if (e.gameOver) {
       return const ResolvedFeedback(haptic: FeedbackHaptic.gameOver);

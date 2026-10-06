@@ -125,7 +125,8 @@ void main() {
       ..progressMilestone = 75
       ..puzzleComplete = true);
     expect(r.message, FeedbackMessage.none);
-    expect(r.haptic, FeedbackHaptic.none);
+    // 마지막 숫자 확정 순간의 medium 하나만 남는다(heavy는 글로우 정점에서 따로).
+    expect(r.haptic, FeedbackHaptic.mediumImpact);
     expect(r.digitBoardHighlight, isFalse);
     expect(r.digitPop, isFalse);
     expect(r.progressPenguin, isFalse);

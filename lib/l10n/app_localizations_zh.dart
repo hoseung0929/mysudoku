@@ -1268,9 +1268,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gameRestartMenuTitle => '从头开始';
 
   @override
-  String get gameRestartMenuDescription => '清除已输入的内容，回到初始状态';
-
-  @override
   String get gameRestartDialogTitle => '要从头开始吗？';
 
   @override

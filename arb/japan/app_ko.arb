@@ -656,7 +656,6 @@
   "levelBestTime": "최고 기록 {time}",
   "levelCellSemantics": "{number}번 퍼즐, {status}",
   "gameRestartMenuTitle": "처음부터 다시 풀기",
-  "gameRestartMenuDescription": "입력한 내용을 지우고 처음 상태로 돌아가요",
   "gameRestartDialogTitle": "처음부터 다시 풀까요?",
   "gameRestartDialogBody": "입력한 숫자와 메모, 시간·힌트 사용·실수 횟수가 모두 초기화돼요. 기존 완료 기록은 유지돼요.",
   "gameRestartConfirm": "다시 풀기",

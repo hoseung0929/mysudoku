@@ -2366,12 +2366,6 @@ abstract class AppLocalizations {
   /// **'Restart from the beginning'**
   String get gameRestartMenuTitle;
 
-  /// No description provided for @gameRestartMenuDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear your input and go back to the starting board'**
-  String get gameRestartMenuDescription;
-
   /// No description provided for @gameRestartDialogTitle.
   ///
   /// In en, this message translates to:

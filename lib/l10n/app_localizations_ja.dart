@@ -1274,9 +1274,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gameRestartMenuTitle => '最初からやり直す';
 
   @override
-  String get gameRestartMenuDescription => '入力した内容を消して最初の状態に戻します';
-
-  @override
   String get gameRestartDialogTitle => '最初からやり直しますか？';
 
   @override

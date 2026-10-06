@@ -656,7 +656,6 @@
   "levelBestTime": "ベスト {time}",
   "levelCellSemantics": "パズル {number}、{status}",
   "gameRestartMenuTitle": "最初からやり直す",
-  "gameRestartMenuDescription": "入力した内容を消して最初の状態に戻します",
   "gameRestartDialogTitle": "最初からやり直しますか？",
   "gameRestartDialogBody": "入力した数字とメモ、時間・ヒントの使用・ミスの回数がすべてリセットされます。これまでの完了記録は残ります。",
   "gameRestartConfirm": "やり直す",

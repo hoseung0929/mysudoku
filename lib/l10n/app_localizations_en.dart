@@ -1374,10 +1374,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gameRestartMenuTitle => 'Restart from the beginning';
 
   @override
-  String get gameRestartMenuDescription =>
-      'Clear your input and go back to the starting board';
-
-  @override
   String get gameRestartDialogTitle => 'Start this puzzle over?';
 
   @override

@@ -30,6 +30,7 @@ class SudokuBoardGrid extends StatelessWidget {
     this.hintAppliedActive = const {},
     this.digitCompleteActive = const {},
     this.showCompletionGlow = false,
+    this.completionOrigin,
   });
 
   final SudokuGamePresenter presenter;
@@ -65,6 +66,9 @@ class SudokuBoardGrid extends StatelessWidget {
   // 퍼즐 완료 연출: 결과 다이얼로그가 뜨기 직전 잠깐(≈500ms, 동작 줄이기는
   // ≈100ms) 보드 전체에 겹쳐 그리는 완료 강조. true인 동안만 마운트된다.
   final bool showCompletionGlow;
+
+  /// 완료 연출의 출발 칸(마지막으로 숫자를 넣은 칸). null이면 보드 중앙.
+  final (int, int)? completionOrigin;
 
   @override
   Widget build(BuildContext context) {
@@ -416,6 +420,11 @@ class SudokuBoardGrid extends StatelessWidget {
                                             userNumberColor:
                                                 context.colors.boardUserNumber,
                                             playPopIn: isWave && !reduceMotion,
+                                            playCompletionPop:
+                                                showCompletionGlow &&
+                                                    !reduceMotion &&
+                                                    completionOrigin ==
+                                                        (row, col),
                                             row: row,
                                             col: col,
                                           )
@@ -483,6 +492,7 @@ class SudokuBoardGrid extends StatelessWidget {
     required Color digitOnBoard,
     required Color userNumberColor,
     required bool playPopIn,
+    bool playCompletionPop = false,
     required int row,
     required int col,
   }) {
@@ -508,6 +518,18 @@ class SudokuBoardGrid extends StatelessWidget {
                       color: userNumberColor,
                     ),
     );
+    if (playCompletionPop) {
+      // 퍼즐을 완성한 마지막 숫자: 일반 정답 팝보다 크게(0.92 → 1.12 → 1.0, 200ms).
+      return TweenAnimationBuilder<double>(
+        key: ValueKey('cell-complete-pop-$row-$col'),
+        tween: Tween(begin: 0.92, end: 1.0),
+        duration: const Duration(milliseconds: 200),
+        curve: const _PopScaleCurve(peakValue: 2.5),
+        builder: (context, scale, child) =>
+            Transform.scale(scale: scale, child: child),
+        child: text,
+      );
+    }
     if (!playPopIn) {
       return text;
     }
@@ -576,26 +598,26 @@ class SudokuBoardGrid extends StatelessWidget {
 /// 정확히 1.0으로 돌아온다 — Curve 계약(transform(1) == 1)을 지키므로
 /// 최종 값은 항상 [Tween]의 end와 같다.
 class _PopScaleCurve extends Curve {
-  const _PopScaleCurve();
+  const _PopScaleCurve({this.peakValue = 1.75});
 
   static const double _peakAt = 0.55;
-  static const double _peakValue = 1.75;
+  final double peakValue;
 
   @override
   double transform(double t) {
     if (t <= _peakAt) {
       final p = t / _peakAt;
-      return Curves.easeOut.transform(p) * _peakValue;
+      return Curves.easeOut.transform(p) * peakValue;
     }
     final p = (t - _peakAt) / (1 - _peakAt);
-    return _peakValue - Curves.easeInOut.transform(p) * (_peakValue - 1);
+    return peakValue - Curves.easeInOut.transform(p) * (peakValue - 1);
   }
 }
 
-/// 퍼즐 완료 연출: 결과 다이얼로그가 뜨기 직전 잠깐 보드 위에 겹쳐 그리는
-/// 완료 강조. 마운트되는 즉시 한 번만 재생하고(부모가 지속 시간이 지나면
-/// 위젯 자체를 내려서 끝낸다), 동작 줄이기에서는 파동 없이 짧은 단색
-/// 강조만 보여준다.
+/// 퍼즐 완료 연출: 결과 다이얼로그가 뜨기 직전 보드 위에 겹쳐 그리는 완료
+/// 강조. 마운트되는 즉시 한 번만 재생하고(부모가 지속 시간이 지나면 위젯
+/// 자체를 내려서 끝낸다), 중앙 맥동·박스 경계·입자를 [_PuzzleCompletePainter]
+/// 하나로 그린다. 동작 줄이기에서는 확산·입자 없이 짧은 단색 강조만 보여준다.
 class _PuzzleCompleteOverlay extends StatelessWidget {
   const _PuzzleCompleteOverlay({
     super.key,
@@ -624,68 +646,174 @@ class _PuzzleCompleteOverlay extends StatelessWidget {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: GameEffectsController.puzzleCompleteGlowDuration,
-      curve: Curves.easeOut,
-      builder: (context, t, child) {
-        // 글로우: 중앙에서 바깥으로 반경이 커지며 0→peak→0으로 밝아졌다 사라짐.
-        final glowOpacity =
-            (t < 0.35 ? t / 0.35 : (1 - t) / 0.65).clamp(0.0, 1.0).toDouble();
-        final glowRadius = 0.15 + t * 1.25;
-        // 3×3 박스 경계 강조: 글로우보다 살짝 늦게 나타났다 먼저 사라진다.
-        final boxT = ((t - 0.2) / 0.55).clamp(0.0, 1.0);
-        final boxOpacity =
-            (boxT < 0.5 ? boxT * 2 : (1 - boxT) * 2).clamp(0.0, 1.0);
-
-        return Stack(
-          children: [
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    radius: glowRadius,
-                    colors: [
-                      color.withValues(alpha: glowOpacity * 0.35),
-                      color.withValues(alpha: 0),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            if (boxOpacity > 0)
-              Opacity(
-                opacity: boxOpacity,
-                child: CustomPaint(
-                  painter: _BoxBoundaryPainter(color: color),
-                  size: Size.infinite,
-                ),
-              ),
-          ],
-        );
-      },
+      builder: (context, t, child) => ClipRect(
+        child: CustomPaint(
+          painter: _PuzzleCompletePainter(t: t, color: color),
+          size: Size.infinite,
+        ),
+      ),
     );
   }
 }
 
-/// 3×3 박스 경계(내부 구분선 4개)만 강조해서 그린다. 셀 격자 자체의 얇은
-/// 보더와 겹쳐도 자연스럽도록 두껍고 약간 반투명한 선을 쓴다.
-class _BoxBoundaryPainter extends CustomPainter {
-  const _BoxBoundaryPainter({required this.color});
+/// 완료 연출 한 프레임. 하나의 0~1 값 [t]를 [GameEffectsController.
+/// puzzleCompleteGlowDuration] 기준 시간(ms)으로 바꿔 구간별로 계산한다.
+/// - 150~550ms 보드 중앙에서 첫 번째 강한 확산(+ 3×3 박스 경계, 이때만)
+/// - 550~800ms 중앙 쪽으로 수축
+/// - 800~1150ms 두 번째 약한 확산(+ 파스텔 입자 10개)
+/// - 1150~1300ms 전체 페이드아웃
+class _PuzzleCompletePainter extends CustomPainter {
+  const _PuzzleCompletePainter({required this.t, required this.color});
 
+  final double t;
   final Color color;
+
+  static const double _spread1Start = 150;
+  static const double _spread1End = 550;
+  static const double _shrinkEnd = 800;
+  static const double _spread2End = 1150;
+  static const double _fadeEnd = 1300;
+
+  // 입자: (중심 x, 중심 y)는 보드 비율, 마지막은 모양(0 점, 1 마름모, 2 별).
+  static const List<(double, double, int)> _particles = [
+    (0.07, 0.07, 0),
+    (0.93, 0.07, 1),
+    (0.07, 0.93, 2),
+    (0.93, 0.93, 0),
+    (0.30, 0.04, 1),
+    (0.70, 0.04, 2),
+    (0.30, 0.96, 0),
+    (0.70, 0.96, 1),
+    (0.04, 0.50, 2),
+    (0.96, 0.50, 0),
+  ];
+
+  static double _unit(double ms, double from, double to) =>
+      ((ms - from) / (to - from)).clamp(0.0, 1.0).toDouble();
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withValues(alpha: 0.55)
-      ..strokeWidth = 2.5;
-    for (final fraction in [1 / 3, 2 / 3]) {
-      final x = size.width * fraction;
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
-      final y = size.height * fraction;
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    final ms =
+        t * GameEffectsController.puzzleCompleteGlowDuration.inMilliseconds;
+    final cell = size.width / 9;
+    final center = size.center(Offset.zero);
+    final fullRadius = size.width * 0.75; // 모서리까지 덮는 반경.
+
+    // 1) 중앙 맥동: 강한 확산 → 수축 → 약한 확산 → 페이드아웃.
+    double radius;
+    double opacity;
+    if (ms < _spread1End) {
+      final p =
+          Curves.easeOutCubic.transform(_unit(ms, _spread1Start, _spread1End));
+      radius = fullRadius * (0.12 + 0.88 * p);
+      opacity = 0.36 *
+          Curves.easeOut.transform(_unit(ms, _spread1Start, _spread1End));
+    } else if (ms < _shrinkEnd) {
+      final p =
+          Curves.easeInOutCubic.transform(_unit(ms, _spread1End, _shrinkEnd));
+      radius = fullRadius * (1 - 0.6 * p); // 최대 반경의 40%까지.
+      opacity = 0.36 + (0.20 - 0.36) * p;
+    } else {
+      final p =
+          Curves.easeOutCubic.transform(_unit(ms, _shrinkEnd, _spread2End));
+      radius = fullRadius * (0.4 + 0.65 * p);
+      opacity = 0.20 + 0.05 * p;
+    }
+    opacity *= 1 - _unit(ms, _spread2End, _fadeEnd);
+    if (opacity > 0.002) {
+      final light = Color.lerp(color, Colors.white, 0.35)!;
+      final shader = RadialGradient(
+        colors: [
+          const Color(0xFFFFF8E7).withValues(alpha: opacity * 0.6),
+          (ms < _shrinkEnd ? color : light).withValues(alpha: opacity),
+          (ms < _shrinkEnd ? color : light).withValues(alpha: opacity * 0.45),
+          color.withValues(alpha: 0),
+        ],
+        stops: const [0, 0.25, 0.7, 1],
+      ).createShader(Rect.fromCircle(center: center, radius: radius));
+      canvas.drawRect(Offset.zero & size, Paint()..shader = shader);
+    }
+
+    // 2) 3×3 박스 경계: 첫 번째 확산이 지나가는 순서(중앙 박스 → 변 → 모서리)로
+    // 한 번씩만 밝아졌다 사라진다.
+    final boxW = size.width / 3;
+    final boxH = size.height / 3;
+    for (var br = 0; br < 3; br++) {
+      for (var bc = 0; bc < 3; bc++) {
+        final ring = (br - 1).abs() + (bc - 1).abs();
+        final start = _spread1Start + ring * 90;
+        final bt = _unit(ms, start, start + 260);
+        final alpha = bt < 0.5 ? bt * 2 : (1 - bt) * 2;
+        if (alpha <= 0) continue;
+        canvas.drawRect(
+          Rect.fromLTWH(bc * boxW, br * boxH, boxW, boxH).deflate(1),
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2
+            ..color = color.withValues(alpha: 0.6 * alpha),
+        );
+      }
+    }
+
+    // 3) 파스텔 입자: 두 번째 확산이 시작될 때 가장자리에서 바깥쪽으로 살짝
+    // 퍼지며 사라진다(약 450ms).
+    final pt = _unit(ms, _shrinkEnd, _shrinkEnd + 450);
+    if (pt > 0 && pt < 1) {
+      final fade = (pt < 0.2 ? pt / 0.2 : (1 - pt) / 0.8).clamp(0.0, 1.0);
+      final colors = [
+        color,
+        Color.lerp(color, Colors.white, 0.55)!,
+        const Color(0xFFFFF8E7),
+      ];
+      for (var i = 0; i < _particles.length; i++) {
+        final (fx, fy, shape) = _particles[i];
+        final dx = fx - 0.5;
+        final dy = fy - 0.5;
+        final len = dx.abs() + dy.abs();
+        // 바깥 방향으로 보드 폭의 최대 3%만 이동 → 보드 밖으로 잘리지 않는다.
+        final move = size.width * 0.03 * Curves.easeOut.transform(pt);
+        final pos = Offset(
+          fx * size.width + dx / len * move,
+          fy * size.height + dy / len * move,
+        );
+        final r = cell * (0.13 + 0.05 * (i % 3));
+        final paint = Paint()
+          ..color = colors[i % 3].withValues(alpha: 0.85 * fade);
+        switch (shape) {
+          case 0:
+            canvas.drawCircle(pos, r * 0.7, paint);
+          case 1:
+            canvas.drawPath(_diamond(pos, r), paint);
+          default:
+            canvas.drawPath(_star(pos, r * 1.2), paint);
+        }
+      }
     }
   }
 
+  static Path _diamond(Offset c, double r) => Path()
+    ..moveTo(c.dx, c.dy - r)
+    ..lineTo(c.dx + r * 0.7, c.dy)
+    ..lineTo(c.dx, c.dy + r)
+    ..lineTo(c.dx - r * 0.7, c.dy)
+    ..close();
+
+  /// 네 꼭짓점이 뾰족한 별(오목한 마름모).
+  static Path _star(Offset c, double r) {
+    final k = r * 0.28;
+    return Path()
+      ..moveTo(c.dx, c.dy - r)
+      ..lineTo(c.dx + k, c.dy - k)
+      ..lineTo(c.dx + r, c.dy)
+      ..lineTo(c.dx + k, c.dy + k)
+      ..lineTo(c.dx, c.dy + r)
+      ..lineTo(c.dx - k, c.dy + k)
+      ..lineTo(c.dx - r, c.dy)
+      ..lineTo(c.dx - k, c.dy - k)
+      ..close();
+  }
+
   @override
-  bool shouldRepaint(covariant _BoxBoundaryPainter oldDelegate) =>
-      oldDelegate.color != color;
+  bool shouldRepaint(covariant _PuzzleCompletePainter old) =>
+      old.t != t || old.color != color;
 }

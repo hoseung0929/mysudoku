@@ -367,37 +367,65 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   /// 중복 실행되지 않도록 막는 가드.
   bool _completionSequenceStarted = false;
 
-  /// 완료 연출이 끝난 뒤 햅틱+다이얼로그를 여는 예약 작업. 화면이 닫히면
+  /// 완료 연출이 끝난 뒤 다이얼로그를 여는 예약 작업. 화면이 닫히면
   /// (뒤로 가기 등으로 dispose되면) 취소해 언마운트된 context로 다이얼로그를
   /// 열려는 시도를 막는다.
   Timer? _completionSequenceTimer;
+
+  /// 연출 오버레이를 끄는 예약 작업([_completionSequenceTimer]와 함께 취소한다).
+  Timer? _completionGlowEndTimer;
 
   /// 글로우 정점에 완료 햅틱을 울리는 예약 작업([_completionSequenceTimer]와
   /// 함께 취소한다).
   Timer? _completionHapticTimer;
 
-  /// 마지막 칸의 정답 강조 → 보드 글로우+박스 강조 → 햅틱 1회 → 결과
-  /// 다이얼로그 순서로 진행하는 퍼즐 완료 연출을 시작한다.
+  /// 마지막 숫자를 넣은 칸. 완료 연출(팝·빛 번짐·박스 경계)의 출발점이다.
+  (int, int)? _lastCorrectCell;
+
+  /// 완료 연출이 진행 중이고 결과 다이얼로그가 아직 뜨기 전인지. 이 동안은
+  /// 입력·버튼·뒤로 가기를 막는다.
+  bool get _isCompletionEffectRunning => _completionSequenceTimer != null;
+
+  void _cancelCompletionTimers() {
+    _completionSequenceTimer?.cancel();
+    _completionSequenceTimer = null;
+    _completionGlowEndTimer?.cancel();
+    _completionGlowEndTimer = null;
+    _completionHapticTimer?.cancel();
+    _completionHapticTimer = null;
+  }
+
+  /// 마지막 칸의 정답 강조(팝) → 보드 글로우+박스 경계+입자 → 완성 보드 잠깐
+  /// 유지 → 결과 다이얼로그 순서로 진행하는 퍼즐 완료 연출을 시작한다.
+  /// 햅틱은 마지막 숫자 확정 순간(medium)과 글로우 정점(heavy)에 한 번씩 울린다.
   void _beginPuzzleCompleteSequence() {
     if (_completionSequenceStarted) return;
     _completionSequenceStarted = true;
-    final duration = _effectsController.reduceMotion
+    final reduced = _effectsController.reduceMotion;
+    final glow = reduced
         ? GameEffectsController.puzzleCompleteGlowDurationReduced
         : GameEffectsController.puzzleCompleteGlowDuration;
+    final hold = reduced
+        ? GameEffectsController.puzzleCompleteHoldReduced
+        : GameEffectsController.puzzleCompleteHold;
     setState(() => _showCompletionGlow = true);
-    final hapticAt = duration < GameEffectsController.puzzleCompleteHapticAt
-        ? duration
-        : GameEffectsController.puzzleCompleteHapticAt;
+    final hapticAt =
+        reduced ? glow : GameEffectsController.puzzleCompleteHapticAt;
     _completionHapticTimer = Timer(hapticAt, () {
       _completionHapticTimer = null;
       if (mounted && _isVibrationEnabled) {
         unawaited(HapticFeedback.heavyImpact());
       }
     });
-    _completionSequenceTimer = Timer(duration, () {
-      _completionSequenceTimer = null;
+    _completionGlowEndTimer = Timer(glow, () {
+      _completionGlowEndTimer = null;
       if (!mounted) return;
       setState(() => _showCompletionGlow = false);
+    });
+    _completionSequenceTimer = Timer(glow + hold, () {
+      _completionSequenceTimer = null;
+      if (!mounted) return;
+      setState(() {});
       _showGameCompleteDialog();
     });
   }
@@ -492,7 +520,10 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     if (resolved.progressPenguin) {
       _triggerPenguinBurst(duration: const Duration(milliseconds: 1500));
     }
-    if (_isVibrationEnabled) {
+    // 동작 줄이기에서는 완료 햅틱을 글로우 시점의 한 번으로 줄인다.
+    final skipForReducedCompletion =
+        events.puzzleComplete && _effectsController.reduceMotion;
+    if (_isVibrationEnabled && !skipForReducedCompletion) {
       unawaited(_performHaptic(resolved.haptic));
     }
   }
@@ -808,6 +839,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
             isMounted: () => mounted,
           );
         }
+        _lastCorrectCell = (row, col);
         // 힌트로 채웠든 직접 입력했든, 이 입력으로 어떤 숫자가 9개 모두
         // 채워졌다면 완료 반응을 준다(둘 다 정답 입력이라는 점은 같다).
         _recordFeedback((e) => e.correct = true);
@@ -879,10 +911,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   Future<void> _resetAndRestartCurrentGame() async {
     await _clearCurrentGameState();
     if (!mounted) return;
-    _completionSequenceTimer?.cancel();
-    _completionSequenceTimer = null;
-    _completionHapticTimer?.cancel();
-    _completionHapticTimer = null;
+    _cancelCompletionTimers();
     _numberPopTimer?.cancel();
     _numberPopTimer = null;
     setState(() {
@@ -974,8 +1003,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       t.cancel();
     }
     _wrongCellTimers.clear();
-    _completionSequenceTimer?.cancel();
-    _completionHapticTimer?.cancel();
+    _cancelCompletionTimers();
     _numberPopTimer?.cancel();
     _penguinActiveTimer?.cancel();
     _timeNotifier.dispose();
@@ -1011,12 +1039,16 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
+        if (_isCompletionEffectRunning) return;
         unawaited(_popAfterSaving());
       },
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: _buildAppBar(),
-        body: _buildBody(),
+        body: IgnorePointer(
+          ignoring: _isCompletionEffectRunning,
+          child: _buildBody(),
+        ),
       ),
     );
   }
@@ -1126,8 +1158,12 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     final palette = LevelStatusPalette.of(context);
     return PopupMenuButton<String>(
       tooltip: l10n.gameMoreOptions,
+      enabled: !_isCompletionEffectRunning,
       icon: Icon(Icons.more_vert, size: 22, color: context.colors.textPrimary),
       padding: EdgeInsets.zero,
+      // 버튼 아래에서 열어 제목·타이머를 가리지 않는다.
+      position: PopupMenuPosition.under,
+      offset: const Offset(0, 6),
       // 앱 스타일: 둥근 16 모서리, surface 배경, 약한 그림자.
       color: Theme.of(context).colorScheme.surface,
       surfaceTintColor: Colors.transparent,
@@ -1137,58 +1173,49 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: palette.completedBorder),
       ),
-      constraints: const BoxConstraints(minWidth: 240, maxWidth: 300),
+      constraints: const BoxConstraints(minWidth: 220, maxWidth: 270),
       onSelected: (_) => _showResetCurrentGameDialog(),
       itemBuilder: (context) => [
         PopupMenuItem<String>(
           value: 'restart',
           enabled: _canResetCurrentGame,
-          height: 64,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Row(
-            children: [
-              ExcludeSemantics(
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: palette.completedBackground,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.replay_rounded,
-                    size: 22,
-                    color: palette.primaryPurple,
+          height: 52,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Semantics(
+            label: l10n.gameRestartMenuTitle,
+            excludeSemantics: true,
+            child: Row(
+              children: [
+                ExcludeSemantics(
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: palette.completedBackground,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.replay_rounded,
+                      size: 21,
+                      color: palette.primaryPurple,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.gameRestartMenuTitle,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: palette.primaryText,
-                      ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l10n.gameRestartMenuTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: palette.primaryText,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      l10n.gameRestartMenuDescription,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        height: 1.3,
-                        color: palette.secondaryText,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
@@ -1725,6 +1752,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                 hintAppliedActive: _effectsController.hintAppliedActive,
                 digitCompleteActive: _effectsController.digitCompleteActive,
                 showCompletionGlow: _showCompletionGlow,
+                completionOrigin: _lastCorrectCell,
                 highlightedMemoNumber:
                     _memoHighlightEnabled && _featurePolicy.memoEnabled
                         ? _memoFocusNumber

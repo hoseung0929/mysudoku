@@ -1386,10 +1386,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get gameRestartMenuTitle => 'Empezar de nuevo';
 
   @override
-  String get gameRestartMenuDescription =>
-      'Borra lo que has introducido y vuelve al tablero inicial';
-
-  @override
   String get gameRestartDialogTitle => '¿Empezar este puzle de nuevo?';
 
   @override

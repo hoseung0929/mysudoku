@@ -117,20 +117,25 @@ class GameEffectsController {
   /// 반드시 이 상수를 그대로 사용해야 총 시간이 어긋나지 않는다.
   static const Duration effectFadeDuration = Duration(milliseconds: 60);
 
-  /// 퍼즐 완료 연출(글로우+박스 강조) 전체 길이. 게임 화면은 이 값이 지난
-  /// 뒤 햅틱 1회와 함께 결과 다이얼로그를 연다 — 보드 위젯의 글로우
-  /// 애니메이션 길이와 반드시 같아야 다이얼로그가 뜨는 순간과 글로우가
-  /// 사라지는 순간이 어긋나지 않는다.
+  /// 퍼즐 완료 연출(글로우·박스 경계·입자) 전체 길이. 마지막 숫자 확정 직후부터
+  /// 시작하고, 보드 위젯의 오버레이 애니메이션 길이와 반드시 같아야 한다.
   static const Duration puzzleCompleteGlowDuration =
-      Duration(milliseconds: 850);
+      Duration(milliseconds: 1300);
 
-  /// 완료 햅틱을 울리는 시점. 글로우가 가장 밝은 때(전체의 35%, 약 300ms)에
-  /// 맞춘다. 동작 줄이기에서는 짧은 연출 끝에서 함께 울린다.
-  static const Duration puzzleCompleteHapticAt = Duration(milliseconds: 300);
+  /// 연출이 끝난 뒤 완성된 보드를 그대로 보여 주는 시간. 결과 다이얼로그는
+  /// [puzzleCompleteGlowDuration] + 이 값(약 1,400ms)에 연다.
+  static const Duration puzzleCompleteHold = Duration(milliseconds: 100);
+
+  /// 완료 햅틱(heavy)을 울리는 시점. 첫 번째 확산이 가장 크게 보이는 때에 맞춘다.
+  /// 마지막 숫자 확정 순간의 medium과 400ms 이상 떨어져 연속 진동으로 느껴지지 않는다.
+  static const Duration puzzleCompleteHapticAt = Duration(milliseconds: 475);
 
   /// 동작 줄이기에서의 완료 연출 길이(짧은 단색 강조만).
   static const Duration puzzleCompleteGlowDurationReduced =
-      Duration(milliseconds: 100);
+      Duration(milliseconds: 150);
+
+  /// 동작 줄이기에서 단색 강조 뒤 팝업까지의 짧은 유지 시간(팝업은 약 180ms에 뜬다).
+  static const Duration puzzleCompleteHoldReduced = Duration(milliseconds: 30);
 
   void resetForBoard({
     required List<List<int>> board,

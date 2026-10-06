@@ -656,7 +656,6 @@
   "levelBestTime": "最佳用时 {time}",
   "levelCellSemantics": "第 {number} 题，{status}",
   "gameRestartMenuTitle": "从头开始",
-  "gameRestartMenuDescription": "清除已输入的内容，回到初始状态",
   "gameRestartDialogTitle": "要从头开始吗？",
   "gameRestartDialogBody": "已输入的数字和笔记、用时、提示使用和错误次数都会重置。已有的完成记录会保留。",
   "gameRestartConfirm": "重新开始",
