@@ -120,15 +120,20 @@ class GameEffectsController {
   /// 퍼즐 완료 연출(글로우·박스 경계·입자) 전체 길이. 마지막 숫자 확정 직후부터
   /// 시작하고, 보드 위젯의 오버레이 애니메이션 길이와 반드시 같아야 한다.
   static const Duration puzzleCompleteGlowDuration =
-      Duration(milliseconds: 1300);
+      Duration(milliseconds: 2325);
 
-  /// 연출이 끝난 뒤 완성된 보드를 그대로 보여 주는 시간. 결과 다이얼로그는
-  /// [puzzleCompleteGlowDuration] + 이 값(약 1,400ms)에 연다.
-  static const Duration puzzleCompleteHold = Duration(milliseconds: 100);
+  /// 맥동 구간표(첫 확산 150~550ms … 페이드 ~1,300ms)에 곱하는 느림 배율.
+  /// [puzzleCompleteGlowDuration]은 기준 1,550ms에 이 값을 곱한 길이다.
+  static const double puzzleCompleteTimeScale = 1.5;
+
+  /// 결과 다이얼로그를 연출이 끝나기 이만큼 먼저(마지막 페이드아웃 중) 연다.
+  /// 연출이 완전히 사라진 뒤 빈 보드 구간을 두면 팝업이 뚝 끊겨 뜨는 느낌이라,
+  /// 마지막 빛이 옅어지는 동안 팝업이 겹쳐 나타나게 한다(약 2,200ms).
+  static const Duration puzzleCompleteDialogLead = Duration(milliseconds: 125);
 
   /// 완료 햅틱(heavy)을 울리는 시점. 첫 번째 확산이 가장 크게 보이는 때에 맞춘다.
   /// 마지막 숫자 확정 순간의 medium과 400ms 이상 떨어져 연속 진동으로 느껴지지 않는다.
-  static const Duration puzzleCompleteHapticAt = Duration(milliseconds: 475);
+  static const Duration puzzleCompleteHapticAt = Duration(milliseconds: 710);
 
   /// 동작 줄이기에서의 완료 연출 길이(짧은 단색 강조만).
   static const Duration puzzleCompleteGlowDurationReduced =

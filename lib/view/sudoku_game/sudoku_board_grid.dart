@@ -656,23 +656,25 @@ class _PuzzleCompleteOverlay extends StatelessWidget {
   }
 }
 
-/// 완료 연출 한 프레임. 하나의 0~1 값 [t]를 [GameEffectsController.
-/// puzzleCompleteGlowDuration] 기준 시간(ms)으로 바꿔 구간별로 계산한다.
+/// 완료 연출 한 프레임. 하나의 0~1 값 [t]를 기준 시간(ms)으로 바꿔 구간별로 계산한다.
 /// - 150~550ms 보드 중앙에서 첫 번째 강한 확산(+ 3×3 박스 경계, 이때만)
-/// - 550~800ms 중앙 쪽으로 수축
-/// - 800~1150ms 두 번째 약한 확산(+ 파스텔 입자 10개)
-/// - 1150~1300ms 전체 페이드아웃
+/// - 550~750ms 중앙 쪽으로 수축, 750~1000ms 두 번째 확산(중간)
+/// - 1000~1150ms 수축, 1150~1400ms 세 번째 확산(약함, + 파스텔 입자 10개)
+/// - 1400~1550ms 전체 페이드아웃
 class _PuzzleCompletePainter extends CustomPainter {
   const _PuzzleCompletePainter({required this.t, required this.color});
 
   final double t;
   final Color color;
 
+  // 기준 구간표(ms). 실제 재생은 [GameEffectsController.puzzleCompleteTimeScale]배로 느려진다.
   static const double _spread1Start = 150;
   static const double _spread1End = 550;
-  static const double _shrinkEnd = 800;
-  static const double _spread2End = 1150;
-  static const double _fadeEnd = 1300;
+  static const double _shrink1End = 750;
+  static const double _spread2End = 1000;
+  static const double _shrink2End = 1150;
+  static const double _spread3End = 1400;
+  static const double _fadeEnd = 1550;
 
   // 입자: (중심 x, 중심 y)는 보드 비율, 마지막은 모양(0 점, 1 마름모, 2 별).
   static const List<(double, double, int)> _particles = [
@@ -693,40 +695,54 @@ class _PuzzleCompletePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final ms =
-        t * GameEffectsController.puzzleCompleteGlowDuration.inMilliseconds;
+    // 구간표는 기준 1,300ms 기준이라 느림 배율만큼 나눠 환산한다.
+    final ms = t *
+        GameEffectsController.puzzleCompleteGlowDuration.inMilliseconds /
+        GameEffectsController.puzzleCompleteTimeScale;
     final cell = size.width / 9;
     final center = size.center(Offset.zero);
     final fullRadius = size.width * 0.75; // 모서리까지 덮는 반경.
 
-    // 1) 중앙 맥동: 강한 확산 → 수축 → 약한 확산 → 페이드아웃.
+    // 1) 중앙 맥동: 강한 확산 → 수축 → 중간 확산 → 수축 → 약한 확산 → 페이드아웃.
+    //    확산마다 반경은 같고 불투명도만 줄어든다(0.36 → 0.26 → 0.20).
     double radius;
     double opacity;
+    var tint = color;
     if (ms < _spread1End) {
+      final u = _unit(ms, _spread1Start, _spread1End);
+      radius = fullRadius * (0.12 + 0.88 * Curves.easeOutCubic.transform(u));
+      opacity = 0.36 * Curves.easeOut.transform(u);
+    } else if (ms < _shrink1End) {
       final p =
-          Curves.easeOutCubic.transform(_unit(ms, _spread1Start, _spread1End));
-      radius = fullRadius * (0.12 + 0.88 * p);
-      opacity = 0.36 *
-          Curves.easeOut.transform(_unit(ms, _spread1Start, _spread1End));
-    } else if (ms < _shrinkEnd) {
-      final p =
-          Curves.easeInOutCubic.transform(_unit(ms, _spread1End, _shrinkEnd));
+          Curves.easeInOutCubic.transform(_unit(ms, _spread1End, _shrink1End));
       radius = fullRadius * (1 - 0.6 * p); // 최대 반경의 40%까지.
-      opacity = 0.36 + (0.20 - 0.36) * p;
+      opacity = 0.36 + (0.18 - 0.36) * p;
+    } else if (ms < _spread2End) {
+      final p =
+          Curves.easeOutCubic.transform(_unit(ms, _shrink1End, _spread2End));
+      radius = fullRadius * (0.4 + 0.6 * p);
+      opacity = 0.18 + (0.26 - 0.18) * p;
+      tint = Color.lerp(color, Colors.white, 0.2)!;
+    } else if (ms < _shrink2End) {
+      final p =
+          Curves.easeInOutCubic.transform(_unit(ms, _spread2End, _shrink2End));
+      radius = fullRadius * (1 - 0.6 * p);
+      opacity = 0.26 + (0.15 - 0.26) * p;
+      tint = Color.lerp(color, Colors.white, 0.2)!;
     } else {
       final p =
-          Curves.easeOutCubic.transform(_unit(ms, _shrinkEnd, _spread2End));
+          Curves.easeOutCubic.transform(_unit(ms, _shrink2End, _spread3End));
       radius = fullRadius * (0.4 + 0.65 * p);
-      opacity = 0.20 + 0.05 * p;
+      opacity = 0.15 + (0.20 - 0.15) * p;
+      tint = Color.lerp(color, Colors.white, 0.35)!;
     }
-    opacity *= 1 - _unit(ms, _spread2End, _fadeEnd);
+    opacity *= 1 - _unit(ms, _spread3End, _fadeEnd);
     if (opacity > 0.002) {
-      final light = Color.lerp(color, Colors.white, 0.35)!;
       final shader = RadialGradient(
         colors: [
           const Color(0xFFFFF8E7).withValues(alpha: opacity * 0.6),
-          (ms < _shrinkEnd ? color : light).withValues(alpha: opacity),
-          (ms < _shrinkEnd ? color : light).withValues(alpha: opacity * 0.45),
+          tint.withValues(alpha: opacity),
+          tint.withValues(alpha: opacity * 0.45),
           color.withValues(alpha: 0),
         ],
         stops: const [0, 0.25, 0.7, 1],
@@ -755,9 +771,9 @@ class _PuzzleCompletePainter extends CustomPainter {
       }
     }
 
-    // 3) 파스텔 입자: 두 번째 확산이 시작될 때 가장자리에서 바깥쪽으로 살짝
+    // 3) 파스텔 입자: 마지막(세 번째) 확산이 시작될 때 가장자리에서 바깥쪽으로 살짝
     // 퍼지며 사라진다(약 450ms).
-    final pt = _unit(ms, _shrinkEnd, _shrinkEnd + 450);
+    final pt = _unit(ms, _shrink2End, _shrink2End + 450);
     if (pt > 0 && pt < 1) {
       final fade = (pt < 0.2 ? pt / 0.2 : (1 - pt) / 0.8).clamp(0.0, 1.0);
       final colors = [

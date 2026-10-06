@@ -407,7 +407,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         : GameEffectsController.puzzleCompleteGlowDuration;
     final hold = reduced
         ? GameEffectsController.puzzleCompleteHoldReduced
-        : GameEffectsController.puzzleCompleteHold;
+        : -GameEffectsController.puzzleCompleteDialogLead;
     setState(() => _showCompletionGlow = true);
     final hapticAt =
         reduced ? glow : GameEffectsController.puzzleCompleteHapticAt;

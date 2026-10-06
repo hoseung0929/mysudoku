@@ -361,21 +361,23 @@ void main() {
     expect(find.textContaining('filled in all'), findsNothing);
     expect(find.textContaining('cleared'), findsNothing);
     expect(haptics, ['mediumImpact']); // 마지막 숫자 확정 순간
-    // 첫 번째 확산 정점(약 475ms) 전에는 더 울리지 않고, 그 직후 heavy 한 번.
+    // 첫 번째 확산 정점(약 710ms) 전에는 더 울리지 않고, 그 직후 heavy 한 번.
     await tester.pump(const Duration(milliseconds: 400));
     expect(haptics, ['mediumImpact']);
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 350));
     expect(haptics, ['mediumImpact', 'heavyImpact']);
-    // 연출 중(1.3초)에는 오버레이가 있고 결과창은 아직 없다. 입력·뒤로 가기도 막힌다.
-    await tester.pump(const Duration(milliseconds: 500));
+    // 연출 중(2.3초)에는 오버레이가 있고 결과창은 아직 없다.
+    await tester.pump(const Duration(milliseconds: 1300));
     expect(
         find.byKey(const ValueKey('puzzle-complete-overlay')), findsOneWidget);
-    expect(find.byType(Dialog), findsNothing);
-    // 오버레이가 사라진 뒤 약 100ms 동안 완성된 보드만 보인다(팝업은 약 1.4초).
-    await tester.pump(const Duration(milliseconds: 350));
+    // 팝업은 마지막 빛이 옅어지는 중(약 2.2초)에 예약된다. 오버레이는 약 2.3초에 사라진다
+    // (결과창 자체는 기록 저장 후 열려 위젯 테스트에서는 확인하지 않는다).
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pump(const Duration(milliseconds: 30));
+    expect(
+        find.byKey(const ValueKey('puzzle-complete-overlay')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 150));
     expect(find.byKey(const ValueKey('puzzle-complete-overlay')), findsNothing);
-    expect(find.byType(Dialog), findsNothing);
-    await tester.pump(const Duration(milliseconds: 100));
     // 결과창이 열린 뒤에도 더 울리지 않는다.
     await tester.pump(const Duration(milliseconds: 600));
     expect(haptics, ['mediumImpact', 'heavyImpact']);
