@@ -26,7 +26,7 @@ import 'package:sudoku159/services/game/number_lock_tip_service.dart';
 import 'package:sudoku159/view/sudoku_game/game_feedback_resolver.dart';
 import 'package:sudoku159/view/home/level_picker_screen.dart';
 import 'package:sudoku159/theme/level_status_colors.dart';
-import 'package:sudoku159/widgets/keep_words_text.dart';
+import 'package:sudoku159/widgets/sentence_text.dart';
 import 'package:sudoku159/widgets/progressive_blur_button.dart';
 import 'package:sudoku159/widgets/waddling_penguin_icon.dart';
 
@@ -1399,14 +1399,12 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                       icon: Icons.edit_note,
                                       buttonKey:
                                           const ValueKey('game-action-memo'),
-                                      imageDisplaySize: 30,
+                                      imageDisplaySize: 28,
                                       activeBackgroundColor:
                                           _memoActiveBackground(),
                                       activeBorderColor: _memoActiveBorder(),
                                       activeLabelColor: _memoActiveLabel(),
-                                      imageAsset: _presenter.isMemoMode
-                                          ? _memoOnImage
-                                          : _memoOffImage,
+                                      imageAsset: _memoImage,
                                       label: _presenter.isMemoMode
                                           ? l10n.gameMemoOnShort
                                           : l10n.gameMemoShort,
@@ -1441,7 +1439,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                                       icon: Icons.backspace_outlined,
                                       buttonKey:
                                           const ValueKey('game-action-erase'),
-                                      imageDisplaySize: 34,
+                                      imageDisplaySize: 32,
                                       imageAsset: _eraseImage,
                                       dimWhenDisabled: true,
                                       semanticsLabel: _canEraseSelection
@@ -1604,13 +1602,11 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                               _buildMobileActionButton(
                                 icon: Icons.edit_note,
                                 buttonKey: const ValueKey('game-action-memo'),
-                                imageDisplaySize: 30,
+                                imageDisplaySize: 28,
                                 activeBackgroundColor: _memoActiveBackground(),
                                 activeBorderColor: _memoActiveBorder(),
                                 activeLabelColor: _memoActiveLabel(),
-                                imageAsset: _presenter.isMemoMode
-                                    ? _memoOnImage
-                                    : _memoOffImage,
+                                imageAsset: _memoImage,
                                 label: _presenter.isMemoMode
                                     ? AppLocalizations.of(context)!
                                         .gameMemoOnShort
@@ -1648,7 +1644,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                               _buildMobileActionButton(
                                 icon: Icons.backspace_outlined,
                                 buttonKey: const ValueKey('game-action-erase'),
-                                imageDisplaySize: 34,
+                                imageDisplaySize: 32,
                                 imageAsset: _eraseImage,
                                 dimWhenDisabled: true,
                                 semanticsLabel: _canEraseSelection
@@ -2147,14 +2143,11 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     _wrongCellTimers.remove(key);
   }
 
-  // 하단 기능 버튼(메모·힌트·지우기)의 이미지 에셋. PNG 고유 색을 그대로 쓴다.
-  static const String _memoOffImage = 'assets/images/game_control_memo_off.png';
-  static const String _memoOnImage = 'assets/images/game_control_memo_on.png';
-  static const String _hintAvailableImage =
-      'assets/images/game_control_hint_available.png';
-  static const String _hintExhaustedImage =
-      'assets/images/game_control_hint_exhausted.png';
-  static const String _eraseImage = 'assets/images/game_control_erase.png';
+  // 하단 기능 버튼(메모·힌트·지우기)의 플랫 아이콘 에셋. 상태가 바뀌어도 같은 이미지를
+  // 쓰고, 상태는 버튼 배경·테두리·투명도로만 표현한다.
+  static const String _memoImage = 'assets/images/game_control_memo_flat.png';
+  static const String _hintImage = 'assets/images/game_control_hint_flat.png';
+  static const String _eraseImage = 'assets/images/game_control_erase_flat.png';
 
   // 메모 ON 활성 표현: 옅은 라벤더 배경 + 브랜드 보라 30~40% 테두리(탁한 회녹색 대신).
   Color _memoActiveBackground() =>
@@ -2176,6 +2169,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     String? imageAsset,
     // 비활성일 때 이미지를 바꾸지 않고 버튼 전체 투명도만 낮춘다.
     bool dimWhenDisabled = false,
+    double disabledOpacity = 0.6,
     // false면 라벨 글자를 그리지 않는다(이미지만). 스크린리더 이름은 그대로 전달한다.
     bool showLabel = true,
     // 이미지 표시 크기(라벨이 있을 때). 이미지마다 피사체 크기가 달라 버튼별로 정한다.
@@ -2328,7 +2322,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       );
     }
     if (dimWhenDisabled && onPressed == null && onLongPress == null) {
-      button = Opacity(opacity: 0.6, child: button);
+      button = Opacity(opacity: disabledOpacity, child: button);
     }
     if (onLongPress != null) {
       button = GestureDetector(onLongPress: onLongPress, child: button);
@@ -2347,11 +2341,12 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         _buildMobileActionButton(
           icon: Icons.lightbulb_outline,
           buttonKey: const ValueKey('game-action-hint'),
-          imageDisplaySize: 32,
-          imageAsset: hintsLeft > 0 ? _hintAvailableImage : _hintExhaustedImage,
-          // 힌트가 남았는데 선택한 칸이 없어 비활성이면 버튼 전체를 흐리게 한다
-          // (소진 이미지에는 추가 투명도를 주지 않는다).
-          dimWhenDisabled: hintsLeft > 0,
+          imageDisplaySize: 31,
+          imageAsset: _hintImage,
+          // 비활성(선택한 칸이 유효하지 않거나 힌트 소진)이면 버튼 전체를 흐리게 하고,
+          // 소진은 더 옅게 보여 구분한다.
+          dimWhenDisabled: true,
+          disabledOpacity: hintsLeft > 0 ? 0.6 : 0.4,
           semanticsLabel: hintsLeft > 0
               ? AppLocalizations.of(context)!
                   .gameHintSemanticsRemaining(hintsLeft)
@@ -2366,7 +2361,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           size: buttonSize,
           labelFontSize: labelFontSize,
         ),
-        // 힌트를 모두 썼으면 개수 배지는 숨기고(소진 이미지가 상태를 알려 준다).
+        // 힌트를 모두 썼으면 개수 배지는 숨긴다(버튼도 더 옅게 비활성으로 보인다).
         if (hintsLeft > 0)
           Positioned(
             // 버튼 오른쪽 위 모서리 안쪽에 걸친다(예전 -2에서 안쪽으로 이동).
@@ -2837,10 +2832,9 @@ class _RestartConfirmDialogState extends State<_RestartConfirmDialog> {
                 ),
               ),
               const SizedBox(height: 10),
-              // 한글이 글자 중간에서 줄바꿈되지 않게 단어 단위로 줄을 바꾼다.
-              KeepWordsText(
+              // 문장마다 새 줄에서 시작하고, 단어 중간에서는 줄을 바꾸지 않는다.
+              SentenceText(
                 l10n.gameRestartDialogBody,
-                alignment: WrapAlignment.center,
                 style: TextStyle(
                   fontSize: 14,
                   height: 1.45,

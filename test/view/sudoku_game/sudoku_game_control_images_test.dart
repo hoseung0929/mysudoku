@@ -44,11 +44,12 @@ void main() {
     ..[0][2] = 0
     ..[4][4] = 0;
 
-  const memoOff = 'assets/images/game_control_memo_off.png';
-  const memoOn = 'assets/images/game_control_memo_on.png';
-  const hintAvailable = 'assets/images/game_control_hint_available.png';
-  const hintExhausted = 'assets/images/game_control_hint_exhausted.png';
-  const erase = 'assets/images/game_control_erase.png';
+  // 상태가 바뀌어도 같은 플랫 이미지를 쓴다(상태는 배경·테두리·투명도로만 표현).
+  const memoOff = 'assets/images/game_control_memo_flat.png';
+  const memoOn = memoOff;
+  const hintAvailable = 'assets/images/game_control_hint_flat.png';
+  const hintExhausted = hintAvailable;
+  const erase = 'assets/images/game_control_erase_flat.png';
 
   Future<SudokuGamePresenter> pumpGame(
     WidgetTester tester, {
@@ -140,7 +141,6 @@ void main() {
     await tester.tap(memoButton());
     await tester.pump();
     expect(asset(memoOn), findsOneWidget);
-    expect(asset(memoOff), findsNothing);
     expect(find.text('Memo ON'), findsOneWidget);
     final onRect = tester.getRect(asset(memoOn));
     // 같은 크기·같은 중심: 전환해도 이미지와 라벨이 움직이지 않는다.
@@ -180,7 +180,6 @@ void main() {
       (tester) async {
     final presenter = await pumpGame(tester);
     expect(asset(hintAvailable), findsOneWidget);
-    expect(asset(hintExhausted), findsNothing);
     expect(find.text('${presenter.hintsRemaining}'), findsWidgets);
     final hintButton = find.ancestor(
       of: asset(hintAvailable),
@@ -194,7 +193,6 @@ void main() {
     final presenter = await pumpGame(tester, restoredHints: 0);
     expect(presenter.hintsRemaining, 0);
     expect(asset(hintExhausted), findsOneWidget);
-    expect(asset(hintAvailable), findsNothing);
     // 개수 배지(18pt 원)가 없다.
     expect(
       find.byWidgetPredicate((w) =>
@@ -236,10 +234,10 @@ void main() {
     final memo = tester.getRect(asset(memoOff));
     final hint = tester.getRect(asset(hintAvailable));
     final eraser = tester.getRect(asset(erase));
-    // 피사체 크기 보정: 메모 30 < 힌트 32 < 지우기 34.
-    expect(memo.width, closeTo(30, 0.5));
-    expect(hint.width, closeTo(32, 0.5));
-    expect(eraser.width, closeTo(34, 0.5));
+    // 피사체 크기 보정: 메모 28 < 힌트 31 < 지우기 32.
+    expect(memo.width, closeTo(28, 0.5));
+    expect(hint.width, closeTo(31, 0.5));
+    expect(eraser.width, closeTo(32, 0.5));
     // 이미지 윗면이 같은 줄에 가깝게 놓이도록 가운데 정렬 기준이 같다.
     expect(hint.center.dy, closeTo(memo.center.dy, 2));
     expect(eraser.center.dy, closeTo(memo.center.dy, 2));

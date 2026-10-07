@@ -243,12 +243,12 @@ void main() {
       _FakeDashboard(() async => _data(continues: [_summary(12)])),
     );
     expect(find.text('Continue'), findsOneWidget);
-    expect(find.text('Beginner · Puzzle 12'), findsOneWidget);
+    expect(find.text('Beginner\u00A0· Puzzle\u00A012'), findsOneWidget);
     expect(find.text('40%'), findsOneWidget);
     expect(find.textContaining('View all in-progress'), findsNothing);
     // 오늘의 도전은 별도 카드
     expect(find.text("Today's challenge"), findsOneWidget);
-    expect(find.text('Beginner · Puzzle 7'), findsOneWidget);
+    expect(find.text('Beginner\u00A0· Puzzle\u00A07'), findsOneWidget);
     expect(find.text('Start challenge'), findsOneWidget);
     expect(find.text('Not started yet'), findsOneWidget);
     // 시작 전에는 진행바가 없다.
@@ -295,7 +295,7 @@ void main() {
       ),
     );
     // 병합: 이어하기 카드가 도전 카드 역할 — 라벨 '오늘의 도전', 상태+진행바.
-    expect(find.text('Beginner · Puzzle 7'), findsOneWidget);
+    expect(find.text('Beginner\u00A0· Puzzle\u00A07'), findsOneWidget);
     expect(find.text("Today's challenge"), findsOneWidget);
     expect(find.text('Continue today\'s challenge'), findsNothing);
     expect(find.text('Continue'), findsOneWidget);
@@ -325,7 +325,7 @@ void main() {
       // 이어하기 카드(재도전 진행) + 도전 카드(완료)가 따로 보인다.
       expect(find.text('Continue'), findsOneWidget);
       expect(find.text("Today's challenge complete!"), findsOneWidget);
-      expect(find.text('Beginner · Puzzle 7'), findsNWidgets(2));
+      expect(find.text('Beginner\u00A0· Puzzle\u00A07'), findsNWidgets(2));
       // 병합 카드의 도전 라벨/진행바는 없다(완료 상태가 우선).
       expect(find.byKey(const Key('home_challenge_progress')), findsNothing);
       // 완료 카드에는 "오늘의 도전" 머리줄이 없다(제목이 완료 문구).
@@ -407,7 +407,7 @@ void main() {
           ),
         ),
       );
-      await tester.tap(find.text('Beginner · Puzzle 7'));
+      await tester.tap(find.text('Beginner\u00A0· Puzzle\u00A07'));
       await tester.tap(find.text('Continue'), warnIfMissed: false);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 600));
@@ -526,7 +526,7 @@ void main() {
       _FakeDashboard(() async => _data(challengeDone: true)),
     );
     expect(find.text("Today's challenge complete!"), findsOneWidget);
-    expect(find.text('Beginner · Puzzle 7'), findsOneWidget);
+    expect(find.text('Beginner\u00A0· Puzzle\u00A07'), findsOneWidget);
     expect(find.byKey(const Key('home_challenge_progress')), findsNothing);
     // 완료 카드에는 재도전 버튼이 없다.
     expect(find.text('Play again'), findsNothing);
@@ -550,7 +550,7 @@ void main() {
     final done = await measure(true);
     expect(start.height - done.height, inInclusiveRange(20, 30));
     expect(done.top, start.top);
-    expect(find.text('Beginner · Puzzle 7'), findsOneWidget);
+    expect(find.text('Beginner\u00A0· Puzzle\u00A07'), findsOneWidget);
     expect(find.text("Today's challenge"), findsNothing);
   });
 
@@ -562,7 +562,8 @@ void main() {
       _FakeDashboard(() async => _data(challengeDone: true)),
     );
     final node = tester.getSemantics(
-      find.bySemanticsLabel("Today's challenge complete! Beginner · Puzzle 7"),
+      find.bySemanticsLabel(
+          "Today's challenge complete! Beginner\u00A0· Puzzle\u00A07"),
     );
     final data = node.getSemanticsData();
     expect(data.flagsCollection.isButton, isFalse);
@@ -703,7 +704,7 @@ void main() {
     expect(find.byType(SavedGamesScreen), findsOneWidget);
     Finder inList(String text) => find.descendant(
         of: find.byType(SavedGamesScreen), matching: find.text(text));
-    expect(inList('Beginner · Puzzle 5'), findsOneWidget);
+    expect(inList('Beginner\u00A0· Puzzle\u00A05'), findsOneWidget);
 
     // 삭제는 확인창을 먼저 보여주고, 취소하면 목록이 그대로다.
     await tester.tap(find.byTooltip('Delete saved progress').first);
@@ -713,10 +714,10 @@ void main() {
     await tester.tap(find.text('Cancel'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    expect(inList('Beginner · Puzzle 5'), findsOneWidget);
+    expect(inList('Beginner\u00A0· Puzzle\u00A05'), findsOneWidget);
 
     // 항목을 고르면 그 게임이 저장된 상태로 복원된다.
-    await tester.tap(inList('Beginner · Puzzle 9'));
+    await tester.tap(inList('Beginner\u00A0· Puzzle\u00A09'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
     final screen =

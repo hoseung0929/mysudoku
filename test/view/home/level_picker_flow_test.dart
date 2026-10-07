@@ -288,7 +288,7 @@ void main() {
     await tester.tap(find.text('001').first);
     await settle(tester);
     expect(find.text('Replay puzzle 1?'), findsOneWidget);
-    expect(find.textContaining('only your best record is updated'),
+    expect(find.bySemanticsLabel(RegExp('only your best record is updated')),
         findsOneWidget);
     // 주 버튼은 전체 폭, 취소는 그 아래 텍스트 버튼.
     final replay = tester.getRect(find.widgetWithText(FilledButton, 'Replay'));

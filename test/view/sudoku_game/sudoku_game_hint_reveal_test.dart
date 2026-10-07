@@ -197,7 +197,8 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
   });
 
-  testWidgets('the last hint switches to the exhausted look and disables it',
+  testWidgets(
+      'the last hint keeps the same icon, drops the badge and disables it',
       (tester) async {
     final presenter = await pumpGame(tester, restoredHints: 1);
     expect(presenter.hintsRemaining, 1);
@@ -210,7 +211,7 @@ void main() {
           w is Image &&
           w.image is AssetImage &&
           (w.image as AssetImage).assetName ==
-              'assets/images/game_control_hint_exhausted.png'),
+              'assets/images/game_control_hint_flat.png'),
       findsOneWidget,
     );
     await select(tester, presenter, 4, 4);

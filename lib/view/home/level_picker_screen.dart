@@ -3,6 +3,7 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:sudoku159/utils/light_haptic.dart';
+import 'package:sudoku159/widgets/sentence_text.dart';
 import 'package:sudoku159/widgets/animated_progress_bar.dart';
 import 'package:sudoku159/widgets/press_scale.dart';
 import 'package:sudoku159/widgets/press_scale_listener.dart';
@@ -1861,9 +1862,8 @@ class _ReplayConfirmDialogState extends State<_ReplayConfirmDialog> {
                 ),
               ),
               const SizedBox(height: 10),
-              Text(
+              SentenceText(
                 l10n.levelReplayBody,
-                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
                   height: 1.45,

@@ -417,6 +417,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// "난이도 · 퍼즐 번호" 제목. 좁은 카드에서 줄이 바뀔 때 "58"처럼 번호만 홀로 다음
+  /// 줄로 넘어가지 않도록, 번호 문구 안의 공백과 가운뎃점 앞 공백을 줄바꿈 불가
+  /// 공백(NBSP)으로 바꿔 "Intermediate ·" / "Puzzle 58"처럼 의미 단위로 나뉘게 한다.
+  static String _puzzleHeading(String levelName, String puzzleNumber) =>
+      '$levelName\u00A0· ${puzzleNumber.replaceAll(' ', '\u00A0')}';
+
   /// 진행 중인 게임 전체 목록. 항목을 고르면 그 게임을 복원한다.
   Future<void> _openSavedGames() async {
     if (_isOpeningGame || !mounted) return;
@@ -430,8 +436,9 @@ class _HomeScreenState extends State<HomeScreen> {
           initialGames: games,
           title: l10n.homeSavedGamesTitle,
           description: l10n.homeSavedGamesDescription,
-          itemTitleBuilder: (summary) =>
-              '${summary.level.localizedName(l10n)} · ${l10n.levelPuzzleNumber(summary.game.gameNumber)}',
+          itemTitleBuilder: (summary) => _puzzleHeading(
+              summary.level.localizedName(l10n),
+              l10n.levelPuzzleNumber(summary.game.gameNumber)),
           itemSubtitleBuilder: (summary) => _continueDetail(l10n, summary),
           deleteTooltip: l10n.homeSavedGameDeleteTooltip,
           onDelete: (summary) => _deleteSavedGame(summary, games),
@@ -1052,8 +1059,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final level = continueGame.level;
     final levelImage = _levelIdentityImage(level.difficulty);
-    final title =
-        '${level.localizedName(l10n)} · ${l10n.levelPuzzleNumber(continueGame.game.gameNumber)}';
+    final title = _puzzleHeading(level.localizedName(l10n),
+        l10n.levelPuzzleNumber(continueGame.game.gameNumber));
     final continuePct = (continueGame.progress * 100).round();
     // 오늘의 도전과 같은 문제면 이 카드가 도전 카드 역할을 한다: 분류 라벨은
     // '오늘의 도전', 상태는 "36% 진행"(메모만 있으면 메모 상태), 진행바 포함.
@@ -1203,8 +1210,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final puzzleTitle = isError
         ? ''
-        : '${game.levelName.localizedSudokuLevelName(l10n)} · '
-            '${l10n.levelPuzzleNumber(game.gameNumber)}';
+        : _puzzleHeading(game.levelName.localizedSudokuLevelName(l10n),
+            l10n.levelPuzzleNumber(game.gameNumber));
     final String sub;
     if (isError) {
       sub = l10n.homeChallengeLoadErrorBody;
