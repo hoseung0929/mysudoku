@@ -3,6 +3,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/services/settings/force_update_service.dart';
+import 'package:sudoku159/theme/level_status_colors.dart';
+import 'package:sudoku159/widgets/sentence_text.dart';
 import 'package:sudoku159/utils/app_logger.dart';
 
 class ForceUpdateGate extends StatefulWidget {
@@ -51,50 +53,70 @@ class _ForceUpdateGateState extends State<ForceUpdateGate> {
     }
 
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
+    final palette = LevelStatusPalette.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isTablet = MediaQuery.of(context).size.width > 600;
-    final mascotSize = isTablet ? 160.0 : 120.0;
+    final mascotSize = isTablet ? 220.0 : 170.0;
 
     return PopScope(
       canPop: false,
       child: Scaffold(
+        backgroundColor: palette.screenBackground,
         body: SafeArea(
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                    const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Image.asset(
-                      'assets/images/character.png',
-                      width: mascotSize,
-                      height: mascotSize,
-                      fit: BoxFit.contain,
+                    // 장식 이미지(상태는 아래 텍스트가 전달한다).
+                    ExcludeSemantics(
+                      child: Image.asset(
+                        'assets/images/records_summary_mascot.png',
+                        width: mascotSize,
+                        height: mascotSize,
+                        fit: BoxFit.contain,
+                      ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
                     Text(
                       l10n.updateRequiredTitle,
                       textAlign: TextAlign.center,
-                      style:
-                          Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: palette.primaryText,
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.updateRequiredMessage,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
+                    const SizedBox(height: 10),
+                    // 문장마다 새 줄에서 시작하고 단어 중간에서는 줄을 바꾸지 않는다.
+                    Center(
+                      child: SentenceText(
+                        l10n.updateRequiredMessage,
+                        style: TextStyle(
+                          fontSize: 14,
+                          height: 1.5,
+                          color: palette.secondaryText,
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 28),
                     FilledButton(
                       onPressed: _openStore,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: palette.primaryPurple,
+                        foregroundColor:
+                            isDark ? const Color(0xFF1F1B3A) : Colors.white,
+                        minimumSize: const Size.fromHeight(52),
+                        textStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                       child: Text(l10n.updateNowButton),
                     ),
                   ],
