@@ -1054,7 +1054,7 @@ void main() {
     Finder section() => find.byKey(const Key('records_recent'));
     Finder viewAll() => find.byKey(const Key('records_recent_view_all'));
 
-    testWidgets('sits between level records and the activity calendar',
+    testWidgets('is the last section, below the activity calendar',
         (tester) async {
       await pumpRecords(
         tester,
@@ -1063,9 +1063,9 @@ void main() {
       );
       double top(Finder f) => tester.getTopLeft(f).dy;
       expect(top(find.text('Records by level')),
-          lessThan(top(find.text('Recent completions'))));
-      expect(top(find.text('Recent completions')),
           lessThan(top(find.text('Last 26 weeks of activity'))));
+      expect(top(find.text('Last 26 weeks of activity')),
+          lessThan(top(find.text('Recent completions'))));
       expect(find.text('Tap a puzzle to play it again'), findsOneWidget);
       expect(viewAll(), findsNothing);
     });
@@ -1139,6 +1139,9 @@ void main() {
           tester.getTopLeft(find.text('Last 26 weeks of activity')).dx;
       expect(recentLeft, greaterThan(weekLeft));
       expect(recentLeft, calendarLeft);
+      // 오른쪽 칼럼에서 활동 달력 아래.
+      expect(tester.getTopLeft(find.text('Last 26 weeks of activity')).dy,
+          lessThan(tester.getTopLeft(find.text('Recent completions')).dy));
       expect(tester.takeException(), isNull);
     });
   });

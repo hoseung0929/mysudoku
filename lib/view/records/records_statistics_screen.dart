@@ -465,11 +465,11 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (recent != null) ...[
-                      recent,
-                      const SizedBox(height: 24),
-                    ],
                     calendar,
+                    if (recent != null) ...[
+                      const SizedBox(height: 24),
+                      recent,
+                    ],
                   ],
                 ),
               ),
@@ -483,11 +483,11 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
             const SizedBox(height: 20),
             levels,
             const SizedBox(height: 20),
-            if (recent != null) ...[
-              recent,
-              const SizedBox(height: 20),
-            ],
             calendar,
+            if (recent != null) ...[
+              const SizedBox(height: 20),
+              recent,
+            ],
           ],
         );
       },
