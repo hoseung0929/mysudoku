@@ -227,12 +227,6 @@
   "recordsTrendLegendDailyClears": "日別クリア",
   "recordsTrendTodayLabel": "今日",
   "recordsPlayInsightsTitle": "今週の活動",
-  "recordsWeekSubtitle": "曜日をタップして記録を確認",
-  "recordsWeeklyGoalLabel": "今週の目標",
-  "recordsWeeklyGoalProgress": "{goal, plural, other{{done} / {goal}問}}",
-  "recordsWeeklyGoalStart": "今週最初のパズルを始めましょう",
-  "recordsWeeklyGoalRemaining": "{count, plural, other{あと{count}問で目標達成です}}",
-  "recordsWeeklyGoalAchieved": "今週の目標を達成しました",
   "gameResultWeeklyGoalAchieved": "今週の目標を達成しました",
   "recordsPlayCalendarTitle": "曜日別",
   "recordsWeeklyReportTitle": "今週のレポート",
@@ -266,11 +260,8 @@
   "recordsPacePreviousWindow": "前の7日",
   "recordsPaceDelta": "変化",
   "recordsMetricClears": "クリア（フィルター）",
-  "recordsMetricClearRate": "完了したパズル",
   "recordsMetricPerfectRate": "ミスなし完了の割合",
   "recordsSummaryMetricsFootnote": "パズルごとにベスト記録1件だけを数え、期間・レベルのフィルターを反映します。完了状況は同じ範囲の全パズル数との比較です。",
-  "recordsMetricAvgTime": "平均完了時間",
-  "recordsMetricAvgWrong": "平均ミス",
   "recordsByLevelTitle": "レベル別の記録",
   "recordsByLevelSubtitle": "難易度を選んで記録を比べてみましょう",
   "recordsByLevelEmpty": "表示するレベル統計がありません。",
@@ -283,13 +274,9 @@
   "recordsRetry": "再試行",
   "recordsEmptyAction": "パズルを始める",
   "recordsLevelEmpty": "このレベルの完了記録はまだありません。",
-  "recordsRowBestTime": "最速記録",
-  "recordsAverageBasisNote": "平均はパズルごとのベスト記録が基準です。",
   "recordsCalendarTitle": "直近{weeks}週の活動",
   "recordsCalendarSubtitle": "クリアした日とプレイ頻度を確認しましょう",
   "recordsOverallNote": "全レベルで{total}問中{cleared}問を完了しました。",
-  "recordsWeekActiveDays": "活動 {count}日",
-  "recordsWeekCompletions": "完了 {count}回",
   "recordsWeekDayDone": "{day}: {count}回完了",
   "recordsWeekDayNone": "{day}: 完了なし",
   "recordsStatsPageSubtitle": "クリアと平均タイムを一目で確認できます。",
@@ -330,14 +317,6 @@
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
-  },
-  "recordsStatAverageWrongFormatted": "{value}回",
-  "@recordsStatAverageWrongFormatted": {
-    "placeholders": {
-      "value": {
-        "type": "String"
       }
     }
   },
@@ -674,12 +653,11 @@
   "recordsSummaryHeroMilestone": "{count, plural, other{{count}問を突破！コツコツ積み重ねています}}",
   "recordsSummaryHeroGrowing": "{count, plural, other{もう{count}問のパズルを解きました}}",
   "recordsSummaryHeroStacked": "{count, plural, other{{count}問のパズルがコツコツ積み上がりました}}",
-  "recordsLevelRingsTitle": "難易度別の進行",
   "recordsLevelRingSemantics": "{level}、{total, plural, other{{total}問中{cleared}問完了}}",
   "recordsSummaryAllPerfect": "すべてミスなしで解きました",
   "recordsSummaryPartialPerfect": "そのうち{count}問はミスなしで解きました",
-  "recordsSummaryStreakPlaying": "{days}日連続でプレイ中",
-  "recordsSummaryPlayDays": "プレイ{days}日",
+  "recordsSummaryStreakPlaying": "{days}日連続でプレイしています",
+  "recordsSummaryPlayDays": "{days}日間プレイしました",
   "recordsSummaryEmptyTitle": "最初の記録をつくりましょう",
   "recordsSummaryEmptyBody": "パズルを完成させると、ここに記録がたまります",
   "challengeTodayEyebrow": "今日の流れ",
@@ -760,5 +738,13 @@
   "levelNoPuzzlesAvailable": "このレベルのパズルはありません。",
   "levelLastPlayedToday": "今日",
   "levelLastPlayedYesterday": "昨日",
-  "levelLastPlayedDaysAgo": "{count}日前"
+  "levelLastPlayedDaysAgo": "{count}日前",
+  "recordsRecentTitle": "最近のクリア",
+  "recordsRecentSubtitle": "パズルをタップするともう一度解けます",
+  "recordsRecentViewAll": "すべて見る（{count}）",
+  "recordsRecentYesterday": "昨日",
+  "recordsMetricHintFree": "ヒントなしで解いたパズル",
+  "recordsMetricMistakeFree": "ミスなしで解いたパズル",
+  "recordsMetricTypicalTime": "1問あたりの目安時間",
+  "recordsTypicalTimeValue": "約{minutes}分"
 }

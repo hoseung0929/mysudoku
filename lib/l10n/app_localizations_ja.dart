@@ -495,38 +495,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsPlayInsightsTitle => '今週の活動';
 
   @override
-  String get recordsWeekSubtitle => '曜日をタップして記録を確認';
-
-  @override
-  String get recordsWeeklyGoalLabel => '今週の目標';
-
-  @override
-  String recordsWeeklyGoalProgress(int done, int goal) {
-    String _temp0 = intl.Intl.pluralLogic(
-      goal,
-      locale: localeName,
-      other: '$done / $goal問',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get recordsWeeklyGoalStart => '今週最初のパズルを始めましょう';
-
-  @override
-  String recordsWeeklyGoalRemaining(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'あと$count問で目標達成です',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get recordsWeeklyGoalAchieved => '今週の目標を達成しました';
-
-  @override
   String get gameResultWeeklyGoalAchieved => '今週の目標を達成しました';
 
   @override
@@ -579,20 +547,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsMetricClears => 'クリア（フィルター）';
 
   @override
-  String get recordsMetricClearRate => '完了したパズル';
-
-  @override
   String get recordsMetricPerfectRate => 'ミスなし完了の割合';
 
   @override
   String get recordsSummaryMetricsFootnote =>
       'パズルごとにベスト記録1件だけを数え、期間・レベルのフィルターを反映します。完了状況は同じ範囲の全パズル数との比較です。';
-
-  @override
-  String get recordsMetricAvgTime => '平均完了時間';
-
-  @override
-  String get recordsMetricAvgWrong => '平均ミス';
 
   @override
   String get recordsByLevelTitle => 'レベル別の記録';
@@ -631,12 +590,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recordsLevelEmpty => 'このレベルの完了記録はまだありません。';
 
   @override
-  String get recordsRowBestTime => '最速記録';
-
-  @override
-  String get recordsAverageBasisNote => '平均はパズルごとのベスト記録が基準です。';
-
-  @override
   String recordsCalendarTitle(int weeks) {
     return '直近$weeks週の活動';
   }
@@ -647,16 +600,6 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String recordsOverallNote(int cleared, int total) {
     return '全レベルで$total問中$cleared問を完了しました。';
-  }
-
-  @override
-  String recordsWeekActiveDays(int count) {
-    return '活動 $count日';
-  }
-
-  @override
-  String recordsWeekCompletions(int count) {
-    return '完了 $count回';
   }
 
   @override
@@ -733,11 +676,6 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String recordsDetailStreakDays(int count) {
     return '$count日';
-  }
-
-  @override
-  String recordsStatAverageWrongFormatted(String value) {
-    return '$value回';
   }
 
   @override
@@ -1357,9 +1295,6 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get recordsLevelRingsTitle => '難易度別の進行';
-
-  @override
   String recordsLevelRingSemantics(String level, int cleared, int total) {
     String _temp0 = intl.Intl.pluralLogic(
       total,
@@ -1379,12 +1314,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String recordsSummaryStreakPlaying(num days) {
-    return '$days日連続でプレイ中';
+    return '$days日連続でプレイしています';
   }
 
   @override
   String recordsSummaryPlayDays(num days) {
-    return 'プレイ$days日';
+    return '$days日間プレイしました';
   }
 
   @override
@@ -1632,5 +1567,30 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String levelLastPlayedDaysAgo(int count) {
     return '$count日前';
+  }
+
+  @override
+  String get recordsRecentSubtitle => 'パズルをタップするともう一度解けます';
+
+  @override
+  String recordsRecentViewAll(int count) {
+    return 'すべて見る（$count）';
+  }
+
+  @override
+  String get recordsRecentYesterday => '昨日';
+
+  @override
+  String get recordsMetricHintFree => 'ヒントなしで解いたパズル';
+
+  @override
+  String get recordsMetricMistakeFree => 'ミスなしで解いたパズル';
+
+  @override
+  String get recordsMetricTypicalTime => '1問あたりの目安時間';
+
+  @override
+  String recordsTypicalTimeValue(int minutes) {
+    return '約$minutes分';
   }
 }

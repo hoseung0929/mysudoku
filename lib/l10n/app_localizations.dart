@@ -1016,42 +1016,6 @@ abstract class AppLocalizations {
   /// **'This week\'s activity'**
   String get recordsPlayInsightsTitle;
 
-  /// No description provided for @recordsWeekSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap a day to see your record'**
-  String get recordsWeekSubtitle;
-
-  /// No description provided for @recordsWeeklyGoalLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'This week\'s goal'**
-  String get recordsWeeklyGoalLabel;
-
-  /// No description provided for @recordsWeeklyGoalProgress.
-  ///
-  /// In en, this message translates to:
-  /// **'{goal, plural, =1{{done} / 1 puzzle} other{{done} / {goal} puzzles}}'**
-  String recordsWeeklyGoalProgress(int done, int goal);
-
-  /// No description provided for @recordsWeeklyGoalStart.
-  ///
-  /// In en, this message translates to:
-  /// **'Start your first puzzle this week'**
-  String get recordsWeeklyGoalStart;
-
-  /// No description provided for @recordsWeeklyGoalRemaining.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{Just 1 more puzzle to reach your goal} other{Just {count} more puzzles to reach your goal}}'**
-  String recordsWeeklyGoalRemaining(int count);
-
-  /// No description provided for @recordsWeeklyGoalAchieved.
-  ///
-  /// In en, this message translates to:
-  /// **'You reached this week\'s goal'**
-  String get recordsWeeklyGoalAchieved;
-
   /// No description provided for @gameResultWeeklyGoalAchieved.
   ///
   /// In en, this message translates to:
@@ -1148,12 +1112,6 @@ abstract class AppLocalizations {
   /// **'Clears (filtered)'**
   String get recordsMetricClears;
 
-  /// No description provided for @recordsMetricClearRate.
-  ///
-  /// In en, this message translates to:
-  /// **'Puzzles completed'**
-  String get recordsMetricClearRate;
-
   /// No description provided for @recordsMetricPerfectRate.
   ///
   /// In en, this message translates to:
@@ -1165,18 +1123,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Each puzzle counts once, using its best record, and follows your active filters. Completion compares those puzzles with the total number of puzzles in the same scope.'**
   String get recordsSummaryMetricsFootnote;
-
-  /// No description provided for @recordsMetricAvgTime.
-  ///
-  /// In en, this message translates to:
-  /// **'Average solve time'**
-  String get recordsMetricAvgTime;
-
-  /// No description provided for @recordsMetricAvgWrong.
-  ///
-  /// In en, this message translates to:
-  /// **'Avg. mistakes'**
-  String get recordsMetricAvgWrong;
 
   /// No description provided for @recordsByLevelTitle.
   ///
@@ -1250,18 +1196,6 @@ abstract class AppLocalizations {
   /// **'No completed puzzles at this level yet.'**
   String get recordsLevelEmpty;
 
-  /// No description provided for @recordsRowBestTime.
-  ///
-  /// In en, this message translates to:
-  /// **'Fastest time'**
-  String get recordsRowBestTime;
-
-  /// No description provided for @recordsAverageBasisNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Averages are based on each puzzle\'s best record.'**
-  String get recordsAverageBasisNote;
-
   /// No description provided for @recordsCalendarTitle.
   ///
   /// In en, this message translates to:
@@ -1279,18 +1213,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{cleared} of {total} puzzles completed across all levels.'**
   String recordsOverallNote(int cleared, int total);
-
-  /// No description provided for @recordsWeekActiveDays.
-  ///
-  /// In en, this message translates to:
-  /// **'Active days: {count}'**
-  String recordsWeekActiveDays(int count);
-
-  /// No description provided for @recordsWeekCompletions.
-  ///
-  /// In en, this message translates to:
-  /// **'Completed: {count}'**
-  String recordsWeekCompletions(int count);
 
   /// No description provided for @recordsWeekDayDone.
   ///
@@ -1424,12 +1346,6 @@ abstract class AppLocalizations {
   /// **'{count, plural, one{{count} day} other{{count} days}}'**
   String recordsDetailStreakDays(int count);
 
-  /// No description provided for @recordsStatAverageWrongFormatted.
-  ///
-  /// In en, this message translates to:
-  /// **'{value}'**
-  String recordsStatAverageWrongFormatted(String value);
-
   /// No description provided for @recordsDifficultySnapshotEmpty.
   ///
   /// In en, this message translates to:
@@ -1529,7 +1445,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordsRecentTitle.
   ///
   /// In en, this message translates to:
-  /// **'Recent clears'**
+  /// **'Recent completions'**
   String get recordsRecentTitle;
 
   /// No description provided for @recordsRecentEmpty.
@@ -2474,12 +2390,6 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 puzzle solved, and your record keeps growing} other{{count} puzzles solved, and your record keeps growing}}'**
   String recordsSummaryHeroStacked(int count);
 
-  /// No description provided for @recordsLevelRingsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Progress by level'**
-  String get recordsLevelRingsTitle;
-
   /// No description provided for @recordsLevelRingSemantics.
   ///
   /// In en, this message translates to:
@@ -2489,25 +2399,25 @@ abstract class AppLocalizations {
   /// No description provided for @recordsSummaryAllPerfect.
   ///
   /// In en, this message translates to:
-  /// **'All solved without mistakes'**
+  /// **'You solved them all without mistakes'**
   String get recordsSummaryAllPerfect;
 
   /// No description provided for @recordsSummaryPartialPerfect.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 of them without mistakes} other{{count} of them without mistakes}}'**
+  /// **'{count, plural, =1{You solved 1 of them without mistakes} other{You solved {count} of them without mistakes}}'**
   String recordsSummaryPartialPerfect(num count);
 
   /// No description provided for @recordsSummaryStreakPlaying.
   ///
   /// In en, this message translates to:
-  /// **'{days, plural, =1{Played 1 day in a row} other{Playing {days} days in a row}}'**
+  /// **'{days, plural, =1{You played 1 day in a row} other{You\'ve been playing {days} days in a row}}'**
   String recordsSummaryStreakPlaying(num days);
 
   /// No description provided for @recordsSummaryPlayDays.
   ///
   /// In en, this message translates to:
-  /// **'{days, plural, =1{1 day played} other{{days} days played}}'**
+  /// **'{days, plural, =1{You\'ve played on 1 day} other{You\'ve played on {days} days}}'**
   String recordsSummaryPlayDays(num days);
 
   /// No description provided for @recordsSummaryEmptyTitle.
@@ -2935,6 +2845,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 day ago} other{{count} days ago}}'**
   String levelLastPlayedDaysAgo(int count);
+
+  /// No description provided for @recordsRecentSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a puzzle to play it again'**
+  String get recordsRecentSubtitle;
+
+  /// No description provided for @recordsRecentViewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View all ({count})'**
+  String recordsRecentViewAll(int count);
+
+  /// No description provided for @recordsRecentYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get recordsRecentYesterday;
+
+  /// No description provided for @recordsMetricHintFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Solved without hints'**
+  String get recordsMetricHintFree;
+
+  /// No description provided for @recordsMetricMistakeFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Solved without mistakes'**
+  String get recordsMetricMistakeFree;
+
+  /// No description provided for @recordsMetricTypicalTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Typical time per puzzle'**
+  String get recordsMetricTypicalTime;
+
+  /// No description provided for @recordsTypicalTimeValue.
+  ///
+  /// In en, this message translates to:
+  /// **'About {minutes} min'**
+  String recordsTypicalTimeValue(int minutes);
 }
 
 class _AppLocalizationsDelegate

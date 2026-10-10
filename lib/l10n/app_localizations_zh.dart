@@ -492,38 +492,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsPlayInsightsTitle => '本周活动';
 
   @override
-  String get recordsWeekSubtitle => '点按星期查看记录';
-
-  @override
-  String get recordsWeeklyGoalLabel => '本周目标';
-
-  @override
-  String recordsWeeklyGoalProgress(int done, int goal) {
-    String _temp0 = intl.Intl.pluralLogic(
-      goal,
-      locale: localeName,
-      other: '$done / $goal 道',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get recordsWeeklyGoalStart => '开始本周的第一道谜题';
-
-  @override
-  String recordsWeeklyGoalRemaining(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '再完成 $count 道即可达成目标',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get recordsWeeklyGoalAchieved => '你达成了本周目标';
-
-  @override
   String get gameResultWeeklyGoalAchieved => '你达成了本周目标';
 
   @override
@@ -576,20 +544,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsMetricClears => '通关数（已筛选）';
 
   @override
-  String get recordsMetricClearRate => '已完成谜题';
-
-  @override
   String get recordsMetricPerfectRate => '无失误占比';
 
   @override
   String get recordsSummaryMetricsFootnote =>
       '每道谜题只按其最佳记录计一次，并遵循当前筛选。完成情况是与同一范围内谜题总数的比较。';
-
-  @override
-  String get recordsMetricAvgTime => '平均完成用时';
-
-  @override
-  String get recordsMetricAvgWrong => '平均失误';
 
   @override
   String get recordsByLevelTitle => '按难度的记录';
@@ -628,12 +587,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordsLevelEmpty => '该难度还没有完成记录。';
 
   @override
-  String get recordsRowBestTime => '最快记录';
-
-  @override
-  String get recordsAverageBasisNote => '平均值以每道谜题的最佳记录为准。';
-
-  @override
   String recordsCalendarTitle(int weeks) {
     return '最近 $weeks 周活动';
   }
@@ -644,16 +597,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String recordsOverallNote(int cleared, int total) {
     return '所有难度共 $total 道谜题，已完成 $cleared 道。';
-  }
-
-  @override
-  String recordsWeekActiveDays(int count) {
-    return '活动 $count 天';
-  }
-
-  @override
-  String recordsWeekCompletions(int count) {
-    return '完成 $count 局';
   }
 
   @override
@@ -733,11 +676,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String recordsStatAverageWrongFormatted(String value) {
-    return '$value';
-  }
-
-  @override
   String get recordsDifficultySnapshotEmpty => '还没有各难度的游玩记录。';
 
   @override
@@ -792,7 +730,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get recordsRecentTitle => '最近通关';
+  String get recordsRecentTitle => '最近完成';
 
   @override
   String get recordsRecentEmpty => '没有符合该筛选条件的通关记录。';
@@ -1350,9 +1288,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get recordsLevelRingsTitle => '各难度进度';
-
-  @override
   String recordsLevelRingSemantics(String level, int cleared, int total) {
     String _temp0 = intl.Intl.pluralLogic(
       total,
@@ -1367,7 +1302,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String recordsSummaryPartialPerfect(num count) {
-    return '其中 $count 道无失误';
+    return '其中 $count 道无失误完成';
   }
 
   @override
@@ -1377,7 +1312,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String recordsSummaryPlayDays(num days) {
-    return '游玩 $days 天';
+    return '已经玩了 $days 天';
   }
 
   @override
@@ -1619,5 +1554,30 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String levelLastPlayedDaysAgo(int count) {
     return '$count 天前';
+  }
+
+  @override
+  String get recordsRecentSubtitle => '点击题目即可再玩一次';
+
+  @override
+  String recordsRecentViewAll(int count) {
+    return '查看全部（$count）';
+  }
+
+  @override
+  String get recordsRecentYesterday => '昨天';
+
+  @override
+  String get recordsMetricHintFree => '无提示完成';
+
+  @override
+  String get recordsMetricMistakeFree => '无失误完成';
+
+  @override
+  String get recordsMetricTypicalTime => '每题通常用时';
+
+  @override
+  String recordsTypicalTimeValue(int minutes) {
+    return '约 $minutes 分钟';
   }
 }

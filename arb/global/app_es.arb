@@ -227,12 +227,6 @@
   "recordsTrendLegendDailyClears": "Victorias diarias",
   "recordsTrendTodayLabel": "Hoy",
   "recordsPlayInsightsTitle": "Actividad de esta semana",
-  "recordsWeekSubtitle": "Toca un día para ver tu registro",
-  "recordsWeeklyGoalLabel": "Objetivo de la semana",
-  "recordsWeeklyGoalProgress": "{goal, plural, =1{{done} / 1 puzle} other{{done} / {goal} puzles}}",
-  "recordsWeeklyGoalStart": "Empieza tu primer puzle de la semana",
-  "recordsWeeklyGoalRemaining": "{count, plural, =1{Solo 1 puzle más para lograr tu objetivo} other{Solo {count} puzles más para lograr tu objetivo}}",
-  "recordsWeeklyGoalAchieved": "Has logrado el objetivo de la semana",
   "gameResultWeeklyGoalAchieved": "Has logrado el objetivo de la semana",
   "recordsPlayCalendarTitle": "Por día",
   "recordsWeeklyReportTitle": "Informe semanal",
@@ -266,11 +260,8 @@
   "recordsPacePreviousWindow": "7 días anteriores",
   "recordsPaceDelta": "Cambio",
   "recordsMetricClears": "Victorias (filtradas)",
-  "recordsMetricClearRate": "Puzles completados",
   "recordsMetricPerfectRate": "Sin errores",
   "recordsSummaryMetricsFootnote": "Cada puzle cuenta una vez, con su mejor registro, y sigue tus filtros activos. El progreso compara esos puzles con el total del mismo ámbito.",
-  "recordsMetricAvgTime": "Tiempo medio",
-  "recordsMetricAvgWrong": "Errores medios",
   "recordsByLevelTitle": "Registros por nivel",
   "recordsByLevelSubtitle": "Selecciona una dificultad para comparar registros",
   "recordsByLevelEmpty": "No hay estadísticas para este filtro.",
@@ -283,13 +274,9 @@
   "recordsRetry": "Reintentar",
   "recordsEmptyAction": "Empezar un puzle",
   "recordsLevelEmpty": "Aún no hay puzles completados en este nivel.",
-  "recordsRowBestTime": "Tiempo más rápido",
-  "recordsAverageBasisNote": "Los promedios se basan en el mejor registro de cada puzle.",
   "recordsCalendarTitle": "Actividad de las últimas {weeks} semanas",
   "recordsCalendarSubtitle": "Consulta los días que completaste y tu frecuencia de juego",
   "recordsOverallNote": "{cleared} de {total} puzles completados en todos los niveles.",
-  "recordsWeekActiveDays": "Días activos: {count}",
-  "recordsWeekCompletions": "Completados: {count}",
   "recordsWeekDayDone": "{day}: {count} completados",
   "recordsWeekDayNone": "{day}: sin completados",
   "recordsStatsPageSubtitle": "Victorias y tiempo promedio de un vistazo.",
@@ -330,14 +317,6 @@
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
-  },
-  "recordsStatAverageWrongFormatted": "{value}",
-  "@recordsStatAverageWrongFormatted": {
-    "placeholders": {
-      "value": {
-        "type": "String"
       }
     }
   },
@@ -674,12 +653,11 @@
   "recordsSummaryHeroMilestone": "{count, plural, =1{¡Has llegado a 1 puzle! Qué constancia} other{¡Has llegado a {count} puzles! Qué constancia}}",
   "recordsSummaryHeroGrowing": "{count, plural, =1{Ya has resuelto 1 puzle} other{Ya has resuelto {count} puzles}}",
   "recordsSummaryHeroStacked": "{count, plural, =1{Tu registro suma 1 puzle} other{Tu registro suma {count} puzles}}",
-  "recordsLevelRingsTitle": "Progreso por nivel",
   "recordsLevelRingSemantics": "{level}, {cleared, plural, =1{1 de {total} completado} other{{cleared} de {total} completados}}",
-  "recordsSummaryAllPerfect": "Todos resueltos sin errores",
-  "recordsSummaryPartialPerfect": "{count, plural, =1{1 de ellos sin errores} other{{count} de ellos sin errores}}",
+  "recordsSummaryAllPerfect": "Los resolviste todos sin errores",
+  "recordsSummaryPartialPerfect": "{count, plural, =1{Resolviste 1 de ellos sin errores} other{Resolviste {count} de ellos sin errores}}",
   "recordsSummaryStreakPlaying": "{days, plural, =1{Jugaste 1 día seguido} other{Llevas {days} días seguidos jugando}}",
-  "recordsSummaryPlayDays": "{days, plural, =1{1 día jugado} other{{days} días jugados}}",
+  "recordsSummaryPlayDays": "{days, plural, =1{Has jugado 1 día} other{Has jugado {days} días}}",
   "recordsSummaryEmptyTitle": "¿Creamos tu primer registro?",
   "recordsSummaryEmptyBody": "Cuando completes un puzle, tus registros se acumularán aquí",
   "challengeTodayEyebrow": "Hoy",
@@ -760,5 +738,13 @@
   "levelNoPuzzlesAvailable": "No hay puzles disponibles para este nivel.",
   "levelLastPlayedToday": "Hoy",
   "levelLastPlayedYesterday": "Ayer",
-  "levelLastPlayedDaysAgo": "Hace {count, plural, =1{1 día} other{{count} días}}"
+  "levelLastPlayedDaysAgo": "Hace {count, plural, =1{1 día} other{{count} días}}",
+  "recordsRecentTitle": "Completados recientes",
+  "recordsRecentSubtitle": "Toca un puzle para volver a jugarlo",
+  "recordsRecentViewAll": "Ver todo ({count})",
+  "recordsRecentYesterday": "Ayer",
+  "recordsMetricHintFree": "Resueltos sin pistas",
+  "recordsMetricMistakeFree": "Resueltos sin errores",
+  "recordsMetricTypicalTime": "Tiempo habitual por puzle",
+  "recordsTypicalTimeValue": "Unos {minutes} min"
 }

@@ -261,29 +261,6 @@
   "recordsTrendLegendDailyClears": "Daily clears",
   "recordsTrendTodayLabel": "Today",
   "recordsPlayInsightsTitle": "This week's activity",
-  "recordsWeekSubtitle": "Tap a day to see your record",
-  "recordsWeeklyGoalLabel": "This week's goal",
-  "recordsWeeklyGoalProgress": "{goal, plural, =1{{done} / 1 puzzle} other{{done} / {goal} puzzles}}",
-  "@recordsWeeklyGoalProgress": {
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "goal": {
-        "type": "int"
-      }
-    }
-  },
-  "recordsWeeklyGoalStart": "Start your first puzzle this week",
-  "recordsWeeklyGoalRemaining": "{count, plural, =1{Just 1 more puzzle to reach your goal} other{Just {count} more puzzles to reach your goal}}",
-  "@recordsWeeklyGoalRemaining": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordsWeeklyGoalAchieved": "You reached this week's goal",
   "gameResultWeeklyGoalAchieved": "You reached this week's goal",
   "recordsPlayCalendarTitle": "By day",
   "recordsWeeklyReportTitle": "Weekly report",
@@ -317,11 +294,8 @@
   "recordsPacePreviousWindow": "Previous 7 days",
   "recordsPaceDelta": "Change",
   "recordsMetricClears": "Clears (filtered)",
-  "recordsMetricClearRate": "Puzzles completed",
   "recordsMetricPerfectRate": "Mistake-free share",
   "recordsSummaryMetricsFootnote": "Each puzzle counts once, using its best record, and follows your active filters. Completion compares those puzzles with the total number of puzzles in the same scope.",
-  "recordsMetricAvgTime": "Average solve time",
-  "recordsMetricAvgWrong": "Avg. mistakes",
   "recordsByLevelTitle": "Records by level",
   "recordsByLevelSubtitle": "Select a difficulty to compare records",
   "recordsByLevelEmpty": "No stats for this filter.",
@@ -334,8 +308,6 @@
   "recordsRetry": "Try again",
   "recordsEmptyAction": "Start a puzzle",
   "recordsLevelEmpty": "No completed puzzles at this level yet.",
-  "recordsRowBestTime": "Fastest time",
-  "recordsAverageBasisNote": "Averages are based on each puzzle's best record.",
   "recordsCalendarTitle": "Last {weeks} weeks of activity",
   "@recordsCalendarTitle": {
     "placeholders": {
@@ -352,22 +324,6 @@
         "type": "int"
       },
       "total": {
-        "type": "int"
-      }
-    }
-  },
-  "recordsWeekActiveDays": "Active days: {count}",
-  "@recordsWeekActiveDays": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordsWeekCompletions": "Completed: {count}",
-  "@recordsWeekCompletions": {
-    "placeholders": {
-      "count": {
         "type": "int"
       }
     }
@@ -429,14 +385,6 @@
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
-  },
-  "recordsStatAverageWrongFormatted": "{value}",
-  "@recordsStatAverageWrongFormatted": {
-    "placeholders": {
-      "value": {
-        "type": "String"
       }
     }
   },
@@ -895,7 +843,6 @@
       }
     }
   },
-  "recordsLevelRingsTitle": "Progress by level",
   "recordsLevelRingSemantics": "{level}, {cleared, plural, =1{1 of {total} completed} other{{cleared} of {total} completed}}",
   "@recordsLevelRingSemantics": {
     "placeholders": {
@@ -910,8 +857,8 @@
       }
     }
   },
-  "recordsSummaryAllPerfect": "All solved without mistakes",
-  "recordsSummaryPartialPerfect": "{count, plural, =1{1 of them without mistakes} other{{count} of them without mistakes}}",
+  "recordsSummaryAllPerfect": "You solved them all without mistakes",
+  "recordsSummaryPartialPerfect": "{count, plural, =1{You solved 1 of them without mistakes} other{You solved {count} of them without mistakes}}",
   "@recordsSummaryPartialPerfect": {
     "placeholders": {
       "count": {
@@ -919,7 +866,7 @@
       }
     }
   },
-  "recordsSummaryStreakPlaying": "{days, plural, =1{Played 1 day in a row} other{Playing {days} days in a row}}",
+  "recordsSummaryStreakPlaying": "{days, plural, =1{You played 1 day in a row} other{You've been playing {days} days in a row}}",
   "@recordsSummaryStreakPlaying": {
     "placeholders": {
       "days": {
@@ -927,7 +874,7 @@
       }
     }
   },
-  "recordsSummaryPlayDays": "{days, plural, =1{1 day played} other{{days} days played}}",
+  "recordsSummaryPlayDays": "{days, plural, =1{You've played on 1 day} other{You've played on {days} days}}",
   "@recordsSummaryPlayDays": {
     "placeholders": {
       "days": {
@@ -1097,6 +1044,28 @@
   "@levelLastPlayedDaysAgo": {
     "placeholders": {
       "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsRecentTitle": "Recent completions",
+  "recordsRecentSubtitle": "Tap a puzzle to play it again",
+  "recordsRecentViewAll": "View all ({count})",
+  "@recordsRecentViewAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsRecentYesterday": "Yesterday",
+  "recordsMetricHintFree": "Solved without hints",
+  "recordsMetricMistakeFree": "Solved without mistakes",
+  "recordsMetricTypicalTime": "Typical time per puzzle",
+  "recordsTypicalTimeValue": "About {minutes} min",
+  "@recordsTypicalTimeValue": {
+    "placeholders": {
+      "minutes": {
         "type": "int"
       }
     }

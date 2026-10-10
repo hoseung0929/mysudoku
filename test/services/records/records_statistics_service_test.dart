@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sudoku159/constants/records_level_filter.dart';
+import 'package:sudoku159/services/records/recent_completions_service.dart';
 import 'package:sudoku159/services/records/records_statistics_service.dart';
 import 'package:sudoku159/utils/app_logger.dart';
 
@@ -371,6 +372,84 @@ void main() {
 
       expect(summary['current_streak_days'], 2);
       expect(summary['best_streak_days'], 2);
+    });
+  });
+
+  group('buildLevelInsight', () {
+    Map<String, dynamic> record(int number,
+            {int time = 300, int wrong = 0, int hints = 0}) =>
+        {
+          'level_name': '초급',
+          'game_number': number,
+          'clear_time': time,
+          'wrong_count': wrong,
+          'hints_used': hints,
+        };
+    RecentCompletion run(int number,
+            {int time = 300, int wrong = 0, int hints = 0}) =>
+        RecentCompletion(
+          levelName: '초급',
+          gameNumber: number,
+          clearDate: '2026-10-10',
+          clearTime: time,
+          wrongCount: wrong,
+          hintsUsed: hints,
+        );
+
+    test('a puzzle counts once if any run was hint-free / mistake-free', () {
+      final insight = RecordsStatisticsService.buildLevelInsight(
+        levelName: '초급',
+        clearRecords: [record(1), record(2)],
+        completions: [
+          run(1, hints: 2, wrong: 1),
+          run(1, hints: 0, wrong: 1), // 다시 풀어 힌트 없이 완료
+          run(2, hints: 1, wrong: 0),
+        ],
+      );
+      expect(insight.completed, 2);
+      expect(insight.hintFree, 1);
+      expect(insight.mistakeFree, 1);
+    });
+
+    test('typical time is the median of every run, replays included', () {
+      final odd = RecordsStatisticsService.buildLevelInsight(
+        levelName: '초급',
+        clearRecords: [record(1), record(2)],
+        completions: [
+          run(1, time: 100),
+          run(1, time: 900),
+          run(2, time: 400),
+        ],
+      );
+      expect(odd.typicalSeconds, 400); // 매우 긴 판(900초)에 끌려가지 않는다.
+      final even = RecordsStatisticsService.buildLevelInsight(
+        levelName: '초급',
+        clearRecords: [record(1)],
+        completions: [run(1, time: 100), run(1, time: 301)],
+      );
+      expect(even.typicalSeconds, 201);
+    });
+
+    test('puzzles without run history fall back to their best record', () {
+      final insight = RecordsStatisticsService.buildLevelInsight(
+        levelName: '초급',
+        clearRecords: [record(1, time: 200, wrong: 0, hints: 1)],
+        completions: const [],
+      );
+      expect(insight.completed, 1);
+      expect(insight.hintFree, 0);
+      expect(insight.mistakeFree, 1);
+      expect(insight.typicalSeconds, 200);
+    });
+
+    test('other levels are ignored; no records means no typical time', () {
+      final insight = RecordsStatisticsService.buildLevelInsight(
+        levelName: '중급',
+        clearRecords: [record(1)],
+        completions: [run(1)],
+      );
+      expect(insight.completed, 0);
+      expect(insight.typicalSeconds, isNull);
     });
   });
 }

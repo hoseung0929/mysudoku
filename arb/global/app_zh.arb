@@ -227,12 +227,6 @@
   "recordsTrendLegendDailyClears": "每日通关",
   "recordsTrendTodayLabel": "今天",
   "recordsPlayInsightsTitle": "本周活动",
-  "recordsWeekSubtitle": "点按星期查看记录",
-  "recordsWeeklyGoalLabel": "本周目标",
-  "recordsWeeklyGoalProgress": "{goal, plural, other{{done} / {goal} 道}}",
-  "recordsWeeklyGoalStart": "开始本周的第一道谜题",
-  "recordsWeeklyGoalRemaining": "{count, plural, other{再完成 {count} 道即可达成目标}}",
-  "recordsWeeklyGoalAchieved": "你达成了本周目标",
   "gameResultWeeklyGoalAchieved": "你达成了本周目标",
   "recordsPlayCalendarTitle": "按天查看",
   "recordsWeeklyReportTitle": "本周报告",
@@ -266,11 +260,8 @@
   "recordsPacePreviousWindow": "此前 7 天",
   "recordsPaceDelta": "变化",
   "recordsMetricClears": "通关数（已筛选）",
-  "recordsMetricClearRate": "已完成谜题",
   "recordsMetricPerfectRate": "无失误占比",
   "recordsSummaryMetricsFootnote": "每道谜题只按其最佳记录计一次，并遵循当前筛选。完成情况是与同一范围内谜题总数的比较。",
-  "recordsMetricAvgTime": "平均完成用时",
-  "recordsMetricAvgWrong": "平均失误",
   "recordsByLevelTitle": "按难度的记录",
   "recordsByLevelSubtitle": "选择难度来比较记录",
   "recordsByLevelEmpty": "该筛选条件下暂无统计数据。",
@@ -283,13 +274,9 @@
   "recordsRetry": "重试",
   "recordsEmptyAction": "开始解题",
   "recordsLevelEmpty": "该难度还没有完成记录。",
-  "recordsRowBestTime": "最快记录",
-  "recordsAverageBasisNote": "平均值以每道谜题的最佳记录为准。",
   "recordsCalendarTitle": "最近 {weeks} 周活动",
   "recordsCalendarSubtitle": "查看完成日期和游玩频率",
   "recordsOverallNote": "所有难度共 {total} 道谜题，已完成 {cleared} 道。",
-  "recordsWeekActiveDays": "活动 {count} 天",
-  "recordsWeekCompletions": "完成 {count} 局",
   "recordsWeekDayDone": "{day}：完成 {count} 局",
   "recordsWeekDayNone": "{day}：没有完成",
   "recordsStatsPageSubtitle": "一览通关数与平均用时。",
@@ -330,14 +317,6 @@
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
-  },
-  "recordsStatAverageWrongFormatted": "{value}",
-  "@recordsStatAverageWrongFormatted": {
-    "placeholders": {
-      "value": {
-        "type": "String"
       }
     }
   },
@@ -674,12 +653,11 @@
   "recordsSummaryHeroMilestone": "{count, plural, other{已突破 {count} 道谜题}}",
   "recordsSummaryHeroGrowing": "{count, plural, other{已经解开 {count} 道谜题了}}",
   "recordsSummaryHeroStacked": "{count, plural, other{{count} 道谜题一点点积累起来}}",
-  "recordsLevelRingsTitle": "各难度进度",
   "recordsLevelRingSemantics": "{level}，{total, plural, other{{total} 道中已完成 {cleared} 道}}",
   "recordsSummaryAllPerfect": "全部无失误完成",
-  "recordsSummaryPartialPerfect": "其中 {count} 道无失误",
+  "recordsSummaryPartialPerfect": "其中 {count} 道无失误完成",
   "recordsSummaryStreakPlaying": "已连续玩了 {days} 天",
-  "recordsSummaryPlayDays": "游玩 {days} 天",
+  "recordsSummaryPlayDays": "已经玩了 {days} 天",
   "recordsSummaryEmptyTitle": "来创建第一条记录吧",
   "recordsSummaryEmptyBody": "完成谜题后，记录会在这里累积",
   "challengeTodayEyebrow": "今日动态",
@@ -760,5 +738,13 @@
   "levelNoPuzzlesAvailable": "此难度暂无可用题目。",
   "levelLastPlayedToday": "今天",
   "levelLastPlayedYesterday": "昨天",
-  "levelLastPlayedDaysAgo": "{count} 天前"
+  "levelLastPlayedDaysAgo": "{count} 天前",
+  "recordsRecentTitle": "最近完成",
+  "recordsRecentSubtitle": "点击题目即可再玩一次",
+  "recordsRecentViewAll": "查看全部（{count}）",
+  "recordsRecentYesterday": "昨天",
+  "recordsMetricHintFree": "无提示完成",
+  "recordsMetricMistakeFree": "无失误完成",
+  "recordsMetricTypicalTime": "每题通常用时",
+  "recordsTypicalTimeValue": "约 {minutes} 分钟"
 }

@@ -496,38 +496,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsPlayInsightsTitle => '이번 주 활동';
 
   @override
-  String get recordsWeekSubtitle => '요일을 눌러 기록을 확인하세요';
-
-  @override
-  String get recordsWeeklyGoalLabel => '이번 주 목표';
-
-  @override
-  String recordsWeeklyGoalProgress(int done, int goal) {
-    String _temp0 = intl.Intl.pluralLogic(
-      goal,
-      locale: localeName,
-      other: '$done / $goal판',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get recordsWeeklyGoalStart => '이번 주 첫 퍼즐을 시작해보세요';
-
-  @override
-  String recordsWeeklyGoalRemaining(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count판만 더 완료하면 목표를 달성해요',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get recordsWeeklyGoalAchieved => '이번 주 목표를 달성했어요';
-
-  @override
   String get gameResultWeeklyGoalAchieved => '이번 주 목표를 달성했어요';
 
   @override
@@ -580,20 +548,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsMetricClears => '클리어 (필터)';
 
   @override
-  String get recordsMetricClearRate => '완료한 퍼즐';
-
-  @override
   String get recordsMetricPerfectRate => '실수 없이 완료한 비율';
 
   @override
   String get recordsSummaryMetricsFootnote =>
       '퍼즐마다 최고 기록 한 건만 세고, 기간·난이도 필터를 반영해요. 완료 현황은 같은 범위의 전체 퍼즐 수와 비교한 값이에요.';
-
-  @override
-  String get recordsMetricAvgTime => '평균 완료 시간';
-
-  @override
-  String get recordsMetricAvgWrong => '평균 실수';
 
   @override
   String get recordsByLevelTitle => '난이도별 기록';
@@ -633,12 +592,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordsLevelEmpty => '이 난이도에서 완료한 퍼즐이 아직 없어요.';
 
   @override
-  String get recordsRowBestTime => '가장 빠른 기록';
-
-  @override
-  String get recordsAverageBasisNote => '평균은 퍼즐별 최고 기록 기준이에요.';
-
-  @override
   String recordsCalendarTitle(int weeks) {
     return '최근 $weeks주 활동';
   }
@@ -649,16 +602,6 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String recordsOverallNote(int cleared, int total) {
     return '전체 난이도에서 $total개 중 $cleared개를 완료했어요.';
-  }
-
-  @override
-  String recordsWeekActiveDays(int count) {
-    return '활동 $count일';
-  }
-
-  @override
-  String recordsWeekCompletions(int count) {
-    return '완료 $count판';
   }
 
   @override
@@ -738,11 +681,6 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String recordsStatAverageWrongFormatted(String value) {
-    return '$value회';
-  }
-
-  @override
   String get recordsDifficultySnapshotEmpty => '아직 난이도별 기록이 없어요.';
 
   @override
@@ -798,7 +736,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get recordsRecentTitle => '최근 클리어';
+  String get recordsRecentTitle => '최근 완료';
 
   @override
   String get recordsRecentEmpty => '선택한 조건의 클리어 기록이 없습니다.';
@@ -1363,9 +1301,6 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get recordsLevelRingsTitle => '난이도별 진행';
-
-  @override
   String recordsLevelRingSemantics(String level, int cleared, int total) {
     String _temp0 = intl.Intl.pluralLogic(
       total,
@@ -1385,12 +1320,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String recordsSummaryStreakPlaying(num days) {
-    return '$days일 연속 플레이 중';
+    return '$days일 연속으로 플레이하고 있어요';
   }
 
   @override
   String recordsSummaryPlayDays(num days) {
-    return '플레이 $days일';
+    return '$days일 동안 플레이했어요';
   }
 
   @override
@@ -1637,5 +1572,30 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String levelLastPlayedDaysAgo(int count) {
     return '$count일 전';
+  }
+
+  @override
+  String get recordsRecentSubtitle => '퍼즐을 눌러 다시 풀 수 있어요';
+
+  @override
+  String recordsRecentViewAll(int count) {
+    return '전체 보기 ($count)';
+  }
+
+  @override
+  String get recordsRecentYesterday => '어제';
+
+  @override
+  String get recordsMetricHintFree => '힌트 없이 푼 퍼즐';
+
+  @override
+  String get recordsMetricMistakeFree => '실수 없이 푼 퍼즐';
+
+  @override
+  String get recordsMetricTypicalTime => '한 판에 보통 걸리는 시간';
+
+  @override
+  String recordsTypicalTimeValue(int minutes) {
+    return '약 $minutes분';
   }
 }

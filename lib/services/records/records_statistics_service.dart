@@ -1,6 +1,6 @@
 import 'package:sudoku159/constants/records_level_filter.dart';
 import 'package:sudoku159/database/database_helper.dart';
-import 'package:sudoku159/services/challenge/weekly_goal_service.dart';
+import 'package:sudoku159/services/records/recent_completions_service.dart';
 
 class RecordsStatisticsData {
   const RecordsStatisticsData({
@@ -9,7 +9,7 @@ class RecordsStatisticsData {
     required this.recent,
     required this.activitySummary,
     required this.events,
-    this.weeklyGoal,
+    this.recentCompletions = const [],
   });
 
   final Map<String, dynamic> overall;
@@ -20,16 +20,39 @@ class RecordsStatisticsData {
   /// 히트맵 표시 범위에 해당하는 클리어 이벤트
   final List<Map<String, dynamic>> events;
 
-  /// 이번 주 목표와 진행. 불러오지 못하면 null(목표 영역만 숨긴다).
-  final WeeklyGoalState? weeklyGoal;
+  /// 최근 완료 목록(최신 순, 다시 푼 판 포함).
+  final List<RecentCompletion> recentCompletions;
+}
+
+/// 난이도별 기록 카드의 세 값. 분모는 그 난이도에서 완료한 퍼즐 수다.
+class LevelInsight {
+  const LevelInsight({
+    required this.completed,
+    required this.hintFree,
+    required this.mistakeFree,
+    this.typicalSeconds,
+  });
+
+  /// 완료한 퍼즐 수(퍼즐당 한 번).
+  final int completed;
+
+  /// 한 번이라도 힌트 없이 완료한 퍼즐 수.
+  final int hintFree;
+
+  /// 한 번이라도 실수 없이 완료한 퍼즐 수.
+  final int mistakeFree;
+
+  /// 한 판에 보통 걸리는 시간(다시 푼 판 포함 완료 시간의 중앙값). 기록이 없으면 null.
+  final int? typicalSeconds;
 }
 
 class RecordsStatisticsService {
   RecordsStatisticsService({
     DatabaseHelper? databaseHelper,
-    WeeklyGoalService? weeklyGoalService,
+    RecentCompletionsService? recentCompletionsService,
   })  : _databaseHelper = databaseHelper ?? DatabaseHelper(),
-        _weeklyGoalService = weeklyGoalService ?? WeeklyGoalService();
+        _recentCompletionsService = recentCompletionsService ??
+            RecentCompletionsService(databaseHelper: databaseHelper);
 
   static const List<String> levelOrder = ['초급', '중급', '고급', '전문가', '마스터'];
 
@@ -38,7 +61,7 @@ class RecordsStatisticsService {
   static const int _kTrendPastDaysInclusive = 6;
 
   final DatabaseHelper _databaseHelper;
-  final WeeklyGoalService _weeklyGoalService;
+  final RecentCompletionsService _recentCompletionsService;
 
   Future<RecordsStatisticsData> load({
     required int selectedPeriodDays,
@@ -80,12 +103,7 @@ class RecordsStatisticsService {
       endDate: _formatDate(now),
     );
 
-    WeeklyGoalState? weeklyGoal;
-    try {
-      weeklyGoal = await _weeklyGoalService.resolve(events);
-    } catch (_) {
-      weeklyGoal = null;
-    }
+    final recentCompletions = await _recentCompletionsService.load();
 
     return RecordsStatisticsData(
       overall: overall,
@@ -93,7 +111,7 @@ class RecordsStatisticsService {
       recent: recent,
       activitySummary: activitySummary,
       events: events,
-      weeklyGoal: weeklyGoal,
+      recentCompletions: recentCompletions,
     );
   }
 
@@ -171,6 +189,54 @@ class RecordsStatisticsService {
       'total_average_time': avgTime,
       'total_average_wrong_count': avgWrong,
     };
+  }
+
+  /// [clearRecords]는 퍼즐별 최고 기록(`clear_records`), [completions]는 다시 푼
+  /// 판까지 모든 완료다. 완료 이력(`clear_events`)이 없는 오래된 퍼즐은 최고 기록
+  /// 한 판으로 대신 센다.
+  static LevelInsight buildLevelInsight({
+    required String levelName,
+    required List<Map<String, dynamic>> clearRecords,
+    required List<RecentCompletion> completions,
+  }) {
+    final records =
+        clearRecords.where((r) => r['level_name'] == levelName).toList();
+    final runs = completions.where((c) => c.levelName == levelName).toList();
+    final runsByPuzzle = <int, List<RecentCompletion>>{};
+    for (final run in runs) {
+      (runsByPuzzle[run.gameNumber] ??= []).add(run);
+    }
+
+    var hintFree = 0;
+    var mistakeFree = 0;
+    final times = <int>[for (final run in runs) run.clearTime];
+    for (final record in records) {
+      final number = _recordInt(record, 'game_number');
+      final puzzleRuns = runsByPuzzle[number];
+      if (puzzleRuns == null || puzzleRuns.isEmpty) {
+        if (_recordInt(record, 'hints_used') == 0) hintFree++;
+        if (_recordInt(record, 'wrong_count') == 0) mistakeFree++;
+        times.add(_recordInt(record, 'clear_time'));
+        continue;
+      }
+      if (puzzleRuns.any((r) => r.hintsUsed == 0)) hintFree++;
+      if (puzzleRuns.any((r) => r.wrongCount == 0)) mistakeFree++;
+    }
+
+    int? typical;
+    if (times.isNotEmpty) {
+      times.sort();
+      final mid = times.length ~/ 2;
+      typical = times.length.isOdd
+          ? times[mid]
+          : ((times[mid - 1] + times[mid]) / 2).round();
+    }
+    return LevelInsight(
+      completed: records.length,
+      hintFree: hintFree,
+      mistakeFree: mistakeFree,
+      typicalSeconds: typical,
+    );
   }
 
   List<Map<String, dynamic>> buildLevelStats({

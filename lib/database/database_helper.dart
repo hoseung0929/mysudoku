@@ -1,3 +1,4 @@
+import 'package:sudoku159/model/daily_challenge_completion_detail.dart';
 
 import 'database_manager.dart';
 import 'daily_challenge_completion_repository.dart';
@@ -206,6 +207,12 @@ class DatabaseHelper {
     return _dailyChallengeCompletionRepository.getStreakEligibleDatesDescending(
       limit: limit,
     );
+  }
+
+  /// 모든 날짜의 오늘의 도전 완료 세부 기록을 반환합니다.
+  Future<List<DailyChallengeCompletionDetail>>
+      getAllDailyChallengeCompletions() async {
+    return _dailyChallengeCompletionRepository.getAllCompletions();
   }
 
   /// 특정 레벨의 클리어 기록을 삭제합니다.

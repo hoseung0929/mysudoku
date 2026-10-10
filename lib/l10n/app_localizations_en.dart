@@ -515,40 +515,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsPlayInsightsTitle => 'This week\'s activity';
 
   @override
-  String get recordsWeekSubtitle => 'Tap a day to see your record';
-
-  @override
-  String get recordsWeeklyGoalLabel => 'This week\'s goal';
-
-  @override
-  String recordsWeeklyGoalProgress(int done, int goal) {
-    String _temp0 = intl.Intl.pluralLogic(
-      goal,
-      locale: localeName,
-      other: '$done / $goal puzzles',
-      one: '$done / 1 puzzle',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get recordsWeeklyGoalStart => 'Start your first puzzle this week';
-
-  @override
-  String recordsWeeklyGoalRemaining(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Just $count more puzzles to reach your goal',
-      one: 'Just 1 more puzzle to reach your goal',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get recordsWeeklyGoalAchieved => 'You reached this week\'s goal';
-
-  @override
   String get gameResultWeeklyGoalAchieved => 'You reached this week\'s goal';
 
   @override
@@ -615,20 +581,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsMetricClears => 'Clears (filtered)';
 
   @override
-  String get recordsMetricClearRate => 'Puzzles completed';
-
-  @override
   String get recordsMetricPerfectRate => 'Mistake-free share';
 
   @override
   String get recordsSummaryMetricsFootnote =>
       'Each puzzle counts once, using its best record, and follows your active filters. Completion compares those puzzles with the total number of puzzles in the same scope.';
-
-  @override
-  String get recordsMetricAvgTime => 'Average solve time';
-
-  @override
-  String get recordsMetricAvgWrong => 'Avg. mistakes';
 
   @override
   String get recordsByLevelTitle => 'Records by level';
@@ -669,13 +626,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsLevelEmpty => 'No completed puzzles at this level yet.';
 
   @override
-  String get recordsRowBestTime => 'Fastest time';
-
-  @override
-  String get recordsAverageBasisNote =>
-      'Averages are based on each puzzle\'s best record.';
-
-  @override
   String recordsCalendarTitle(int weeks) {
     return 'Last $weeks weeks of activity';
   }
@@ -687,16 +637,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String recordsOverallNote(int cleared, int total) {
     return '$cleared of $total puzzles completed across all levels.';
-  }
-
-  @override
-  String recordsWeekActiveDays(int count) {
-    return 'Active days: $count';
-  }
-
-  @override
-  String recordsWeekCompletions(int count) {
-    return 'Completed: $count';
   }
 
   @override
@@ -795,11 +735,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String recordsStatAverageWrongFormatted(String value) {
-    return '$value';
-  }
-
-  @override
   String get recordsDifficultySnapshotEmpty =>
       'Play a few games to see your difficulty mix here.';
 
@@ -860,7 +795,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get recordsRecentTitle => 'Recent clears';
+  String get recordsRecentTitle => 'Recent completions';
 
   @override
   String get recordsRecentEmpty => 'No clears match this filter.';
@@ -1463,9 +1398,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get recordsLevelRingsTitle => 'Progress by level';
-
-  @override
   String recordsLevelRingSemantics(String level, int cleared, int total) {
     String _temp0 = intl.Intl.pluralLogic(
       cleared,
@@ -1477,15 +1409,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get recordsSummaryAllPerfect => 'All solved without mistakes';
+  String get recordsSummaryAllPerfect => 'You solved them all without mistakes';
 
   @override
   String recordsSummaryPartialPerfect(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count of them without mistakes',
-      one: '1 of them without mistakes',
+      other: 'You solved $count of them without mistakes',
+      one: 'You solved 1 of them without mistakes',
     );
     return '$_temp0';
   }
@@ -1495,8 +1427,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       days,
       locale: localeName,
-      other: 'Playing $days days in a row',
-      one: 'Played 1 day in a row',
+      other: 'You\'ve been playing $days days in a row',
+      one: 'You played 1 day in a row',
     );
     return '$_temp0';
   }
@@ -1506,8 +1438,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       days,
       locale: localeName,
-      other: '$days days played',
-      one: '1 day played',
+      other: 'You\'ve played on $days days',
+      one: 'You\'ve played on 1 day',
     );
     return '$_temp0';
   }
@@ -1794,5 +1726,30 @@ class AppLocalizationsEn extends AppLocalizations {
       one: '1 day ago',
     );
     return '$_temp0';
+  }
+
+  @override
+  String get recordsRecentSubtitle => 'Tap a puzzle to play it again';
+
+  @override
+  String recordsRecentViewAll(int count) {
+    return 'View all ($count)';
+  }
+
+  @override
+  String get recordsRecentYesterday => 'Yesterday';
+
+  @override
+  String get recordsMetricHintFree => 'Solved without hints';
+
+  @override
+  String get recordsMetricMistakeFree => 'Solved without mistakes';
+
+  @override
+  String get recordsMetricTypicalTime => 'Typical time per puzzle';
+
+  @override
+  String recordsTypicalTimeValue(int minutes) {
+    return 'About $minutes min';
   }
 }

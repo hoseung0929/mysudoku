@@ -141,6 +141,15 @@ class DailyChallengeCompletionRepository {
     };
   }
 
+  /// 모든 날짜의 완료 세부 기록(기록 화면의 최근 완료 목록에서 쓴다).
+  Future<List<DailyChallengeCompletionDetail>> getAllCompletions() async {
+    final db = await _dbManager.database;
+    final rows = await db.query('daily_challenge_completions');
+    return rows
+        .map(DailyChallengeCompletionDetail.fromRow)
+        .toList(growable: false);
+  }
+
   Future<void> clearAll() async {
     final db = await _dbManager.database;
     await db.delete('daily_challenge_completions');
