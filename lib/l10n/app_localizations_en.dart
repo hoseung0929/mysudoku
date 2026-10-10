@@ -283,6 +283,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gameWrongShort => 'Wrong';
 
   @override
+  String get gameMistakesShort => 'Mistakes';
+
+  @override
   String get gamePerfectShort => 'Perfect';
 
   @override

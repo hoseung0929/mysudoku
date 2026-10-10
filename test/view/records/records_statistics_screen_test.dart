@@ -381,6 +381,8 @@ void main() {
     'phone 1.3x dark': (const Size(390, 844), 1.3, true),
     'tablet portrait': (const Size(768, 1024), 1.0, false),
     'tablet landscape dark': (const Size(1024, 768), 1.0, true),
+    'ipad 11 landscape 1.3x': (const Size(1194, 834), 1.3, false),
+    'ipad 13 landscape dark': (const Size(1366, 1024), 1.0, true),
   }.entries) {
     testWidgets('renders without overflow: ${entry.key}', (tester) async {
       final (size, scale, dark) = entry.value;
@@ -732,7 +734,7 @@ void main() {
     expect(find.textContaining('Longest streak'), findsOneWidget);
   });
 
-  testWidgets('tablet landscape uses two columns capped at 960 wide',
+  testWidgets('tablet landscape uses two columns capped at 1072 wide',
       (tester) async {
     await pumpRecords(
       tester,
@@ -744,9 +746,23 @@ void main() {
         tester.getTopLeft(find.text('Last 26 weeks of activity')).dx;
     expect(calendarLeft, greaterThan(weekLeft + 300)); // 오른쪽 칼럼
     final width = tester.getSize(find.text('Last 26 weeks of activity')).width;
-    expect(width, lessThan(960));
-    // 콘텐츠 바깥 여백이 가운데 정렬을 반영 (1280 - 960)/2 = 160
-    expect(weekLeft, greaterThanOrEqualTo(160));
+    expect(width, lessThan(1072));
+    // 가로형(폭 > 900): 카드 영역은 min(1072, 폭 - 64), 가운데 정렬.
+    // 1280 → 1072, 좌우 (1280 - 1072) / 2 = 104 (최소 32 이상).
+    expect(weekLeft, greaterThanOrEqualTo(104));
+    expect(weekLeft, lessThan(160));
+  });
+
+  testWidgets('phone and tablet portrait keep the 960 cap', (tester) async {
+    await pumpRecords(
+      tester,
+      () async => _data(recent: recent, events: events),
+      size: const Size(1024, 1366),
+    );
+    final weekLeft = tester.getTopLeft(find.text("This week's activity")).dx;
+    // 폭 1024 > 900이므로 가로형 규칙(1072 → 폭 - 64 = 960)이 같은 값이 된다.
+    expect(weekLeft, greaterThanOrEqualTo(32));
+    expect(tester.takeException(), isNull);
   });
 
   for (final lang in ['ko', 'ja', 'es', 'zh']) {

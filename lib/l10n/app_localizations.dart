@@ -614,6 +614,12 @@ abstract class AppLocalizations {
   /// **'Wrong'**
   String get gameWrongShort;
 
+  /// No description provided for @gameMistakesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Mistakes'**
+  String get gameMistakesShort;
+
   /// No description provided for @gamePerfectShort.
   ///
   /// In en, this message translates to:

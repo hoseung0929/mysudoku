@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:flutter/rendering.dart';
 import 'package:sudoku159/widgets/animated_progress_bar.dart';
 import 'package:sudoku159/widgets/press_scale.dart';
 import 'package:sudoku159/widgets/press_scale_listener.dart';
+import 'package:sudoku159/utils/tablet_hero_height.dart';
 import 'package:sudoku159/utils/light_haptic.dart';
 import 'package:flutter/services.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
@@ -68,7 +70,6 @@ class _HomeScreenState extends State<HomeScreen> {
   /// 홈 최상단 히어로 이미지(환영 문구 포함, 프로필 행 제외)의 고정 높이.
   /// 핵심 콘텐츠(시작 카드)가 더 빨리 보이도록 기존 값에서 24 줄였다.
   static const double _kHomeHeroHeightPhone = 236;
-  static const double _kHomeHeroHeightTablet = 276;
 
   /// 프로필·설정을 담은 축소 앱바의 콘텐츠 높이(상태바 높이 제외).
   static const double _kCollapsedAppBarContentHeight = 60;
@@ -497,7 +498,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   double _currentHeroHeight(BuildContext context) =>
       MediaQuery.sizeOf(context).width > 600
-          ? _kHomeHeroHeightTablet
+          ? tabletHeroHeight(context)
           : _kHomeHeroHeightPhone;
 
   /// 히어로가 축소 앱바 뒤로 완전히 넘어가면 앱바를 사진 위 오버레이(투명)에서
@@ -581,7 +582,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final mediaQuery = MediaQuery.of(context);
     final screenWidth = mediaQuery.size.width;
     final isTablet = screenWidth > 600;
-    final isLandscape = mediaQuery.orientation == Orientation.landscape;
+    // 회전 여부가 아니라 실제 폭으로 2열을 결정한다(Split View·세로 13" 포함).
+    final isLandscape = screenWidth > 900;
 
     final topInset = MediaQuery.paddingOf(context).top;
 
@@ -642,18 +644,32 @@ class _HomeScreenState extends State<HomeScreen> {
                 // 히어로 이미지는 본문과 함께 스크롤되고, 전체 너비를 유지하도록
                 // 좌우 패딩 밖에 둔다.
                 _buildHomeHeroImage(isTablet: true),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHomeHero(isTablet: true),
-                      const SizedBox(height: 20),
-                      _buildLevelExplorer(
-                        isTablet: true,
-                        isLandscape: isLandscape,
+                // 넓은 화면에서 본문이 화면 전체로 늘어나지 않도록 가운데 정렬·최대 폭.
+                Center(
+                  child: ConstrainedBox(
+                    // 가로형(폭 > 900)은 외곽 1120(최소 좌우 32), 그 외는 기존 1008.
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.sizeOf(context).width > 900
+                          ? math.min(
+                              MediaQuery.sizeOf(context).width - 64,
+                              1120.0,
+                            )
+                          : 960.0 + 48,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHomeHero(isTablet: true),
+                          const SizedBox(height: 20),
+                          _buildLevelExplorer(
+                            isTablet: true,
+                            isLandscape: isLandscape,
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ],
@@ -732,7 +748,7 @@ class _HomeScreenState extends State<HomeScreen> {
   /// 위에 시간대별 환영 문구만 겹쳐 보여준다(프로필·설정은 별도의 축소
   /// 앱바로 분리됨). 이제 고정되지 않고 본문과 함께 스크롤된다.
   Widget _buildHomeHeroImage({required bool isTablet}) {
-    final height = isTablet ? _kHomeHeroHeightTablet : _kHomeHeroHeightPhone;
+    final height = isTablet ? tabletHeroHeight(context) : _kHomeHeroHeightPhone;
     final greeting = ProfileGlassHeader.greetingMessage(
       l10n: AppLocalizations.of(context)!,
       hour: DateTime.now().hour,
@@ -801,12 +817,13 @@ class _HomeScreenState extends State<HomeScreen> {
             bottom: 18,
             child: KeepWordsText(
               greeting,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
-                fontSize: 18,
+                // 아이패드: 큰 히어로 이미지에 맞춰 28.
+                fontSize: isTablet ? 28 : 18,
                 fontWeight: FontWeight.w700,
                 height: 1.3,
-                shadows: [
+                shadows: const [
                   Shadow(color: Colors.black45, blurRadius: 6),
                 ],
               ),
@@ -853,7 +870,10 @@ class _HomeScreenState extends State<HomeScreen> {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: EdgeInsets.symmetric(
+            horizontal: isTablet ? 24 : 16,
+            vertical: isTablet ? 12 : 8,
+          ),
           child: MediaQuery.withClampedTextScaling(
             maxScaleFactor: 1.3,
             child: Row(
@@ -865,7 +885,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       onTap: _openProfileEditor,
                       borderRadius: BorderRadius.circular(14),
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(minHeight: 44),
+                        constraints:
+                            BoxConstraints(minHeight: isTablet ? 64 : 44),
                         child: Row(
                           children: [
                             Container(
@@ -880,7 +901,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               child: CircleAvatar(
-                                radius: 19,
+                                radius: isTablet ? 28 : 19,
                                 backgroundColor: onPhoto
                                     ? Colors.white.withValues(alpha: 0.25)
                                     : colorScheme.primaryContainer,
@@ -891,7 +912,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ) as ImageProvider,
                               ),
                             ),
-                            const SizedBox(width: 10),
+                            SizedBox(width: isTablet ? 14 : 10),
                             Expanded(
                               child: Text(
                                 displayName,
@@ -899,7 +920,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 17,
+                                  fontSize: isTablet ? 22 : 17,
                                   color: contentColor,
                                   shadows: textShadows,
                                 ),
@@ -965,7 +986,8 @@ class _HomeScreenState extends State<HomeScreen> {
         continueGame.game.gameNumber == challenge.gameNumber;
 
     return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: isTablet ? 640 : double.infinity),
+      // 아이패드: 본문 최대 폭(960) 안에서 아래 레벨 카드와 같은 폭을 쓴다.
+      constraints: const BoxConstraints(maxWidth: double.infinity),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -1006,6 +1028,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final busy = _isOpeningGame;
+    // 아이패드: 카드 글자를 카드·이미지 크기에 맞게 키운다(폰 값은 그대로).
+    final isTablet = MediaQuery.sizeOf(context).width > 600;
+    final startTitleFontSize = isTablet ? 22.0 : 20.0;
+    final startBodyFontSize = isTablet ? 16.0 : 14.0;
+    final startLabelFontSize = isTablet ? 14.0 : 12.0;
+    final startDetailFontSize = isTablet ? 15.0 : 13.0;
+    final TextStyle? startButtonTextStyle =
+        isTablet ? const TextStyle(fontSize: 16) : null;
 
     if (continueGame == null) {
       final firstTime = _challengeProgress?.lastClearDate == null;
@@ -1015,7 +1045,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(
             firstTime ? l10n.homeFirstStartTitle : l10n.homeNewPuzzleTitle,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: startTitleFontSize,
               fontWeight: FontWeight.w800,
               color: cs.onSurface,
             ),
@@ -1024,7 +1054,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(
             l10n.homeChooseLevelBody,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: startBodyFontSize,
               height: 1.4,
               color: cs.onSurfaceVariant,
             ),
@@ -1036,13 +1066,10 @@ class _HomeScreenState extends State<HomeScreen> {
         child: _homeCard(
           // 캐릭터는 최상단 히어로 이미지에 이미 나오므로, 캐릭터 중복을
           // 줄이기 위해 이 카드에서는 마스코트 장식 없이 문구만 보여준다.
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              textBlock,
-              const SizedBox(height: 14),
-              // 실제로 게임을 시작하지 않고 아래 난이도 선택 영역으로 이동한다.
-              FilledButton(
+          child: LayoutBuilder(
+            builder: (context, cardConstraints) {
+              final startButton = FilledButton(
+                // 실제로 게임을 시작하지 않고 아래 난이도 선택 영역으로 이동한다.
                 onPressed: _scrollToLevels,
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(50),
@@ -1050,9 +1077,32 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Text(
                   l10n.homeChooseLevelButton,
                   textAlign: TextAlign.center,
+                  style: startButtonTextStyle,
                 ),
-              ),
-            ],
+              );
+              // 넓은 카드(가로형)에서는 설명과 버튼을 가로로 배치하고 버튼 폭을
+              // 360으로 제한한다. 좁거나 큰 글자(1.3배 초과)에서는 기존 세로 배치.
+              final sideBySide = cardConstraints.maxWidth >= 720 &&
+                  MediaQuery.textScalerOf(context).scale(1.0) <= 1.3;
+              if (sideBySide) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(child: textBlock),
+                    const SizedBox(width: 24),
+                    SizedBox(width: 360, child: startButton),
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  textBlock,
+                  const SizedBox(height: 14),
+                  startButton,
+                ],
+              );
+            },
           ),
         ),
       );
@@ -1088,7 +1138,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ? l10n.challengeTodaysChallengeTitle
                           : l10n.homeContinueTitle,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: startLabelFontSize,
                         fontWeight: FontWeight.w700,
                         color: cs.onSurfaceVariant,
                       ),
@@ -1096,7 +1146,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       title,
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: startTitleFontSize,
                         fontWeight: FontWeight.w800,
                         color: cs.onSurface,
                       ),
@@ -1104,7 +1154,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       detail,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: startDetailFontSize,
                         color: cs.onSurfaceVariant,
                       ),
                     ),
@@ -1134,7 +1184,10 @@ class _HomeScreenState extends State<HomeScreen> {
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(50),
               ),
-              child: Text(l10n.levelContinueButton),
+              child: Text(
+                l10n.levelContinueButton,
+                style: startButtonTextStyle,
+              ),
             ),
           ),
           if (_totalContinueCount > 1)
@@ -1242,6 +1295,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final showArtwork = !isError &&
         MediaQuery.sizeOf(context).width >= 300 &&
         MediaQuery.textScalerOf(context).scale(1.0) <= 1.3;
+    // 아이패드: 제목 26 · 설명 17 · 라벨 16 · 버튼 17 · 아이콘 20 (폰은 18/13/13/14/16).
+    final isTabletText = MediaQuery.sizeOf(context).width > 600;
     final headingColor =
         showArtwork ? const Color(0xFF625D69) : cs.onSurfaceVariant;
     final titleColor = showArtwork ? const Color(0xFF27242C) : cs.onSurface;
@@ -1258,7 +1313,7 @@ class _HomeScreenState extends State<HomeScreen> {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            fontSize: 18,
+            fontSize: isTabletText ? 26 : 18,
             fontWeight: FontWeight.w800,
             color: titleColor,
           ),
@@ -1268,7 +1323,7 @@ class _HomeScreenState extends State<HomeScreen> {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            fontSize: 13,
+            fontSize: isTabletText ? 17 : 13,
             fontWeight: strong ? FontWeight.w700 : FontWeight.w600,
             color: headingColor,
           ),
@@ -1292,7 +1347,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     onEnd: _finishChallengeCompleteFade,
                     child: Icon(
                       Icons.check_circle_rounded,
-                      size: 20,
+                      size: isTabletText ? 26 : 20,
                       color: palette.primaryPurple,
                     ),
                   ),
@@ -1320,7 +1375,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Icon(
               Icons.calendar_today_rounded,
-              size: 16,
+              size: isTabletText ? 20 : 16,
               color: headingColor,
             ),
             const SizedBox(width: 8),
@@ -1328,7 +1383,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Text(
                 l10n.challengeTodaysChallengeTitle,
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: isTabletText ? 16 : 13,
                   fontWeight: FontWeight.w700,
                   color: headingColor,
                 ),
@@ -1336,7 +1391,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: isTabletText ? 10 : 6),
         titleText(puzzleTitle),
         subText(sub),
         if (progressPct > 0) ...[
@@ -1414,7 +1469,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : Text(buttonLabel, textAlign: TextAlign.center),
+                              : Text(
+                                  buttonLabel,
+                                  textAlign: TextAlign.center,
+                                  style: isTabletText
+                                      ? const TextStyle(fontSize: 17)
+                                      : null,
+                                ),
                         ),
                       ),
                     ),
@@ -1422,10 +1483,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   return narrow
                       ? Align(
                           alignment: Alignment.centerLeft,
-                          child: FractionallySizedBox(
-                            widthFactor: 0.62,
-                            child: button,
-                          ),
+                          // 아이패드: 카드가 넓어 62%면 버튼이 너무 길어지므로 폭 상한.
+                          child: MediaQuery.sizeOf(context).width > 600
+                              ? SizedBox(
+                                  width: math.min(
+                                    constraints.maxWidth * 0.62,
+                                    260.0,
+                                  ),
+                                  child: button,
+                                )
+                              : FractionallySizedBox(
+                                  widthFactor: 0.62,
+                                  child: button,
+                                ),
                         )
                       : button;
                 },
@@ -1435,52 +1505,67 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
 
-    final card = Container(
-      width: double.infinity,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: cs.outlineVariant),
-      ),
-      child: Stack(
-        children: [
-          if (showArtwork)
-            Positioned.fill(
-              child: ExcludeSemantics(
-                child: Image.asset(
-                  'assets/images/home_daily_challenge_card_bg.png',
-                  key: const Key('home_today_challenge_artwork'),
-                  fit: BoxFit.cover,
-                  alignment: Alignment.center,
-                ),
-              ),
-            ),
-          if (showArtwork)
-            const Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [
-                      Color.fromRGBO(255, 255, 255, 0.52),
-                      Color.fromRGBO(255, 255, 255, 0.16),
-                      Color.fromRGBO(255, 255, 255, 0),
-                    ],
-                    stops: [0, 0.38, 0.65],
+    // 아이패드: 배경 일러스트(3:1)가 넓은 카드에서 위아래가 잘리지 않도록
+    // 카드 폭에 맞춘 최소 높이를 두고(최대 260) 내용은 세로 중앙에 둔다.
+    final screenSize = MediaQuery.sizeOf(context);
+    final isTabletCard = screenSize.width > 600 && showArtwork;
+    // 카드 높이는 고정 폭이 아니라 레이아웃이 실제로 준 카드 폭(÷3, 상한 260)으로.
+    final card = LayoutBuilder(
+      builder: (context, cardConstraints) => Container(
+        width: double.infinity,
+        clipBehavior: Clip.antiAlias,
+        constraints: isTabletCard
+            ? BoxConstraints(
+                minHeight: math.min(cardConstraints.maxWidth / 3, 260),
+              )
+            : null,
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: cs.outlineVariant),
+        ),
+        child: Stack(
+          alignment: isTabletCard
+              ? AlignmentDirectional.centerStart
+              : AlignmentDirectional.topStart,
+          children: [
+            if (showArtwork)
+              Positioned.fill(
+                child: ExcludeSemantics(
+                  child: Image.asset(
+                    'assets/images/home_daily_challenge_card_bg.png',
+                    key: const Key('home_today_challenge_artwork'),
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
                   ),
                 ),
               ),
+            if (showArtwork)
+              const Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        Color.fromRGBO(255, 255, 255, 0.52),
+                        Color.fromRGBO(255, 255, 255, 0.16),
+                        Color.fromRGBO(255, 255, 255, 0),
+                      ],
+                      stops: [0, 0.38, 0.65],
+                    ),
+                  ),
+                ),
+              ),
+            // 상태가 바뀔 때 텍스트·버튼만 짧게 크로스페이드한다.
+            AnimatedSwitcher(
+              duration: reduceMotion
+                  ? Duration.zero
+                  : const Duration(milliseconds: 200),
+              child: content,
             ),
-          // 상태가 바뀔 때 텍스트·버튼만 짧게 크로스페이드한다.
-          AnimatedSwitcher(
-            duration: reduceMotion
-                ? Duration.zero
-                : const Duration(milliseconds: 200),
-            child: content,
-          ),
-        ],
+          ],
+        ),
       ),
     );
 

@@ -86,8 +86,11 @@ class _ProfileEditorContentState extends State<_ProfileEditorContent> {
         _draftImagePath != null &&
         File(_draftImagePath!).existsSync();
 
+    // heightFactor: 1 — 시트가 내용 높이만큼만 차지해야 아래로 드래그해서 닫기와
+    // 바깥 터치 닫기가 동작한다(이전엔 화면 전체를 덮어 둘 다 막혀 있었다).
     return Align(
       alignment: Alignment.bottomCenter,
+      heightFactor: 1.0,
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: isTablet ? 480 : double.infinity,
@@ -290,7 +293,8 @@ class _ProfileEditorContentState extends State<_ProfileEditorContent> {
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize:
+                          MediaQuery.sizeOf(context).width > 600 ? 16 : 14,
                       fontWeight: FontWeight.w600,
                       color: colors.textPrimary,
                     ),
@@ -298,7 +302,8 @@ class _ProfileEditorContentState extends State<_ProfileEditorContent> {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize:
+                          MediaQuery.sizeOf(context).width > 600 ? 14 : 12,
                       color: colors.textMuted,
                     ),
                   ),

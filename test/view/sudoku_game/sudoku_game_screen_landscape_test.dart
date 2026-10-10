@@ -121,6 +121,25 @@ void main() {
     },
   );
 
+  for (final size in const [
+    Size(1194, 834),
+    Size(1366, 1024),
+    Size(1024, 768),
+  ]) {
+    testWidgets(
+      'tablet landscape panel (status cards, bigger labels and badges) fits at ${size.width.toInt()}x${size.height.toInt()}',
+      (WidgetTester tester) async {
+        await pumpLandscapeGameScreen(tester, size: size);
+
+        expect(tester.takeException(), isNull);
+        expect(find.textContaining('OVERFLOWED'), findsNothing);
+        // 세로형과 같은 상태 카드 문구.
+        expect(find.text('Mistakes'), findsOneWidget);
+        expect(find.text('0 / 5'), findsOneWidget);
+      },
+    );
+  }
+
   testWidgets(
     'tablet landscape shows a pencil input overlay once a cell is selected, and writing a digit fills it',
     (WidgetTester tester) async {

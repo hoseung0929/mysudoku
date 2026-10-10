@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
+import 'package:sudoku159/widgets/dialog_metrics.dart';
 import 'package:sudoku159/widgets/game_result_dialog_frame.dart';
 
 /// 게임 오버 다이얼로그. 완료 다이얼로그와 같은 너비·여백·버튼 규칙을 쓴다.
@@ -35,29 +36,36 @@ class _GameOverDialogState extends State<GameOverDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
+    final m = DialogMetrics.of(context);
     return GameResultDialogFrame(
       body: [
         Text(
           l10n.gameOverTitle,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontSize: m.size(22.0, 26.0),
+            fontWeight: FontWeight.w700,
+          ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: m.spacing(12.0, 14.0)),
         Text(
           l10n.gameOverWrongLabel(widget.wrongCount, widget.maxWrongCount),
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 16,
+          style: TextStyle(
+            fontSize: m.size(16.0, 18.0),
             fontWeight: FontWeight.w600,
-            fontFeatures: [FontFeature.tabularFigures()],
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: m.spacing(8.0, 10.0)),
         Text(
           l10n.gameOverMessage,
           textAlign: TextAlign.center,
-          style:
-              TextStyle(fontSize: 14, height: 1.4, color: cs.onSurfaceVariant),
+          style: TextStyle(
+            fontSize: m.size(14.0, 16.0),
+            height: 1.4,
+            color: cs.onSurfaceVariant,
+          ),
         ),
       ],
       primaryLabel: l10n.gameRestartMenuTitle,

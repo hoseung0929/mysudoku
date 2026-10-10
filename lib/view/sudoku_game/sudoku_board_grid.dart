@@ -22,6 +22,7 @@ class SudokuBoardGrid extends StatelessWidget {
     this.highlightedMemoNumber,
     required this.onCellTapped,
     this.onPencilDigit,
+    this.emphasizeBlockLines = false,
     this.hintRegionCells = const {},
     this.hintBlockerCells = const {},
     this.hintTargetCell,
@@ -44,6 +45,9 @@ class SudokuBoardGrid extends StatelessWidget {
   // 아이패드 애플펜슬 필기 입력 콜백 (선택 사항). null이면(기본값, 아이폰
   // 호출부) 오버레이 자체를 만들지 않아 기존 동작과 완전히 동일하다.
   final void Function(int digit)? onPencilDigit;
+
+  /// 아이패드 세로: 3×3 블록 경계와 외곽선의 대비를 높인다(두께는 그대로).
+  final bool emphasizeBlockLines;
 
   // 힌트 설명 중 강조할 칸(칸 번호 = row * 9 + col). 비어 있으면 평소와 같다.
   final Set<int> hintRegionCells;
@@ -76,12 +80,26 @@ class SudokuBoardGrid extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final levelPalette = LevelStatusPalette.of(context);
     // ── 보드 라인 색상 ─────────────────────────────────────────────
-    final borderColor =
-        isDark ? const Color(0xFF2A2A2A) : context.colors.border;
-    final borderColorStrong =
-        isDark ? const Color(0xFF444444) : context.colors.border;
+    // 아이패드(emphasizeBlockLines)의 다크 모드: 셀 선이 배경(#1E1E1E)에 묻혀
+    // 보이지 않아 선 색을 한 단계 밝히고 조금 두껍게 한다. 아이폰·라이트는 그대로.
+    final brightDarkLines = isDark && emphasizeBlockLines;
+    final borderColor = isDark
+        ? (brightDarkLines ? const Color(0xFF4C4C4C) : const Color(0xFF2A2A2A))
+        : context.colors.border;
+    final thinLineWidth = brightDarkLines ? 0.7 : 0.35;
+    final borderColorStrong = isDark
+        ? (brightDarkLines ? const Color(0xFF6E6E6E) : const Color(0xFF444444))
+        : context.colors.border;
     final boardOutlineColor =
         isDark ? const Color(0xFF4A4A4A) : context.colors.border;
+    final blockLineColor = emphasizeBlockLines
+        ? Color.lerp(borderColorStrong, isDark ? Colors.white : Colors.black,
+            isDark ? 0.22 : 0.3)!
+        : borderColorStrong;
+    final outlineColor = emphasizeBlockLines
+        ? Color.lerp(boardOutlineColor, isDark ? Colors.white : Colors.black,
+            isDark ? 0.3 : 0.38)!
+        : boardOutlineColor;
     // ── 셀 하이라이트 색상 (다크/라이트 분기) ──────────────────────
     final selectedCellColor = isDark
         ? levelPalette.primaryPurple.withValues(alpha: 0.25)
@@ -179,8 +197,7 @@ class SudokuBoardGrid extends StatelessWidget {
         final board = Container(
           decoration: BoxDecoration(
             color: context.colors.surface,
-            border:
-                Border.all(color: boardOutlineColor, width: isDark ? 1.2 : 1.0),
+            border: Border.all(color: outlineColor, width: isDark ? 1.2 : 1.0),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF21382A).withValues(alpha: 0.06),
@@ -291,35 +308,35 @@ class SudokuBoardGrid extends StatelessWidget {
                                 border: Border(
                                   top: BorderSide(
                                     color: (row == 0 || row == 3 || row == 6)
-                                        ? borderColorStrong
+                                        ? blockLineColor
                                         : borderColor,
                                     width: (row == 0 || row == 3 || row == 6)
                                         ? 1.2
-                                        : 0.35,
+                                        : thinLineWidth,
                                   ),
                                   left: BorderSide(
                                     color: (col == 0 || col == 3 || col == 6)
-                                        ? borderColorStrong
+                                        ? blockLineColor
                                         : borderColor,
                                     width: (col == 0 || col == 3 || col == 6)
                                         ? 1.2
-                                        : 0.35,
+                                        : thinLineWidth,
                                   ),
                                   right: BorderSide(
                                     color: (col == 2 || col == 5 || col == 8)
-                                        ? borderColorStrong
+                                        ? blockLineColor
                                         : borderColor,
                                     width: (col == 2 || col == 5 || col == 8)
                                         ? 1.2
-                                        : 0.35,
+                                        : thinLineWidth,
                                   ),
                                   bottom: BorderSide(
                                     color: (row == 2 || row == 5 || row == 8)
-                                        ? borderColorStrong
+                                        ? blockLineColor
                                         : borderColor,
                                     width: (row == 2 || row == 5 || row == 8)
                                         ? 1.2
-                                        : 0.35,
+                                        : thinLineWidth,
                                   ),
                                 ),
                                 // 성공·오답 강조는 별도의 빠른 오버레이로 그려

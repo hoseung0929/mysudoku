@@ -144,6 +144,8 @@ class _SavedGamesScreenState extends State<SavedGamesScreen> {
               Text(
                 widget.description,
                 style: TextStyle(
+                  // 아이패드: 설명 16(폰은 테마 기본).
+                  fontSize: MediaQuery.sizeOf(context).width > 600 ? 16 : null,
                   color: colorScheme.onSurfaceVariant,
                 ),
               ),
@@ -306,7 +308,10 @@ class _SavedGameListTile extends StatelessWidget {
         onTap: tapEnabled ? onTap : null,
         borderRadius: BorderRadius.circular(18),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: MediaQuery.sizeOf(context).width > 600 ? 16 : 12,
+          ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: colorScheme.outlineVariant),
@@ -333,6 +338,8 @@ class _SavedGameListTile extends StatelessWidget {
                     Text(
                       title,
                       style: TextStyle(
+                        fontSize:
+                            MediaQuery.sizeOf(context).width > 600 ? 17 : null,
                         fontWeight: FontWeight.w700,
                         color: colorScheme.onSurface,
                       ),
@@ -341,7 +348,8 @@ class _SavedGameListTile extends StatelessWidget {
                     Text(
                       subtitle,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize:
+                            MediaQuery.sizeOf(context).width > 600 ? 14 : 12,
                         color: colorScheme.onSurfaceVariant,
                       ),
                     ),

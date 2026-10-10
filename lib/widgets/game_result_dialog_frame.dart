@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sudoku159/widgets/dialog_metrics.dart';
 
 /// 완료·실패 다이얼로그가 공유하는 틀.
 ///
@@ -31,6 +32,9 @@ class GameResultDialogFrame extends StatelessWidget {
     final media = MediaQuery.of(context);
     final safeHeight =
         media.size.height - media.padding.top - media.padding.bottom;
+    // 아이패드: 폭 480·여백 32·버튼 54(아이폰은 기존 값 그대로).
+    final m = DialogMetrics.of(context);
+    final sidePad = m.size(24.0, 32.0);
 
     final buttons = Column(
       mainAxisSize: MainAxisSize.min,
@@ -39,10 +43,11 @@ class GameResultDialogFrame extends StatelessWidget {
         FilledButton(
           onPressed: onPrimary,
           style: FilledButton.styleFrom(
-            minimumSize: const Size.fromHeight(48),
+            minimumSize: Size.fromHeight(m.size(48.0, 54.0)),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
+            textStyle: m.isTablet ? const TextStyle(fontSize: 17) : null,
           ),
           child: Text(primaryLabel, textAlign: TextAlign.center),
         ),
@@ -52,6 +57,7 @@ class GameResultDialogFrame extends StatelessWidget {
           style: TextButton.styleFrom(
             minimumSize: const Size.fromHeight(44),
             foregroundColor: cs.onSurfaceVariant,
+            textStyle: m.isTablet ? const TextStyle(fontSize: 16) : null,
           ),
           child: Text(secondaryLabel, textAlign: TextAlign.center),
         ),
@@ -59,33 +65,33 @@ class GameResultDialogFrame extends StatelessWidget {
     );
 
     final content = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: EdgeInsets.symmetric(horizontal: sidePad),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (header != null) ...[
-            const SizedBox(height: 24),
+            SizedBox(height: m.spacing(24.0, 32.0)),
             Center(child: header),
-            const SizedBox(height: 12),
+            SizedBox(height: m.spacing(12.0, 16.0)),
           ] else
-            const SizedBox(height: 24),
+            SizedBox(height: m.spacing(24.0, 32.0)),
           ...body,
-          const SizedBox(height: 24),
+          SizedBox(height: m.spacing(24.0, 28.0)),
         ],
       ),
     );
 
     return Dialog(
       backgroundColor: cs.surface,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      insetPadding: EdgeInsets.symmetric(horizontal: m.inset(20), vertical: 24),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(m.size(28.0, 30.0)),
         side: BorderSide(color: cs.outlineVariant),
       ),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: 400,
+          maxWidth: m.maxWidth(phone: 400, tablet: 480),
           maxHeight: safeHeight * 0.85,
         ),
         // 본문은 스크롤, 버튼은 하단 고정. 높이가 너무 작아 버튼까지 못 들어가는
@@ -93,7 +99,12 @@ class GameResultDialogFrame extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final buttonArea = Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+              padding: EdgeInsets.fromLTRB(
+                sidePad,
+                0,
+                sidePad,
+                m.spacing(20.0, 28.0),
+              ),
               child: buttons,
             );
             if (constraints.maxHeight < 320) {

@@ -92,6 +92,7 @@
   "gameMemoFocusShort": "탐색",
   "gameMemoFocusIdle": "없음",
   "gameWrongShort": "오답",
+  "gameMistakesShort": "오답",
   "gamePerfectShort": "퍼펙트",
   "gamePerfectReady": "유지 중",
   "gamePerfectMissed": "깨짐",

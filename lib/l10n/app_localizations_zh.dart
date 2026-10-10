@@ -272,6 +272,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gameWrongShort => '错误';
 
   @override
+  String get gameMistakesShort => '错误';
+
+  @override
   String get gamePerfectShort => '完美';
 
   @override

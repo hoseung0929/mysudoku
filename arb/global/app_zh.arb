@@ -92,6 +92,7 @@
   "gameMemoFocusShort": "聚焦",
   "gameMemoFocusIdle": "无",
   "gameWrongShort": "错误",
+  "gameMistakesShort": "错误",
   "gamePerfectShort": "完美",
   "gamePerfectReady": "保持中",
   "gamePerfectMissed": "已中断",

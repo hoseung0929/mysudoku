@@ -85,9 +85,23 @@ class _SudokuPencilInputOverlayState extends State<SudokuPencilInputOverlay> {
         focusNode: _focusNode,
         keyboardType: TextInputType.none,
         showCursor: false,
+        // 이 필드는 필기(Scribble) 인식 전용이다. 셀을 탭했을 때 iOS가 보여 주는
+        // 선택 핸들·돋보기·'붙여넣기' 메뉴가 뜨지 않게 선택 UI를 모두 끈다.
+        enableInteractiveSelection: false,
+        contextMenuBuilder: (context, editableTextState) =>
+            const SizedBox.shrink(),
+        autocorrect: false,
+        enableSuggestions: false,
         maxLines: 1,
+        // 앱 테마가 모든 TextField에 둥근 테두리·배경을 주므로, 포커스·활성
+        // 상태의 테두리까지 전부 꺼서 셀 위에 알약 모양이 보이지 않게 한다.
         decoration: const InputDecoration(
           border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          disabledBorder: InputBorder.none,
+          errorBorder: InputBorder.none,
+          focusedErrorBorder: InputBorder.none,
           filled: false,
           isDense: true,
           contentPadding: EdgeInsets.zero,

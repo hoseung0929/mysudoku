@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +17,7 @@ import 'package:sudoku159/theme/system_ui_style.dart';
 import 'package:sudoku159/view/onboarding/beginner_tutorial_screen.dart';
 import 'package:sudoku159/widgets/app_snackbar.dart';
 import 'package:sudoku159/widgets/waddling_penguin_icon.dart';
+import 'package:sudoku159/utils/tablet_hero_height.dart';
 import 'package:sudoku159/utils/app_logger.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -45,7 +47,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   /// 설정 최상단 히어로 이미지(제목·부제 포함)의 고정 높이(상태바 제외).
   static const double _kSettingsHeroHeightPhone = 185;
-  static const double _kSettingsHeroHeightTablet = 220;
 
   final SettingsController _settingsController = SettingsController();
   late final NotificationService _notificationService =
@@ -97,7 +98,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   double _currentHeroHeight(BuildContext context) =>
       MediaQuery.sizeOf(context).width > 600
-          ? _kSettingsHeroHeightTablet
+          ? tabletHeroHeight(context)
           : _kSettingsHeroHeightPhone;
 
   /// 히어로가 상태바 영역 뒤로 완전히 넘어가면 밝은(사진 위) 아이콘에서
@@ -412,6 +413,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth > 600;
     final horizontalPad = isTablet ? 24.0 : 16.0;
+    // 외곽 최대 폭: 세로 1008(카드 약 960), 가로형(폭 > 900) 1120(카드 약 1072,
+    // 화면 가장자리와 최소 32). 내부 좌우 패딩 24는 그대로.
+    final isWide = screenWidth > 900;
+    final outerMaxWidth = isWide ? math.min(1120.0, screenWidth - 64) : 1008.0;
+    // 히어로 문구의 시작선을 카드 시작선과 맞춘다.
+    final heroTextPad = isWide
+        ? math.max(
+            horizontalPad, (screenWidth - outerMaxWidth) / 2 + horizontalPad)
+        : horizontalPad;
     final topInset = MediaQuery.paddingOf(context).top;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
     final l10n = AppLocalizations.of(context)!;
@@ -431,10 +441,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           physics: const ClampingScrollPhysics(),
           padding: EdgeInsets.only(bottom: _kScrollBottomPad + bottomInset),
           children: [
-            _buildHeroHeader(l10n, horizontalPad, topInset, isTablet),
+            _buildHeroHeader(l10n, heroTextPad, topInset, isTablet),
             Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 960),
+                constraints: BoxConstraints(maxWidth: outerMaxWidth),
                 child: Padding(
                   key: const Key('settings_content_padding'),
                   padding: EdgeInsets.fromLTRB(
@@ -443,11 +453,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     horizontalPad,
                     0,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
+                  child: _arrangeSections(
+                    isTablet: isTablet,
+                    sections: [
                       _buildThemeSection(),
-                      SizedBox(height: isTablet ? 20 : 16),
                       _buildSettingsSection([
                         _buildSettingsSwitchTile(
                           icon: Icons.notifications_active_outlined,
@@ -462,7 +471,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               : _setNotificationsEnabled,
                         ),
                       ]),
-                      SizedBox(height: isTablet ? 20 : 16),
                       _buildSettingsSection([
                         _buildSettingsTile(
                           icon: Icons.language,
@@ -474,7 +482,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onTap: _showLanguagePicker,
                         ),
                       ]),
-                      SizedBox(height: isTablet ? 20 : 16),
                       _buildSettingsSection([
                         _buildSettingsSwitchTile(
                           icon: Icons.vibration,
@@ -503,7 +510,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onChanged: _setKeepScreenAwake,
                         ),
                       ]),
-                      SizedBox(height: isTablet ? 20 : 16),
                       _buildSettingsSection([
                         if (_showHowToPlay)
                           _buildSettingsTile(
@@ -542,6 +548,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  /// 설정 섹션 배치: 폭 > 900이면 연관된 섹션끼리 2열(왼쪽: 테마·알림·언어,
+  /// 오른쪽: 게임 설정·정보), 그 외는 기존 단일 열.
+  Widget _arrangeSections({
+    required bool isTablet,
+    required List<Widget> sections,
+  }) {
+    final gap = isTablet ? 20.0 : 16.0;
+    Widget column(List<Widget> items) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < items.length; i++) ...[
+              if (i > 0) SizedBox(height: gap),
+              items[i],
+            ],
+          ],
+        );
+    // 2열 전환은 화면 폭이 아니라 실제로 받은 콘텐츠 폭 기준: 각 열이 최소 480을
+    // 확보할 때만. 부족하면(세로·Split View) 단일 열로 복귀.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columnWidth = (constraints.maxWidth - gap) / 2;
+        if (columnWidth < 480 || sections.length < 5) {
+          return column(sections);
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: column(sections.sublist(0, 3))),
+            SizedBox(width: gap),
+            Expanded(child: column(sections.sublist(3))),
+          ],
+        );
+      },
     );
   }
 
@@ -730,12 +772,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 l10n.settingsHeroSubtitle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
-                  fontSize: 18,
+                  fontSize: isTablet ? 28 : 18,
                   height: 1.3,
                   fontWeight: FontWeight.w800,
-                  shadows: [Shadow(color: Colors.black45, blurRadius: 6)],
+                  shadows: const [Shadow(color: Colors.black45, blurRadius: 6)],
                 ),
               ),
             ),

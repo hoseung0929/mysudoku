@@ -39,9 +39,12 @@ void main() async {
   final logicalSize = view.physicalSize / view.devicePixelRatio;
   final isTabletDevice = math.min(logicalSize.width, logicalSize.height) > 600;
   final allowLandscape = Platform.isIOS && isTabletDevice;
+  // 아이폰: 세로만. 아이패드: 세로·세로 반대·가로 좌/우 모두 허용.
+  // (화면별로 다시 설정하지 않는다.)
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     if (allowLandscape) ...[
+      DeviceOrientation.portraitDown,
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ],

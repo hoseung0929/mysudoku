@@ -333,7 +333,8 @@ void main() {
               )
               .first,
         );
-        expect(box.width, lessThanOrEqualTo(400));
+        // 아이폰 400, 아이패드(폭 > 600) 480.
+        expect(box.width, lessThanOrEqualTo(size.width > 600 ? 480 : 400));
         expect(box.left, greaterThanOrEqualTo(20));
         expect(size.width - box.right, greaterThanOrEqualTo(20));
         expect(box.height, lessThanOrEqualTo(size.height * 0.85 + 1));

@@ -92,6 +92,7 @@
   "gameMemoFocusShort": "Foco",
   "gameMemoFocusIdle": "Ninguno",
   "gameWrongShort": "Errores",
+  "gameMistakesShort": "Errores",
   "gamePerfectShort": "Perfecto",
   "gamePerfectReady": "Activo",
   "gamePerfectMissed": "Perdido",

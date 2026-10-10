@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
@@ -574,92 +575,98 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
         final nextFresh = _nextFreshGameNumber(games);
         final allCompleted = games.every((g) => _isCleared(levelName, g));
 
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            final contentWidth = constraints.maxWidth - 32;
-            final textScale = MediaQuery.textScalerOf(context).scale(1.0);
-            final cols = _gridColumnsForWidth(contentWidth, textScale);
-            final totalRows = (filteredGames.length / cols).ceil();
-            return CustomScrollView(
-              controller: _scrollController,
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-                  sliver: SliverToBoxAdapter(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildSummary(
-                          continueNumber: hasRecent ? recentNumber : null,
-                          // 이어할 퍼즐이 없을 때만 다음 새 퍼즐이 카드의 주 행동.
-                          nextNumber: hasRecent ? null : nextFresh,
-                          allCompleted: !hasRecent && allCompleted,
-                          inProgressCount: inProgress.length,
-                        ),
-                        const SizedBox(height: 10),
-                        KeyedSubtree(
-                          key: _filterKey,
-                          child: _buildFilterChips(games),
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-                    ),
-                  ),
-                ),
-                if (filteredGames.isEmpty)
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: _buildFilterEmptyState(
-                      games,
-                      nextFresh: nextFresh,
-                      allCompleted: allCompleted,
-                    ),
-                  )
-                else
+        // 넓은 화면(아이패드 가로 등)에서 카드·필터·그리드가 화면 전체로 늘어나지
+        // 않도록 가운데 정렬하고 최대 폭을 둔다. 열 수는 이 폭 기준으로 계산된다.
+        return Center(
+            child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1040),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final contentWidth = constraints.maxWidth - 32;
+              final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+              final cols = _gridColumnsForWidth(contentWidth, textScale);
+              final totalRows = (filteredGames.length / cols).ceil();
+              return CustomScrollView(
+                controller: _scrollController,
+                slivers: [
                   SliverPadding(
-                    padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPadding),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, r) {
-                          final start = r * cols;
-                          final end =
-                              (start + cols).clamp(0, filteredGames.length);
-                          final rowGames = filteredGames.sublist(start, end);
-                          return Padding(
-                            padding: EdgeInsets.only(
-                              bottom: r < totalRows - 1
-                                  ? ((r + 1) % _rowsPerGroup == 0
-                                      ? _groupGap
-                                      : _cellGap)
-                                  : 0,
-                            ),
-                            child: Row(
-                              children: [
-                                for (int c = 0; c < cols; c++) ...[
-                                  Expanded(
-                                    child: AspectRatio(
-                                      aspectRatio:
-                                          textScale > 1.15 ? 1.2 : 1.52,
-                                      child: c < rowGames.length
-                                          ? _buildPuzzleCell(rowGames[c])
-                                          : const SizedBox(),
-                                    ),
-                                  ),
-                                  if (c < cols - 1)
-                                    const SizedBox(width: _cellGap),
-                                ],
-                              ],
-                            ),
-                          );
-                        },
-                        childCount: totalRows,
+                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                    sliver: SliverToBoxAdapter(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildSummary(
+                            continueNumber: hasRecent ? recentNumber : null,
+                            // 이어할 퍼즐이 없을 때만 다음 새 퍼즐이 카드의 주 행동.
+                            nextNumber: hasRecent ? null : nextFresh,
+                            allCompleted: !hasRecent && allCompleted,
+                            inProgressCount: inProgress.length,
+                          ),
+                          const SizedBox(height: 10),
+                          KeyedSubtree(
+                            key: _filterKey,
+                            child: _buildFilterChips(games),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
                       ),
                     ),
                   ),
-              ],
-            );
-          },
-        );
+                  if (filteredGames.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: _buildFilterEmptyState(
+                        games,
+                        nextFresh: nextFresh,
+                        allCompleted: allCompleted,
+                      ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPadding),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, r) {
+                            final start = r * cols;
+                            final end =
+                                (start + cols).clamp(0, filteredGames.length);
+                            final rowGames = filteredGames.sublist(start, end);
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                bottom: r < totalRows - 1
+                                    ? ((r + 1) % _rowsPerGroup == 0
+                                        ? _groupGap
+                                        : _cellGap)
+                                    : 0,
+                              ),
+                              child: Row(
+                                children: [
+                                  for (int c = 0; c < cols; c++) ...[
+                                    Expanded(
+                                      child: AspectRatio(
+                                        aspectRatio:
+                                            textScale > 1.15 ? 1.2 : 1.52,
+                                        child: c < rowGames.length
+                                            ? _buildPuzzleCell(rowGames[c])
+                                            : const SizedBox(),
+                                      ),
+                                    ),
+                                    if (c < cols - 1)
+                                      const SizedBox(width: _cellGap),
+                                  ],
+                                ],
+                              ),
+                            );
+                          },
+                          childCount: totalRows,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ));
       },
     );
   }
@@ -694,6 +701,8 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     final l10n = AppLocalizations.of(context)!;
     final progressPct = _savedProgressPercent(recentNumber);
     final timeLabel = _lastPlayedLabel(recentNumber);
+    // 아이패드: 번호 15 · 상태 14 · 시간 13 · 진행률 15 (폰 13/12/11/13).
+    final isTablet = MediaQuery.of(context).size.width > 600;
 
     return _InteractiveTile(
       onTap: onTap,
@@ -710,7 +719,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
             Text(
               recentNumber.toString().padLeft(3, '0'),
               style: TextStyle(
-                fontSize: 13,
+                fontSize: isTablet ? 15 : 13,
                 fontWeight: FontWeight.w700,
                 color: inProgressColor,
                 fontFeatures: const [FontFeature.tabularFigures()],
@@ -722,7 +731,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                 l10n.levelStatusInProgress,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: isTablet ? 14 : 12,
                   fontWeight: FontWeight.w600,
                   color: inProgressColor,
                 ),
@@ -732,14 +741,17 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
             if (timeLabel.isNotEmpty) ...[
               Text(
                 timeLabel,
-                style: TextStyle(fontSize: 11, color: colors.secondaryText),
+                style: TextStyle(
+                  fontSize: isTablet ? 13 : 11,
+                  color: colors.secondaryText,
+                ),
               ),
               const SizedBox(width: 8),
             ],
             Text(
               progressPct > 0 ? '$progressPct%' : l10n.gameMemoShort,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: isTablet ? 15 : 13,
                 fontWeight: FontWeight.w700,
                 color: inProgressColor,
               ),
@@ -783,6 +795,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     final cleared = _clearedGameNumbers[level.name]?.length ?? 0;
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final busy = _isGameTransitioning || _selectionInFlight;
+    final isTablet = MediaQuery.of(context).size.width > 600;
 
     final _SummaryKind? kind = continueNumber != null
         ? _SummaryKind.continuePlay
@@ -820,9 +833,8 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
               ),
             ),
           ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          _summaryContent(
+            isTablet: isTablet,
             children: [
               ConstrainedBox(
                 constraints: const BoxConstraints(minHeight: 64),
@@ -833,9 +845,9 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                     child: cleared > 0
                         ? Container(
                             key: const Key('level_completed_badge'),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isTablet ? 14 : 10,
+                              vertical: isTablet ? 6 : 4,
                             ),
                             decoration: BoxDecoration(
                               color: const Color.fromRGBO(255, 255, 255, 0.78),
@@ -843,10 +855,10 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                             ),
                             child: Text(
                               l10n.levelCompletedCount(cleared),
-                              style: const TextStyle(
-                                fontSize: 13,
+                              style: TextStyle(
+                                fontSize: isTablet ? 16 : 13,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF4A3F9A),
+                                color: const Color(0xFF4A3F9A),
                               ),
                             ),
                           )
@@ -874,11 +886,46 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
         ],
       ),
     );
-    if (kind != _SummaryKind.continuePlay) return card;
+    // 아이패드: 배경 일러스트(3:1)가 가로로 길게 늘어나 위아래가 잘리지 않도록
+    // 폭에 맞춰 높이를 확보한다(최대 280). 아이폰은 기존 내용 높이 그대로.
+    final sizedCard = isTablet
+        ? LayoutBuilder(
+            builder: (context, constraints) => SizedBox(
+              height: math.min(constraints.maxWidth / 3, 280),
+              child: card,
+            ),
+          )
+        : card;
+    if (kind != _SummaryKind.continuePlay) return sizedCard;
     // 카드 어디를 눌러도 이어서 풀기가 실행된다(안쪽 버튼은 같은 동작).
     return _InteractiveTile(
       onTap: busy ? null : () => _startFromCard(continueNumber!),
-      child: card,
+      child: sizedCard,
+    );
+  }
+
+  /// 요약 카드 내용. 아이폰은 내용 높이만큼, 아이패드는 카드 높이를 채우고
+  /// 헤더(배지)는 위, 행동 영역은 아래에 둔다.
+  Widget _summaryContent({
+    required bool isTablet,
+    required List<Widget> children,
+  }) {
+    if (!isTablet) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      );
+    }
+    return Positioned.fill(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          children.first,
+          const Spacer(),
+          ...children.skip(1),
+        ],
+      ),
     );
   }
 
@@ -890,6 +937,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     required bool busy,
   }) {
     final l10n = AppLocalizations.of(context)!;
+    final isTablet = MediaQuery.of(context).size.width > 600;
     final isContinue = kind == _SummaryKind.continuePlay;
     final isDone = kind == _SummaryKind.allDone;
     final pct = isContinue ? _savedProgressPercent(number!) : 0;
@@ -936,12 +984,12 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
           title,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontSize: 20,
+          style: TextStyle(
+            fontSize: isTablet ? 30 : 20,
             fontWeight: FontWeight.w800,
             color: Colors.white,
             shadows: shadow,
-            fontFeatures: [FontFeature.tabularFigures()],
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
         if (sub.isNotEmpty)
@@ -949,8 +997,8 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
             sub,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 13,
+            style: TextStyle(
+              fontSize: isTablet ? 19 : 13,
               fontWeight: FontWeight.w600,
               color: Colors.white,
               shadows: shadow,
@@ -973,9 +1021,13 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
               foregroundColor: const Color(0xFF4A3F9A),
               disabledBackgroundColor: const Color(0x80FFFFFF),
               side: const BorderSide(color: Color(0x66FFFFFF)),
-              minimumSize: const Size(0, 40),
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              textStyle: const TextStyle(fontWeight: FontWeight.w700),
+              // 아이패드: 버튼 높이 56 · 글자 18 · 좌우 28(폰 40/기본/18).
+              minimumSize: Size(0, isTablet ? 56 : 40),
+              padding: EdgeInsets.symmetric(horizontal: isTablet ? 28 : 18),
+              textStyle: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: isTablet ? 18 : null,
+              ),
             ),
             child:
                 Text(buttonLabel, maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -994,7 +1046,9 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 28, 12, 12),
+        padding: isTablet
+            ? const EdgeInsets.fromLTRB(28, 28, 24, 24)
+            : const EdgeInsets.fromLTRB(16, 28, 12, 12),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1062,10 +1116,11 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
 
   // ─── Filter chips ─────────────────────────────────────────────────────────
 
-  static const _filterChipTextStyle = TextStyle(
-    fontSize: 12.5,
-    fontWeight: FontWeight.w600,
-  );
+  TextStyle get _filterChipTextStyle => TextStyle(
+        // 아이패드 14 · 폰 12.5.
+        fontSize: MediaQuery.of(context).size.width > 600 ? 14 : 12.5,
+        fontWeight: FontWeight.w600,
+      );
 
   Widget _buildFilterChips(List<int> games) {
     final colors = LevelStatusPalette.of(context);
@@ -1173,18 +1228,18 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
             children: [
               // 실제 칸과 같은 스티커 견본(CLEAR는 완료, PERFECT는 힌트·실수 없음).
               _buildLegendItem(
-                const PuzzleResultSticker(
+                PuzzleResultSticker(
                   perfect: false,
-                  width: 50,
+                  width: MediaQuery.of(context).size.width > 600 ? 72 : 50,
                   tiltDegrees: -6,
                 ),
                 l10n.levelFilterDone,
                 colors,
               ),
               _buildLegendItem(
-                const PuzzleResultSticker(
+                PuzzleResultSticker(
                   perfect: true,
-                  width: 50,
+                  width: MediaQuery.of(context).size.width > 600 ? 72 : 50,
                   tiltDegrees: -6,
                 ),
                 l10n.levelPerfectLegend,
@@ -1211,7 +1266,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
           child: Text(
             label,
             style: TextStyle(
-              fontSize: 13,
+              fontSize: MediaQuery.of(context).size.width > 600 ? 15 : 13,
               fontWeight: FontWeight.w600,
               color: colors.secondaryText,
             ),
@@ -1385,6 +1440,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
 
   Widget _buildPuzzleCell(int gameNumber) {
     final l10n = AppLocalizations.of(context)!;
+    final isTablet = MediaQuery.of(context).size.width > 600;
     final kind = _puzzleCardKind(gameNumber);
     final isFresh = kind == _PuzzleCardKind.fresh;
     final isInProgress =
@@ -1483,7 +1539,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                           Text(
                             numberText,
                             style: TextStyle(
-                              fontSize: 19,
+                              fontSize: isTablet ? 24 : 19,
                               fontWeight: isFresh
                                   ? FontWeight.w400
                                   : isCompleted
@@ -1505,7 +1561,9 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                               ),
                               perfect: isPerfect,
                               // PERFECT!는 CLEAR보다 약 2px 크게.
-                              width: isPerfect ? 56 : 54,
+                              width: isTablet
+                                  ? (isPerfect ? 76 : 72)
+                                  : (isPerfect ? 56 : 54),
                             ),
                             const SizedBox(height: 2),
                           ],
@@ -1514,7 +1572,7 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                               notesOnly ? l10n.gameMemoShort : '$pct%',
                               maxLines: 1,
                               style: TextStyle(
-                                fontSize: 11.5,
+                                fontSize: isTablet ? 14 : 11.5,
                                 fontWeight: isRecent
                                     ? FontWeight.w700
                                     : FontWeight.w500,

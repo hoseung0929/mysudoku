@@ -307,7 +307,8 @@ class _BeginnerTutorialScreenState extends State<BeginnerTutorialScreen> {
           title: Text(
             l10n.beginnerTutorialPracticeTitle,
             style: GoogleFonts.notoSans(
-              fontSize: 16,
+              // 아이패드 +2.
+              fontSize: MediaQuery.sizeOf(context).width > 600 ? 18 : 16,
               fontWeight: FontWeight.w700,
               color: textColor,
             ),
@@ -335,7 +336,8 @@ class _BeginnerTutorialScreenState extends State<BeginnerTutorialScreen> {
                       _TutorialStep.values.length,
                     ),
                     style: GoogleFonts.notoSans(
-                      fontSize: 14,
+                      fontSize:
+                          MediaQuery.sizeOf(context).width > 600 ? 16 : 14,
                       fontWeight: FontWeight.w600,
                       color: context.colors.textSecondary,
                     ),
@@ -546,7 +548,9 @@ class _BeginnerTutorialScreenState extends State<BeginnerTutorialScreen> {
                         child: Text(
                           content.title,
                           style: GoogleFonts.notoSans(
-                            fontSize: 16,
+                            fontSize: MediaQuery.sizeOf(context).width > 600
+                                ? 18
+                                : 16,
                             fontWeight: FontWeight.w800,
                             color: colors.textPrimary,
                           ),
@@ -569,7 +573,8 @@ class _BeginnerTutorialScreenState extends State<BeginnerTutorialScreen> {
                   child: Text(
                     content.body,
                     style: GoogleFonts.notoSans(
-                      fontSize: 13.5,
+                      fontSize:
+                          MediaQuery.sizeOf(context).width > 600 ? 15.5 : 13.5,
                       height: 1.35,
                       color: colors.textSecondary,
                     ),
@@ -641,7 +646,8 @@ class _BeginnerTutorialScreenState extends State<BeginnerTutorialScreen> {
                     labels[region]!,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.notoSans(
-                      fontSize: 13,
+                      fontSize:
+                          MediaQuery.sizeOf(context).width > 600 ? 15 : 13,
                       fontWeight: _ruleRegion == region
                           ? FontWeight.w800
                           : FontWeight.w600,

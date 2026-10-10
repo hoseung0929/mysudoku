@@ -743,6 +743,8 @@ void main() {
     'narrow + large text': (const Size(320, 568), 2.0, false),
     'phone dark': (const Size(390, 844), 1.0, true),
     'tablet landscape': (const Size(1024, 768), 1.0, false),
+    'ipad 11 landscape 1.3x': (const Size(1194, 834), 1.3, false),
+    'ipad 13 landscape dark': (const Size(1366, 1024), 1.0, true),
     'tablet portrait dark': (const Size(768, 1024), 1.0, true),
   }.entries) {
     testWidgets('renders without overflow: ${entry.key}', (tester) async {
@@ -770,8 +772,9 @@ void main() {
     // 쓰므로, 히어로 높이도 태블릿 값(300)이 적용된다.
     'phone portrait': (const Size(390, 844), 236.0),
     'phone landscape': (const Size(844, 390), 276.0),
-    'tablet portrait': (const Size(768, 1024), 276.0),
-    'tablet landscape': (const Size(1024, 768), 276.0),
+    // 아이패드: 폭/2(이미지 전체), 상한 min(420, 높이의 40%).
+    'tablet portrait': (const Size(768, 1024), 384.0),
+    'tablet landscape': (const Size(1024, 768), 307.2),
   }.entries) {
     testWidgets(
         'hero header keeps its fixed height with no overflow: ${entry.key}',
@@ -784,7 +787,7 @@ void main() {
       );
       final headerSize =
           tester.getSize(find.byKey(const Key('home_hero_header')));
-      expect(headerSize.height, expectedHeight);
+      expect(headerSize.height, closeTo(expectedHeight, 0.01));
       expect(tester.takeException(), isNull);
     });
   }
@@ -807,6 +810,61 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  // 아이패드: 글자를 키운(제목 22 · 설명 15) 카드가 모든 언어에서 넘치지 않는다.
+  for (final lang in ['en', 'ko', 'ja', 'es', 'zh']) {
+    for (final textScale in [1.0, 1.3]) {
+      for (final size in [const Size(834, 1194), const Size(1194, 834)]) {
+        testWidgets(
+            'tablet bigger card text does not overflow: $lang x$textScale '
+            '${size.width.toInt()}x${size.height.toInt()}', (tester) async {
+          await pumpHome(
+            tester,
+            _FakeDashboard(
+              () async => _data(
+                continues: [_summary(5, progress: 0, notes: 2), _summary(6)],
+                challengeHasSession: true,
+              ),
+            ),
+            size: size,
+            textScale: textScale,
+            locale: Locale(lang),
+          );
+          expect(tester.takeException(), isNull);
+        });
+      }
+    }
+  }
+
+  // 가로형: 본문 외곽 최대 1120(가장자리 최소 32), 시작 카드는 설명+버튼 가로 배치.
+  testWidgets('wide landscape home: 1120 body, start button capped at 360',
+      (tester) async {
+    await pumpHome(
+      tester,
+      _FakeDashboard(() async => _data()),
+      size: const Size(1366, 1024),
+    );
+    final button = find.widgetWithText(FilledButton, 'Choose a level');
+    expect(button, findsOneWidget);
+    expect(tester.getSize(button).width, lessThanOrEqualTo(360));
+    final card =
+        tester.getRect(find.byKey(const Key('home_today_challenge_artwork')));
+    // 오늘의 도전 카드: 가장자리 최소 32, 폭은 1072 이하.
+    expect(card.left, greaterThanOrEqualTo(32));
+    expect(card.width, lessThanOrEqualTo(1072));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('narrow tablet keeps the stacked start button', (tester) async {
+    await pumpHome(
+      tester,
+      _FakeDashboard(() async => _data()),
+      size: const Size(700, 1000),
+    );
+    final button = find.widgetWithText(FilledButton, 'Choose a level');
+    expect(tester.getSize(button).width, greaterThan(400));
+    expect(tester.takeException(), isNull);
+  });
 
   group('decorative images', () {
     testWidgets(

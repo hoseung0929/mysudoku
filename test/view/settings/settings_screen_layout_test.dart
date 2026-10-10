@@ -15,6 +15,8 @@ void main() {
     'phone 1.3x dark es': (const Size(390, 844), 1.3, true, 'es'),
     'tablet portrait': (const Size(768, 1024), 1.0, false, 'en'),
     'tablet landscape dark': (const Size(1024, 768), 1.0, true, 'ja'),
+    'ipad 11 landscape es 1.3x': (const Size(1194, 834), 1.3, false, 'es'),
+    'ipad 13 landscape zh': (const Size(1366, 1024), 1.0, false, 'zh'),
   }.entries) {
     testWidgets('settings renders without overflow: ${entry.key}',
         (tester) async {
@@ -43,6 +45,45 @@ void main() {
         await tester.pump(const Duration(milliseconds: 300));
       }
       expect(find.byIcon(Icons.notifications_active_outlined), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  // 2열 전환은 화면 폭이 아니라 콘텐츠 폭(각 열 최소 480) 기준이다.
+  for (final entry in {
+    'iPad 11 landscape': (const Size(1194, 834), true),
+    'iPad 13 landscape': (const Size(1366, 1024), true),
+    'iPad 11 portrait': (const Size(834, 1194), false),
+    'Split View 700': (const Size(700, 1000), false),
+  }.entries) {
+    testWidgets('settings columns and margins: ${entry.key}', (tester) async {
+      final (size, twoColumns) = entry.value;
+      SharedPreferences.setMockInitialValues({});
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const SettingsScreen(),
+        ),
+      );
+      await tester.pump();
+      for (var i = 0; i < 3; i++) {
+        await tester.pump(const Duration(milliseconds: 300));
+      }
+      final themeLeft = tester.getTopLeft(find.text('Theme')).dx;
+      final privacyLeft = tester.getTopLeft(find.text('Privacy policy')).dx;
+      if (twoColumns) {
+        expect(privacyLeft, greaterThan(themeLeft + 400)); // 오른쪽 열
+      } else {
+        expect(privacyLeft, closeTo(themeLeft, 40)); // 단일 열
+      }
+      // 화면 가장자리와 본문 사이 최소 32.
+      expect(themeLeft, greaterThanOrEqualTo(32));
       expect(tester.takeException(), isNull);
     });
   }

@@ -119,6 +119,7 @@
   "gameMemoFocusShort": "Focus",
   "gameMemoFocusIdle": "None",
   "gameWrongShort": "Wrong",
+  "gameMistakesShort": "Mistakes",
   "gamePerfectShort": "Perfect",
   "gamePerfectReady": "Active",
   "gamePerfectMissed": "Lost",

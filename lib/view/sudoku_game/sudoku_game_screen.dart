@@ -20,13 +20,13 @@ import 'package:sudoku159/view/sudoku_game/game_session_controller.dart';
 import 'package:sudoku159/view/sudoku_game/game_settings_controller.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_answer_box.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_board_grid.dart';
-import 'package:sudoku159/view/sudoku_game/sudoku_info_card.dart';
 import 'package:sudoku159/view/sudoku_game/game_effects_controller.dart';
 import 'package:sudoku159/services/game/auto_notes_tip_service.dart';
 import 'package:sudoku159/services/game/number_lock_tip_service.dart';
 import 'package:sudoku159/view/sudoku_game/game_feedback_resolver.dart';
 import 'package:sudoku159/view/home/level_picker_screen.dart';
 import 'package:sudoku159/theme/level_status_colors.dart';
+import 'package:sudoku159/widgets/dialog_metrics.dart';
 import 'package:sudoku159/widgets/sentence_text.dart';
 import 'package:sudoku159/widgets/progressive_blur_button.dart';
 import 'package:sudoku159/widgets/waddling_penguin_icon.dart';
@@ -1101,7 +1101,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
               maxLines: 1,
               softWrap: false,
               style: GoogleFonts.notoSans(
-                fontSize: 16,
+                // 아이패드: 제목 18(폰 16).
+                fontSize: MediaQuery.sizeOf(context).width > 600 ? 18 : 16,
                 fontWeight: FontWeight.w700,
                 color: context.colors.textPrimary,
               ),
@@ -1137,7 +1138,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                       child: Text(
                         time,
                         style: GoogleFonts.notoSans(
-                          fontSize: 13,
+                          // 아이패드: 타이머 15(폰 13).
+                          fontSize:
+                              MediaQuery.sizeOf(context).width > 600 ? 15 : 13,
                           fontWeight: FontWeight.w700,
                           color: Theme.of(context).brightness == Brightness.dark
                               ? const Color(0xFFB8B8B8)
@@ -1323,7 +1326,105 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
               maxWidth: constraints.maxWidth,
               maxHeight: constraints.maxHeight,
               bottomSafePadding: bottomSafePadding,
+              isTablet: mediaQuery.size.width > 600,
             );
+
+            // 숫자 키패드(3×3)와 액션 버튼 목록. 폰은 키패드 아래 한 줄, 아이패드
+            // 세로는 키패드 양옆(도구/상태)에 배치한다.
+            final isTabletPortrait = mediaQuery.size.width > 600;
+            Widget keypadRows() => Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (int i = 0; i < 3; i++)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          for (int j = 1; j <= 3; j++)
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: metrics.numberButtonGap / 2,
+                                vertical: metrics.numberButtonGap / 2,
+                              ),
+                              child: _buildNumberButton(
+                                i * 3 + j,
+                                compact: true,
+                                width: metrics.numberButtonWidth,
+                                height: metrics.numberButtonHeight,
+                                borderRadius: metrics.numberButtonRadius,
+                                tabletPortraitBadge: isTabletPortrait,
+                              ),
+                            ),
+                        ],
+                      ),
+                  ],
+                );
+            List<Widget> actionButtons(double size, double labelFontSize) => [
+                  if (widget.showUndoButton)
+                    _buildMobileActionButton(
+                      icon: Icons.undo_rounded,
+                      buttonKey: const ValueKey('game-action-undo'),
+                      label: l10n.gameUndoShort,
+                      color: AppTheme.lightBlueColor,
+                      onPressed: _canUndo ? _undoLastInput : null,
+                      onLongPress: _canRedo ? _redoLastInput : null,
+                      longPressSemanticsHint: l10n.gameRedoShort,
+                      compact: true,
+                      size: size,
+                      labelFontSize: labelFontSize,
+                    ),
+                  _buildMobileActionButton(
+                    icon: Icons.edit_note,
+                    buttonKey: const ValueKey('game-action-memo'),
+                    imageDisplaySize: 28,
+                    activeBackgroundColor: _memoActiveBackground(),
+                    activeBorderColor: _memoActiveBorder(),
+                    activeLabelColor: _memoActiveLabel(),
+                    imageAsset: _memoImage,
+                    label: _presenter.isMemoMode
+                        ? l10n.gameMemoOnShort
+                        : l10n.gameMemoShort,
+                    semanticsLabel: _presenter.isMemoMode
+                        ? l10n.gameMemoModeOnSemantics
+                        : l10n.gameMemoModeOffSemantics,
+                    color: AppTheme.lightBlueColor,
+                    isActive: _presenter.isMemoMode,
+                    onPressed: _canToggleMemo
+                        ? () {
+                            unawaited(_toggleMemoMode());
+                          }
+                        : null,
+                    onLongPress: _canUseAutoNotes
+                        ? () => unawaited(_applyAutoNotes())
+                        : null,
+                    longPressSemanticsHint:
+                        _autoNotesEnabled ? l10n.gameMemoLongPressHint : null,
+                    showAutoNotesBadge: _autoNotesEnabled,
+                    compact: true,
+                    size: size,
+                    labelFontSize: labelFontSize,
+                  ),
+                  _buildMobileHintButton(
+                    buttonSize: size,
+                    labelFontSize: labelFontSize,
+                    badgeSize: isTabletPortrait ? 28 : 18,
+                  ),
+                  _buildMobileActionButton(
+                    icon: Icons.backspace_outlined,
+                    buttonKey: const ValueKey('game-action-erase'),
+                    imageDisplaySize: 32,
+                    imageAsset: _eraseImage,
+                    dimWhenDisabled: true,
+                    semanticsLabel: _canEraseSelection
+                        ? l10n.gameEraseSemanticsSelected
+                        : l10n.gameEraseShort,
+                    label: l10n.gameEraseShort,
+                    color: context.colors.attentionSurface,
+                    onPressed: _canEraseSelection ? _eraseSelectedCell : null,
+                    compact: true,
+                    size: size,
+                    labelFontSize: labelFontSize,
+                  ),
+                ];
 
             return Stack(
               children: [
@@ -1341,130 +1442,38 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                           child: SizedBox(
                             width: metrics.boardSize,
                             height: metrics.boardSize,
-                            child: _buildBoardGrid(),
+                            child: _buildBoardGrid(
+                              tabletPortrait: isTabletPortrait,
+                            ),
                           ),
                         ),
                       ),
                       SizedBox(height: metrics.sectionGap),
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          for (int i = 0; i < 3; i++)
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                for (int j = 1; j <= 3; j++)
-                                  Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: metrics.numberButtonGap / 2,
-                                      vertical: metrics.numberButtonGap / 2,
-                                    ),
-                                    child: _buildNumberButton(
-                                      i * 3 + j,
-                                      compact: true,
-                                      width: metrics.numberButtonWidth,
-                                      height: metrics.numberButtonHeight,
-                                      borderRadius: metrics.numberButtonRadius,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          SizedBox(height: metrics.compactGap),
-                          Padding(
-                            padding: EdgeInsets.only(
-                              bottom: metrics.scrollBottomPadding,
-                            ),
-                            child: Column(
+                      isTabletPortrait
+                          ? _buildTabletPortraitBottom(
+                              metrics: metrics,
+                              keypad: keypadRows(),
+                              actionButtons: actionButtons,
+                            )
+                          : Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    if (widget.showUndoButton)
-                                      _buildMobileActionButton(
-                                        icon: Icons.undo_rounded,
-                                        buttonKey:
-                                            const ValueKey('game-action-undo'),
-                                        label: l10n.gameUndoShort,
-                                        color: AppTheme.lightBlueColor,
-                                        onPressed:
-                                            _canUndo ? _undoLastInput : null,
-                                        onLongPress:
-                                            _canRedo ? _redoLastInput : null,
-                                        longPressSemanticsHint:
-                                            l10n.gameRedoShort,
-                                        compact: true,
-                                        size: metrics.actionButtonSize,
-                                        labelFontSize:
-                                            metrics.actionLabelFontSize,
-                                      ),
-                                    _buildMobileActionButton(
-                                      icon: Icons.edit_note,
-                                      buttonKey:
-                                          const ValueKey('game-action-memo'),
-                                      imageDisplaySize: 28,
-                                      activeBackgroundColor:
-                                          _memoActiveBackground(),
-                                      activeBorderColor: _memoActiveBorder(),
-                                      activeLabelColor: _memoActiveLabel(),
-                                      imageAsset: _memoImage,
-                                      label: _presenter.isMemoMode
-                                          ? l10n.gameMemoOnShort
-                                          : l10n.gameMemoShort,
-                                      semanticsLabel: _presenter.isMemoMode
-                                          ? l10n.gameMemoModeOnSemantics
-                                          : l10n.gameMemoModeOffSemantics,
-                                      color: AppTheme.lightBlueColor,
-                                      isActive: _presenter.isMemoMode,
-                                      onPressed: _canToggleMemo
-                                          ? () {
-                                              unawaited(_toggleMemoMode());
-                                            }
-                                          : null,
-                                      onLongPress: _canUseAutoNotes
-                                          ? () => unawaited(_applyAutoNotes())
-                                          : null,
-                                      longPressSemanticsHint: _autoNotesEnabled
-                                          ? l10n.gameMemoLongPressHint
-                                          : null,
-                                      showAutoNotesBadge: _autoNotesEnabled,
-                                      compact: true,
-                                      size: metrics.actionButtonSize,
-                                      labelFontSize:
-                                          metrics.actionLabelFontSize,
+                                keypadRows(),
+                                SizedBox(height: metrics.compactGap),
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                    bottom: metrics.scrollBottomPadding,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: actionButtons(
+                                      metrics.actionButtonSize,
+                                      metrics.actionLabelFontSize,
                                     ),
-                                    _buildMobileHintButton(
-                                      buttonSize: metrics.actionButtonSize,
-                                      labelFontSize:
-                                          metrics.actionLabelFontSize,
-                                    ),
-                                    _buildMobileActionButton(
-                                      icon: Icons.backspace_outlined,
-                                      buttonKey:
-                                          const ValueKey('game-action-erase'),
-                                      imageDisplaySize: 32,
-                                      imageAsset: _eraseImage,
-                                      dimWhenDisabled: true,
-                                      semanticsLabel: _canEraseSelection
-                                          ? l10n.gameEraseSemanticsSelected
-                                          : l10n.gameEraseShort,
-                                      label: l10n.gameEraseShort,
-                                      color: context.colors.attentionSurface,
-                                      onPressed: _canEraseSelection
-                                          ? _eraseSelectedCell
-                                          : null,
-                                      compact: true,
-                                      size: metrics.actionButtonSize,
-                                      labelFontSize:
-                                          metrics.actionLabelFontSize,
-                                    ),
-                                  ],
+                                  ),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
-                      ),
                     ],
                   ),
                 ),
@@ -1531,7 +1540,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                   child: SizedBox(
                     width: metrics.boardSize,
                     height: metrics.boardSize,
-                    child: _buildBoardGrid(),
+                    child: _buildBoardGrid(tabletPortrait: true),
                   ),
                 ),
               ),
@@ -1705,42 +1714,210 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         ? 0
         : ((playerFilledCount / widget.level.emptyCells) * 100).round();
 
+    // 세로형 하단 상태 카드와 같은 모양(틴트 배경·가운데 정렬·Mistakes 라벨).
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SudokuInfoCard(
-          AppLocalizations.of(context)!.gameWrongShort,
-          '$wrongCount/$maxWrongCount',
-          Icons.close_rounded,
-          // 오답 0개일 때까지 경고색으로 보이지 않도록 accentColor를 안 주고
-          // 중립 톤(위젯 기본값)으로 떨어뜨림. 1개 이상부터만 경고색 적용.
-          accentColor: wrongCount > 0 ? AppTheme.pinkColor : null,
+        SizedBox(
+          height: 88,
+          child: _buildTabletStatusCard(
+            label: l10n.gameMistakesShort,
+            value: '$wrongCount / $maxWrongCount',
+            accentColor: wrongCount > 0 ? AppTheme.pinkColor : null,
+          ),
         ),
-        const SizedBox(height: 12),
-        SudokuInfoCard(
-          AppLocalizations.of(context)!.gameProgressShort,
-          '$progressPercent%',
-          Icons.donut_large_rounded,
-          accentColor: AppTheme.statisticsAccent,
-          progressValue: progressPercent / 100,
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 88,
+          child: _buildTabletStatusCard(
+            label: l10n.gameProgressShort,
+            value: '$progressPercent%',
+            accentColor: AppTheme.statisticsAccent,
+            progressValue: progressPercent / 100,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildBoardGrid() {
+  /// 아이패드 세로 하단: [도구(메모/힌트/지우기)] [숫자 키패드] [상태(실수·진행)].
+  /// 도구와 상태 칼럼의 높이는 키패드 3줄과 같아서 줄이 맞는다.
+  Widget _buildTabletPortraitBottom({
+    required _MobileGameLayoutMetrics metrics,
+    required Widget keypad,
+    required List<Widget> Function(double size, double labelFontSize)
+        actionButtons,
+  }) {
+    final pitch = metrics.numberButtonHeight + metrics.numberButtonGap;
+    final blockHeight = pitch * 3;
+    final toolCount = widget.showUndoButton ? 4 : 3;
+    final slot = blockHeight / toolCount;
+    final toolSize = math.min(metrics.numberButtonHeight, slot - 4);
+    final tools = actionButtons(toolSize, metrics.actionLabelFontSize);
+
+    final keypadWidth =
+        3 * (metrics.numberButtonWidth + metrics.numberButtonGap);
+    final sideWidth = math.max(0.0, (metrics.boardSize - keypadWidth) / 2 - 12);
+
+    final maxWrongCount = _featurePolicy.maxWrongCount;
+    final wrongCount = _presenter.wrongCount;
+    int filledCount = 0;
+    for (int row = 0; row < 9; row++) {
+      for (int col = 0; col < 9; col++) {
+        if (_presenter.getCellValue(row, col) != 0) filledCount++;
+      }
+    }
+    final originalFilledCount = 81 - widget.level.emptyCells;
+    final playerFilledCount =
+        (filledCount - originalFilledCount).clamp(0, widget.level.emptyCells);
+    final progressPercent = widget.level.emptyCells == 0
+        ? 0
+        : ((playerFilledCount / widget.level.emptyCells) * 100).round();
+    final l10n = AppLocalizations.of(context)!;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: metrics.scrollBottomPadding),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: sideWidth,
+            height: blockHeight,
+            child: Column(
+              children: [
+                for (final tool in tools)
+                  SizedBox(
+                    height: slot,
+                    child: Center(child: tool),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          keypad,
+          const SizedBox(width: 12),
+          SizedBox(
+            width: sideWidth,
+            height: blockHeight,
+            child: Padding(
+              padding:
+                  EdgeInsets.symmetric(vertical: metrics.numberButtonGap / 2),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: _buildTabletStatusCard(
+                      label: l10n.gameMistakesShort,
+                      value: '$wrongCount / $maxWrongCount',
+                      accentColor: wrongCount > 0 ? AppTheme.pinkColor : null,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: _buildTabletStatusCard(
+                      label: l10n.gameProgressShort,
+                      value: '$progressPercent%',
+                      accentColor: AppTheme.statisticsAccent,
+                      progressValue: progressPercent / 100,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabletStatusCard({
+    required String label,
+    required String value,
+    Color? accentColor,
+    double? progressValue,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      // 정보 표시 전용: 숫자 버튼(흰 배경)보다 대비를 낮추고 테두리·그림자 없이
+      // 옅은 틴트만 둬서 눌러지는 버튼으로 보이지 않게 한다.
+      decoration: BoxDecoration(
+        // 다크 모드에서는 4%가 배경에 묻혀 10%로 올린다.
+        color: cs.onSurface.withValues(
+          alpha: Theme.of(context).brightness == Brightness.dark ? 0.10 : 0.04,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            maxLines: 1,
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 15, color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.center,
+            child: Text(
+              value,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: accentColor ?? cs.onSurface,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          // 두 카드의 라벨·값 위치가 같도록, 진행 바가 없는 카드도 같은 높이를
+          // 비워 둔다. 트랙은 카드 폭의 약 78%로 가운데 배치.
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 5,
+            child: progressValue == null
+                ? null
+                : FractionallySizedBox(
+                    widthFactor: 0.78,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(2.5),
+                      child: LinearProgressIndicator(
+                        value: progressValue.clamp(0.0, 1.0),
+                        minHeight: 5,
+                        color: accentColor,
+                        backgroundColor: cs.outlineVariant,
+                      ),
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBoardGrid({bool tabletPortrait = false}) {
     // 아이패드 애플펜슬 필기 입력(전용 "펜슬 모드" 없이 넘패드와 항상 병행) —
     // 아이폰은 콜백 자체를 안 넘겨 오버레이가 생성되지 않아 기존과 동일.
     final isTablet = MediaQuery.of(context).size.width > 600;
 
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 680, maxHeight: 680),
+        constraints: BoxConstraints(
+          maxWidth: isTablet ? 820 : 680,
+          maxHeight: isTablet ? 820 : 680,
+        ),
         child: Stack(
           children: [
             // 칸 크기가 고정이라 시스템 글씨 크기를 따라 숫자가 커지면 칸 안에서 잘린다.
             MediaQuery.withNoTextScaling(
               child: SudokuBoardGrid(
+                emphasizeBlockLines: tabletPortrait,
                 presenter: _presenter,
                 waveActive: _effectsController.waveActive,
                 lineCompleteActive: _effectsController.lineCompleteActive,
@@ -1976,6 +2153,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     // 폰 레이아웃과 공유하는 컴포넌트라, 폰 쪽 크기에는 영향이 없도록
     // 기본값 false로 두고 랜드스케이프 호출부에서만 켠다.
     bool largeBadge = false,
+    // 아이패드 세로 전용: 잔여 개수 배지를 24 → 34로(폰·가로는 그대로).
+    bool tabletPortraitBadge = false,
   }) {
     final remainingCount = _remainingCountForNumber(number);
     final isEnabled = _isNumberInputEnabled(number) || _canLockNumber(number);
@@ -1995,19 +2174,28 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     const digitAlignment = Alignment.center;
     final badgeBaseSize = isCompactSmallButton ? 22.0 : 24.0;
     final badgeBaseInset = isCompactSmallButton ? 7.0 : 10.0;
-    final badgeSize =
-        largeBadge ? (buttonWidth * 0.23).clamp(18.0, 22.0) : badgeBaseSize;
+    final shortSide = math.min(buttonWidth, height ?? (compact ? 56.0 : 70.0));
+    final badgeSize = largeBadge
+        ? math.max(18.0, math.min(28.0, shortSide * 0.4))
+        : tabletPortraitBadge
+            ? math.min(34.0, shortSide * 0.46)
+            : badgeBaseSize;
     final badgeInset =
         largeBadge ? (buttonWidth * 0.08).clamp(6.0, 8.0) : badgeBaseInset;
     final badgeScale = badgeSize / badgeBaseSize;
     // 고정(핀)한 숫자는 보라(라벤더 배경 + 보라 테두리 + 보라 핀)로 표시한다. 선택한
     // 칸의 숫자는 보드에서 이미 강조되므로 숫자패드에는 따로 표시하지 않는다.
     final lockPalette = LevelStatusPalette.of(context);
+    // 아이패드 다크 모드: 숫자패드가 배경에 묻히지 않도록 한 단계 밝힌다
+    // (ProgressiveBlurButton이 이 색을 약 40%만 섞어 표시하므로 값이 크다).
+    final isTabletPad = largeBadge || tabletPortraitBadge;
+    final darkPadColor =
+        isTabletPad ? const Color(0xFF666666) : const Color(0xFF323232);
     final effectiveBackgroundColor = isCompletedNumber
         ? (isDark ? const Color(0xFF232323) : context.colors.surfaceSubtle)
         : isLockedNumber
             ? lockPalette.completedBackground
-            : (isDark ? const Color(0xFF323232) : context.colors.surface);
+            : (isDark ? darkPadColor : context.colors.surface);
     // ProgressiveBlurButton은 활성이 아닐 때 배경을 기본 표면색에 22%(다크 40%)만
     // 섞어 보여 준다. 고정 표시가 흐려지지 않도록 완성된 색을 활성 배경으로
     // 직접 넘기고, 차오르는 효과도 같은 색을 써서 끝에서 어긋나지 않게 한다.
@@ -2020,7 +2208,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         _lockFillNumber == number && !_effectsController.reduceMotion;
     // 해제 효과가 덮는 색: 고정되지 않은 평소 버튼의 실제 표시색.
     final unlockedCover =
-        isDark ? Color.lerp(padBase, const Color(0xFF323232), 0.40)! : padBase;
+        isDark ? Color.lerp(padBase, darkPadColor, 0.40)! : padBase;
 
     Widget button = MediaQuery.withNoTextScaling(
         child: ProgressiveBlurButton(
@@ -2521,6 +2709,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   Widget _buildMobileHintButton({
     required double buttonSize,
     required double labelFontSize,
+    // 잔여 힌트 배지 지름. 아이패드 세로에서만 키운다(기본 18).
+    double badgeSize = 18,
   }) {
     final hintsLeft = _visibleHintsRemaining;
     return Stack(
@@ -2556,8 +2746,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
             top: 1,
             right: 1,
             child: Container(
-              width: 18,
-              height: 18,
+              width: badgeSize,
+              height: badgeSize,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: const Color(0xFF457B9D),
@@ -2574,7 +2764,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                 // 18px 고정 원 안이므로 시스템 글씨 크기를 따르지 않는다.
                 textScaler: TextScaler.noScaling,
                 style: GoogleFonts.notoSans(
-                  fontSize: 9,
+                  fontSize: badgeSize * 0.5,
                   fontWeight: FontWeight.w800,
                   color: Colors.white,
                 ),
@@ -2731,11 +2921,14 @@ class _MobileGameLayoutMetrics {
     required double maxWidth,
     required double maxHeight,
     required double bottomSafePadding,
+    bool isTablet = false,
   }) {
     final isIPhoneSELayout = maxWidth <= 375 && maxHeight <= 620;
     final horizontalPadding = isIPhoneSELayout
         ? _clamp(maxWidth * 0.008, 2, 6)
-        : _clamp(maxWidth * 0.015, 4, 8);
+        : isTablet
+            ? 16.0
+            : _clamp(maxWidth * 0.015, 4, 8);
     final contentWidth = math.max(maxWidth - (horizontalPadding * 2), 220.0);
 
     final numberButtonGap = isIPhoneSELayout
@@ -2746,37 +2939,45 @@ class _MobileGameLayoutMetrics {
       74,
       isIPhoneSELayout ? 128 : 180,
     );
+    // 아이패드: 키패드를 보드의 62% 폭으로 좁히고, 양옆에 도구/상태를 둔다
+    // (_buildTabletPortraitBottom).
     final baseNumberButtonHeight = isIPhoneSELayout
         ? _clamp(numberButtonWidth * 0.32, 36, 40)
-        : _clamp(numberButtonWidth * 0.66, 48, 68);
+        : isTablet
+            ? 76.0
+            : _clamp(numberButtonWidth * 0.66, 48, 68);
     final numberButtonRadius = isIPhoneSELayout
         ? _clamp(numberButtonWidth * 0.2, 14, 22)
         : _clamp(numberButtonWidth * 0.24, 16, 28);
 
     final actionButtonGap = contentWidth < 350 ? 3.0 : 4.0;
-    final baseActionButtonSize = _clamp(
-      (contentWidth - (actionButtonGap * 14)) / 6,
-      isIPhoneSELayout ? 34 : 36,
-      isIPhoneSELayout ? 40 : 70,
-    );
+    final baseActionButtonSize = isTablet
+        ? 72.0
+        : _clamp(
+            (contentWidth - (actionButtonGap * 14)) / 6,
+            isIPhoneSELayout ? 34 : 36,
+            isIPhoneSELayout ? 40 : 70,
+          );
 
     final sectionGap = isIPhoneSELayout ? 3.0 : (maxHeight < 760 ? 4.0 : 8.0);
     final compactGap = isIPhoneSELayout ? 1.0 : (maxHeight < 760 ? 2.0 : 4.0);
 
     final estimatedNumberPadHeight =
         (baseNumberButtonHeight * 3) + (numberButtonGap * 4);
-    final estimatedActionRowHeight = baseActionButtonSize + 8.0;
+    // 아이패드 세로는 액션 버튼이 키패드 옆으로 가서 별도 행이 없다.
+    final estimatedActionRowHeight =
+        isTablet ? 0.0 : baseActionButtonSize + 8.0;
     final fixedChromeHeight = estimatedNumberPadHeight +
         estimatedActionRowHeight +
         bottomSafePadding +
         (isIPhoneSELayout ? 0 : 12.0);
 
-    final baseBoardSize =
-        _clamp(contentWidth, 292, isIPhoneSELayout ? 520 : 680);
+    // 아이패드 세로: 키패드를 줄여 확보한 높이만큼 보드를 폭 가득(최대 820)으로.
+    final maxBoardSize = isIPhoneSELayout ? 520.0 : (isTablet ? 820.0 : 680.0);
+    final baseBoardSize = _clamp(contentWidth, 292, maxBoardSize);
     final estimatedTotalHeight = fixedChromeHeight + baseBoardSize;
     final overflow = math.max(0.0, estimatedTotalHeight - maxHeight);
-    final boardSize =
-        _clamp(baseBoardSize - overflow, 256, isIPhoneSELayout ? 520 : 680);
+    final boardSize = _clamp(baseBoardSize - overflow, 256, maxBoardSize);
 
     // Grow the keypad/action buttons with height that's genuinely left over
     // after the (width-bound) board and required chrome are placed — never
@@ -2794,16 +2995,23 @@ class _MobileGameLayoutMetrics {
               estimatedActionRowHeight +
               bottomSafePadding),
     );
-    final extraPerRow = math.min(leftoverHeight / 4, 16.0);
+    final extraPerRow = math.min(leftoverHeight / 4, isTablet ? 6.0 : 16.0);
     final numberButtonHeight =
         math.min(baseNumberButtonHeight + extraPerRow, 116.0);
-    final actionButtonSize = math.min(baseActionButtonSize + extraPerRow, 82.0);
-    final actionLabelFontSize = actionButtonSize <= 50 ? 7.5 : 8.5;
+    final actionButtonSize = math.min(
+      baseActionButtonSize + extraPerRow,
+      isTablet ? 100.0 : 82.0,
+    );
+    final actionLabelFontSize =
+        isTablet ? 13.0 : (actionButtonSize <= 50 ? 7.5 : 8.5);
 
     // 숫자 패드 한 줄(3버튼)의 전체 폭이 보드 폭과 같아지도록 정렬.
     final alignedNumberButtonWidth = isIPhoneSELayout
         ? numberButtonWidth
-        : math.max((boardSize - numberButtonGap * 3) / 3, numberButtonWidth);
+        : isTablet
+            ? (boardSize * 0.62 - numberButtonGap * 3) / 3
+            : math.max(
+                (boardSize - numberButtonGap * 3) / 3, numberButtonWidth);
 
     return _MobileGameLayoutMetrics(
       horizontalPadding: horizontalPadding,
@@ -2876,25 +3084,30 @@ class _TabletLandscapeGameLayoutMetrics {
     final contentHeight = math.max(maxHeight - (verticalPadding * 2), 300.0);
 
     // 키패드 패널 폭: 전체 폭의 일부를 고정 비율로 확보.
-    final keypadColumnWidth = _clamp(maxWidth * 0.30, 240, 340);
+    // 세로형과 비율을 맞추기 위해 상한을 340 → 360으로(숫자 버튼 약 94).
+    // 보드는 높이에 묶여 폭이 남으므로 숫자패드 쪽에 더 준다(최대 400).
+    final keypadColumnWidth = _clamp(maxWidth * 0.32, 240, 400);
 
     final boardAreaWidth = math.max(
       maxWidth - keypadColumnWidth - sectionGap - (horizontalPadding * 2),
       240.0,
     );
-    final boardSize = _clamp(math.min(boardAreaWidth, contentHeight), 300, 680);
+    // 높이에 여유가 있어 상한을 680 → 704로(세로형 802보다는 작게 유지).
+    final boardSize = _clamp(math.min(boardAreaWidth, contentHeight), 300, 704);
 
     // 키패드 칼럼을 감싸는 패널 테두리 안쪽에서 실제로 쓸 수 있는 폭/높이.
-    final usableKeypadWidth = keypadColumnWidth - (panelPadding * 2);
+    // 패널 테두리(양쪽 1px)와 반올림 오차 여유 2px를 함께 뺀다(밀도 계수 1.0).
+    final usableKeypadWidth = keypadColumnWidth - (panelPadding * 2) - 4;
     final keypadContentHeight =
         math.max(contentHeight - (panelPadding * 2), 200.0);
 
-    const numberButtonGap = 8.0;
+    const numberButtonGap = 10.0;
     // 태블릿 가로 모드에서 숫자패드가 다소 커 보인다는 피드백에 따라
     // 8% 축소(밀도 개선). 버튼 사이 gap/keypadColumnWidth는 그대로 두고
     // 버튼 자체만 살짝 줄이므로, 남는 폭은 각 행이 가운데 정렬되며
     // 자연스러운 여백으로 흡수된다 — 오버플로우 쪽으로는 절대 안 커짐.
-    const numberPadDensityFactor = 0.92;
+    // 숫자패드가 작다는 피드백: 밀도 축소를 되돌린다(1.0).
+    const numberPadDensityFactor = 1.0;
     // 각 버튼이 Padding(horizontal: numberButtonGap / 2)을 개별로 두르고 있어
     // 양 끝 버튼 바깥쪽에도 gap이 생기므로, 실제로 소모되는 간격은 2개가 아니라
     // 버튼 개수(3)만큼이다. 간격을 2개로 잘못 가정하면 항상 8px 오버플로우한다.
@@ -2912,21 +3125,25 @@ class _TabletLandscapeGameLayoutMetrics {
     final numberButtonRadius = _clamp(numberButtonWidth * 0.22, 14, 26);
     final compactGap = _clamp(maxHeight * 0.015, 8, 18);
 
-    var numberButtonHeight = _clamp(numberButtonWidth * 0.78, 52, 104);
-    var actionButtonSize = _clamp(numberButtonWidth * 0.72, 48, 84);
+    var numberButtonHeight = _clamp(numberButtonWidth * 0.90, 52, 112);
+    // 세로형 도구 버튼(약 76~80)에 가깝게: 비율 0.72 → 0.80, 하한 56.
+    var actionButtonSize = _clamp(numberButtonWidth * 0.80, 56, 84);
 
     // 오버플로우 방지: 숫자 패드 3행 + 액션 버튼 행이 사용 가능한 높이를 넘으면 축소.
     final estimatedBlockHeight = (numberButtonHeight * 3) +
         (numberButtonGap * 2) +
         compactGap +
         actionButtonSize;
-    if (estimatedBlockHeight > keypadContentHeight) {
-      final scale = keypadContentHeight / estimatedBlockHeight;
+    // 위쪽 상태 카드 2장(88×2 + 간격 10)과 최소 여백이 차지하는 높이를 뺀다.
+    final availableForKeypad = keypadContentHeight - 186 - 40;
+    if (estimatedBlockHeight > availableForKeypad) {
+      final scale = math.max(availableForKeypad, 160.0) / estimatedBlockHeight;
       numberButtonHeight = math.max(numberButtonHeight * scale, 44.0);
       actionButtonSize = math.max(actionButtonSize * scale, 40.0);
     }
 
-    final actionLabelFontSize = actionButtonSize <= 56 ? 8.0 : 9.0;
+    // 세로형과 같은 13(긴 번역은 버튼 안에서 FittedBox로 축소).
+    final actionLabelFontSize = actionButtonSize <= 56 ? 11.0 : 13.0;
 
     return _TabletLandscapeGameLayoutMetrics(
       horizontalPadding: horizontalPadding,
@@ -2975,19 +3192,30 @@ class _RestartConfirmDialogState extends State<_RestartConfirmDialog> {
     final l10n = AppLocalizations.of(context)!;
     final colors = LevelStatusPalette.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final m = DialogMetrics.of(context);
     return Dialog(
       backgroundColor: Theme.of(context).colorScheme.surface,
       elevation: 3,
       shadowColor: Colors.black.withValues(alpha: 0.2),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      insetPadding: EdgeInsets.symmetric(horizontal: m.inset(24), vertical: 24),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(m.size(24.0, 28.0)),
         side: BorderSide(color: colors.completedBorder),
       ),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 340),
+        constraints: BoxConstraints(
+          maxWidth: m.maxWidth(phone: 340, tablet: 440),
+          maxHeight: m.maxHeight ?? double.infinity,
+        ),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+          padding: m.isTablet
+              ? EdgeInsets.fromLTRB(
+                  32,
+                  m.compactHeight ? 24 : 32,
+                  32,
+                  m.compactHeight ? 24 : 16,
+                )
+              : const EdgeInsets.fromLTRB(24, 24, 24, 12),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2995,41 +3223,41 @@ class _RestartConfirmDialogState extends State<_RestartConfirmDialog> {
               Center(
                 child: ExcludeSemantics(
                   child: Container(
-                    width: 44,
-                    height: 44,
+                    width: m.spacing(44.0, 52.0),
+                    height: m.spacing(44.0, 52.0),
                     decoration: BoxDecoration(
                       color: colors.completedBackground,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.replay_rounded,
-                      size: 24,
+                      size: m.spacing(24.0, 28.0),
                       color: colors.primaryPurple,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: m.spacing(16.0, 20.0)),
               Text(
                 l10n.gameRestartDialogTitle,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: m.size(20.0, 24.0),
                   fontWeight: FontWeight.w800,
                   color: colors.primaryText,
                 ),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: m.spacing(10.0, 12.0)),
               // 문장마다 새 줄에서 시작하고, 단어 중간에서는 줄을 바꾸지 않는다.
               SentenceText(
                 l10n.gameRestartDialogBody,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: m.size(14.0, 16.0),
                   height: 1.45,
                   color: colors.secondaryText,
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: m.spacing(20.0, 24.0)),
               FilledButton(
                 onPressed: _answered ? null : () => _answer(true),
                 style: FilledButton.styleFrom(
@@ -3039,12 +3267,12 @@ class _RestartConfirmDialogState extends State<_RestartConfirmDialog> {
                   disabledBackgroundColor: colors.primaryPurple,
                   disabledForegroundColor:
                       isDark ? const Color(0xFF1F1B3A) : Colors.white,
-                  minimumSize: const Size.fromHeight(48),
+                  minimumSize: Size.fromHeight(m.size(48.0, 54.0)),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  textStyle: const TextStyle(
-                    fontSize: 16,
+                  textStyle: TextStyle(
+                    fontSize: m.size(16.0, 17.0),
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -3057,8 +3285,8 @@ class _RestartConfirmDialogState extends State<_RestartConfirmDialog> {
                 style: TextButton.styleFrom(
                   foregroundColor: colors.secondaryText,
                   minimumSize: const Size.fromHeight(44),
-                  textStyle: const TextStyle(
-                    fontSize: 15,
+                  textStyle: TextStyle(
+                    fontSize: m.size(15.0, 16.0),
                     fontWeight: FontWeight.w600,
                   ),
                 ),

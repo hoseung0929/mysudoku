@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/utils/time_format.dart';
 import 'package:sudoku159/widgets/mascot_image.dart';
+import 'package:sudoku159/widgets/dialog_metrics.dart';
 import 'package:sudoku159/widgets/game_result_dialog_frame.dart';
 
 /// 게임 완료 다이얼로그.
@@ -60,6 +61,7 @@ class _GameCompleteDialogState extends State<GameCompleteDialog> {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final hasNext = widget.onNextPuzzle != null;
+    final m = DialogMetrics.of(context);
 
     // 성취 메시지는 최대 한 개: 오늘의 도전 완료 > 새 최고 기록.
     final achievement = widget.challengeMessage ??
@@ -71,15 +73,21 @@ class _GameCompleteDialogState extends State<GameCompleteDialog> {
         Text(
           l10n.dialogPuzzleCompleteTitle,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontSize: m.size(22.0, 26.0),
+            fontWeight: FontWeight.w700,
+          ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: m.spacing(6.0, 8.0)),
         Text(
           widget.levelLabel,
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
+          style: TextStyle(
+            fontSize: m.size(14.0, 16.0),
+            color: cs.onSurfaceVariant,
+          ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: m.spacing(16.0, 20.0)),
         _ResultSummary(
           timeLabel: l10n.dialogElapsedTime,
           timeValue: widget.formattedTime,
@@ -87,19 +95,19 @@ class _GameCompleteDialogState extends State<GameCompleteDialog> {
           mistakesValue: l10n.dialogWrongCountValue(widget.wrongCount),
         ),
         if (achievement != null) ...[
-          const SizedBox(height: 12),
+          SizedBox(height: m.spacing(12.0, 14.0)),
           Text(
             achievement,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: m.size(14.0, 16.0),
               fontWeight: FontWeight.w600,
               color: cs.onSurface,
             ),
           ),
         ],
         if (widget.weeklyGoalMessage != null) ...[
-          const SizedBox(height: 10),
+          SizedBox(height: m.spacing(10.0, 12.0)),
           _WeeklyGoalCelebration(message: widget.weeklyGoalMessage!),
         ],
       ],
@@ -135,6 +143,7 @@ class _ResultSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final stacked = MediaQuery.textScalerOf(context).scale(1.0) > 1.3;
+    final m = DialogMetrics.of(context);
 
     Widget item(String label, String value) => Semantics(
           container: true,
@@ -146,16 +155,19 @@ class _ResultSummary extends StatelessWidget {
               Text(
                 label,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+                style: TextStyle(
+                  fontSize: m.size(13.0, 15.0),
+                  color: cs.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 value,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 22,
+                style: TextStyle(
+                  fontSize: m.size(22.0, 26.0),
                   fontWeight: FontWeight.w700,
-                  fontFeatures: [FontFeature.tabularFigures()],
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
             ],
@@ -164,7 +176,10 @@ class _ResultSummary extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+      padding: EdgeInsets.symmetric(
+        vertical: m.spacing(14.0, 18.0),
+        horizontal: 8,
+      ),
       decoration: BoxDecoration(
         color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
@@ -242,8 +257,9 @@ class _CelebrationHeaderState extends State<_CelebrationHeader>
     final gold = Theme.of(context).brightness == Brightness.dark
         ? const Color(0xFFE8B84A)
         : const Color(0xFFF0AE2E);
-    // 큰 화면에서도 그림을 키우지 않는다.
-    const size = 104.0;
+    // 아이패드 세로(높이 충분)에서만 약 12% 키우고, 낮은 높이·아이폰은 그대로.
+    final m = DialogMetrics.of(context);
+    final size = m.spacing(104.0, 116.0);
     return ExcludeSemantics(
       child: SizedBox(
         width: size + 40,
@@ -255,7 +271,7 @@ class _CelebrationHeaderState extends State<_CelebrationHeader>
             child: Stack(
               alignment: Alignment.center,
               children: [
-                const MascotImage(asset: MascotImage.celebrate, size: size),
+                MascotImage(asset: MascotImage.celebrate, size: size),
                 Positioned(
                   left: 4,
                   top: 10,
@@ -321,7 +337,7 @@ class _WeeklyGoalCelebration extends StatelessWidget {
               message,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: DialogMetrics.of(context).size(14.0, 16.0),
                 fontWeight: FontWeight.w700,
                 color: color,
               ),

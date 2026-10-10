@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/theme/level_status_colors.dart';
+import 'package:sudoku159/widgets/dialog_metrics.dart';
 import 'package:sudoku159/utils/time_format.dart';
 import 'package:sudoku159/widgets/sentence_text.dart';
 
@@ -62,6 +63,7 @@ class _ReplayConfirmDialogState extends State<_ReplayConfirmDialog> {
     final l10n = AppLocalizations.of(context)!;
     final colors = LevelStatusPalette.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final m = DialogMetrics.of(context);
     final record = widget.bestRecord;
     final int? bestTime = (record?['clear_time'] as num?)?.toInt();
     final String? recordLine = bestTime == null
@@ -78,15 +80,25 @@ class _ReplayConfirmDialogState extends State<_ReplayConfirmDialog> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       elevation: 3,
       shadowColor: Colors.black.withValues(alpha: 0.2),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      insetPadding: EdgeInsets.symmetric(horizontal: m.inset(24), vertical: 24),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(m.size(24.0, 28.0)),
         side: BorderSide(color: colors.completedBorder),
       ),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 340),
+        constraints: BoxConstraints(
+          maxWidth: m.maxWidth(phone: 340, tablet: 440),
+          maxHeight: m.maxHeight ?? double.infinity,
+        ),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+          padding: m.isTablet
+              ? EdgeInsets.fromLTRB(
+                  32,
+                  m.compactHeight ? 24 : 32,
+                  32,
+                  m.compactHeight ? 24 : 16,
+                )
+              : const EdgeInsets.fromLTRB(24, 24, 24, 12),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -94,66 +106,66 @@ class _ReplayConfirmDialogState extends State<_ReplayConfirmDialog> {
               Center(
                 child: ExcludeSemantics(
                   child: Container(
-                    width: 44,
-                    height: 44,
+                    width: m.spacing(44.0, 52.0),
+                    height: m.spacing(44.0, 52.0),
                     decoration: BoxDecoration(
                       color: colors.completedBackground,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.replay_rounded,
-                      size: 24,
+                      size: m.spacing(24.0, 28.0),
                       color: colors.primaryPurple,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: m.spacing(16.0, 20.0)),
               Text(
                 l10n.levelReplayTitle(widget.gameNumber),
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: m.size(20.0, 24.0),
                   fontWeight: FontWeight.w800,
                   color: colors.primaryText,
                 ),
               ),
               if (recordLine != null) ...[
-                const SizedBox(height: 8),
+                SizedBox(height: m.spacing(8.0, 10.0)),
                 Text(
                   recordLine,
                   key: const Key('replay-dialog-best-record'),
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: m.size(14.0, 16.0),
                     fontWeight: FontWeight.w700,
                     color: colors.primaryPurple,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
               ],
-              const SizedBox(height: 10),
+              SizedBox(height: m.spacing(10.0, 12.0)),
               SentenceText(
                 l10n.levelReplayBody,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: m.size(14.0, 16.0),
                   height: 1.45,
                   color: colors.secondaryText,
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: m.spacing(20.0, 24.0)),
               FilledButton(
                 onPressed: () => _answer(true),
                 style: FilledButton.styleFrom(
                   backgroundColor: colors.primaryPurple,
                   foregroundColor:
                       isDark ? const Color(0xFF1F1B3A) : Colors.white,
-                  minimumSize: const Size.fromHeight(48),
+                  minimumSize: Size.fromHeight(m.size(48.0, 54.0)),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  textStyle: const TextStyle(
-                    fontSize: 16,
+                  textStyle: TextStyle(
+                    fontSize: m.size(16.0, 17.0),
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -166,8 +178,8 @@ class _ReplayConfirmDialogState extends State<_ReplayConfirmDialog> {
                 style: TextButton.styleFrom(
                   foregroundColor: colors.secondaryText,
                   minimumSize: const Size.fromHeight(44),
-                  textStyle: const TextStyle(
-                    fontSize: 15,
+                  textStyle: TextStyle(
+                    fontSize: m.size(15.0, 16.0),
                     fontWeight: FontWeight.w600,
                   ),
                 ),

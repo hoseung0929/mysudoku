@@ -92,6 +92,7 @@
   "gameMemoFocusShort": "フォーカス",
   "gameMemoFocusIdle": "なし",
   "gameWrongShort": "ミス",
+  "gameMistakesShort": "ミス",
   "gamePerfectShort": "パーフェクト",
   "gamePerfectReady": "継続中",
   "gamePerfectMissed": "失敗",

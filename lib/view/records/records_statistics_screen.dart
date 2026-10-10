@@ -19,6 +19,7 @@ import 'package:sudoku159/view/records/recent_completion_tile.dart';
 import 'package:sudoku159/view/records/recent_completions_screen.dart';
 import 'package:sudoku159/widgets/keep_words_text.dart';
 import 'package:sudoku159/widgets/loading_skeleton.dart';
+import 'package:sudoku159/utils/tablet_hero_height.dart';
 
 /// 문장 안의 숫자 덩어리에만 [numberStyle]을 적용한다(언어와 무관).
 List<InlineSpan> _numberSpans(String text, TextStyle numberStyle) {
@@ -101,7 +102,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
 
   /// 기록 최상단 히어로 이미지(제목·부제 포함)의 고정 높이(상태바 제외).
   static const double _kRecordsHeroHeightPhone = 185;
-  static const double _kRecordsHeroHeightTablet = 220;
 
   late final RecordsStatisticsService _statisticsService =
       widget.statisticsService ?? RecordsStatisticsService();
@@ -178,7 +178,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
 
   double _currentHeroHeight(BuildContext context) =>
       MediaQuery.sizeOf(context).width > 600
-          ? _kRecordsHeroHeightTablet
+          ? tabletHeroHeight(context)
           : _kRecordsHeroHeightPhone;
 
   /// 히어로가 상태바 영역 뒤로 완전히 넘어가면 밝은(사진 위) 아이콘에서
@@ -259,6 +259,15 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     final topInset = MediaQuery.paddingOf(context).top;
     final isTablet = MediaQuery.sizeOf(context).width > 600;
     final horizontalPad = isTablet ? 24.0 : 16.0;
+    // 가로형(폭 > 900): 카드 영역 최대 1072(외곽 1120), 화면 가장자리와 최소 32.
+    // 그 외(세로·Split View)는 기존 960.
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isWide = screenWidth > 900;
+    final cardMaxWidth = isWide ? min(1072.0, screenWidth - 64) : 960.0;
+    // 히어로 문구의 시작선을 본문 카드 시작선과 맞춘다.
+    final heroTextPad = isWide
+        ? max(horizontalPad, (screenWidth - cardMaxWidth) / 2)
+        : horizontalPad;
 
     final sectionGap = isTablet ? 24.0 : 20.0;
 
@@ -297,7 +306,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 bottom: _kScrollBottomPad + bottomInset,
               ),
               children: [
-                _buildHeaderBanner(l10n, horizontalPad, topInset, isTablet),
+                _buildHeaderBanner(l10n, heroTextPad, topInset, isTablet),
                 Padding(
                   key: const Key('records_content_padding'),
                   padding: EdgeInsets.fromLTRB(
@@ -308,7 +317,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                   ),
                   child: Center(
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 960),
+                      constraints: BoxConstraints(maxWidth: cardMaxWidth),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -418,12 +427,12 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               header: true,
               child: KeepWordsText(
                 l10n.recordsHeroImageSubtitle,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
-                  fontSize: 20,
+                  fontSize: isTablet ? 30 : 20,
                   height: 1.3,
                   fontWeight: FontWeight.w800,
-                  shadows: [Shadow(color: Colors.black45, blurRadius: 6)],
+                  shadows: const [Shadow(color: Colors.black45, blurRadius: 6)],
                 ),
               ),
             ),
@@ -730,13 +739,15 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                         _summarySupportPick % supportCandidates.length],
                   ];
 
+            // 아이패드: 요약 제목 20 · 보조 문장 15 · 빈 상태 본문 16 (폰 17/13.5/14).
+            final isTabletSummary = MediaQuery.sizeOf(context).width > 600;
             final labelStyle = TextStyle(
-              fontSize: 17,
+              fontSize: isTabletSummary ? 20 : 17,
               fontWeight: FontWeight.w700,
               color: cs.onSurface,
             );
             final supportStyle = TextStyle(
-              fontSize: 13.5,
+              fontSize: isTabletSummary ? 15 : 13.5,
               fontWeight: FontWeight.w500,
               color: cs.onSurface.withValues(alpha: 0.85),
             );
@@ -756,7 +767,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                   KeepWordsText(
                     l10n.recordsSummaryEmptyBody,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: isTabletSummary ? 16 : 14,
                       height: 1.4,
                       color: cs.onSurfaceVariant,
                     ),
@@ -778,7 +789,7 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               switchKey = '$heroSentence|${supportTexts.join('|')}';
               // 숫자만 크게(30~32px), 나머지는 같은 문장 안에서 17px.
               final heroStyle = TextStyle(
-                fontSize: 17,
+                fontSize: isTabletSummary ? 20 : 17,
                 height: 1.25,
                 fontWeight: FontWeight.w600,
                 color: cs.onSurface.withValues(alpha: 0.85),
@@ -1029,7 +1040,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         (st['level_name'] as String).localizedSudokuLevelName(l10n),
     ];
     final labelStyle = DefaultTextStyle.of(context).style.copyWith(
-          fontSize: 13,
+          // 아이패드: 난이도명 15(폰 13).
+          fontSize: MediaQuery.sizeOf(context).width > 600 ? 15 : 13,
           height: 1.2,
           fontWeight: FontWeight.w600,
           color: cs.onSurface,
@@ -1317,7 +1329,11 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                 Expanded(
                   child: Text(
                     label,
-                    style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
+                    style: TextStyle(
+                      fontSize:
+                          MediaQuery.sizeOf(context).width > 600 ? 16 : 14,
+                      color: cs.onSurfaceVariant,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -1330,7 +1346,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                     value,
                     textAlign: TextAlign.right,
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize:
+                          MediaQuery.sizeOf(context).width > 600 ? 17 : 15,
                       fontWeight: FontWeight.w700,
                       fontFeatures: const [FontFeature.tabularFigures()],
                       color: cs.onSurface,
@@ -1377,8 +1394,11 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                     const SizedBox(height: 12),
                     Text(
                       l10n.recordsLevelEmpty,
-                      style:
-                          TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
+                      style: TextStyle(
+                        fontSize:
+                            MediaQuery.sizeOf(context).width > 600 ? 16 : 14,
+                        color: cs.onSurfaceVariant,
+                      ),
                     ),
                   ],
                   if (hasRecords) ...[
@@ -1433,7 +1453,11 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
   Widget _buildRecentSection(AppLocalizations l10n) {
     final cs = Theme.of(context).colorScheme;
     final entries = _recentCompletions;
-    final visible = entries.take(_kRecentVisibleCount).toList();
+    // 아이패드: 한 줄이 너무 길어 번호와 시간이 멀어지므로 2열로 배치한다.
+    final isTablet = MediaQuery.of(context).size.width > 600;
+    final visibleCount =
+        isTablet ? _kRecentVisibleCount + 1 : _kRecentVisibleCount;
+    final visible = entries.take(visibleCount).toList();
     return KeyedSubtree(
       key: const Key('records_recent'),
       child: _card(
@@ -1449,14 +1473,56 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            for (var i = 0; i < visible.length; i++) ...[
-              if (i > 0) Divider(height: 1, color: cs.outlineVariant),
-              RecentCompletionTile(
-                entry: visible[i],
-                onTap: () => _openRecent(visible[i]),
-              ),
-            ],
-            if (entries.length > _kRecentVisibleCount) ...[
+            if (isTablet)
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  // 칼럼이 좁으면(2칼럼 화면의 절반 등) 한 줄에 한 항목.
+                  if (constraints.maxWidth < 560) {
+                    return Column(
+                      children: [
+                        for (var i = 0; i < visible.length; i++) ...[
+                          if (i > 0)
+                            Divider(height: 1, color: cs.outlineVariant),
+                          RecentCompletionTile(
+                            entry: visible[i],
+                            onTap: () => _openRecent(visible[i]),
+                          ),
+                        ],
+                      ],
+                    );
+                  }
+                  const columnGap = 28.0;
+                  final tileWidth = (constraints.maxWidth - columnGap) / 2;
+                  return Wrap(
+                    spacing: columnGap,
+                    children: [
+                      for (final entry in visible)
+                        SizedBox(
+                          width: tileWidth,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              RecentCompletionTile(
+                                entry: entry,
+                                onTap: () => _openRecent(entry),
+                              ),
+                              Divider(height: 1, color: cs.outlineVariant),
+                            ],
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              )
+            else
+              for (var i = 0; i < visible.length; i++) ...[
+                if (i > 0) Divider(height: 1, color: cs.outlineVariant),
+                RecentCompletionTile(
+                  entry: visible[i],
+                  onTap: () => _openRecent(visible[i]),
+                ),
+              ],
+            if (entries.length > visibleCount) ...[
               Divider(height: 1, color: cs.outlineVariant),
               const SizedBox(height: 4),
               Align(
@@ -1538,7 +1604,8 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                     key: ValueKey('heatmap-selection-$locale-'
                         '$_selectedHeatmapDateKey'),
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize:
+                          MediaQuery.sizeOf(context).width > 600 ? 15 : 13,
                       fontWeight: FontWeight.w600,
                       color: cs.onSurface,
                     ),
@@ -1549,7 +1616,11 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
                     '${l10n.recordsActivityBestStreakLabel} '
                     '${l10n.recordsActivityDayCount(best)}',
                     key: const ValueKey('heatmap-selection-none'),
-                    style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+                    style: TextStyle(
+                      fontSize:
+                          MediaQuery.sizeOf(context).width > 600 ? 15 : 13,
+                      color: cs.onSurfaceVariant,
+                    ),
                   ),
           ),
         ],
@@ -1632,8 +1703,6 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
         (activityHeatmap['month_labels'] as List<dynamic>? ?? const <dynamic>[])
             .cast<Map<String, dynamic>>();
     final isTablet = MediaQuery.of(context).size.width > 600;
-    final isLandscape =
-        MediaQuery.of(context).orientation == Orientation.landscape;
     final baseGap = isTablet ? 5.0 : 4.0;
     final baseCellSize = isTablet ? 20.0 : 16.0;
     final dayLabelWidth = isTablet ? 17.0 : 14.0;
@@ -1642,11 +1711,11 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // 아이패드 가로 모드에서는 남는 폭만큼 셀을 키워서 히트맵이 꽉 차 보이게 함
-        // (세로/아이폰은 기존 고정 셀 크기 그대로).
+        // 아이패드(세로·가로)에서는 남는 폭만큼 셀을 키워서 히트맵이 꽉 차 보이게
+        // 함(아이폰은 기존 고정 셀 크기 그대로).
         var gap = baseGap;
         var cellSize = baseCellSize;
-        if (isLandscape && weeks.isNotEmpty && constraints.maxWidth.isFinite) {
+        if (isTablet && weeks.isNotEmpty && constraints.maxWidth.isFinite) {
           final availableWidth = constraints.maxWidth - dayLabelWidth - baseGap;
           final filledCellSize =
               (availableWidth - (weeks.length - 1) * gap) / weeks.length;
@@ -1958,7 +2027,7 @@ class _RecordCardHeader extends StatelessWidget {
                 child: Text(
                   title,
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: MediaQuery.sizeOf(context).width > 600 ? 20 : 18,
                     fontWeight: FontWeight.w700,
                     color: cs.onSurface,
                   ),
@@ -1975,7 +2044,10 @@ class _RecordCardHeader extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             subtitle!,
-            style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+            style: TextStyle(
+              fontSize: MediaQuery.sizeOf(context).width > 600 ? 15 : 13,
+              color: cs.onSurfaceVariant,
+            ),
           ),
         ],
       ],

@@ -69,7 +69,7 @@ class RecentCompletionTile extends StatelessWidget {
     final timeText = Text(
       time,
       style: TextStyle(
-        fontSize: 15,
+        fontSize: MediaQuery.sizeOf(context).width > 600 ? 17 : 15,
         fontWeight: FontWeight.w700,
         color: cs.onSurface,
         fontFeatures: const [FontFeature.tabularFigures()],
@@ -90,7 +90,7 @@ class RecentCompletionTile extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 11.5,
+            fontSize: MediaQuery.sizeOf(context).width > 600 ? 13 : 11.5,
             fontWeight: FontWeight.w700,
             color: emphasized ? palette.primaryPurple : cs.onSurfaceVariant,
           ),
@@ -111,7 +111,8 @@ class RecentCompletionTile extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 56),
+          constraints: BoxConstraints(
+              minHeight: MediaQuery.sizeOf(context).width > 600 ? 68 : 56),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: Row(
@@ -124,7 +125,8 @@ class RecentCompletionTile extends StatelessWidget {
                       Text(
                         title,
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize:
+                              MediaQuery.sizeOf(context).width > 600 ? 17 : 15,
                           fontWeight: FontWeight.w700,
                           color: cs.onSurface,
                           fontFeatures: const [FontFeature.tabularFigures()],
@@ -135,7 +137,8 @@ class RecentCompletionTile extends StatelessWidget {
                       Text(
                         details,
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize:
+                              MediaQuery.sizeOf(context).width > 600 ? 15 : 13,
                           color: cs.onSurfaceVariant,
                         ),
                       ),

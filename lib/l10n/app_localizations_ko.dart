@@ -274,6 +274,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get gameWrongShort => '오답';
 
   @override
+  String get gameMistakesShort => '오답';
+
+  @override
   String get gamePerfectShort => '퍼펙트';
 
   @override
