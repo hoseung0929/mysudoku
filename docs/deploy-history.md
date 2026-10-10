@@ -6,7 +6,7 @@
 
 없음 — 현재 작업 트리는 `1.2.1+5`(아래) 그대로다. 새 변경이 생기면 여기에 적고, 버전이 올라가 게시되면 해당 버전 항목으로 옮긴다.
 
-- **알려진 제약(인지만)**: 결과 텍스트 공유(`GameResultActions.shareResultText`)는 구현돼 있지만 어떤 화면에서도 호출되지 않음. `ChallengeScreen`은 어디에도 연결되지 않은 화면.
+- **알려진 제약(인지만)**: 결과 텍스트 공유(`GameResultActions.shareResultText`)는 구현돼 있지만 어떤 화면에서도 호출되지 않음. (`ChallengeScreen`은 2026-10-03 도전 캘린더 제거와 함께 삭제됨.)
 - **아이패드 가로 모드·Apple Pencil**은 코드에 들어 있지만 아이폰 전용 배포(`TARGETED_DEVICE_FAMILY=1`)라 사용자에겐 노출되지 않음. 아이패드 배포 결정은 [tablet-ui-guidelines.md](tablet-ui-guidelines.md) 참고.
 
 ## Sudoku159 (글로벌)
