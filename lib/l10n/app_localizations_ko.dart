@@ -1096,11 +1096,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get levelFilterDone => '완료';
 
   @override
-  String levelPuzzleListTitle(int count) {
-    return '퍼즐 목록 · $count';
-  }
-
-  @override
   String get levelRecentBadge => '최근';
 
   @override
@@ -1203,11 +1198,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get levelActionShowAll => '전체 보기';
-
-  @override
-  String levelBestTime(String time) {
-    return '최고 기록 $time';
-  }
 
   @override
   String levelCellSemantics(String number, String status) {
@@ -1598,4 +1588,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String recordsTypicalTimeValue(int minutes) {
     return '약 $minutes분';
   }
+
+  @override
+  String get levelPerfectLegend => '힌트·실수 없이 푼 퍼즐';
 }

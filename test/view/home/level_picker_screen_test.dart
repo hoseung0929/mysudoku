@@ -39,6 +39,12 @@ List<List<int>> _puzzle() {
 
 class _FakeDb implements DatabaseHelper {
   @override
+  Future<List<Map<String, dynamic>>> getClearEventsForLevel(
+    String levelName,
+  ) async =>
+      events;
+
+  @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError(invocation.memberName.toString());
 
@@ -47,8 +53,12 @@ class _FakeDb implements DatabaseHelper {
     this.cleared = const {},
     this.gameEntryGate,
     this.failGameEntry = false,
+    this.events = const [],
   });
   final List<int> games;
+
+  /// 완료 이력(`clear_events`): 다시 푼 판까지. 비어 있으면 최고 기록으로 판단한다.
+  final List<Map<String, dynamic>> events;
   final Set<int> cleared;
   // 설정하면 getGameEntry가 이 Future가 끝날 때까지 대기한다(로딩 상태 테스트용).
   final Future<void>? gameEntryGate;
@@ -153,6 +163,7 @@ void main() {
     bool reduceMotion = false,
     Future<void>? gameEntryGate,
     bool failGameEntry = false,
+    List<Map<String, dynamic>> events = const [],
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
@@ -178,6 +189,7 @@ void main() {
             cleared: cleared,
             gameEntryGate: gameEntryGate,
             failGameEntry: failGameEntry,
+            events: events,
           ),
           gameStateService: _FakeStates(saved, gate: gate),
         ),
@@ -188,6 +200,90 @@ void main() {
   }
 
   final games = List.generate(12, (i) => i + 1);
+
+  group('completed cells show result stickers', () {
+    Map<String, dynamic> run(int number, {int wrong = 0, int hints = 0}) => {
+          'game_number': number,
+          'clear_time': 125,
+          'wrong_count': wrong,
+          'hints_used': hints,
+        };
+    Finder sticker(int number, String kind) =>
+        find.byKey(ValueKey('level-cell-sticker-$number-$kind'));
+
+    testWidgets(
+        'PERFECT when any run had no hints and no mistakes, otherwise CLEAR; '
+        'no times on cells', (tester) async {
+      await pumpPicker(
+        tester,
+        games: games,
+        cleared: {1, 2, 3},
+        events: [
+          run(2, wrong: 1),
+          run(3, hints: 1),
+          run(3), // 다시 풀어 힌트·실수 없이 완료
+        ],
+      );
+      // 1번은 완료 이력이 없어 최고 기록(실수·힌트 없음)으로 판단한다.
+      expect(sticker(1, 'perfect'), findsOneWidget);
+      expect(sticker(2, 'clear'), findsOneWidget);
+      expect(sticker(3, 'perfect'), findsOneWidget);
+      expect(find.text('02:05'), findsNothing);
+      expect(find.byIcon(Icons.timer_outlined), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('the legend explains PERFECT only when something is completed',
+        (tester) async {
+      await pumpPicker(tester, games: games, cleared: {1});
+      expect(find.byKey(const Key('level-perfect-legend')), findsOneWidget);
+      expect(find.text('Solved with no hints or mistakes'), findsOneWidget);
+      // 위 필터와 같은 개수를 반복하던 "퍼즐 목록 · N" 제목은 없다.
+      expect(find.textContaining('Puzzles ·'), findsNothing);
+    });
+
+    testWidgets('no legend when nothing in the level is completed',
+        (tester) async {
+      await pumpPicker(tester, games: games);
+      expect(find.byKey(const Key('level-perfect-legend')), findsNothing);
+    });
+
+    testWidgets('screen readers hear the result in words', (tester) async {
+      final handle = tester.ensureSemantics();
+      await pumpPicker(
+        tester,
+        games: games,
+        cleared: {1, 2},
+        events: [run(1), run(2, wrong: 1)],
+      );
+      expect(
+        find.bySemanticsLabel(
+            RegExp(r'^Puzzle 001, .*Solved with no hints or mistakes')),
+        findsOneWidget,
+      );
+      expect(
+        find.bySemanticsLabel(RegExp(r'^Puzzle 002, .*no hints or mistakes')),
+        findsNothing,
+      );
+      handle.dispose();
+    });
+
+    testWidgets('the replay dialog shows the best record', (tester) async {
+      await pumpPicker(
+        tester,
+        games: games,
+        cleared: {2},
+        events: [run(2, wrong: 1)],
+      );
+      await tester.tap(find.text('002'));
+      await tester.pumpAndSettle();
+      expect(find.text('Replay puzzle 2?'), findsOneWidget);
+      // 이 페이크의 최고 기록 행에는 실수·힌트 값이 없어 0으로 읽는다.
+      expect(find.text('Best run 02:05 · 0 mistakes'), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+    });
+  });
 
   testWidgets('no in-progress: start-new is the primary action, no continue',
       (tester) async {

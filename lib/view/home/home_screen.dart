@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -1384,28 +1385,38 @@ class _HomeScreenState extends State<HomeScreen> {
                       : isError
                           ? _openTodayChallenge
                           : _startChallengeWithHaptic;
-                  // '난이도 선택'(주 버튼, 검은색)과 위계를 구분하기 위해 연한 보라색
-                  // 배경의 보조 버튼으로 모든 상태에서 같게 표시한다.
+                  // '난이도 선택'(주 버튼, 검은색)과 위계를 구분하기 위해 반투명 흰 유리
+                  // 보조 버튼으로 모든 상태에서 같게 표시한다(레벨 화면 히어로 카드와
+                  // 동일). 배경 일러스트가 테마와 무관하게 고정이라 색도 고정.
                   final button = PressScaleListener(
-                    child: FilledButton(
-                      onPressed: onPressed,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: palette.completedBackground,
-                        foregroundColor: palette.primaryPurple,
-                        // 탭 직후 busy 상태에서도 배경이 비치지 않도록 유지한다.
-                        disabledBackgroundColor: palette.completedBackground,
-                        disabledForegroundColor: palette.primaryPurple,
-                        minimumSize: const Size.fromHeight(44),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                        child: FilledButton(
+                          onPressed: onPressed,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0x8CFFFFFF),
+                            foregroundColor: const Color(0xFF4A3F9A),
+                            // 탭 직후 busy 상태에서도 모양이 바뀌지 않도록 유지한다.
+                            disabledBackgroundColor: const Color(0x8CFFFFFF),
+                            disabledForegroundColor: const Color(0xFF4A3F9A),
+                            side: const BorderSide(color: Color(0x66FFFFFF)),
+                            minimumSize: const Size.fromHeight(44),
+                            textStyle:
+                                const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          child: isError && _isRetryingTodayChallenge
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(buttonLabel, textAlign: TextAlign.center),
+                        ),
                       ),
-                      child: isError && _isRetryingTodayChallenge
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : Text(buttonLabel, textAlign: TextAlign.center),
                     ),
                   );
                   return narrow

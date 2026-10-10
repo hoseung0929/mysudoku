@@ -581,14 +581,6 @@
   "levelFilterNew": "全新",
   "levelFilterInProgress": "进行中",
   "levelFilterDone": "已完成",
-  "levelPuzzleListTitle": "谜题列表 · {count}",
-  "@levelPuzzleListTitle": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "levelRecentBadge": "最近",
   "levelStatusInProgress": "进行中",
   "levelNoResults": "暂无结果。",
@@ -632,7 +624,6 @@
   "levelActionShowNew": "查看新谜题",
   "levelActionShowInProgress": "查看进行中",
   "levelActionShowAll": "查看全部",
-  "levelBestTime": "最佳用时 {time}",
   "levelCellSemantics": "第 {number} 题，{status}",
   "gameRestartMenuTitle": "从头开始",
   "gameRestartDialogTitle": "要从头开始吗？",
@@ -746,5 +737,6 @@
   "recordsMetricHintFree": "无提示完成",
   "recordsMetricMistakeFree": "无失误完成",
   "recordsMetricTypicalTime": "每题通常用时",
-  "recordsTypicalTimeValue": "约 {minutes} 分钟"
+  "recordsTypicalTimeValue": "约 {minutes} 分钟",
+  "levelPerfectLegend": "无提示、无失误完成"
 }

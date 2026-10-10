@@ -1091,11 +1091,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get levelFilterDone => '完了';
 
   @override
-  String levelPuzzleListTitle(int count) {
-    return 'パズル一覧 · $count';
-  }
-
-  @override
   String get levelRecentBadge => '最近';
 
   @override
@@ -1197,11 +1192,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get levelActionShowAll => 'すべて見る';
-
-  @override
-  String levelBestTime(String time) {
-    return 'ベスト $time';
-  }
 
   @override
   String levelCellSemantics(String number, String status) {
@@ -1593,4 +1583,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String recordsTypicalTimeValue(int minutes) {
     return '約$minutes分';
   }
+
+  @override
+  String get levelPerfectLegend => 'ヒント・ミスなしで解いたパズル';
 }

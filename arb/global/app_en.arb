@@ -684,14 +684,6 @@
   "levelFilterNew": "New",
   "levelFilterInProgress": "In progress",
   "levelFilterDone": "Done",
-  "levelPuzzleListTitle": "Puzzles · {count}",
-  "@levelPuzzleListTitle": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "levelRecentBadge": "Recent",
   "levelStatusInProgress": "In progress",
   "levelNoResults": "No results.",
@@ -777,14 +769,6 @@
   "levelActionShowNew": "Show new puzzles",
   "levelActionShowInProgress": "Show in progress",
   "levelActionShowAll": "Show all",
-  "levelBestTime": "Best time {time}",
-  "@levelBestTime": {
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
-  },
   "levelCellSemantics": "Puzzle {number}, {status}",
   "@levelCellSemantics": {
     "placeholders": {
@@ -1069,5 +1053,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "levelPerfectLegend": "Solved with no hints or mistakes"
 }

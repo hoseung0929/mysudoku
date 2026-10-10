@@ -183,10 +183,17 @@ Future<void> openRecentCompletion(
     gameNumber: entry.gameNumber,
   );
   if (!context.mounted) return;
+  final db = databaseHelper ?? DatabaseHelper();
   final hasSession = session != null;
   if (!hasSession) {
-    final confirmed =
-        await showReplayConfirmDialog(context, gameNumber: entry.gameNumber);
+    final bestRecord =
+        await db.getClearRecord(entry.levelName, entry.gameNumber);
+    if (!context.mounted) return;
+    final confirmed = await showReplayConfirmDialog(
+      context,
+      gameNumber: entry.gameNumber,
+      bestRecord: bestRecord,
+    );
     if (!context.mounted || confirmed != true) return;
   }
 
@@ -194,8 +201,7 @@ Future<void> openRecentCompletion(
     (item) => item.name == entry.levelName,
     orElse: () => SudokuLevel.levels.first,
   );
-  final gameEntry = await (databaseHelper ?? DatabaseHelper())
-      .getGameEntry(entry.levelName, entry.gameNumber);
+  final gameEntry = await db.getGameEntry(entry.levelName, entry.gameNumber);
   if (!context.mounted) return;
   if (gameEntry == null) {
     ScaffoldMessenger.of(context).showSnackBar(

@@ -248,15 +248,22 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1200));
   });
 
-  testWidgets('selecting a number first locks it and a cell tap enters it',
+  testWidgets('a short tap with no cell selected does not lock the number',
+      (tester) async {
+    await pumpSafeGame(tester, const Size(390, 844));
+    await tester.tap(find.byKey(const ValueKey('number-button-3')),
+        warnIfMissed: false);
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byKey(const ValueKey('number-lock-3')), findsNothing);
+    await tester.pump(const Duration(milliseconds: 1200));
+  });
+
+  testWidgets('long-pressing a number first locks it and a cell tap enters it',
       (tester) async {
     final presenter = await pumpSafeGame(tester, const Size(390, 844));
 
-    tester
-        .widget<ProgressiveBlurButton>(
-          find.byKey(const ValueKey('number-button-3')),
-        )
-        .onPressed!();
+    await tester.longPress(find.byKey(const ValueKey('number-button-3')),
+        warnIfMissed: false);
     await tester.pump();
     expect(find.byKey(const ValueKey('number-lock-3')), findsOneWidget);
 

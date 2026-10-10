@@ -7,6 +7,7 @@ import 'package:sudoku159/widgets/keep_words_text.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sudoku159/database/database_helper.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/navigation/root_nav_scope.dart';
 import 'package:sudoku159/services/challenge/challenge_progress_service.dart';
@@ -62,6 +63,18 @@ RecordsStatisticsData _data({
 }
 
 /// 요약 카드 보조 문장 선택을 고정한다(0이면 첫 후보, 1이면 두 번째 후보).
+/// 최근 완료 줄을 눌렀을 때 읽는 최고 기록만 돌려주는 저장소.
+class _RecordOnlyDb implements DatabaseHelper {
+  @override
+  Future<Map<String, dynamic>?> getClearRecord(
+          String levelName, int gameNumber) async =>
+      {'clear_time': 202, 'wrong_count': 0, 'hints_used': 0};
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError(invocation.memberName.toString());
+}
+
 class _FixedRandom implements Random {
   _FixedRandom(this.value);
   final int value;
@@ -124,6 +137,7 @@ void main() {
     ValueChanged<int>? onTab,
     bool reduceMotion = false,
     int supportPick = 0,
+    DatabaseHelper? databaseHelper,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
@@ -149,6 +163,7 @@ void main() {
               key: UniqueKey(),
               statisticsService: _FakeStats(produce),
               random: _FixedRandom(supportPick),
+              databaseHelper: databaseHelper,
             ),
           ),
         ),
@@ -1112,6 +1127,7 @@ void main() {
         tester,
         () async => _data(
             recent: recent, events: events, recentCompletions: completions(2)),
+        databaseHelper: _RecordOnlyDb(),
       );
       final row =
           find.descendant(of: section(), matching: find.text('Beginner 002'));
@@ -1120,6 +1136,8 @@ void main() {
       await tester.tap(row);
       await tester.pumpAndSettle();
       expect(find.text('Replay puzzle 2?'), findsOneWidget);
+      // 확인창에 그 퍼즐의 최고 기록이 한 줄로 나온다.
+      expect(find.text('Best run 03:22 · 0 mistakes'), findsOneWidget);
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
       expect(find.text('Replay puzzle 2?'), findsNothing);

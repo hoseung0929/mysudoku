@@ -2084,12 +2084,6 @@ abstract class AppLocalizations {
   /// **'Done'**
   String get levelFilterDone;
 
-  /// No description provided for @levelPuzzleListTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Puzzles · {count}'**
-  String levelPuzzleListTitle(int count);
-
   /// No description provided for @levelRecentBadge.
   ///
   /// In en, this message translates to:
@@ -2263,12 +2257,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show all'**
   String get levelActionShowAll;
-
-  /// No description provided for @levelBestTime.
-  ///
-  /// In en, this message translates to:
-  /// **'Best time {time}'**
-  String levelBestTime(String time);
 
   /// No description provided for @levelCellSemantics.
   ///
@@ -2887,6 +2875,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'About {minutes} min'**
   String recordsTypicalTimeValue(int minutes);
+
+  /// No description provided for @levelPerfectLegend.
+  ///
+  /// In en, this message translates to:
+  /// **'Solved with no hints or mistakes'**
+  String get levelPerfectLegend;
 }
 
 class _AppLocalizationsDelegate

@@ -15,7 +15,6 @@ class GameCompleteDialog extends StatefulWidget {
     required this.levelLabel,
     required this.timeInSeconds,
     required this.wrongCount,
-    this.hintsUsed = 0,
     this.isNewBestRecord = false,
     this.challengeMessage,
     this.weeklyGoalMessage,
@@ -29,8 +28,6 @@ class GameCompleteDialog extends StatefulWidget {
   final int timeInSeconds;
   final int wrongCount;
 
-  /// 이번 플레이에서 사용한 힌트 수. 0이면 표시하지 않는다.
-  final int hintsUsed;
   final bool isNewBestRecord;
   final String? challengeMessage;
 
@@ -89,14 +86,6 @@ class _GameCompleteDialogState extends State<GameCompleteDialog> {
           mistakesLabel: l10n.dialogWrongCount,
           mistakesValue: l10n.dialogWrongCountValue(widget.wrongCount),
         ),
-        if (widget.hintsUsed > 0) ...[
-          const SizedBox(height: 8),
-          Text(
-            l10n.dialogHintsUsed(widget.hintsUsed),
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
-          ),
-        ],
         if (achievement != null) ...[
           const SizedBox(height: 12),
           Text(

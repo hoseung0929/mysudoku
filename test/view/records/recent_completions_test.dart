@@ -23,6 +23,11 @@ class _NoDb implements DatabaseHelper {
   int gameEntryCalls = 0;
 
   @override
+  Future<Map<String, dynamic>?> getClearRecord(
+          String levelName, int gameNumber) async =>
+      {'clear_time': 257, 'wrong_count': 1, 'hints_used': 0};
+
+  @override
   Future<Map<String, dynamic>?> getGameEntry(
       String levelName, int gameNumber) async {
     gameEntryCalls++;

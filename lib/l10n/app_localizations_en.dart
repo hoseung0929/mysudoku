@@ -1179,11 +1179,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get levelFilterDone => 'Done';
 
   @override
-  String levelPuzzleListTitle(int count) {
-    return 'Puzzles · $count';
-  }
-
-  @override
   String get levelRecentBadge => 'Recent';
 
   @override
@@ -1294,11 +1289,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get levelActionShowAll => 'Show all';
-
-  @override
-  String levelBestTime(String time) {
-    return 'Best time $time';
-  }
 
   @override
   String levelCellSemantics(String number, String status) {
@@ -1752,4 +1742,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String recordsTypicalTimeValue(int minutes) {
     return 'About $minutes min';
   }
+
+  @override
+  String get levelPerfectLegend => 'Solved with no hints or mistakes';
 }

@@ -11,6 +11,7 @@ import 'package:sudoku159/theme/app_theme.dart';
 import 'package:sudoku159/utils/app_logger.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_board_grid.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_game_screen.dart';
+import 'package:sudoku159/widgets/progressive_blur_button.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:wakelock_plus_platform_interface/wakelock_plus_platform_interface.dart';
 
@@ -240,6 +241,202 @@ void main() {
     await tester.pump();
     expect(presenter.getCellValue(7, 7), 3);
     expect(haptics, ['lightImpact']);
+    await settle(tester);
+  });
+
+  testWidgets(
+      'number lock: weak tick while holding, heavy impact when the pin sets',
+      (tester) async {
+    await pumpGame(tester);
+    final haptics = trackHaptics(tester);
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byKey(const ValueKey('number-button-3'))),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(haptics, isEmpty); // 일반 탭 길이에서는 아직 울리지 않는다.
+    await tester.pump(const Duration(milliseconds: 100)); // 200ms
+    expect(haptics, ['selectionClick']);
+    await tester.pump(const Duration(milliseconds: 200)); // 400ms: 350ms 지남
+    expect(haptics, ['selectionClick', 'heavyImpact']);
+    await gesture.up();
+    await tester.pump();
+    expect(haptics, ['selectionClick', 'heavyImpact']);
+    await settle(tester);
+  });
+
+  testWidgets('a quick number tap gets no hold tick and no lock vibration',
+      (tester) async {
+    final presenter = await pumpGame(tester);
+    tapCell(tester, 7, 7);
+    await tester.pump();
+    final haptics = trackHaptics(tester);
+    await tester.tap(find.byKey(const ValueKey('number-button-3')),
+        warnIfMissed: false);
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(presenter.getCellValue(7, 7), 3);
+    expect(haptics, ['mediumImpact']); // 입력 진동 하나뿐
+    await settle(tester);
+  });
+
+  testWidgets('number lock: the button fills while held, gone on release',
+      (tester) async {
+    await pumpGame(tester);
+    final fill = find.byKey(const ValueKey('number-lock-fill-3'));
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byKey(const ValueKey('number-button-3'))),
+    );
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(fill, findsNothing); // 빠른 탭에서는 번쩍이지 않는다.
+    await tester.pump(const Duration(milliseconds: 100)); // 150ms
+    expect(fill, findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 100)); // 250ms, 아직 누르는 중
+    expect(fill, findsOneWidget);
+    await gesture.up();
+    await tester.pump();
+    expect(fill, findsNothing);
+    await settle(tester);
+  });
+
+  testWidgets(
+      'number lock: unlocking covers first, then the pin and border leave',
+      (tester) async {
+    await pumpGame(tester);
+    final button = find.byKey(const ValueKey('number-button-3'));
+    final pin = find.byKey(const ValueKey('number-lock-3'));
+    final border = find.byKey(const ValueKey('number-lock-border-3'));
+    await tester.longPress(button, warnIfMissed: false);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(pin, findsOneWidget);
+    final gesture = await tester.startGesture(tester.getCenter(button));
+    await tester.pump(const Duration(milliseconds: 16)); // 효과 시작 프레임
+    await tester.pump(const Duration(milliseconds: 280)); // 거의 다 덮음
+    expect(find.byKey(const ValueKey('number-lock-fill-3')), findsOneWidget);
+    // 고정의 역순: 덮는 동안 핀과 보라 테두리는 그대로 보인다.
+    double opacity(Finder f) => tester
+        .widgetList<FadeTransition>(
+            find.ancestor(of: f, matching: find.byType(FadeTransition)))
+        .fold(1.0, (o, w) => o * w.opacity.value);
+    expect(pin, findsOneWidget);
+    expect(border, findsOneWidget);
+    expect(opacity(pin), 1.0);
+    expect(opacity(border), 1.0);
+    await tester.pump(const Duration(milliseconds: 80)); // 해제됨(350ms 이후)
+    await tester.pump(const Duration(milliseconds: 110)); // 사라지는 후반
+    final pinScale = tester
+        .widget<ScaleTransition>(find
+            .ancestor(of: pin, matching: find.byType(ScaleTransition))
+            .first)
+        .scale
+        .value;
+    expect(pinScale, lessThan(1.0)); // 나타날 때의 역순으로 작아진다.
+    expect(pin, findsOneWidget);
+    expect(border, findsOneWidget);
+    expect(opacity(pin), lessThan(1.0));
+    expect(opacity(border), lessThan(1.0));
+    await tester.pump(const Duration(milliseconds: 200)); // 다 사라짐
+    expect(pin, findsNothing);
+    expect(border, findsNothing);
+    await gesture.up();
+    await tester.pump();
+    expect(find.byKey(const ValueKey('number-lock-fill-3')), findsNothing);
+    await settle(tester);
+  });
+
+  testWidgets(
+      'number lock: fills up from the bottom, unlock covers from the top',
+      (tester) async {
+    await pumpGame(tester);
+    final button = find.byKey(const ValueKey('number-button-3'));
+    final fill = find.byKey(const ValueKey('number-lock-fill-3'));
+
+    var gesture = await tester.startGesture(tester.getCenter(button));
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 150));
+    var rect = tester.getRect(fill);
+    // 채움이 들어 있는 버튼 모양(눌려 줄어든 상태 그대로) 기준으로 비교한다.
+    final clip =
+        find.ancestor(of: fill, matching: find.byType(ClipRRect)).first;
+    var buttonRect = tester.getRect(clip);
+    expect(rect.bottom, moreOrLessEquals(buttonRect.bottom, epsilon: 1));
+    expect(rect.top, greaterThan(buttonRect.top + 1));
+    await tester.pump(const Duration(milliseconds: 250)); // 고정됨
+    // 고정 테두리는 툭 나타나지 않고 서서히 나타나는 중이다.
+    final border = find.byKey(const ValueKey('number-lock-border-3'));
+    expect(border, findsOneWidget);
+    expect(
+      tester
+          .widget<FadeTransition>(find
+              .ancestor(of: border, matching: find.byType(FadeTransition))
+              .first)
+          .opacity
+          .value,
+      lessThan(1.0),
+    );
+    await gesture.up();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byKey(const ValueKey('number-lock-3')), findsOneWidget);
+
+    gesture = await tester.startGesture(tester.getCenter(button));
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 150));
+    rect = tester.getRect(fill);
+    buttonRect = tester.getRect(clip);
+    expect(rect.top, moreOrLessEquals(buttonRect.top, epsilon: 1));
+    expect(rect.bottom, lessThan(buttonRect.bottom - 1));
+    await gesture.up();
+    await settle(tester);
+  });
+
+  testWidgets('number lock: sliding off while held clears the fill',
+      (tester) async {
+    await pumpGame(tester);
+    final fill = find.byKey(const ValueKey('number-lock-fill-3'));
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byKey(const ValueKey('number-button-3'))),
+    );
+    await tester.pump(const Duration(milliseconds: 16)); // 효과 시작 프레임
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(fill, findsOneWidget);
+    await gesture.moveBy(const Offset(0, 30)); // 길게 누르기가 취소되는 거리
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(fill, findsNothing); // 고정된 것처럼 꽉 찬 채로 남지 않는다.
+    expect(find.byKey(const ValueKey('number-lock-3')), findsNothing);
+    await gesture.up();
+    await settle(tester);
+  });
+
+  testWidgets(
+      'selecting a filled cell does not highlight its number on the pad',
+      (tester) async {
+    await pumpGame(tester);
+    tapCell(tester, 1, 6); // 주어진 3: 보드에서만 같은 숫자를 강조한다.
+    await tester.pump();
+    final button = tester.widget<ProgressiveBlurButton>(
+      find.byKey(const ValueKey('number-button-3')),
+    );
+    expect(button.isActive, isFalse);
+    await settle(tester);
+  });
+
+  testWidgets('a quick tap never shows the fill', (tester) async {
+    await pumpGame(tester);
+    tapCell(tester, 7, 7);
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('number-button-3')),
+        warnIfMissed: false);
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.byKey(const ValueKey('number-lock-fill-3')), findsNothing);
+    await settle(tester);
+  });
+
+  testWidgets('reduce motion skips the fill', (tester) async {
+    await pumpGame(tester, reduceMotion: true);
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byKey(const ValueKey('number-button-3'))),
+    );
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.byKey(const ValueKey('number-lock-fill-3')), findsNothing);
+    await gesture.up();
     await settle(tester);
   });
 

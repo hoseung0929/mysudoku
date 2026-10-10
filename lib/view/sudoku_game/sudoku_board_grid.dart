@@ -86,9 +86,12 @@ class SudokuBoardGrid extends StatelessWidget {
     final selectedCellColor = isDark
         ? levelPalette.primaryPurple.withValues(alpha: 0.25)
         : levelPalette.primaryPurple.withValues(alpha: 0.14);
+    // 같은 숫자 강조는 앱의 하늘색(진행 중) 계열(고정한 숫자는 보라색으로 따로 구분).
     final sameNumberColor = isDark
         ? const Color(0xFF304050)
-        : AppTheme.lightBlueColor.withValues(alpha: 0.14);
+        : LevelStatusPalette.of(context)
+            .inProgressPrimary
+            .withValues(alpha: 0.14);
     final relatedFill =
         isDark ? const Color(0xFF242A30) : context.colors.surfaceSubtle;
     final wrongCellColor = isDark

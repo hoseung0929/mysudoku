@@ -98,6 +98,10 @@ flutter:
     - assets/images/level2.png
     - assets/images/level3.png
     - assets/images/level4.png
+    - assets/images/level_badge_clear_light.png
+    - assets/images/level_badge_clear_dark.png
+    - assets/images/level_badge_perfect_light.png
+    - assets/images/level_badge_perfect_dark.png
     - assets/images/clear_white.png
     - assets/images/level_filter_in_progress.png
     - assets/images/level_beginner_progress_card_bg.png

@@ -43,6 +43,12 @@ List<List<int>> _puzzle() {
 }
 
 class _FakeDb implements DatabaseHelper {
+  @override
+  Future<List<Map<String, dynamic>>> getClearEventsForLevel(
+    String levelName,
+  ) async =>
+      const [];
+
   _FakeDb(this.games, this.cleared);
   final List<int> games;
   final Set<int> cleared;

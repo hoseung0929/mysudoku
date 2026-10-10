@@ -581,14 +581,6 @@
   "levelFilterNew": "새 퍼즐",
   "levelFilterInProgress": "진행 중",
   "levelFilterDone": "완료",
-  "levelPuzzleListTitle": "퍼즐 목록 · {count}",
-  "@levelPuzzleListTitle": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "levelRecentBadge": "최근",
   "levelStatusInProgress": "진행 중",
   "levelNoResults": "해당 항목이 없습니다.",
@@ -632,7 +624,6 @@
   "levelActionShowNew": "새 퍼즐 보기",
   "levelActionShowInProgress": "진행 중 보기",
   "levelActionShowAll": "전체 보기",
-  "levelBestTime": "최고 기록 {time}",
   "levelCellSemantics": "{number}번 퍼즐, {status}",
   "gameRestartMenuTitle": "처음부터 다시 풀기",
   "gameRestartDialogTitle": "처음부터 다시 풀까요?",
@@ -746,5 +737,6 @@
   "recordsMetricHintFree": "힌트 없이 푼 퍼즐",
   "recordsMetricMistakeFree": "실수 없이 푼 퍼즐",
   "recordsMetricTypicalTime": "한 판에 보통 걸리는 시간",
-  "recordsTypicalTimeValue": "약 {minutes}분"
+  "recordsTypicalTimeValue": "약 {minutes}분",
+  "levelPerfectLegend": "힌트·실수 없이 푼 퍼즐"
 }

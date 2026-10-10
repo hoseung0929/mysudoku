@@ -581,14 +581,6 @@
   "levelFilterNew": "Nuevos",
   "levelFilterInProgress": "En curso",
   "levelFilterDone": "Hechos",
-  "levelPuzzleListTitle": "Rompecabezas · {count}",
-  "@levelPuzzleListTitle": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "levelRecentBadge": "Reciente",
   "levelStatusInProgress": "En curso",
   "levelNoResults": "Sin resultados.",
@@ -632,7 +624,6 @@
   "levelActionShowNew": "Ver puzles nuevos",
   "levelActionShowInProgress": "Ver en curso",
   "levelActionShowAll": "Ver todos",
-  "levelBestTime": "Mejor tiempo {time}",
   "levelCellSemantics": "Puzle {number}, {status}",
   "gameRestartMenuTitle": "Empezar de nuevo",
   "gameRestartDialogTitle": "¿Empezar este puzle de nuevo?",
@@ -746,5 +737,6 @@
   "recordsMetricHintFree": "Resueltos sin pistas",
   "recordsMetricMistakeFree": "Resueltos sin errores",
   "recordsMetricTypicalTime": "Tiempo habitual por puzle",
-  "recordsTypicalTimeValue": "Unos {minutes} min"
+  "recordsTypicalTimeValue": "Unos {minutes} min",
+  "levelPerfectLegend": "Resuelto sin pistas ni errores"
 }

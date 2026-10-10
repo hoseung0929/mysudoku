@@ -260,6 +260,12 @@ class DatabaseHelper {
     return _clearRecordRepository.getAllClearEvents();
   }
 
+  /// 특정 레벨의 클리어 이벤트(다시 푼 판 포함)를 반환합니다.
+  Future<List<Map<String, dynamic>>> getClearEventsForLevel(
+      String levelName) async {
+    return _clearRecordRepository.getClearEventsForLevel(levelName);
+  }
+
   /// 특정 기간의 클리어 이벤트를 반환합니다.
   Future<List<Map<String, dynamic>>> getClearEventsByDateRange({
     required String startDate,

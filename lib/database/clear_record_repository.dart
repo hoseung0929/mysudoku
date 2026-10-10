@@ -88,6 +88,17 @@ class ClearRecordRepository {
     );
   }
 
+  /// 특정 레벨의 클리어 이벤트(다시 푼 판 포함)를 반환합니다.
+  Future<List<Map<String, dynamic>>> getClearEventsForLevel(
+      String levelName) async {
+    final db = await _dbManager.database;
+    return db.query(
+      'clear_events',
+      where: 'level_name = ?',
+      whereArgs: [levelName],
+    );
+  }
+
   /// 특정 기간의 클리어 이벤트를 반환합니다.
   Future<List<Map<String, dynamic>>> getClearEventsByDateRange({
     required String startDate,

@@ -77,7 +77,6 @@ void main() {
               levelLabel: l10n.levelPuzzleNumber(159),
               timeInSeconds: 3725,
               wrongCount: 2,
-              hintsUsed: 3,
               isNewBestRecord: true,
               challengeMessage: l10n.challengeCompletedToday,
               weeklyGoalMessage: l10n.gameResultWeeklyGoalAchieved,

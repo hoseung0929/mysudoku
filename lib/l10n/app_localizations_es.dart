@@ -1190,11 +1190,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get levelFilterDone => 'Hechos';
 
   @override
-  String levelPuzzleListTitle(int count) {
-    return 'Rompecabezas · $count';
-  }
-
-  @override
   String get levelRecentBadge => 'Reciente';
 
   @override
@@ -1305,11 +1300,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get levelActionShowAll => 'Ver todos';
-
-  @override
-  String levelBestTime(String time) {
-    return 'Mejor tiempo $time';
-  }
 
   @override
   String levelCellSemantics(String number, String status) {
@@ -1764,4 +1754,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String recordsTypicalTimeValue(int minutes) {
     return 'Unos $minutes min';
   }
+
+  @override
+  String get levelPerfectLegend => 'Resuelto sin pistas ni errores';
 }

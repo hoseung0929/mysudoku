@@ -6,6 +6,7 @@ import 'package:sudoku159/utils/light_haptic.dart';
 import 'package:sudoku159/widgets/animated_progress_bar.dart';
 import 'package:sudoku159/widgets/press_scale.dart';
 import 'package:sudoku159/widgets/press_scale_listener.dart';
+import 'package:sudoku159/widgets/puzzle_result_sticker.dart';
 import 'package:sudoku159/widgets/replay_confirm_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
@@ -21,7 +22,6 @@ import 'package:sudoku159/services/home/level_progress_service.dart';
 import 'package:sudoku159/services/onboarding/beginner_tutorial_service.dart';
 import 'package:sudoku159/services/settings/app_settings_service.dart';
 import 'package:sudoku159/theme/level_status_colors.dart';
-import 'package:sudoku159/utils/time_format.dart';
 import 'package:sudoku159/view/onboarding/beginner_tutorial_screen.dart';
 import 'package:sudoku159/view/sudoku_game/sudoku_game_screen.dart';
 
@@ -74,6 +74,9 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
   final Map<String, Set<int>> _clearedGameNumbers = {};
   final Map<String, Map<int, SavedGameState>> _savedGameStates = {};
   final Map<String, Map<int, Map<String, dynamic>>> _clearRecords = {};
+
+  /// 힌트와 실수 없이 한 판이라도 완료한 퍼즐 번호(★ 표시).
+  final Map<String, Set<int>> _perfectGameNumbers = {};
   final Map<String, int?> _recentSavedGameNumber = {};
   final Map<String, Future<void>> _puzzleMetadataFutureCache = {};
   List<SudokuLevel> _levels = List<SudokuLevel>.from(SudokuLevel.levels);
@@ -174,6 +177,10 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
       if (gameNumber == null) continue;
       recordsByGame[gameNumber] = record;
     }
+    final perfect = _perfectNumbers(
+      records: recordsByGame,
+      events: await _dbHelper.getClearEventsForLevel(levelName),
+    );
 
     if (!mounted) return;
     setState(() {
@@ -181,7 +188,34 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
       _clearRecords[levelName] = recordsByGame;
       _recentSavedGameNumber[levelName] = recentGameNumber;
       _clearedGameNumbers[levelName] = recordsByGame.keys.toSet();
+      _perfectGameNumbers[levelName] = perfect;
     });
+  }
+
+  /// 힌트·실수 없이 한 판이라도 완료한 퍼즐. 기록 화면의 "힌트 없이 / 실수 없이"
+  /// 집계와 같은 기준으로, 완료 이력(`clear_events`)이 없는 오래된 퍼즐은 최고 기록
+  /// 한 판으로 판단한다.
+  static Set<int> _perfectNumbers({
+    required Map<int, Map<String, dynamic>> records,
+    required List<Map<String, dynamic>> events,
+  }) {
+    bool isPerfect(Map<String, dynamic> row) =>
+        ((row['hints_used'] as num?)?.toInt() ?? 0) == 0 &&
+        ((row['wrong_count'] as num?)?.toInt() ?? 0) == 0;
+    final withEvents = <int>{};
+    final perfect = <int>{};
+    for (final event in events) {
+      final number = (event['game_number'] as num?)?.toInt();
+      if (number == null) continue;
+      withEvents.add(number);
+      if (isPerfect(event)) perfect.add(number);
+    }
+    for (final entry in records.entries) {
+      if (!withEvents.contains(entry.key) && isPerfect(entry.value)) {
+        perfect.add(entry.key);
+      }
+    }
+    return perfect.intersection(records.keys.toSet());
   }
 
   Future<void> _puzzleMetadataFutureForLevel(String levelName) {
@@ -239,8 +273,11 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     if (_isGameTransitioning || !mounted) return;
     final kind = _puzzleCardKind(gameNumber);
     if (kind == _PuzzleCardKind.completed) {
-      final shouldReplay =
-          await showReplayConfirmDialog(context, gameNumber: gameNumber);
+      final shouldReplay = await showReplayConfirmDialog(
+        context,
+        gameNumber: gameNumber,
+        bestRecord: _clearRecords[level.name]?[gameNumber],
+      );
       if (!mounted || shouldReplay != true) return;
     }
     if (kind == _PuzzleCardKind.fresh &&
@@ -922,17 +959,17 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
       ],
     );
     // 배경 이미지·그라데이션이 테마와 무관하게 고정이라 버튼도 고정색:
-    // 반투명(약 88%) 흰 유리 버튼 + 보라 글씨. 뒤를 살짝 블러해 무늬가
-    // 글씨를 방해하지 않게 하면서 일러스트가 은은하게 비친다.
+    // 반투명(약 55%) 흰 유리 버튼 + 보라 글씨. 뒤를 살짝만 블러해 일러스트가
+    // 비쳐 보이게 하면서 글씨는 읽히게 한다.
     final button = PressScaleListener(
       child: ClipRRect(
         borderRadius: BorderRadius.circular(999),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
           child: FilledButton(
             onPressed: onPressed,
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xE0FFFFFF),
+              backgroundColor: const Color(0x8CFFFFFF),
               foregroundColor: const Color(0xFF4A3F9A),
               disabledBackgroundColor: const Color(0x80FFFFFF),
               side: const BorderSide(color: Color(0x66FFFFFF)),
@@ -1033,7 +1070,6 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
   Widget _buildFilterChips(List<int> games) {
     final colors = LevelStatusPalette.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final resultCount = _filteredGamesFor(_selectedFilter, games).length;
     const filters = _PuzzleFilter.values;
     final counts = [
       for (final f in filters) _filteredGamesFor(f, games).length,
@@ -1126,13 +1162,59 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
             },
           ),
         ),
-        const SizedBox(height: 14),
-        Text(
-          l10n.levelPuzzleListTitle(resultCount),
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: colors.secondaryText,
+        // 개수는 위 필터에 이미 있으므로, 완료한 퍼즐이 있을 때만 ★ 뜻을 알려 준다.
+        if (_clearedGameNumbers[widget.level.name]?.isNotEmpty ?? false) ...[
+          const SizedBox(height: 14),
+          Wrap(
+            key: const Key('level-perfect-legend'),
+            spacing: 16,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              // 실제 칸과 같은 스티커 견본(CLEAR는 완료, PERFECT는 힌트·실수 없음).
+              _buildLegendItem(
+                const PuzzleResultSticker(
+                  perfect: false,
+                  width: 50,
+                  tiltDegrees: -6,
+                ),
+                l10n.levelFilterDone,
+                colors,
+              ),
+              _buildLegendItem(
+                const PuzzleResultSticker(
+                  perfect: true,
+                  width: 50,
+                  tiltDegrees: -6,
+                ),
+                l10n.levelPerfectLegend,
+                colors,
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildLegendItem(
+    Widget sticker,
+    String label,
+    LevelStatusPalette colors,
+  ) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        sticker,
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: colors.secondaryText,
+            ),
           ),
         ),
       ],
@@ -1317,12 +1399,18 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
     final double borderWidth;
     final colors = LevelStatusPalette.of(context);
     final accentColor = _levelAccentColor(_currentLevelInfo());
+    // 완료 칸은 시간 대신 결과 스티커를 붙인다(CLEAR / 힌트·실수 없이 푼 퍼즐은
+    // PERFECT). 시간은 다시 풀기 확인창의 최고 기록에서 보여 준다.
+    final isPerfect = isCompleted &&
+        (_perfectGameNumbers[widget.level.name]?.contains(gameNumber) ?? false);
 
     if (isCompleted) {
-      bgColor = colors.completedBackground;
+      bgColor =
+          isPerfect ? colors.perfectCellBackground : colors.clearCellBackground;
       textColor = colors.completedNumberText;
       iconColor = accentColor;
-      borderColor = colors.completedBorder;
+      borderColor =
+          isPerfect ? colors.perfectCellBorder : colors.clearCellBorder;
       borderWidth = 1.0;
     } else if (isInProgress) {
       final inProgressColor = colors.inProgressPrimary;
@@ -1341,7 +1429,6 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
 
     final pct = isInProgress ? _savedProgressPercent(gameNumber) : 0;
     final notesOnly = isInProgress && pct == 0;
-    final clearTimeLabel = isCompleted ? _clearTimeLabel(gameNumber) : null;
     final numberText = gameNumber.toString().padLeft(3, '0');
     final statusText = isCompleted
         ? l10n.levelFilterDone
@@ -1350,8 +1437,8 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
             : l10n.levelFilterNew;
     final semanticsDetail = isInProgress
         ? _progressDetail(gameNumber)
-        : clearTimeLabel != null
-            ? l10n.levelBestTime(clearTimeLabel)
+        : isPerfect
+            ? l10n.levelPerfectLegend
             : null;
     final semanticsLabel = l10n.levelCellSemantics(
       numberText,
@@ -1409,6 +1496,19 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                               ],
                             ),
                           ),
+                          if (isCompleted) ...[
+                            const SizedBox(height: 1.5),
+                            PuzzleResultSticker(
+                              key: ValueKey(
+                                'level-cell-sticker-$gameNumber-'
+                                '${isPerfect ? 'perfect' : 'clear'}',
+                              ),
+                              perfect: isPerfect,
+                              // PERFECT!는 CLEAR보다 약 2px 크게.
+                              width: isPerfect ? 56 : 54,
+                            ),
+                            const SizedBox(height: 2),
+                          ],
                           if (isInProgress)
                             Text(
                               notesOnly ? l10n.gameMemoShort : '$pct%',
@@ -1421,31 +1521,6 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                                 color: colors.inProgressPrimary,
                                 height: 1.4,
                               ),
-                            ),
-                          if (clearTimeLabel != null)
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.timer_outlined,
-                                  size: 11,
-                                  color: colors.secondaryText,
-                                ),
-                                const SizedBox(width: 2),
-                                Text(
-                                  clearTimeLabel,
-                                  maxLines: 1,
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w500,
-                                    color: colors.secondaryText,
-                                    height: 1.4,
-                                    fontFeatures: const [
-                                      FontFeature.tabularFigures()
-                                    ],
-                                  ),
-                                ),
-                              ],
                             ),
                         ],
                       ),
@@ -1465,20 +1540,14 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
                       ),
                     ),
                   )
-                else if (!isFresh)
+                else if (isInProgress)
                   Positioned(
                     top: 5,
                     right: 5,
                     child: Icon(
                       notesOnly ? Icons.edit_note_rounded : _statusIcon(kind),
-                      size: isCompleted
-                          ? LevelStatusColors.completedCheckIconSize
-                          : 12,
-                      color: isCompleted
-                          ? iconColor.withValues(
-                              alpha:
-                                  LevelStatusColors.completedCheckIconOpacity)
-                          : iconColor,
+                      size: 12,
+                      color: iconColor,
                     ),
                   ),
               ],
@@ -1612,14 +1681,6 @@ class _LevelPickerScreenState extends State<LevelPickerScreen> {
         (filledCells - originalFilledCells).clamp(0, widget.level.emptyCells);
     if (widget.level.emptyCells == 0) return 0;
     return ((filledByPlayer / widget.level.emptyCells) * 100).round();
-  }
-
-  String? _clearTimeLabel(int gameNumber) {
-    final clearTime =
-        (_clearRecords[widget.level.name]?[gameNumber]?['clear_time'] as num?)
-            ?.toInt();
-    if (clearTime == null) return null;
-    return formatElapsedSeconds(clearTime);
   }
 
   @override

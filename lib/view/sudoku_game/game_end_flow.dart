@@ -87,7 +87,6 @@ class GameEndFlow {
         return GameCompleteDialog(
           levelLabel:
               '${level.localizedName(l10n)} · ${l10n.levelPuzzleNumber(game.gameNumber)}',
-          hintsUsed: hintsUsed,
           timeInSeconds: clearTimeSeconds,
           wrongCount: wrongCount,
           isNewBestRecord: completionData.isNewBestRecord,

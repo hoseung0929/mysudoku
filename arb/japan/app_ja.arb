@@ -581,14 +581,6 @@
   "levelFilterNew": "新規",
   "levelFilterInProgress": "進行中",
   "levelFilterDone": "完了",
-  "levelPuzzleListTitle": "パズル一覧 · {count}",
-  "@levelPuzzleListTitle": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "levelRecentBadge": "最近",
   "levelStatusInProgress": "進行中",
   "levelNoResults": "該当なし",
@@ -632,7 +624,6 @@
   "levelActionShowNew": "新しいパズルを見る",
   "levelActionShowInProgress": "進行中を見る",
   "levelActionShowAll": "すべて見る",
-  "levelBestTime": "ベスト {time}",
   "levelCellSemantics": "パズル {number}、{status}",
   "gameRestartMenuTitle": "最初からやり直す",
   "gameRestartDialogTitle": "最初からやり直しますか？",
@@ -746,5 +737,6 @@
   "recordsMetricHintFree": "ヒントなしで解いたパズル",
   "recordsMetricMistakeFree": "ミスなしで解いたパズル",
   "recordsMetricTypicalTime": "1問あたりの目安時間",
-  "recordsTypicalTimeValue": "約{minutes}分"
+  "recordsTypicalTimeValue": "約{minutes}分",
+  "levelPerfectLegend": "ヒント・ミスなしで解いたパズル"
 }

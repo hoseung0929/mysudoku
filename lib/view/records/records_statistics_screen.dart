@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:sudoku159/constants/records_level_filter.dart';
+import 'package:sudoku159/database/database_helper.dart';
 import 'package:sudoku159/l10n/app_localizations.dart';
 import 'package:sudoku159/l10n/sudoku_level_l10n.dart';
 import 'package:sudoku159/navigation/root_nav_scope.dart';
@@ -68,6 +69,7 @@ class RecordsStatisticsScreen extends StatefulWidget {
     this.statisticsService,
     this.tabScrollController,
     this.random,
+    this.databaseHelper,
   });
 
   /// 테스트에서 저장소를 대체하기 위한 선택적 주입. 기본값은 실제 구현.
@@ -80,6 +82,10 @@ class RecordsStatisticsScreen extends StatefulWidget {
   /// 요약 카드 보조 문장을 고르는 난수. 테스트에서만 고정값을 넣는다.
   @visibleForTesting
   final Random? random;
+
+  /// 최근 완료 줄을 눌렀을 때 퍼즐·최고 기록을 읽을 저장소. 테스트에서만 넣는다.
+  @visibleForTesting
+  final DatabaseHelper? databaseHelper;
 
   @override
   State<RecordsStatisticsScreen> createState() =>
@@ -1413,7 +1419,11 @@ class _RecordsStatisticsScreenState extends State<RecordsStatisticsScreen> {
     if (_openingRecent) return;
     _openingRecent = true;
     try {
-      await openRecentCompletion(context, entry);
+      await openRecentCompletion(
+        context,
+        entry,
+        databaseHelper: widget.databaseHelper,
+      );
     } finally {
       _openingRecent = false;
     }

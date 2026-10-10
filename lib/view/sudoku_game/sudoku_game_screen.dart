@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -912,6 +913,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     await _clearCurrentGameState();
     if (!mounted) return;
     _cancelCompletionTimers();
+    _numberLockCueTimer?.cancel();
+    _numberLockPopTimer?.cancel();
     _numberPopTimer?.cancel();
     _numberPopTimer = null;
     setState(() {
@@ -1844,17 +1847,74 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       _lockedInputNumber = _lockedInputNumber == number ? null : number;
       _memoFocusNumber = _presenter.isMemoMode ? _lockedInputNumber : null;
     });
+    if (_lockedInputNumber == number && !_effectsController.reduceMotion) {
+      _numberLockPopTimer?.cancel();
+      setState(() => _numberLockPopNumber = number);
+      _numberLockPopTimer = Timer(const Duration(milliseconds: 90), () {
+        _numberLockPopTimer = null;
+        if (!mounted) return;
+        setState(() => _numberLockPopNumber = null);
+      });
+    }
+    // 핀이 걸리거나 풀리는 순간: 누르는 중 신호(selectionClick)보다 확실히 강하게.
     if (_isVibrationEnabled) {
-      unawaited(HapticFeedback.selectionClick());
+      unawaited(HapticFeedback.heavyImpact());
     }
   }
 
+  /// 숫자 버튼을 길게 눌러 고정할 때까지 걸리는 시간(기본 500ms보다 짧게).
+  static const Duration _numberLockPressDuration = Duration(milliseconds: 350);
+
+  /// 누르고 있는 중간에 "계속 누르면 고정된다"를 알리는 약한 진동 시점. 일반 탭
+  /// (보통 150ms 안에 끝남)에는 울리지 않는다.
+  static const Duration _numberLockCueAt = Duration(milliseconds: 150);
+
+  Timer? _numberLockCueTimer;
+
+  /// 숫자 버튼에 손을 댄 위치. 누른 채 이만큼(kTouchSlop) 벗어나면 길게 누르기가
+  /// 취소되므로, 차오르는 효과도 같이 거둬 고정된 것처럼 보이지 않게 한다.
+  Offset? _numberLockPressOrigin;
+
+  /// "차오르는" 효과의 전체 길이와 시작 지연(ms). 손을 댄 시점부터 재서
+  /// [_numberLockPressDuration](350ms)보다 조금 일찍(320ms) 가득 차도록 맞춰, 핀이
+  /// 걸리는 순간에는 이미 다 차 있게 한다. 90ms 안에 끝나는 빠른 탭에는 아무것도
+  /// 보이지 않는다.
+  static const int _lockFillTotalMs = 320;
+  static const int _lockFillStartMs = 90;
+
+  /// 지금 손을 대고 있어 고정·해제 효과를 재생 중인 숫자. null이면 없음.
+  int? _lockFillNumber;
+
+  /// 핀이 방금 걸린 숫자: 버튼이 아주 살짝 튀는(1.0 → 1.045 → 1.0) 반응에 쓴다.
+  int? _numberLockPopNumber;
+  Timer? _numberLockPopTimer;
+
+  void _startNumberLockCue(int number) {
+    _cancelNumberLockCue();
+    _numberLockCueTimer = Timer(_numberLockCueAt, () {
+      _numberLockCueTimer = null;
+      if (mounted && _isVibrationEnabled) {
+        unawaited(HapticFeedback.selectionClick());
+      }
+    });
+    if (_effectsController.reduceMotion) return;
+    setState(() => _lockFillNumber = number);
+  }
+
+  void _cancelNumberLockCue() {
+    _numberLockCueTimer?.cancel();
+    _numberLockCueTimer = null;
+    if (_lockFillNumber != null && mounted) {
+      setState(() => _lockFillNumber = null);
+    }
+  }
+
+  /// 짧게 탭하면 입력만 한다. 입력할 칸이 없을 때의 탭은 아무 일도 하지 않고(고정은
+  /// 길게 누를 때만 걸리고 풀린다), 버튼은 비활성처럼 흐려지지 않게 그대로 둔다.
   void _handleNumberButtonTap(int number) {
     if (_isNumberInputEnabled(number)) {
       _insertDigit(number);
-      return;
     }
-    _toggleNumberLock(number);
   }
 
   // 넘패드 탭과 아이패드 애플펜슬 필기 입력이 공유하는 실제 입력 처리.
@@ -1906,20 +1966,6 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     );
   }
 
-  int? _selectedInputNumber() {
-    final row = _presenter.selectedRow;
-    final col = _presenter.selectedCol;
-    if (row == null || col == null) {
-      return null;
-    }
-
-    final value = _presenter.getCellValue(row, col);
-    if (value == 0) {
-      return null;
-    }
-    return value;
-  }
-
   Widget _buildNumberButton(
     int number, {
     bool compact = false,
@@ -1931,10 +1977,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     // 기본값 false로 두고 랜드스케이프 호출부에서만 켠다.
     bool largeBadge = false,
   }) {
-    const buttonColor = AppTheme.lightBlueColor;
     final remainingCount = _remainingCountForNumber(number);
     final isEnabled = _isNumberInputEnabled(number) || _canLockNumber(number);
-    final isSelectedNumber = _selectedInputNumber() == number;
     final isLockedNumber = _lockedInputNumber == number;
     final isCompletedNumber = remainingCount == 0;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1956,127 +2000,271 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     final badgeInset =
         largeBadge ? (buttonWidth * 0.08).clamp(6.0, 8.0) : badgeBaseInset;
     final badgeScale = badgeSize / badgeBaseSize;
+    // 고정(핀)한 숫자는 보라(라벤더 배경 + 보라 테두리 + 보라 핀)로 표시한다. 선택한
+    // 칸의 숫자는 보드에서 이미 강조되므로 숫자패드에는 따로 표시하지 않는다.
+    final lockPalette = LevelStatusPalette.of(context);
     final effectiveBackgroundColor = isCompletedNumber
         ? (isDark ? const Color(0xFF232323) : context.colors.surfaceSubtle)
-        : isSelectedNumber || isLockedNumber
-            ? (isDark
-                ? const Color(0xFF2C4055)
-                : buttonColor.withValues(alpha: 0.22))
+        : isLockedNumber
+            ? lockPalette.completedBackground
             : (isDark ? const Color(0xFF323232) : context.colors.surface);
+    // ProgressiveBlurButton은 활성이 아닐 때 배경을 기본 표면색에 22%(다크 40%)만
+    // 섞어 보여 준다. 고정 표시가 흐려지지 않도록 완성된 색을 활성 배경으로
+    // 직접 넘기고, 차오르는 효과도 같은 색을 써서 끝에서 어긋나지 않게 한다.
+    final padBase = Theme.of(context).colorScheme.surface;
+    final lockedBg = Color.alphaBlend(
+      lockPalette.primaryPurple.withValues(alpha: isDark ? 0.26 : 0.16),
+      padBase,
+    );
+    final holdingLockPress =
+        _lockFillNumber == number && !_effectsController.reduceMotion;
+    // 해제 효과가 덮는 색: 고정되지 않은 평소 버튼의 실제 표시색.
+    final unlockedCover =
+        isDark ? Color.lerp(padBase, const Color(0xFF323232), 0.40)! : padBase;
 
     Widget button = MediaQuery.withNoTextScaling(
         child: ProgressiveBlurButton(
       key: ValueKey('number-button-$number'),
       onPressed: isEnabled ? () => _handleNumberButtonTap(number) : null,
       backgroundColor: effectiveBackgroundColor,
+      isActive: !isCompletedNumber && isLockedNumber,
+      activeBackgroundColor: lockedBg,
+      activeBorderColor: Colors.transparent,
       width: width ?? (compact ? 72 : 95),
       height: height ?? (compact ? 56 : 70),
       borderRadius: borderRadius ?? (compact ? 20 : 28),
       enablePressScale: true,
-      child: Stack(
-        children: [
-          if (isSelectedNumber || isLockedNumber)
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(
-                    borderRadius ?? (compact ? 20 : 28),
-                  ),
-                  border: Border.all(
-                    color: buttonColor.withValues(
-                      alpha: isLockedNumber ? 1 : 0.75,
-                    ),
-                    width: isLockedNumber ? 2.2 : 1.6,
-                  ),
-                ),
-              ),
-            ),
-          Align(
-            alignment: digitAlignment,
-            child: Text(
-              number.toString(),
-              style: GoogleFonts.notoSans(
-                      fontSize: digitFontSize,
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textPrimary)
-                  .copyWith(
-                fontWeight:
-                    isSelectedNumber || isLockedNumber ? FontWeight.w800 : null,
-              ),
-            ),
-          ),
-          if (isLockedNumber)
-            Positioned(
-              left: badgeInset,
-              top: badgeInset,
-              child: Icon(
-                Icons.push_pin_rounded,
-                key: ValueKey('number-lock-$number'),
-                size: (compact ? 14 : 16) * badgeScale,
-                color: buttonColor,
-              ),
-            ),
-          Positioned(
-            top: badgeInset,
-            right: badgeInset,
-            child: Container(
-              width: badgeSize,
-              height: badgeSize,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: isDark
-                    ? const Color(0xFF2E2E2E)
-                    : context.colors.surfaceSubtle,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isDark
-                      ? const Color(0xFF3E3E3E)
-                      : context.colors.borderLight,
-                  width: 1,
-                ),
-              ),
-              child: AnimatedSwitcher(
-                duration: _effectsController.reduceMotion
-                    ? Duration.zero
-                    : const Duration(milliseconds: 150),
-                switchInCurve: Curves.easeOut,
-                switchOutCurve: Curves.easeOut,
-                transitionBuilder: (child, animation) =>
-                    FadeTransition(opacity: animation, child: child),
-                child: isCompletedNumber
-                    ? Icon(
-                        Icons.check_rounded,
-                        key: const ValueKey('badge-check'),
-                        size: (compact ? 16 : 18) * badgeScale,
-                        color: isDark
-                            ? const Color(0xFF5A8A70)
-                            : AppTheme.lightBlueColor,
-                      )
-                    : Text(
-                        '$remainingCount',
-                        key: ValueKey('badge-count-$remainingCount'),
-                        style: GoogleFonts.notoSans(
-                          fontSize:
-                              (isCompactSmallButton ? 9 : (compact ? 10 : 11)) *
-                                  badgeScale,
-                          fontWeight: FontWeight.w800,
-                          color: isDark
-                              ? context.colors.textSecondary
-                              : context.colors.textPrimary,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.0, end: holdingLockPress ? 1.0 : 0.0),
+        duration: holdingLockPress
+            ? const Duration(milliseconds: _lockFillTotalMs)
+            : Duration.zero,
+        builder: (context, p, _) {
+          final ms = p * _lockFillTotalMs;
+          final fillT = Curves.easeOutCubic.transform(
+            ((ms - _lockFillStartMs) / (_lockFillTotalMs - _lockFillStartMs))
+                .clamp(0.0, 1.0),
+          );
+          final fadeDuration = _effectsController.reduceMotion
+              ? Duration.zero
+              : const Duration(milliseconds: 150);
+          return Stack(
+            children: [
+              // 길게 누르는 동안 채워진다. 고정하는 중에는 라벤더가 바닥에서 차오르고, 이미
+              // 고정된 숫자를 눌러 해제하는 중에는 평소 버튼색이 위에서 내려와 라벤더를
+              // 덮는다. 앞쪽 가장자리는 살짝 번지게 해서 물처럼 움직이는 느낌을 주고,
+              // 끝(가득 찬 상태)에서는 번진 부분이 버튼 밖으로 밀려나 고르게 채워진다.
+              if (fillT > 0)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(
+                        borderRadius ?? (compact ? 20 : 28),
+                      ),
+                      child: Align(
+                        alignment: isLockedNumber
+                            ? Alignment.topCenter
+                            : Alignment.bottomCenter,
+                        child: FractionallySizedBox(
+                          key: ValueKey('number-lock-fill-$number'),
+                          widthFactor: 1,
+                          heightFactor: fillT * 1.2,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: isLockedNumber
+                                    ? Alignment.bottomCenter
+                                    : Alignment.topCenter,
+                                end: isLockedNumber
+                                    ? Alignment.topCenter
+                                    : Alignment.bottomCenter,
+                                colors: [
+                                  (isLockedNumber ? unlockedCover : lockedBg)
+                                      .withValues(alpha: 0.0),
+                                  isLockedNumber ? unlockedCover : lockedBg,
+                                  isLockedNumber ? unlockedCover : lockedBg,
+                                ],
+                                stops: const [0.0, 0.16, 1.0],
+                              ),
+                            ),
+                          ),
                         ),
                       ),
+                    ),
+                  ),
+                ),
+              // 고정 테두리는 핀이 걸릴 때 부드럽게 나타나고, 풀릴 때 부드럽게 사라진다.
+              // 해제는 고정의 역순이라, 덮는 동안에는 그대로 두었다가 해제가 걸리는 순간
+              // 사라진다. 위의 채움이 생기고 빠질 때 다른 자리와 짝지어져 전환 상태를
+              // 잃지 않도록 키를 준다.
+              Positioned.fill(
+                key: const ValueKey('number-lock-border-slot'),
+                child: AnimatedSwitcher(
+                  duration: fadeDuration,
+                  child: isLockedNumber
+                      ? Container(
+                          key: ValueKey('number-lock-border-$number'),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(
+                              borderRadius ?? (compact ? 20 : 28),
+                            ),
+                            border: Border.all(
+                              color: lockPalette.primaryPurple,
+                              width: 2.4,
+                            ),
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
               ),
-            ),
-          ),
-        ],
+              Align(
+                alignment: digitAlignment,
+                child: Text(
+                  number.toString(),
+                  style: GoogleFonts.notoSans(
+                          fontSize: digitFontSize,
+                          fontWeight: FontWeight.w600,
+                          color: context.colors.textPrimary)
+                      .copyWith(
+                    fontWeight: isLockedNumber ? FontWeight.w800 : null,
+                  ),
+                ),
+              ),
+              // 핀은 걸리는 순간 작게 커지며(0.6 → 1.0) 나타나고, 풀리는 순간 그 역순으로
+              // 작아지며 사라진다.
+              Positioned(
+                left: badgeInset,
+                top: badgeInset,
+                child: AnimatedSwitcher(
+                  duration: fadeDuration,
+                  // 곡선은 크기에만 준다(easeOutBack은 1을 넘어 투명도 계산에 쓸 수 없다).
+                  // 사라질 때는 같은 곡선을 거꾸로 따라가 나타날 때의 정확한 역순이 된다.
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: CurvedAnimation(
+                      parent: animation,
+                      curve: const Interval(0.0, 0.4),
+                    ),
+                    child: ScaleTransition(
+                      scale: Tween(begin: 0.6, end: 1.0).animate(
+                        CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeOutBack,
+                        ),
+                      ),
+                      child: child,
+                    ),
+                  ),
+                  child: isLockedNumber
+                      ? Icon(
+                          Icons.push_pin_rounded,
+                          key: ValueKey('number-lock-$number'),
+                          size: (compact ? 14 : 16) * badgeScale,
+                          color: lockPalette.primaryPurple,
+                        )
+                      : const SizedBox.shrink(),
+                ),
+              ),
+              Positioned(
+                top: badgeInset,
+                right: badgeInset,
+                child: Container(
+                  width: badgeSize,
+                  height: badgeSize,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? const Color(0xFF2E2E2E)
+                        : context.colors.surfaceSubtle,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isDark
+                          ? const Color(0xFF3E3E3E)
+                          : context.colors.borderLight,
+                      width: 1,
+                    ),
+                  ),
+                  child: AnimatedSwitcher(
+                    duration: _effectsController.reduceMotion
+                        ? Duration.zero
+                        : const Duration(milliseconds: 150),
+                    switchInCurve: Curves.easeOut,
+                    switchOutCurve: Curves.easeOut,
+                    transitionBuilder: (child, animation) =>
+                        FadeTransition(opacity: animation, child: child),
+                    child: isCompletedNumber
+                        ? Icon(
+                            Icons.check_rounded,
+                            key: const ValueKey('badge-check'),
+                            size: (compact ? 16 : 18) * badgeScale,
+                            color: isDark
+                                ? const Color(0xFF5A8A70)
+                                : AppTheme.lightBlueColor,
+                          )
+                        : Text(
+                            '$remainingCount',
+                            key: ValueKey('badge-count-$remainingCount'),
+                            style: GoogleFonts.notoSans(
+                              fontSize: (isCompactSmallButton
+                                      ? 9
+                                      : (compact ? 10 : 11)) *
+                                  badgeScale,
+                              fontWeight: FontWeight.w800,
+                              color: isDark
+                                  ? context.colors.textSecondary
+                                  : context.colors.textPrimary,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     ));
 
+    // 핀이 걸린 직후 버튼이 아주 살짝 튄다(항상 감싸 두어 위젯 구조가 바뀌지 않는다).
+    button = AnimatedScale(
+      scale: _numberLockPopNumber == number ? 1.045 : 1.0,
+      duration: _effectsController.reduceMotion
+          ? Duration.zero
+          : const Duration(milliseconds: 80),
+      curve: Curves.easeOut,
+      child: button,
+    );
+
     if (_canLockNumber(number)) {
-      button = GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onLongPress: () => _toggleNumberLock(number),
-        child: button,
+      button = Listener(
+        onPointerDown: (event) {
+          _numberLockPressOrigin = event.position;
+          _startNumberLockCue(number);
+        },
+        onPointerMove: (event) {
+          final origin = _numberLockPressOrigin;
+          if (origin != null &&
+              (event.position - origin).distance > kTouchSlop) {
+            _numberLockPressOrigin = null;
+            _cancelNumberLockCue();
+          }
+        },
+        onPointerUp: (_) => _cancelNumberLockCue(),
+        onPointerCancel: (_) => _cancelNumberLockCue(),
+        child: RawGestureDetector(
+          behavior: HitTestBehavior.opaque,
+          gestures: {
+            LongPressGestureRecognizer: GestureRecognizerFactoryWithHandlers<
+                LongPressGestureRecognizer>(
+              () => LongPressGestureRecognizer(
+                duration: _numberLockPressDuration,
+              ),
+              (recognizer) => recognizer.onLongPress = () {
+                _cancelNumberLockCue();
+                _toggleNumberLock(number);
+              },
+            ),
+          },
+          child: button,
+        ),
       );
     }
     final l10n = AppLocalizations.of(context)!;

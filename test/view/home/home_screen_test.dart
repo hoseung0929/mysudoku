@@ -14,7 +14,6 @@ import 'package:sudoku159/services/home/home_dashboard_service.dart';
 import 'package:sudoku159/services/home/level_progress_service.dart';
 import 'package:sudoku159/navigation/root_nav_scope.dart';
 import 'package:sudoku159/theme/app_theme.dart';
-import 'package:sudoku159/theme/level_status_colors.dart';
 import 'package:sudoku159/utils/app_logger.dart';
 import 'package:sudoku159/view/home/home_screen.dart';
 import 'package:sudoku159/view/home/saved_games_screen.dart';
@@ -1093,19 +1092,16 @@ void main() {
           )
           .style;
 
-      final palette = LevelStatusPalette.of(tester.element(
-        find.text('Start challenge'),
-      ));
       // '난이도 선택'은 배경색을 따로 지정하지 않아 테마 기본(검은색 계열)을
-      // 그대로 쓰고, '오늘의 도전 시작'만 연한 보라색 배경으로 구분한다.
+      // 그대로 쓰고, '오늘의 도전 시작'만 반투명 흰 유리 버튼으로 구분한다.
       expect(chooseLevelButton?.backgroundColor?.resolve({}), isNull);
       expect(
         todayChallengeButton?.backgroundColor?.resolve({}),
-        palette.completedBackground,
+        const Color(0x8CFFFFFF),
       );
       expect(
         todayChallengeButton?.foregroundColor?.resolve({}),
-        palette.primaryPurple,
+        const Color(0xFF4A3F9A),
       );
     });
 

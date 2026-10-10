@@ -38,6 +38,12 @@ List<List<int>> _puzzle() {
 
 class _FakeDb implements DatabaseHelper {
   @override
+  Future<List<Map<String, dynamic>>> getClearEventsForLevel(
+    String levelName,
+  ) async =>
+      const [];
+
+  @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError(invocation.memberName.toString());
 

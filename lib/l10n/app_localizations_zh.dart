@@ -1085,11 +1085,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get levelFilterDone => '已完成';
 
   @override
-  String levelPuzzleListTitle(int count) {
-    return '谜题列表 · $count';
-  }
-
-  @override
   String get levelRecentBadge => '最近';
 
   @override
@@ -1191,11 +1186,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get levelActionShowAll => '查看全部';
-
-  @override
-  String levelBestTime(String time) {
-    return '最佳用时 $time';
-  }
 
   @override
   String levelCellSemantics(String number, String status) {
@@ -1580,4 +1570,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String recordsTypicalTimeValue(int minutes) {
     return '约 $minutes 分钟';
   }
+
+  @override
+  String get levelPerfectLegend => '无提示、无失误完成';
 }

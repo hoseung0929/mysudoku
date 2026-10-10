@@ -9,6 +9,10 @@ class LevelStatusPalette {
     required this.completedBackground,
     required this.completedBorder,
     required this.completedNumberText,
+    required this.clearCellBackground,
+    required this.clearCellBorder,
+    required this.perfectCellBackground,
+    required this.perfectCellBorder,
     required this.inProgressPrimary,
     required this.inProgressBackground,
     required this.inProgressBorder,
@@ -29,6 +33,12 @@ class LevelStatusPalette {
   final Color completedBackground;
   final Color completedBorder;
   final Color completedNumberText;
+
+  /// 퍼즐 칸 전용: 완료(CLEAR)와 힌트·실수 없이 푼(PERFECT!) 칸의 옅은 틴트.
+  final Color clearCellBackground;
+  final Color clearCellBorder;
+  final Color perfectCellBackground;
+  final Color perfectCellBorder;
 
   final Color inProgressPrimary;
   final Color inProgressBackground;
@@ -52,6 +62,10 @@ class LevelStatusPalette {
     completedBackground: Color(0xFFF5F3FF),
     completedBorder: Color(0xFFD8D2F5),
     completedNumberText: Color(0xFF606060),
+    clearCellBackground: Color(0xFFF4F1FF),
+    clearCellBorder: Color(0xFFD7CFFF),
+    perfectCellBackground: Color(0xFFFFF7E2),
+    perfectCellBorder: Color(0xFFF1D17D),
     inProgressPrimary: Color(0xFF2E78B7),
     inProgressBackground: Color(0xFFEAF3F9),
     inProgressBorder: Color(0xFF8DB4D1),
@@ -73,6 +87,10 @@ class LevelStatusPalette {
     completedBackground: Color(0xFF2A2645),
     completedBorder: Color(0xFF433C6E),
     completedNumberText: Color(0xFFA9A4C4),
+    clearCellBackground: Color(0xFF292541),
+    clearCellBorder: Color(0xFF6F61A8),
+    perfectCellBackground: Color(0xFF3A3121),
+    perfectCellBorder: Color(0xFFA98748),
     inProgressPrimary: Color(0xFF5AB4ED),
     inProgressBackground: Color(0xFF15303F),
     inProgressBorder: Color(0xFF428ABB),
@@ -97,6 +115,4 @@ class LevelStatusPalette {
 /// 테마와 무관한 크기/투명도 상수.
 abstract final class LevelStatusColors {
   static const inProgressBorderWidth = 1.5;
-  static const completedCheckIconSize = 12.6; // 기존 14 대비 10% 축소
-  static const completedCheckIconOpacity = 0.85;
 }
