@@ -39,7 +39,7 @@
 
 ## 진행 중
 
-- **Apple Pencil 직접 필기 입력(계획 확정, 구현 전)**: 1단계는 Dart 전부(상단바 필기 토글·설정 저장·최초 코치마크·셀 상태·후보 선택 바·Memo/Undo/오답 연동)와 인식기 인터페이스·테스트용 가짜 인식기, 네이티브는 기존 Scribble 오버레이 유지. 2단계에서 PencilKit(`PKCanvasView`) + Vision 텍스트 인식(iOS 13+)을 붙임. 실기기(Apple Pencil) 검증 필요.
+- **Apple Pencil 직접 필기 입력**: **구현 완료·실기기(iPad) 검증 통과(미배포, 아이패드 배포 보류)** — 상단바 필기 토글(아이패드 전용, 기본 OFF), 코치마크, 네이티브 오버레이(`PencilCanvasPlugin`)로 Pencil 터치만 수신, 앱에 내장한 MNIST 학습 MLP(int8)로 기기 안에서 1~9 인식(애매하면 후보 선택, 실패 시 오답 미계산), 기존 입력 로직(오답 검사·Memo·Undo) 공유. 미구현: 키패드 후보 강조, Pencil 더블탭, 문질러 지우기.
 
 - **아이패드 가로 모드·Apple Pencil**: 코드 구현됨, 아이폰 전용 배포라 사용자에겐 미노출. **실기기(아이패드+펜슬) 검증 대기.**
 
@@ -69,4 +69,4 @@
 - [tablet-ui-guidelines.md](tablet-ui-guidelines.md) · [privacy-policy.md](privacy-policy.md) · [app-store-privacy-checklist.md](app-store-privacy-checklist.md)
 
 ---
-마지막 갱신: 2026-10-10
+마지막 갱신: 2026-10-16

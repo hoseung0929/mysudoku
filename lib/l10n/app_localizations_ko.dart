@@ -416,6 +416,33 @@ class AppLocalizationsKo extends AppLocalizations {
   String get commonOk => '확인';
 
   @override
+  String get pencilWritingToggleLabel => 'Apple Pencil 필기';
+
+  @override
+  String get pencilWritingOnNotice => 'Pencil 필기 켜짐';
+
+  @override
+  String get pencilWritingOffNotice => 'Pencil 필기 꺼짐';
+
+  @override
+  String get pencilWritingCoachmark =>
+      'Apple Pencil로 빈 셀에 숫자 1~9를 직접 써보세요. 숫자패드도 계속 사용할 수 있습니다.';
+
+  @override
+  String get pencilCandidatesTitle => '인식 결과를 선택하세요';
+
+  @override
+  String get pencilRewrite => '다시 쓰기';
+
+  @override
+  String get pencilRecognitionFailed => '숫자 1~9를 다시 써주세요';
+
+  @override
+  String pencilDigitEntered(int digit) {
+    return '$digit 입력됨';
+  }
+
+  @override
   String get commonCancel => '취소';
 
   @override

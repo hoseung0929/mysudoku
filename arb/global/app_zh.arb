@@ -179,6 +179,21 @@
   "settingsAboutDeveloperNote": "祝你玩得开心，Sudoku159！",
   "settingsAboutSupportEmail": "· team929.support@gmail.com",
   "commonOk": "确定",
+  "pencilWritingToggleLabel": "Apple Pencil 手写",
+  "pencilWritingOnNotice": "Pencil 手写已开启",
+  "pencilWritingOffNotice": "Pencil 手写已关闭",
+  "pencilWritingCoachmark": "用 Apple Pencil 在空格中直接写下数字 1～9。数字键盘仍可继续使用。",
+  "pencilCandidatesTitle": "请选择识别结果",
+  "pencilRewrite": "重写",
+  "pencilRecognitionFailed": "请重新书写数字 1～9",
+  "pencilDigitEntered": "已输入 {digit}",
+  "@pencilDigitEntered": {
+    "placeholders": {
+      "digit": {
+        "type": "int"
+      }
+    }
+  },
   "commonCancel": "取消",
   "gameOverTitle": "已达到失误上限",
   "gameOverMessage": "你可以从头重新解题，或选择其他谜题。",

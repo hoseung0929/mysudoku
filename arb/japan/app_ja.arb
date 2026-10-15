@@ -179,6 +179,21 @@
   "settingsAboutDeveloperNote": "ナンプレ159をお楽しみください！",
   "settingsAboutSupportEmail": "· team929.support@gmail.com",
   "commonOk": "OK",
+  "pencilWritingToggleLabel": "Apple Pencil 手書き",
+  "pencilWritingOnNotice": "Pencil 手書きオン",
+  "pencilWritingOffNotice": "Pencil 手書きオフ",
+  "pencilWritingCoachmark": "Apple Pencilで空のセルに1〜9の数字を書いてみましょう。数字パッドも引き続き使えます。",
+  "pencilCandidatesTitle": "認識結果を選んでください",
+  "pencilRewrite": "書き直す",
+  "pencilRecognitionFailed": "1〜9の数字をもう一度書いてください",
+  "pencilDigitEntered": "{digit} を入力しました",
+  "@pencilDigitEntered": {
+    "placeholders": {
+      "digit": {
+        "type": "int"
+      }
+    }
+  },
   "commonCancel": "キャンセル",
   "gameOverTitle": "ミスの上限に達しました",
   "gameOverMessage": "最初からやり直すか、別のパズルを選べます。",

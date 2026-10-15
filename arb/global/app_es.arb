@@ -179,6 +179,21 @@
   "settingsAboutDeveloperNote": "¡Disfruta jugando Sudoku159!",
   "settingsAboutSupportEmail": "· team929.support@gmail.com",
   "commonOk": "Aceptar",
+  "pencilWritingToggleLabel": "Escritura con Apple Pencil",
+  "pencilWritingOnNotice": "Escritura con Pencil activada",
+  "pencilWritingOffNotice": "Escritura con Pencil desactivada",
+  "pencilWritingCoachmark": "Escribe un dígito del 1 al 9 en una celda vacía con el Apple Pencil. El teclado numérico sigue disponible.",
+  "pencilCandidatesTitle": "Elige el dígito reconocido",
+  "pencilRewrite": "Reescribir",
+  "pencilRecognitionFailed": "Escribe de nuevo un dígito del 1 al 9",
+  "pencilDigitEntered": "{digit} introducido",
+  "@pencilDigitEntered": {
+    "placeholders": {
+      "digit": {
+        "type": "int"
+      }
+    }
+  },
   "commonCancel": "Cancelar",
   "gameOverTitle": "Has alcanzado el límite de errores",
   "gameOverMessage": "Puedes empezar este puzle de nuevo o elegir otro.",

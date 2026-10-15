@@ -145,7 +145,11 @@ void main() {
     (WidgetTester tester) async {
       await pumpLandscapeGameScreen(tester, size: const Size(1024, 768));
 
-      // 애플펜슬 오버레이(TextField)는 셀이 선택되기 전엔 없어야 한다.
+      // Pencil 필기는 기본 OFF: 켜기 전에는 오버레이가 없다.
+      expect(find.byType(TextField), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('pencil-writing-toggle')));
+      await tester.pump();
+      // 켜도 셀이 선택되기 전엔 없어야 한다.
       expect(find.byType(TextField), findsNothing);
 
       // puzzleBoard[0][1]은 빈 칸(고정 아님) — 보드 그리드 안의 두 번째 셀
@@ -165,12 +169,15 @@ void main() {
       // Timer가 걸린다 — 테스트 종료 전에 다 끝나도록 충분히 pump한다.
       await tester.enterText(find.byType(TextField), '3');
       await tester.pump();
+      // 마지막 획 뒤 대기(≈380ms) + 미리 보기(150ms) 후 입력된다.
       await tester.pump(const Duration(milliseconds: 800));
 
       // 인식 후 필드는 즉시 비워진다.
       expect(tester.widget<TextField>(find.byType(TextField)).controller!.text,
           '');
       expect(tester.takeException(), isNull);
+      // 켜짐 안내(스낵바)·효과 타이머가 끝나도록 충분히 기다린다.
+      await tester.pump(const Duration(seconds: 4));
     },
   );
 

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
@@ -23,6 +24,12 @@ import 'package:sudoku159/view/sudoku_game/sudoku_board_grid.dart';
 import 'package:sudoku159/view/sudoku_game/game_effects_controller.dart';
 import 'package:sudoku159/services/game/auto_notes_tip_service.dart';
 import 'package:sudoku159/services/game/number_lock_tip_service.dart';
+import 'package:sudoku159/services/game/pencil_canvas_channel.dart';
+import 'package:sudoku159/services/game/pencil_digit_recognizer.dart';
+import 'package:sudoku159/services/game/pencil_writing_service.dart';
+import 'package:sudoku159/presenter/game/pencil_input_controller.dart';
+import 'package:sudoku159/view/sudoku_game/pencil_writing_widgets.dart';
+import 'package:sudoku159/view/sudoku_game/sudoku_pencil_input_overlay.dart';
 import 'package:sudoku159/view/sudoku_game/game_feedback_resolver.dart';
 import 'package:sudoku159/view/home/level_picker_screen.dart';
 import 'package:sudoku159/theme/level_status_colors.dart';
@@ -100,6 +107,23 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   final GameEffectsController _effectsController = GameEffectsController();
   final AutoNotesTipService _autoNotesTipService = AutoNotesTipService();
   final NumberLockTipService _numberLockTipService = NumberLockTipService();
+  // Apple Pencil 필기(아이패드 전용): 토글 상태·최초 안내·인식 흐름.
+  final PencilWritingService _pencilService = PencilWritingService();
+  bool _pencilEnabled = false;
+  bool _pencilCoachmarkVisible = false;
+  // iOS 네이티브 Pencil 오버레이(보드 전체 위 단일 레이어). 지원 플랫폼에서만.
+  PencilCanvasChannel? _pencilCanvas;
+  final GlobalKey _pencilBoardKey = GlobalKey();
+  Rect? _lastSentPencilRect;
+  List<bool>? _lastSentPencilBlocked;
+  bool? _lastSentPencilEnabled;
+  bool _pencilSyncScheduled = false;
+  late final PencilInputController _pencilController = PencilInputController(
+    recognizer: const ScribbleTextDigitRecognizer(),
+    settleDelay: const Duration(milliseconds: 260),
+    previewDelay: const Duration(milliseconds: 70),
+    onConfirmed: _onPencilConfirmed,
+  )..addListener(_onPencilControllerChanged);
   final Map<String, Timer> _wrongCellTimers = {};
   Set<int> _completedUnitIds = {};
   bool _isPenguinActive = false;
@@ -700,7 +724,185 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     super.initState();
     _featurePolicy = SudokuGameFeaturePolicy.forLevel(widget.level);
     WidgetsBinding.instance.addObserver(this);
+    unawaited(_loadPencilEnabled());
+    _setUpPencilCanvas();
     _initializeGame();
+  }
+
+  void _setUpPencilCanvas() {
+    if (!PencilCanvasChannel.isSupported) return;
+    final canvas = PencilCanvasChannel();
+    canvas.onTap = (row, col) {
+      if (!mounted || !_presenterReady) return;
+      _pencilController.cancel();
+      _handleBoardCellTap(row, col);
+    };
+    canvas.onStrokeBegan = (row, col) {
+      if (!mounted || !_presenterReady) return;
+      // 필기 시작 셀을 입력 대상으로 고정(선택 셀도 그 셀로 맞춘다).
+      if (_presenter.selectedRow != row || _presenter.selectedCol != col) {
+        _handleBoardCellTap(row, col);
+      }
+      _pencilController.beginWriting(row, col);
+    };
+    canvas.onStrokeEnded =
+        (row, col) => _pencilController.markRecognizing(row, col);
+    canvas.onResult =
+        (row, col, result) => _pencilController.submitResult(row, col, result);
+    canvas.onCancelled = _pencilController.cancel;
+    _pencilCanvas = canvas;
+  }
+
+  /// 보드 위 Pencil 오버레이의 위치·활성 상태·필기 불가 셀을 네이티브에 알린다.
+  /// 변경이 있을 때만 보낸다(회전·레이아웃 변경 시 좌표를 다시 전달).
+  void _schedulePencilCanvasSync() {
+    final canvas = _pencilCanvas;
+    if (canvas == null || _pencilSyncScheduled) return;
+    _pencilSyncScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _pencilSyncScheduled = false;
+      if (!mounted) return;
+      final enabled = _pencilEnabled &&
+          _presenterReady &&
+          MediaQuery.sizeOf(context).width > 600 &&
+          !_presenter.isPaused &&
+          !_presenter.isGameComplete &&
+          !_presenter.isGameOver;
+      final box = _pencilBoardKey.currentContext?.findRenderObject();
+      Rect? rect;
+      if (box is RenderBox && box.hasSize && box.attached) {
+        rect = box.localToGlobal(Offset.zero) & box.size;
+      }
+      if (rect == null || !_presenterReady) {
+        if (_lastSentPencilEnabled != false) {
+          _lastSentPencilEnabled = false;
+          unawaited(canvas.configure(
+            enabled: false,
+            boardRect: Rect.zero,
+            blocked: const [],
+            strokeColor: 0,
+          ));
+        }
+        return;
+      }
+      final blocked = <bool>[
+        for (var r = 0; r < 9; r++)
+          for (var c = 0; c < 9; c++)
+            _presenter.isCellFixed(r, c) || _presenter.isHintCell(r, c),
+      ];
+      if (_lastSentPencilEnabled == enabled &&
+          _lastSentPencilRect == rect &&
+          listEquals(_lastSentPencilBlocked, blocked)) {
+        return;
+      }
+      _lastSentPencilEnabled = enabled;
+      _lastSentPencilRect = rect;
+      _lastSentPencilBlocked = blocked;
+      unawaited(canvas.configure(
+        enabled: enabled,
+        boardRect: rect,
+        blocked: blocked,
+        strokeColor: LevelStatusPalette.of(context).primaryPurple.toARGB32(),
+      ));
+    });
+  }
+
+  Future<void> _loadPencilEnabled() async {
+    final enabled = await _pencilService.isEnabled();
+    if (!mounted || enabled == _pencilEnabled) return;
+    setState(() => _pencilEnabled = enabled);
+  }
+
+  PencilCellPhase _lastPencilPhase = PencilCellPhase.idle;
+
+  void _onPencilControllerChanged() {
+    final phase = _pencilController.phase;
+    // 성공(앱 숫자로 전환) 또는 대기로 돌아가면 화면의 필기 획을 지운다.
+    // 실패·후보 선택 중에는 사용자가 쓴 획을 잠시 남겨 둔다.
+    if (phase != _lastPencilPhase &&
+        (phase == PencilCellPhase.idle ||
+            phase == PencilCellPhase.recognized)) {
+      unawaited(_pencilCanvas?.clear());
+    }
+    _lastPencilPhase = phase;
+    if (mounted) setState(() {});
+  }
+
+  /// 인식이 확정한 숫자를 기존 숫자 입력 로직으로 넘긴다(정답 검사·Memo·Undo·
+  /// 오답 계산은 숫자패드 입력과 동일). 그 사이 선택 셀이 바뀌었다면 버린다.
+  void _onPencilConfirmed(int row, int col, int digit) {
+    if (!mounted || !_presenterReady) return;
+    if (_presenter.selectedRow != row || _presenter.selectedCol != col) return;
+    _insertDigit(digit, fromPencil: true);
+    final l10n = AppLocalizations.of(context)!;
+    // ignore: deprecated_member_use
+    unawaited(SemanticsService.announce(
+      l10n.pencilDigitEntered(digit),
+      Directionality.of(context),
+    ));
+  }
+
+  Future<void> _togglePencilWriting() async {
+    final next = !_pencilEnabled;
+    _pencilController.cancel();
+    setState(() => _pencilEnabled = next);
+    await _pencilService.setEnabled(next);
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            next ? l10n.pencilWritingOnNotice : l10n.pencilWritingOffNotice,
+          ),
+          duration: const Duration(milliseconds: 1500),
+        ),
+      );
+    // ignore: deprecated_member_use
+    unawaited(SemanticsService.announce(
+      next ? l10n.pencilWritingOnNotice : l10n.pencilWritingOffNotice,
+      Directionality.of(context),
+    ));
+    if (next && !await _pencilService.hasSeenCoachmark() && mounted) {
+      setState(() => _pencilCoachmarkVisible = true);
+    }
+  }
+
+  void _dismissPencilCoachmark() {
+    setState(() => _pencilCoachmarkVisible = false);
+    unawaited(_pencilService.markCoachmarkSeen());
+  }
+
+  /// 필기가 켜져 있고 입력 가능한 빈 셀이 선택된 아이패드 화면인지.
+  bool get _pencilWritingActive =>
+      _pencilEnabled &&
+      MediaQuery.sizeOf(context).width > 600 &&
+      _hasEditableSelection;
+
+  PencilCellFeedback? get _pencilFeedback {
+    if (!_pencilWritingActive) return null;
+    final row = _presenter.selectedRow;
+    final col = _presenter.selectedCol;
+    if (row == null || col == null) return null;
+    final controller = _pencilController;
+    final targeted = controller.row == row && controller.col == col;
+    // 이미 숫자가 들어간 칸(특히 오답)은 필기 중이 아니면 오버레이로 덮지
+    // 않아 오답 표시가 그대로 보이게 한다.
+    final idle = !targeted || controller.phase == PencilCellPhase.idle;
+    if (idle && _presenter.getCellValue(row, col) != 0) return null;
+    final phase = targeted && controller.phase != PencilCellPhase.idle
+        ? controller.phase
+        : PencilCellPhase.writing;
+    // 후보 선택 대기 중에는 셀 표시를 인식 중 상태로 둔다.
+    return PencilCellFeedback(
+      row: row,
+      col: col,
+      phase: phase == PencilCellPhase.ambiguous
+          ? PencilCellPhase.recognizing
+          : phase,
+      previewDigit: targeted ? controller.previewDigit : null,
+    );
   }
 
   /// 게임 초기화
@@ -891,6 +1093,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
           _autoPausedByLifecycle = true;
         }
         _effectsController.clearTransientEffects();
+        _pencilController.cancel();
         unawaited(_flushPendingSessionOnPause());
         return;
       case AppLifecycleState.resumed:
@@ -1009,6 +1212,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     _cancelCompletionTimers();
     _numberPopTimer?.cancel();
     _penguinActiveTimer?.cancel();
+    _pencilCanvas?.dispose();
+    _pencilController.dispose();
     _timeNotifier.dispose();
     if (_presenterReady) {
       _presenter.dispose();
@@ -1050,9 +1255,96 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         appBar: _buildAppBar(),
         body: IgnorePointer(
           ignoring: _isCompletionEffectRunning,
-          child: _buildBody(),
+          child: _withPencilOverlays(_buildBody()),
         ),
       ),
+    );
+  }
+
+  /// Pencil 필기의 후보 선택 바와 최초 안내를 본문 위에 얹는다(비모달).
+  /// 선택 셀이 바뀌거나 필기가 꺼지면 진행 중인 필기를 취소한다.
+  Widget _withPencilOverlays(Widget body) {
+    final controller = _pencilController;
+    final row = _presenter.selectedRow;
+    final col = _presenter.selectedCol;
+    if ((controller.row != null || controller.phase != PencilCellPhase.idle) &&
+        (!_pencilWritingActive ||
+            controller.row != row ||
+            controller.col != col)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _pencilController.cancel();
+      });
+    }
+    final showCandidates = _pencilWritingActive &&
+        controller.phase == PencilCellPhase.ambiguous &&
+        controller.candidates.isNotEmpty;
+    final showError =
+        _pencilWritingActive && controller.phase == PencilCellPhase.error;
+    final l10n = AppLocalizations.of(context)!;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    return Stack(
+      children: [
+        body,
+        if (_pencilCoachmarkVisible)
+          Positioned(
+            top: 8,
+            left: 16,
+            right: 16,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 640),
+                child: PencilCoachmark(onDismiss: _dismissPencilCoachmark),
+              ),
+            ),
+          ),
+        if (showCandidates)
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: bottomInset + 16,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: PencilCandidateBar(
+                  candidates: controller.candidates,
+                  onChoose: _pencilController.chooseCandidate,
+                  onRewrite: _pencilController.rewrite,
+                ),
+              ),
+            ),
+          ),
+        if (showError)
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: bottomInset + 16,
+            child: IgnorePointer(
+              child: Semantics(
+                liveRegion: true,
+                child: Center(
+                  child: Material(
+                    color: Theme.of(context).colorScheme.inverseSurface,
+                    borderRadius: BorderRadius.circular(14),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 12,
+                      ),
+                      child: Text(
+                        l10n.pencilRecognitionFailed,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Theme.of(context).colorScheme.onInverseSurface,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -1117,6 +1409,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         onPressed: _popAfterSaving,
       ),
       actions: [
+        if (MediaQuery.sizeOf(context).width > 600)
+          _buildPencilToggleButton(l10n),
         if (kDebugMode) _buildDeveloperMenuButton(),
         Padding(
           padding: const EdgeInsets.only(right: 2),
@@ -1156,6 +1450,52 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         ),
         _buildGameMenuButton(l10n),
       ],
+    );
+  }
+
+  /// Apple Pencil 필기 켜기/끄기(아이패드 전용). 연결 여부를 판단하지 않고 항상
+  /// 보인다. OFF: 중립 배경·회색 아이콘, ON: 라벤더 배경·보라 아이콘.
+  Widget _buildPencilToggleButton(AppLocalizations l10n) {
+    final palette = LevelStatusPalette.of(context);
+    final on = _pencilEnabled;
+    return Semantics(
+      button: true,
+      toggled: on,
+      label: l10n.pencilWritingToggleLabel,
+      excludeSemantics: true,
+      child: Tooltip(
+        message: l10n.pencilWritingToggleLabel,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Center(
+            child: Material(
+              key: const ValueKey('pencil-writing-toggle'),
+              color: on
+                  ? palette.completedBackground
+                  : Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.06),
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: _isCompletionEffectRunning ? null : _togglePencilWriting,
+                child: SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Icon(
+                    Icons.draw_outlined,
+                    size: 22,
+                    color: on
+                        ? palette.primaryPurple
+                        : context.colors.textSecondary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -1901,13 +2241,37 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     );
   }
 
+  /// 셀 탭(손가락·Pencil 탭 공통): 선택, 숫자 고정 시 자동 입력, 햅틱.
+  void _handleBoardCellTap(int row, int col) {
+    final previousRow = _presenter.selectedRow;
+    final previousCol = _presenter.selectedCol;
+    _presenter.selectCell(row, col);
+    // 실제로 선택이 바뀐 경우에만 가볍게 알린다(같은 칸 재선택,
+    // 일시정지·완료 상태의 no-op 탭에서는 울리지 않는다).
+    final didSelectionChange = (previousRow != row || previousCol != col) &&
+        _presenter.selectedRow == row &&
+        _presenter.selectedCol == col;
+    final lockedNumber = _lockedInputNumber;
+    // 이미 숫자가 들어 있는 칸은 건너뛴다(덮어쓰지 않는다).
+    final shouldApplyLockedNumber = lockedNumber != null &&
+        _hasEditableSelection &&
+        _presenter.getCellValue(row, col) == 0;
+    if (shouldApplyLockedNumber) {
+      _insertDigit(lockedNumber, fromLock: true);
+    } else if (didSelectionChange && _isVibrationEnabled) {
+      unawaited(HapticFeedback.selectionClick());
+    }
+  }
+
   Widget _buildBoardGrid({bool tabletPortrait = false}) {
     // 아이패드 애플펜슬 필기 입력(전용 "펜슬 모드" 없이 넘패드와 항상 병행) —
     // 아이폰은 콜백 자체를 안 넘겨 오버레이가 생성되지 않아 기존과 동일.
     final isTablet = MediaQuery.of(context).size.width > 600;
 
+    _schedulePencilCanvasSync();
     return Center(
       child: ConstrainedBox(
+        key: _pencilBoardKey,
         constraints: BoxConstraints(
           maxWidth: isTablet ? 820 : 680,
           maxHeight: isTablet ? 820 : 680,
@@ -1935,28 +2299,16 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                         : null,
                 enableMemoHighlights:
                     _memoHighlightEnabled && _featurePolicy.memoEnabled,
-                onCellTapped: (row, col) {
-                  final previousRow = _presenter.selectedRow;
-                  final previousCol = _presenter.selectedCol;
-                  _presenter.selectCell(row, col);
-                  // 실제로 선택이 바뀐 경우에만 가볍게 알린다(같은 칸 재선택,
-                  // 일시정지·완료 상태의 no-op 탭에서는 울리지 않는다).
-                  final didSelectionChange =
-                      (previousRow != row || previousCol != col) &&
-                          _presenter.selectedRow == row &&
-                          _presenter.selectedCol == col;
-                  final lockedNumber = _lockedInputNumber;
-                  // 이미 숫자가 들어 있는 칸은 건너뛴다(덮어쓰지 않는다).
-                  final shouldApplyLockedNumber = lockedNumber != null &&
-                      _hasEditableSelection &&
-                      _presenter.getCellValue(row, col) == 0;
-                  if (shouldApplyLockedNumber) {
-                    _insertDigit(lockedNumber, fromLock: true);
-                  } else if (didSelectionChange && _isVibrationEnabled) {
-                    unawaited(HapticFeedback.selectionClick());
-                  }
-                },
-                onPencilDigit: isTablet ? _insertDigit : null,
+                onCellTapped: _handleBoardCellTap,
+                // 필기 ON(아이패드)일 때만 필기 오버레이를 만든다. iOS는 보드
+                // 전체를 덮는 네이티브 오버레이가 받으므로 Scribble 필드는
+                // 네이티브 오버레이를 쓸 수 없는 환경에서만 쓴다.
+                onPencilText:
+                    _pencilWritingActive && !PencilCanvasChannel.isSupported
+                        ? (row, col, text) =>
+                            _pencilController.submitText(row, col, text)
+                        : null,
+                pencilFeedback: _pencilFeedback,
               ),
             ),
             if (_autoNotesFlashKey != null)
@@ -2097,8 +2449,13 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   // 넘패드 탭과 아이패드 애플펜슬 필기 입력이 공유하는 실제 입력 처리.
   // 두 경로 모두 같은 검증/부수효과(진동, 오답셀 타이머, 메모 하이라이트)를
   // 거치도록 한곳에 모아둔다.
-  void _insertDigit(int number, {bool fromLock = false}) {
-    if (!_isNumberInputEnabled(number)) return;
+  void _insertDigit(int number,
+      {bool fromLock = false, bool fromPencil = false}) {
+    // 필기 입력은 남은 개수가 0이어도(오답 숫자가 이미 자리를 차지한 경우 등)
+    // 막지 않고 입력해 오답 표시·검사를 그대로 거친다.
+    final allowed =
+        fromPencil ? _hasEditableSelection : _isNumberInputEnabled(number);
+    if (!allowed) return;
     setState(() {
       _memoFocusNumber = _presenter.isMemoMode ? number : null;
     });

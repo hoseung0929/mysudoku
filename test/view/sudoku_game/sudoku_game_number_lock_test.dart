@@ -360,12 +360,15 @@ void main() {
     expect(pin(3), findsOneWidget);
 
     // 펜슬로 다른 칸에 다른 숫자를 써도 고정은 그대로고 입력도 정상이다.
+    // Pencil 필기를 켜야(기본 OFF) 필기 입력이 활성화된다.
+    await tester.tap(find.byKey(const ValueKey('pencil-writing-toggle')));
+    await tester.pump();
     presenter.selectCell(4, 4);
     await tester.pump();
     final grid = tester.widget<SudokuBoardGrid>(find.byType(SudokuBoardGrid));
-    expect(grid.onPencilDigit, isNotNull);
-    grid.onPencilDigit!(5);
-    await tester.pump();
+    expect(grid.onPencilText, isNotNull);
+    grid.onPencilText!(4, 4, '5');
+    await tester.pump(const Duration(milliseconds: 700));
     expect(presenter.getCellValue(4, 4), 5);
     expect(pin(3), findsOneWidget);
     expect(presenter.wrongCount, 0);

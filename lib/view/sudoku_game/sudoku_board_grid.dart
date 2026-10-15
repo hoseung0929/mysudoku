@@ -22,6 +22,8 @@ class SudokuBoardGrid extends StatelessWidget {
     this.highlightedMemoNumber,
     required this.onCellTapped,
     this.onPencilDigit,
+    this.onPencilText,
+    this.pencilFeedback,
     this.emphasizeBlockLines = false,
     this.hintRegionCells = const {},
     this.hintBlockerCells = const {},
@@ -45,6 +47,13 @@ class SudokuBoardGrid extends StatelessWidget {
   // 아이패드 애플펜슬 필기 입력 콜백 (선택 사항). null이면(기본값, 아이폰
   // 호출부) 오버레이 자체를 만들지 않아 기존 동작과 완전히 동일하다.
   final void Function(int digit)? onPencilDigit;
+
+  /// Pencil 필기 ON(아이패드)일 때만 넘어온다. 인식된 원문을 받아 호출부의
+  /// 인식 컨트롤러가 1~9 판정을 한다. null이면 필기 오버레이를 만들지 않는다.
+  final void Function(int row, int col, String text)? onPencilText;
+
+  /// 필기 대상 셀의 상태 표시(대기·인식 중·미리 보기·실패).
+  final PencilCellFeedback? pencilFeedback;
 
   /// 아이패드 세로: 3×3 블록 경계와 외곽선의 대비를 높인다(두께는 그대로).
   final bool emphasizeBlockLines;
@@ -475,12 +484,25 @@ class SudokuBoardGrid extends StatelessWidget {
         return Stack(
           children: [
             board,
-            if (onPencilDigit != null)
+            if (pencilFeedback != null)
+              PencilCellFeedbackOverlay(
+                feedback: pencilFeedback!,
+                cellExtent: cellExtent,
+                accent: levelPalette.primaryPurple,
+                errorColor: AppTheme.pinkColor,
+                reduceMotion: reduceMotion,
+              ),
+            if ((onPencilDigit != null || onPencilText != null) &&
+                selectedRow != null &&
+                selectedCol != null)
               SudokuPencilInputOverlay(
                 selectedRow: selectedRow,
                 selectedCol: selectedCol,
                 cellExtent: cellExtent,
-                onDigitEntered: onPencilDigit!,
+                onDigitEntered: onPencilDigit ?? (_) {},
+                onTextEntered: onPencilText == null
+                    ? null
+                    : (text) => onPencilText!(selectedRow, selectedCol, text),
               ),
             if (showCompletionGlow)
               Positioned.fill(

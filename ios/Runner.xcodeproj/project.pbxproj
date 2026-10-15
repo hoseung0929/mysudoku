@@ -7,11 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0315BD3EAD23D839DF51178D /* DigitModelData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788492920B0189FFFAB3FFF8 /* DigitModelData.swift */; };
 		101E3D19EF115C6F747DA604 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8666E5CED849FA2E8927347 /* Pods_RunnerTests.framework */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
+		88388D2539FAE15AFDF1722A /* PencilCanvasPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = E111A8A98B75F73AE47961F8 /* PencilCanvasPlugin.swift */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
@@ -66,6 +68,7 @@
 		67B58CFD5BA788F608FA19DC /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		788492920B0189FFFAB3FFF8 /* DigitModelData.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DigitModelData.swift; sourceTree = "<group>"; };
 		7AAF66EE6D575B0D8A8A415E /* Pods-RunnerTests.release-global.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release-global.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release-global.xcconfig"; sourceTree = "<group>"; };
 		7AB3F699538C7603A44B6D1D /* Pods-RunnerTests.debug-global.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug-global.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug-global.xcconfig"; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
@@ -85,6 +88,7 @@
 		C273EF31FA424A39C61C0399 /* Pods-RunnerTests.release-japan.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release-japan.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release-japan.xcconfig"; sourceTree = "<group>"; };
 		DB780DB7EA32E0D664FC29E5 /* Pods-Runner.debug-japan.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug-japan.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug-japan.xcconfig"; sourceTree = "<group>"; };
 		E0A61B3DD8ADCE8F7C094814 /* Release-global.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Flutter/Release-global.xcconfig"; sourceTree = "<group>"; };
+		E111A8A98B75F73AE47961F8 /* PencilCanvasPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PencilCanvasPlugin.swift; sourceTree = "<group>"; };
 		E8666E5CED849FA2E8927347 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E8F4C8C92BE100010071234A /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
 		EE94DE5221AEB829E569AFD9 /* Pods-Runner.profile-global.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile-global.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile-global.xcconfig"; sourceTree = "<group>"; };
@@ -203,6 +207,8 @@
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
+				E111A8A98B75F73AE47961F8 /* PencilCanvasPlugin.swift */,
+				788492920B0189FFFAB3FFF8 /* DigitModelData.swift */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -425,6 +431,8 @@
 			files = (
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
+				88388D2539FAE15AFDF1722A /* PencilCanvasPlugin.swift in Sources */,
+				0315BD3EAD23D839DF51178D /* DigitModelData.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -428,6 +428,33 @@ class AppLocalizationsEs extends AppLocalizations {
   String get commonOk => 'Aceptar';
 
   @override
+  String get pencilWritingToggleLabel => 'Escritura con Apple Pencil';
+
+  @override
+  String get pencilWritingOnNotice => 'Escritura con Pencil activada';
+
+  @override
+  String get pencilWritingOffNotice => 'Escritura con Pencil desactivada';
+
+  @override
+  String get pencilWritingCoachmark =>
+      'Escribe un dígito del 1 al 9 en una celda vacía con el Apple Pencil. El teclado numérico sigue disponible.';
+
+  @override
+  String get pencilCandidatesTitle => 'Elige el dígito reconocido';
+
+  @override
+  String get pencilRewrite => 'Reescribir';
+
+  @override
+  String get pencilRecognitionFailed => 'Escribe de nuevo un dígito del 1 al 9';
+
+  @override
+  String pencilDigitEntered(int digit) {
+    return '$digit introducido';
+  }
+
+  @override
   String get commonCancel => 'Cancelar';
 
   @override

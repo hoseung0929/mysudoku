@@ -179,6 +179,21 @@
   "settingsAboutDeveloperNote": "Nanpre159를 즐겨 주세요!",
   "settingsAboutSupportEmail": "· team929.support@gmail.com",
   "commonOk": "확인",
+  "pencilWritingToggleLabel": "Apple Pencil 필기",
+  "pencilWritingOnNotice": "Pencil 필기 켜짐",
+  "pencilWritingOffNotice": "Pencil 필기 꺼짐",
+  "pencilWritingCoachmark": "Apple Pencil로 빈 셀에 숫자 1~9를 직접 써보세요. 숫자패드도 계속 사용할 수 있습니다.",
+  "pencilCandidatesTitle": "인식 결과를 선택하세요",
+  "pencilRewrite": "다시 쓰기",
+  "pencilRecognitionFailed": "숫자 1~9를 다시 써주세요",
+  "pencilDigitEntered": "{digit} 입력됨",
+  "@pencilDigitEntered": {
+    "placeholders": {
+      "digit": {
+        "type": "int"
+      }
+    }
+  },
   "commonCancel": "취소",
   "gameOverTitle": "실수 한도에 도달했어요",
   "gameOverMessage": "처음부터 다시 풀거나 다른 퍼즐을 선택할 수 있어요.",

@@ -426,6 +426,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonOk => 'OK';
 
   @override
+  String get pencilWritingToggleLabel => 'Apple Pencil writing';
+
+  @override
+  String get pencilWritingOnNotice => 'Pencil writing on';
+
+  @override
+  String get pencilWritingOffNotice => 'Pencil writing off';
+
+  @override
+  String get pencilWritingCoachmark =>
+      'Write a digit 1–9 in an empty cell with Apple Pencil. The number pad still works too.';
+
+  @override
+  String get pencilCandidatesTitle => 'Choose the recognized digit';
+
+  @override
+  String get pencilRewrite => 'Rewrite';
+
+  @override
+  String get pencilRecognitionFailed =>
+      'Please write a digit from 1 to 9 again';
+
+  @override
+  String pencilDigitEntered(int digit) {
+    return '$digit entered';
+  }
+
+  @override
   String get commonCancel => 'Cancel';
 
   @override

@@ -416,6 +416,33 @@ class AppLocalizationsJa extends AppLocalizations {
   String get commonOk => 'OK';
 
   @override
+  String get pencilWritingToggleLabel => 'Apple Pencil 手書き';
+
+  @override
+  String get pencilWritingOnNotice => 'Pencil 手書きオン';
+
+  @override
+  String get pencilWritingOffNotice => 'Pencil 手書きオフ';
+
+  @override
+  String get pencilWritingCoachmark =>
+      'Apple Pencilで空のセルに1〜9の数字を書いてみましょう。数字パッドも引き続き使えます。';
+
+  @override
+  String get pencilCandidatesTitle => '認識結果を選んでください';
+
+  @override
+  String get pencilRewrite => '書き直す';
+
+  @override
+  String get pencilRecognitionFailed => '1〜9の数字をもう一度書いてください';
+
+  @override
+  String pencilDigitEntered(int digit) {
+    return '$digit を入力しました';
+  }
+
+  @override
   String get commonCancel => 'キャンセル';
 
   @override

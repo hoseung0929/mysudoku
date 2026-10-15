@@ -872,6 +872,54 @@ abstract class AppLocalizations {
   /// **'OK'**
   String get commonOk;
 
+  /// No description provided for @pencilWritingToggleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Pencil writing'**
+  String get pencilWritingToggleLabel;
+
+  /// No description provided for @pencilWritingOnNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Pencil writing on'**
+  String get pencilWritingOnNotice;
+
+  /// No description provided for @pencilWritingOffNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Pencil writing off'**
+  String get pencilWritingOffNotice;
+
+  /// No description provided for @pencilWritingCoachmark.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a digit 1–9 in an empty cell with Apple Pencil. The number pad still works too.'**
+  String get pencilWritingCoachmark;
+
+  /// No description provided for @pencilCandidatesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the recognized digit'**
+  String get pencilCandidatesTitle;
+
+  /// No description provided for @pencilRewrite.
+  ///
+  /// In en, this message translates to:
+  /// **'Rewrite'**
+  String get pencilRewrite;
+
+  /// No description provided for @pencilRecognitionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Please write a digit from 1 to 9 again'**
+  String get pencilRecognitionFailed;
+
+  /// No description provided for @pencilDigitEntered.
+  ///
+  /// In en, this message translates to:
+  /// **'{digit} entered'**
+  String pencilDigitEntered(int digit);
+
   /// No description provided for @commonCancel.
   ///
   /// In en, this message translates to:

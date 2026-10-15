@@ -414,6 +414,33 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonOk => '确定';
 
   @override
+  String get pencilWritingToggleLabel => 'Apple Pencil 手写';
+
+  @override
+  String get pencilWritingOnNotice => 'Pencil 手写已开启';
+
+  @override
+  String get pencilWritingOffNotice => 'Pencil 手写已关闭';
+
+  @override
+  String get pencilWritingCoachmark =>
+      '用 Apple Pencil 在空格中直接写下数字 1～9。数字键盘仍可继续使用。';
+
+  @override
+  String get pencilCandidatesTitle => '请选择识别结果';
+
+  @override
+  String get pencilRewrite => '重写';
+
+  @override
+  String get pencilRecognitionFailed => '请重新书写数字 1～9';
+
+  @override
+  String pencilDigitEntered(int digit) {
+    return '已输入 $digit';
+  }
+
+  @override
   String get commonCancel => '取消';
 
   @override
