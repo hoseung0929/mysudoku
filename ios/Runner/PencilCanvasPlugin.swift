@@ -114,8 +114,11 @@ final class PencilCanvasPlugin: NSObject, FlutterPlugin {
           host.subviews.count)
     let frame = CGRect(x: x, y: y, width: w, height: h)
     if view.frame != frame {
-      // 회전·레이아웃 변경 시 진행 중이던 필기는 취소한다.
-      view.clearStrokes()
+      // 크기가 바뀐 경우(회전 등)에만 진행 중이던 필기를 취소한다. 셀을 처음
+      // 선택할 때처럼 위치만 움직인 경우에는 획이 날아가지 않게 프레임만 갱신한다.
+      let sizeChanged =
+        abs(view.frame.width - frame.width) > 1 || abs(view.frame.height - frame.height) > 1
+      if sizeChanged { view.clearStrokes() }
       view.frame = frame
     }
     view.isHidden = false
