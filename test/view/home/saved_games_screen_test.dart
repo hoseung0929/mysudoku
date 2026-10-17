@@ -62,10 +62,20 @@ void main() {
       ContinueGameSummary summary,
     ) onDelete,
     bool reduceMotion = false,
+    Size size = const Size(390, 844),
+    ThemeData? theme,
+    String deleteTooltip = 'Delete',
+    Locale locale = const Locale('en'),
   }) async {
+    tester.view.physicalSize = size;
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.lightTheme(),
+        key: UniqueKey(),
+        theme: theme ?? AppTheme.lightTheme(),
+        locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) => MediaQuery(
@@ -88,7 +98,7 @@ void main() {
                         itemTitleBuilder: (s) =>
                             '${s.level.name} #${s.game.gameNumber}',
                         itemSubtitleBuilder: (s) => 'subtitle',
-                        deleteTooltip: 'Delete',
+                        deleteTooltip: deleteTooltip,
                         onDelete: onDelete,
                       ),
                     ),
@@ -105,6 +115,13 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> tapDelete(WidgetTester tester, {required int cardIndex}) async {
+    await tester.tap(find.byIcon(Icons.more_horiz_rounded).at(cardIndex));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.delete_outline));
+    await tester.pump();
+  }
+
   testWidgets(
       'loading indicator shows only on the tapped row; other rows stay usable',
       (tester) async {
@@ -118,28 +135,198 @@ void main() {
     );
 
     // 최신순 정렬이라 gameB(200)가 위, gameA(100)가 아래.
-    final deleteButtons = find.byIcon(Icons.delete_outline);
-    expect(deleteButtons, findsNWidgets(2));
-    await tester.tap(deleteButtons.first);
-    await tester.pump();
+    expect(find.byIcon(Icons.more_horiz_rounded), findsNWidgets(2));
+    await tapDelete(tester, cardIndex: 0);
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    expect(find.byIcon(Icons.delete_outline), findsOneWidget);
-    final remainingIconButton = tester.widget<IconButton>(
-      find.ancestor(
-        of: find.byIcon(Icons.delete_outline),
-        matching: find.byType(IconButton),
-      ),
+    expect(find.byIcon(Icons.more_horiz_rounded), findsOneWidget);
+    final remainingMenu = tester.widget<PopupMenuButton>(
+      find.byKey(const ValueKey('saved-game-actions-menu')),
     );
-    expect(remainingIconButton.onPressed, isNull);
+    expect(remainingMenu.enabled, isFalse);
 
-    // 삭제 중이 아닌 행은 여전히 열 수 있다(대화상자 pop 트리거).
-    final openTiles = find.byType(InkWell);
-    final untouchedTile = tester.widget<InkWell>(openTiles.last);
-    expect(untouchedTile.onTap, isNotNull);
+    // 삭제 중이 아닌 카드의 이어하기 버튼은 여전히 사용할 수 있다.
+    final continueButtons = tester.widgetList<FilledButton>(
+      find.byType(FilledButton),
+    );
+    expect(continueButtons.where((button) => button.onPressed != null),
+        hasLength(1));
 
     gate.complete([gameA, gameB]);
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('redesigned list fits iPhone and iPad layouts in both themes',
+      (tester) async {
+    final games = [
+      _summary(_levelA, 1, lastPlayedAtMillis: 100),
+      _summary(_levelB, 2, lastPlayedAtMillis: 200),
+    ];
+
+    await pumpScreen(
+      tester,
+      games: games,
+      onDelete: (_) async => games,
+    );
+    expect(
+      find.byKey(const ValueKey('saved-game-level-image')),
+      findsNWidgets(2),
+    );
+    expect(find.byType(LinearProgressIndicator), findsNWidgets(2));
+    expect(
+      find.byKey(const ValueKey('saved-games-sort-menu')),
+      findsOneWidget,
+    );
+    final phoneFirst =
+        tester.getTopLeft(find.byKey(ValueKey('${_levelB.name}#2')));
+    final phoneSecond =
+        tester.getTopLeft(find.byKey(ValueKey('${_levelA.name}#1')));
+    expect(phoneFirst.dx, phoneSecond.dx);
+    expect(phoneFirst.dy, isNot(phoneSecond.dy));
+    expect(tester.takeException(), isNull);
+
+    await pumpScreen(
+      tester,
+      games: games,
+      onDelete: (_) async => games,
+      size: const Size(1024, 1366),
+      theme: AppTheme.darkTheme(),
+    );
+    expect(
+      find.byKey(const ValueKey('saved-game-level-image')),
+      findsNWidgets(2),
+    );
+    expect(find.byType(LinearProgressIndicator), findsNWidgets(2));
+    final tabletFirst =
+        tester.getTopLeft(find.byKey(ValueKey('${_levelB.name}#2')));
+    final tabletSecond =
+        tester.getTopLeft(find.byKey(ValueKey('${_levelA.name}#1')));
+    expect(tabletFirst.dx, isNot(tabletSecond.dx));
+    expect(tabletFirst.dy, tabletSecond.dy);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('difficulty filters use the active locale and canonical order',
+      (tester) async {
+    final games = [
+      _summary(_levelB, 2),
+      _summary(_levelA, 1),
+    ];
+    await pumpScreen(
+      tester,
+      games: games,
+      locale: const Locale('en'),
+      onDelete: (_) async => games,
+    );
+
+    expect(find.text('Beginner'), findsOneWidget);
+    expect(find.text('초급'), findsNothing);
+    expect(find.text('중급'), findsNothing);
+
+    final allCenter = tester.getCenter(find.text('All'));
+    final beginnerCenter = tester.getCenter(find.text('Beginner'));
+    expect(allCenter.dy, beginnerCenter.dy);
+
+    final filterRect = tester.getRect(
+      find.byKey(const ValueKey('saved-games-level-filter')),
+    );
+    final sortRect = tester.getRect(
+      find.byKey(const ValueKey('saved-games-sort-menu')),
+    );
+    expect(filterRect.top, sortRect.top);
+    expect(filterRect.bottom, sortRect.bottom);
+
+    await tester.drag(
+      find.byKey(const ValueKey('saved-games-level-filter-list')),
+      const Offset(-300, 0),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Intermediate'), findsOneWidget);
+    expect(find.text('중급'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('level filter highlight slides to the tapped chip',
+      (tester) async {
+    final games = [_summary(_levelA, 1), _summary(_levelA, 2)];
+    await pumpScreen(
+      tester,
+      games: games,
+      size: const Size(834, 1194),
+      onDelete: (_) async => games,
+    );
+
+    final slide = find.byKey(const ValueKey('saved-games-level-filter-slide'));
+    expect(slide, findsOneWidget);
+    Finder highlight() => find
+        .descendant(of: slide, matching: find.byType(AnimatedPositioned))
+        .first;
+    final before = tester.getTopLeft(highlight()).dx;
+
+    await tester.tap(find.text('Beginner'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    final mid = tester.getTopLeft(highlight()).dx;
+    await tester.pumpAndSettle();
+    final after = tester.getTopLeft(highlight()).dx;
+
+    expect(after, greaterThan(before));
+    expect(mid, greaterThan(before));
+    expect(mid, lessThan(after));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('long localized delete label fits inside the popup menu',
+      (tester) async {
+    final game = _summary(_levelA, 1);
+    await pumpScreen(
+      tester,
+      games: [game],
+      deleteTooltip: 'Borrar progreso guardado',
+      size: const Size(320, 640),
+      onDelete: (_) async => [game],
+    );
+
+    await tester.tap(find.byIcon(Icons.more_horiz_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Borrar progreso guardado'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('level filter shows directional hints only when more is hidden',
+      (tester) async {
+    final games = [
+      for (var index = 0; index < SudokuLevel.levels.length; index++)
+        _summary(SudokuLevel.levels[index], index + 1),
+    ];
+    await pumpScreen(
+      tester,
+      games: games,
+      size: const Size(390, 844),
+      onDelete: (_) async => games,
+    );
+
+    expect(
+      find.byKey(const ValueKey('saved-games-filter-more-right')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('saved-games-filter-more-left')),
+      findsNothing,
+    );
+
+    await tester.drag(
+      find.byKey(const ValueKey('saved-games-level-filter-list')),
+      const Offset(-600, 0),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('saved-games-filter-more-left')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('row is removed from the list once deletion succeeds',
@@ -155,8 +342,7 @@ void main() {
     expect(find.textContaining('#1'), findsOneWidget);
     expect(find.textContaining('#2'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.delete_outline).last);
-    await tester.pump();
+    await tapDelete(tester, cardIndex: 1);
     // 제거 애니메이션(170ms) 진행 중에는 아직 남아 있다.
     await tester.pump(const Duration(milliseconds: 80));
     expect(find.textContaining('#1'), findsOneWidget);
@@ -176,14 +362,13 @@ void main() {
       onDelete: (s) => gate.future,
     );
 
-    await tester.tap(find.byIcon(Icons.delete_outline));
-    await tester.pump();
+    await tapDelete(tester, cardIndex: 0);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
     gate.complete([gameA]);
     await tester.pumpAndSettle();
     expect(find.byType(CircularProgressIndicator), findsNothing);
-    expect(find.byIcon(Icons.delete_outline), findsOneWidget);
+    expect(find.byIcon(Icons.more_horiz_rounded), findsOneWidget);
     expect(find.textContaining('#1'), findsOneWidget);
   });
 
@@ -197,8 +382,7 @@ void main() {
     );
 
     expect(find.text('Saved'), findsOneWidget);
-    await tester.tap(find.byIcon(Icons.delete_outline));
-    await tester.pump();
+    await tapDelete(tester, cardIndex: 0);
     await tester.pumpAndSettle();
     expect(find.text('Saved'), findsNothing);
   });
@@ -214,8 +398,7 @@ void main() {
       reduceMotion: true,
     );
 
-    await tester.tap(find.byIcon(Icons.delete_outline).last);
-    await tester.pump();
+    await tapDelete(tester, cardIndex: 1);
     // 애니메이션 프레임을 더 기다리지 않아도 즉시 반영된다.
     expect(find.textContaining('#1'), findsNothing);
     expect(find.textContaining('#2'), findsOneWidget);
@@ -236,15 +419,14 @@ void main() {
     );
 
     // levelA만 필터링: gameA(#1), gameC(#3)
-    await tester.tap(find.text(_levelA.name));
+    await tester.tap(find.text('Beginner'));
     await tester.pump();
     expect(find.textContaining('#1'), findsOneWidget);
     expect(find.textContaining('#3'), findsOneWidget);
     expect(find.textContaining('#5'), findsNothing);
 
     // 필터 안에서 두 번째(#3, 더 오래된 것)를 삭제해도 정확히 그 항목만 사라진다.
-    await tester.tap(find.byIcon(Icons.delete_outline).last);
-    await tester.pump();
+    await tapDelete(tester, cardIndex: 1);
     await tester.pumpAndSettle();
     expect(find.textContaining('#1'), findsOneWidget);
     expect(find.textContaining('#3'), findsNothing);
@@ -262,32 +444,27 @@ void main() {
       onDelete: (s) => gate.future,
     );
 
-    await tester.tap(find.byIcon(Icons.delete_outline).last);
-    await tester.pump();
+    await tapDelete(tester, cardIndex: 1);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
     gate.completeError(Exception('boom'));
     await tester.pumpAndSettle();
 
-    // 대상 행이 그대로 남아 있고, 로딩이 사라지고, 삭제 버튼이 다시 활성화된다.
+    // 대상 카드가 그대로 남아 있고, 로딩이 사라지고, 메뉴가 다시 활성화된다.
     expect(find.textContaining('#1'), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsNothing);
-    expect(find.byIcon(Icons.delete_outline), findsNWidgets(2));
-    for (final button in tester.widgetList<IconButton>(
-      find.ancestor(
-        of: find.byIcon(Icons.delete_outline),
-        matching: find.byType(IconButton),
-      ),
+    expect(find.byIcon(Icons.more_horiz_rounded), findsNWidgets(2));
+    for (final menu in tester.widgetList<PopupMenuButton>(
+      find.byKey(const ValueKey('saved-game-actions-menu')),
     )) {
-      expect(button.onPressed, isNotNull);
+      expect(menu.enabled, isTrue);
     }
     expect(find.byType(SnackBar), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     // 실패 후 같은 항목을 다시 삭제할 수 있다.
     gate = Completer<List<ContinueGameSummary>>();
-    await tester.tap(find.byIcon(Icons.delete_outline).last);
-    await tester.pump();
+    await tapDelete(tester, cardIndex: 1);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     gate.complete([gameB]);
     await tester.pumpAndSettle();
