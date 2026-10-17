@@ -126,3 +126,6 @@ app.*.symbols
 !**/ios/**/default.pbxuser
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
+
+# 앱스토어 제출용 스크린샷(용량이 커서 저장소에서 제외)
+docs/app-store/

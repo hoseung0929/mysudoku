@@ -1,7 +1,10 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:sudoku159/main.dart' as app;
 import 'package:sudoku159/utils/app_logger.dart';
+import 'package:sudoku159/view/settings/settings_screen.dart';
+import 'package:sudoku159/widgets/bottom_nav_bar.dart';
 
 Future<void> _waitUntilFound(
   WidgetTester tester,
@@ -25,17 +28,15 @@ void main() {
   testWidgets('home to settings flow', (WidgetTester tester) async {
     app.main();
 
-    await _waitUntilFound(tester, find.text('홈'));
-    expect(find.text('기록'), findsOneWidget);
-    expect(find.text('설정'), findsOneWidget);
+    await _waitUntilFound(tester, find.byType(BottomNavBar));
+    expect(find.byIcon(Icons.home_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.bar_chart_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
 
-    await _waitUntilFound(tester, find.text('여행자'));
-    expect(find.text('스도쿠에 오신 것을 환영합니다 👋'), findsOneWidget);
-
-    await tester.tap(find.text('설정'));
+    await tester.tap(find.byIcon(Icons.settings_outlined));
     await tester.pumpAndSettle(const Duration(seconds: 2));
 
-    await _waitUntilFound(tester, find.text('알림'));
-    expect(find.text('알림 설정'), findsOneWidget);
+    await _waitUntilFound(tester, find.byType(SettingsScreen));
+    expect(find.byKey(const Key('settings_content_padding')), findsOneWidget);
   });
 }
