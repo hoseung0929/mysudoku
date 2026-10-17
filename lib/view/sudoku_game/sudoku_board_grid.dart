@@ -92,22 +92,24 @@ class SudokuBoardGrid extends StatelessWidget {
     // 아이패드(emphasizeBlockLines)의 다크 모드: 셀 선이 배경(#1E1E1E)에 묻혀
     // 보이지 않아 선 색을 한 단계 밝히고 조금 두껍게 한다. 아이폰·라이트는 그대로.
     final brightDarkLines = isDark && emphasizeBlockLines;
+    // 아이패드는 라이트·다크 모두 셀 안쪽 선을 더 진하고 두껍게(아이폰은 그대로).
+    final brightLightLines = !isDark && emphasizeBlockLines;
     final borderColor = isDark
-        ? (brightDarkLines ? const Color(0xFF4C4C4C) : const Color(0xFF2A2A2A))
-        : context.colors.border;
-    final thinLineWidth = brightDarkLines ? 0.7 : 0.35;
+        ? (brightDarkLines ? const Color(0xFF666666) : const Color(0xFF2A2A2A))
+        : (brightLightLines ? const Color(0xFFB4B4B4) : context.colors.border);
+    final thinLineWidth = (brightDarkLines || brightLightLines) ? 0.9 : 0.35;
     final borderColorStrong = isDark
         ? (brightDarkLines ? const Color(0xFF6E6E6E) : const Color(0xFF444444))
         : context.colors.border;
     final boardOutlineColor =
         isDark ? const Color(0xFF4A4A4A) : context.colors.border;
+    // 아이패드: 3×3 블록 경계선을 가는 선보다 확실히 진하고 두껍게(아이폰은 그대로).
     final blockLineColor = emphasizeBlockLines
-        ? Color.lerp(borderColorStrong, isDark ? Colors.white : Colors.black,
-            isDark ? 0.22 : 0.3)!
+        ? (isDark ? const Color(0xFFA6A6A6) : const Color(0xFF5E5E5E))
         : borderColorStrong;
+    final blockLineWidth = emphasizeBlockLines ? 1.6 : 1.2;
     final outlineColor = emphasizeBlockLines
-        ? Color.lerp(boardOutlineColor, isDark ? Colors.white : Colors.black,
-            isDark ? 0.3 : 0.38)!
+        ? (isDark ? const Color(0xFFC0C0C0) : const Color(0xFF4A4A4A))
         : boardOutlineColor;
     // ── 셀 하이라이트 색상 (다크/라이트 분기) ──────────────────────
     final selectedCellColor = isDark
@@ -320,7 +322,7 @@ class SudokuBoardGrid extends StatelessWidget {
                                         ? blockLineColor
                                         : borderColor,
                                     width: (row == 0 || row == 3 || row == 6)
-                                        ? 1.2
+                                        ? blockLineWidth
                                         : thinLineWidth,
                                   ),
                                   left: BorderSide(
@@ -328,7 +330,7 @@ class SudokuBoardGrid extends StatelessWidget {
                                         ? blockLineColor
                                         : borderColor,
                                     width: (col == 0 || col == 3 || col == 6)
-                                        ? 1.2
+                                        ? blockLineWidth
                                         : thinLineWidth,
                                   ),
                                   right: BorderSide(
@@ -336,7 +338,7 @@ class SudokuBoardGrid extends StatelessWidget {
                                         ? blockLineColor
                                         : borderColor,
                                     width: (col == 2 || col == 5 || col == 8)
-                                        ? 1.2
+                                        ? blockLineWidth
                                         : thinLineWidth,
                                   ),
                                   bottom: BorderSide(
@@ -344,7 +346,7 @@ class SudokuBoardGrid extends StatelessWidget {
                                         ? blockLineColor
                                         : borderColor,
                                     width: (row == 2 || row == 5 || row == 8)
-                                        ? 1.2
+                                        ? blockLineWidth
                                         : thinLineWidth,
                                   ),
                                 ),

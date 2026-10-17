@@ -127,6 +127,43 @@ void main() {
     await settle(tester);
   });
 
+  testWidgets('releasing the lock with a selected empty cell does not enter it',
+      (tester) async {
+    final presenter = await pumpGame(tester, size: const Size(834, 1194));
+    // 빈 칸을 먼저 선택한 상태에서 고정 → 해제.
+    tapCell(tester, 0, 1);
+    await tester.pump();
+    expect(presenter.getCellValue(0, 1), 0);
+    await lock(tester, 3);
+    await tester.pump();
+    expect(pin(3), findsOneWidget);
+    expect(presenter.getCellValue(0, 1), 0, reason: 'locking must not enter');
+    await lock(tester, 3);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(pin(3), findsNothing);
+    expect(presenter.getCellValue(0, 1), 0, reason: 'unlocking must not enter');
+    await settle(tester);
+  });
+
+  testWidgets('a short tap on the locked key does not enter the selected cell',
+      (tester) async {
+    final presenter = await pumpGame(tester);
+    tapCell(tester, 0, 1);
+    await tester.pump();
+    await lock(tester, 3);
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('number-button-3')));
+    await tester.pump();
+    expect(presenter.getCellValue(0, 1), 0);
+    expect(pin(3), findsOneWidget); // 고정은 그대로
+    // 다른 숫자 키의 탭은 그대로 입력된다.
+    await tester.tap(find.byKey(const ValueKey('number-button-4')));
+    await tester.pump();
+    expect(presenter.getCellValue(0, 1), 4);
+    expect(presenter.wrongCount, 1); // (0,1)의 정답은 3이라 4는 오답
+    await settle(tester);
+  });
+
   testWidgets('never overwrites a filled cell or a given number',
       (tester) async {
     final presenter = await pumpGame(tester);
@@ -324,6 +361,8 @@ void main() {
     ('small phone, 2x text', const Size(320, 568), 2.0),
     ('phone', const Size(390, 844), 1.0),
     ('iPad landscape', const Size(1180, 820), 1.0),
+    ('iPad portrait', const Size(834, 1194), 1.0),
+    ('iPad portrait, 1.3x text', const Size(834, 1194), 1.3),
   ]) {
     testWidgets('pin, digit and remaining badge do not overlap: ${config.$1}',
         (tester) async {

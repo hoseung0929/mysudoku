@@ -744,8 +744,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     canvas.onStrokeBegan = (row, col) {
       if (!mounted || !_presenterReady) return;
       // 필기 시작 셀을 입력 대상으로 고정(선택 셀도 그 셀로 맞춘다).
+      // 숫자 고정 중이어도 필기 시작으로는 고정 숫자를 넣지 않는다(탭만 입력).
       if (_presenter.selectedRow != row || _presenter.selectedCol != col) {
-        _handleBoardCellTap(row, col);
+        _handleBoardCellTap(row, col, applyLock: false);
       }
       _pencilController.beginWriting(row, col);
     };
@@ -766,6 +767,15 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _pencilSyncScheduled = false;
       if (!mounted) return;
+      // 화면 전환 애니메이션 중에는 보드가 아직 움직이고 있어 지금 잰 좌표가
+      // 최종 위치가 아니다(다음 게임으로 이어서 올 때 오버레이가 어긋나 첫 획이
+      // 인식되지 않던 원인). 전환이 끝날 때까지 매 프레임 다시 확인한다.
+      final transition = ModalRoute.of(context)?.animation;
+      if (transition != null &&
+          transition.status != AnimationStatus.completed) {
+        _schedulePencilCanvasSync();
+        return;
+      }
       final enabled = _pencilEnabled &&
           _presenterReady &&
           MediaQuery.sizeOf(context).width > 600 &&
@@ -2442,7 +2452,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   }
 
   /// 셀 탭(손가락·Pencil 탭 공통): 선택, 숫자 고정 시 자동 입력, 햅틱.
-  void _handleBoardCellTap(int row, int col) {
+  void _handleBoardCellTap(int row, int col, {bool applyLock = true}) {
     final previousRow = _presenter.selectedRow;
     final previousCol = _presenter.selectedCol;
     _presenter.selectCell(row, col);
@@ -2453,7 +2463,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         _presenter.selectedCol == col;
     final lockedNumber = _lockedInputNumber;
     // 이미 숫자가 들어 있는 칸은 건너뛴다(덮어쓰지 않는다).
-    final shouldApplyLockedNumber = lockedNumber != null &&
+    final shouldApplyLockedNumber = applyLock &&
+        lockedNumber != null &&
         _hasEditableSelection &&
         _presenter.getCellValue(row, col) == 0;
     if (shouldApplyLockedNumber) {
@@ -2473,8 +2484,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
       child: ConstrainedBox(
         key: _pencilBoardKey,
         constraints: BoxConstraints(
-          maxWidth: isTablet ? 820 : 680,
-          maxHeight: isTablet ? 820 : 680,
+          maxWidth: isTablet ? 960 : 680,
+          maxHeight: isTablet ? 960 : 680,
         ),
         child: Stack(
           children: [
@@ -2600,6 +2611,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
 
   Timer? _numberLockCueTimer;
 
+  /// 이번 터치가 길게 누르기(고정·해제)로 이미 처리됐는지.
+  bool _numberLockLongPressHandled = false;
+
   /// 숫자 버튼에 손을 댄 위치. 누른 채 이만큼(kTouchSlop) 벗어나면 길게 누르기가
   /// 취소되므로, 차오르는 효과도 같이 거둬 고정된 것처럼 보이지 않게 한다.
   Offset? _numberLockPressOrigin;
@@ -2641,6 +2655,13 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   /// 짧게 탭하면 입력만 한다. 입력할 칸이 없을 때의 탭은 아무 일도 하지 않고(고정은
   /// 길게 누를 때만 걸리고 풀린다), 버튼은 비활성처럼 흐려지지 않게 그대로 둔다.
   void _handleNumberButtonTap(int number) {
+    if (_numberLockLongPressHandled) {
+      _numberLockLongPressHandled = false;
+      return;
+    }
+    // 고정된 숫자 키의 짧은 탭은 입력하지 않는다(칸을 눌러 채우는 모드이고,
+    // 해제는 길게 누르기로만 한다).
+    if (_lockedInputNumber == number) return;
     if (_isNumberInputEnabled(number)) {
       _insertDigit(number);
     }
@@ -2981,6 +3002,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
     if (_canLockNumber(number)) {
       button = Listener(
         onPointerDown: (event) {
+          _numberLockLongPressHandled = false;
           _numberLockPressOrigin = event.position;
           _startNumberLockCue(number);
         },
@@ -3004,6 +3026,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
               ),
               (recognizer) => recognizer.onLongPress = () {
                 _cancelNumberLockCue();
+                // 길게 눌러 고정·해제한 같은 터치가 손을 뗄 때 짧은 탭으로도
+                // 처리돼 숫자가 입력되지 않게 막는다.
+                _numberLockLongPressHandled = true;
                 _toggleNumberLock(number);
               },
             ),
@@ -3529,8 +3554,8 @@ class _MobileGameLayoutMetrics {
         bottomSafePadding +
         (isIPhoneSELayout ? 0 : 12.0);
 
-    // 아이패드 세로: 키패드를 줄여 확보한 높이만큼 보드를 폭 가득(최대 820)으로.
-    final maxBoardSize = isIPhoneSELayout ? 520.0 : (isTablet ? 820.0 : 680.0);
+    // 아이패드 세로: 키패드를 줄여 확보한 높이만큼 보드를 폭 가득(최대 960)으로.
+    final maxBoardSize = isIPhoneSELayout ? 520.0 : (isTablet ? 960.0 : 680.0);
     final baseBoardSize = _clamp(contentWidth, 292, maxBoardSize);
     final estimatedTotalHeight = fixedChromeHeight + baseBoardSize;
     final overflow = math.max(0.0, estimatedTotalHeight - maxHeight);
