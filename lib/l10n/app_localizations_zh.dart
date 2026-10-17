@@ -345,7 +345,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String dialogWrongCountValue(int count) {
-    return '$count 次';
+    return '$count';
   }
 
   @override
@@ -1603,4 +1603,28 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get levelPerfectLegend => '无提示、无失误完成';
+
+  @override
+  String get settingsKeypadPlacementTitle => '键盘位置';
+
+  @override
+  String get settingsKeypadPlacementPortrait => '竖屏';
+
+  @override
+  String get settingsKeypadPlacementLandscape => '横屏';
+
+  @override
+  String get settingsKeypadPlacementCenter => '居中';
+
+  @override
+  String get settingsKeypadPlacementLeft => '靠左';
+
+  @override
+  String get settingsKeypadPlacementRight => '靠右';
+
+  @override
+  String get gameKeypadDialogBodyPortrait => '选择竖屏时数字键盘的位置。';
+
+  @override
+  String get gameKeypadDialogBodyLandscape => '选择横屏时数字面板所在的一侧。';
 }

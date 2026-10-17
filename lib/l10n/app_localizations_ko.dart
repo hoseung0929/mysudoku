@@ -347,7 +347,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String dialogWrongCountValue(int count) {
-    return '$count회';
+    return '$count';
   }
 
   @override
@@ -1621,4 +1621,28 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get levelPerfectLegend => '힌트·실수 없이 푼 퍼즐';
+
+  @override
+  String get settingsKeypadPlacementTitle => '키패드 위치';
+
+  @override
+  String get settingsKeypadPlacementPortrait => '세로 모드';
+
+  @override
+  String get settingsKeypadPlacementLandscape => '가로 모드';
+
+  @override
+  String get settingsKeypadPlacementCenter => '가운데';
+
+  @override
+  String get settingsKeypadPlacementLeft => '왼쪽';
+
+  @override
+  String get settingsKeypadPlacementRight => '오른쪽';
+
+  @override
+  String get gameKeypadDialogBodyPortrait => '세로 화면에서 숫자 키패드를 둘 위치를 골라요.';
+
+  @override
+  String get gameKeypadDialogBodyLandscape => '가로 화면에서 숫자 패널을 둘 위치를 골라요.';
 }

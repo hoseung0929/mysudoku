@@ -749,7 +749,7 @@ abstract class AppLocalizations {
   /// No description provided for @dialogWrongCountValue.
   ///
   /// In en, this message translates to:
-  /// **'{count} times'**
+  /// **'{count}'**
   String dialogWrongCountValue(int count);
 
   /// No description provided for @dialogSharePreview.
@@ -2935,6 +2935,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Solved with no hints or mistakes'**
   String get levelPerfectLegend;
+
+  /// No description provided for @settingsKeypadPlacementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keypad position'**
+  String get settingsKeypadPlacementTitle;
+
+  /// No description provided for @settingsKeypadPlacementPortrait.
+  ///
+  /// In en, this message translates to:
+  /// **'Portrait'**
+  String get settingsKeypadPlacementPortrait;
+
+  /// No description provided for @settingsKeypadPlacementLandscape.
+  ///
+  /// In en, this message translates to:
+  /// **'Landscape'**
+  String get settingsKeypadPlacementLandscape;
+
+  /// No description provided for @settingsKeypadPlacementCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Center'**
+  String get settingsKeypadPlacementCenter;
+
+  /// No description provided for @settingsKeypadPlacementLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Left'**
+  String get settingsKeypadPlacementLeft;
+
+  /// No description provided for @settingsKeypadPlacementRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Right'**
+  String get settingsKeypadPlacementRight;
+
+  /// No description provided for @gameKeypadDialogBodyPortrait.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose where the number keypad goes in portrait.'**
+  String get gameKeypadDialogBodyPortrait;
+
+  /// No description provided for @gameKeypadDialogBodyLandscape.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which side the number panel sits on in landscape.'**
+  String get gameKeypadDialogBodyLandscape;
 }
 
 class _AppLocalizationsDelegate

@@ -171,7 +171,7 @@
   "dialogNewBadges": "New badges",
   "dialogElapsedTime": "Time",
   "dialogWrongCount": "Mistakes",
-  "dialogWrongCountValue": "{count} times",
+  "dialogWrongCountValue": "{count}",
   "@dialogWrongCountValue": {
     "placeholders": {
       "count": {
@@ -1070,5 +1070,13 @@
       }
     }
   },
-  "levelPerfectLegend": "Solved with no hints or mistakes"
+  "levelPerfectLegend": "Solved with no hints or mistakes",
+  "settingsKeypadPlacementTitle": "Keypad position",
+  "settingsKeypadPlacementPortrait": "Portrait",
+  "settingsKeypadPlacementLandscape": "Landscape",
+  "settingsKeypadPlacementCenter": "Center",
+  "settingsKeypadPlacementLeft": "Left",
+  "settingsKeypadPlacementRight": "Right",
+  "gameKeypadDialogBodyPortrait": "Choose where the number keypad goes in portrait.",
+  "gameKeypadDialogBodyLandscape": "Choose which side the number panel sits on in landscape."
 }

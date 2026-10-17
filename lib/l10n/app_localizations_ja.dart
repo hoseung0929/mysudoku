@@ -346,7 +346,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String dialogWrongCountValue(int count) {
-    return '$count回';
+    return '$count';
   }
 
   @override
@@ -1616,4 +1616,28 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get levelPerfectLegend => 'ヒント・ミスなしで解いたパズル';
+
+  @override
+  String get settingsKeypadPlacementTitle => 'キーパッドの位置';
+
+  @override
+  String get settingsKeypadPlacementPortrait => '縦向き';
+
+  @override
+  String get settingsKeypadPlacementLandscape => '横向き';
+
+  @override
+  String get settingsKeypadPlacementCenter => '中央';
+
+  @override
+  String get settingsKeypadPlacementLeft => '左';
+
+  @override
+  String get settingsKeypadPlacementRight => '右';
+
+  @override
+  String get gameKeypadDialogBodyPortrait => '縦向きでキーパッドを置く位置を選びます。';
+
+  @override
+  String get gameKeypadDialogBodyLandscape => '横向きで数字パネルを置く側を選びます。';
 }

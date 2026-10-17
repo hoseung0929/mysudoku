@@ -85,8 +85,9 @@ class GameEndFlow {
       barrierDismissible: false,
       builder: (dialogContext) {
         return GameCompleteDialog(
+          // 게임 화면 제목과 같은 짧은 표기("Beginner 003").
           levelLabel:
-              '${level.localizedName(l10n)} · ${l10n.levelPuzzleNumber(game.gameNumber)}',
+              '${level.localizedName(l10n)} ${game.gameNumber.toString().padLeft(3, '0')}',
           timeInSeconds: clearTimeSeconds,
           wrongCount: wrongCount,
           isNewBestRecord: completionData.isNewBestRecord,

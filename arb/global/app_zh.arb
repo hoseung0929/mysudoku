@@ -144,7 +144,7 @@
   "dialogNewBadges": "获得新徽章",
   "dialogElapsedTime": "用时",
   "dialogWrongCount": "失误",
-  "dialogWrongCountValue": "{count} 次",
+  "dialogWrongCountValue": "{count}",
   "@dialogWrongCountValue": {
     "placeholders": {
       "count": {
@@ -754,5 +754,13 @@
   "recordsMetricMistakeFree": "无失误完成",
   "recordsMetricTypicalTime": "每题通常用时",
   "recordsTypicalTimeValue": "约 {minutes} 分钟",
-  "levelPerfectLegend": "无提示、无失误完成"
+  "levelPerfectLegend": "无提示、无失误完成",
+  "settingsKeypadPlacementTitle": "键盘位置",
+  "settingsKeypadPlacementPortrait": "竖屏",
+  "settingsKeypadPlacementLandscape": "横屏",
+  "settingsKeypadPlacementCenter": "居中",
+  "settingsKeypadPlacementLeft": "靠左",
+  "settingsKeypadPlacementRight": "靠右",
+  "gameKeypadDialogBodyPortrait": "选择竖屏时数字键盘的位置。",
+  "gameKeypadDialogBodyLandscape": "选择横屏时数字面板所在的一侧。"
 }

@@ -19,6 +19,7 @@ import 'package:sudoku159/widgets/app_snackbar.dart';
 import 'package:sudoku159/widgets/waddling_penguin_icon.dart';
 import 'package:sudoku159/utils/tablet_hero_height.dart';
 import 'package:sudoku159/utils/app_logger.dart';
+import 'package:sudoku159/services/settings/keypad_placement_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -58,6 +59,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   /// 알림 ON/OFF 처리 중에는 스위치를 잠가 비동기 작업이 겹치지 않게 한다.
   bool _notificationBusy = false;
+
+  final KeypadPlacementService _keypadPlacementService =
+      KeypadPlacementService();
+  KeypadPlacement _keypadPortrait = KeypadPlacement.center;
+  KeypadPlacement _keypadLandscape = KeypadPlacement.right;
 
   /// 히어로가 상태바 영역 뒤로 완전히 넘어가기 전(true)인지 후(false)인지.
   bool _isTop = true;
@@ -115,9 +121,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadSettings() async {
     final loaded = await _settingsController.load();
+    final keypadPortrait = await _keypadPlacementService.portrait();
+    final keypadLandscape = await _keypadPlacementService.landscape();
     if (!mounted) return;
     setState(() {
       _state = loaded;
+      _keypadPortrait = keypadPortrait;
+      _keypadLandscape = keypadLandscape;
     });
   }
 
@@ -509,6 +519,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           value: _state.keepScreenAwake,
                           onChanged: _setKeepScreenAwake,
                         ),
+                        if (isTablet) _buildKeypadPlacementTile(),
                       ]),
                       _buildSettingsSection([
                         if (_showHowToPlay)
@@ -808,6 +819,121 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 color: cs.outlineVariant,
               ),
           ],
+        ],
+      ),
+    );
+  }
+
+  /// 아이패드 전용: 게임 화면 키패드 위치(세로형 3택, 가로형 2택).
+  Widget _buildKeypadPlacementTile() {
+    final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+
+    Widget row({
+      required Key key,
+      required String label,
+      required Set<KeypadPlacement> selected,
+      required List<ButtonSegment<KeypadPlacement>> segments,
+      required ValueChanged<KeypadPlacement> onChanged,
+    }) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: 6),
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<KeypadPlacement>(
+              key: key,
+              selected: selected,
+              onSelectionChanged: (values) => onChanged(values.first),
+              showSelectedIcon: false,
+              style: SegmentedButton.styleFrom(
+                selectedBackgroundColor: cs.primary.withValues(alpha: 0.12),
+                selectedForegroundColor: cs.primary,
+                foregroundColor: cs.onSurfaceVariant,
+                side: BorderSide(color: cs.outlineVariant),
+                textStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              segments: segments,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(22, 16, 22, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _buildSettingIcon(Icons.dialpad_rounded,
+                  color: const Color(0xFF4EAD7C)),
+              const SizedBox(width: 18),
+              Expanded(
+                child: Text(
+                  l10n.settingsKeypadPlacementTitle,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: cs.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          row(
+            key: const ValueKey('keypad-placement-portrait'),
+            label: l10n.settingsKeypadPlacementPortrait,
+            selected: {_keypadPortrait},
+            segments: [
+              ButtonSegment(
+                value: KeypadPlacement.center,
+                label: Text(l10n.settingsKeypadPlacementCenter),
+              ),
+              ButtonSegment(
+                value: KeypadPlacement.left,
+                label: Text(l10n.settingsKeypadPlacementLeft),
+              ),
+              ButtonSegment(
+                value: KeypadPlacement.right,
+                label: Text(l10n.settingsKeypadPlacementRight),
+              ),
+            ],
+            onChanged: (value) async {
+              setState(() => _keypadPortrait = value);
+              await _keypadPlacementService.setPortrait(value);
+            },
+          ),
+          const SizedBox(height: 14),
+          row(
+            key: const ValueKey('keypad-placement-landscape'),
+            label: l10n.settingsKeypadPlacementLandscape,
+            selected: {_keypadLandscape},
+            segments: [
+              ButtonSegment(
+                value: KeypadPlacement.left,
+                label: Text(l10n.settingsKeypadPlacementLeft),
+              ),
+              ButtonSegment(
+                value: KeypadPlacement.right,
+                label: Text(l10n.settingsKeypadPlacementRight),
+              ),
+            ],
+            onChanged: (value) async {
+              setState(() => _keypadLandscape = value);
+              await _keypadPlacementService.setLandscape(value);
+            },
+          ),
         ],
       ),
     );

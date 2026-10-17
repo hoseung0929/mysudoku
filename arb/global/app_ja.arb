@@ -144,7 +144,7 @@
   "dialogNewBadges": "新しいバッジ獲得",
   "dialogElapsedTime": "タイム",
   "dialogWrongCount": "ミス",
-  "dialogWrongCountValue": "{count}回",
+  "dialogWrongCountValue": "{count}",
   "@dialogWrongCountValue": {
     "placeholders": {
       "count": {
@@ -754,5 +754,13 @@
   "recordsMetricMistakeFree": "ミスなしで解いたパズル",
   "recordsMetricTypicalTime": "1問あたりの目安時間",
   "recordsTypicalTimeValue": "約{minutes}分",
-  "levelPerfectLegend": "ヒント・ミスなしで解いたパズル"
+  "levelPerfectLegend": "ヒント・ミスなしで解いたパズル",
+  "settingsKeypadPlacementTitle": "キーパッドの位置",
+  "settingsKeypadPlacementPortrait": "縦向き",
+  "settingsKeypadPlacementLandscape": "横向き",
+  "settingsKeypadPlacementCenter": "中央",
+  "settingsKeypadPlacementLeft": "左",
+  "settingsKeypadPlacementRight": "右",
+  "gameKeypadDialogBodyPortrait": "縦向きでキーパッドを置く位置を選びます。",
+  "gameKeypadDialogBodyLandscape": "横向きで数字パネルを置く側を選びます。"
 }

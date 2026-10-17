@@ -144,7 +144,7 @@
   "dialogNewBadges": "Nuevas insignias",
   "dialogElapsedTime": "Tiempo",
   "dialogWrongCount": "Errores",
-  "dialogWrongCountValue": "{count} veces",
+  "dialogWrongCountValue": "{count}",
   "@dialogWrongCountValue": {
     "placeholders": {
       "count": {
@@ -754,5 +754,13 @@
   "recordsMetricMistakeFree": "Resueltos sin errores",
   "recordsMetricTypicalTime": "Tiempo habitual por puzle",
   "recordsTypicalTimeValue": "Unos {minutes} min",
-  "levelPerfectLegend": "Resuelto sin pistas ni errores"
+  "levelPerfectLegend": "Resuelto sin pistas ni errores",
+  "settingsKeypadPlacementTitle": "Posición del teclado",
+  "settingsKeypadPlacementPortrait": "Vertical",
+  "settingsKeypadPlacementLandscape": "Horizontal",
+  "settingsKeypadPlacementCenter": "Centro",
+  "settingsKeypadPlacementLeft": "Izquierda",
+  "settingsKeypadPlacementRight": "Derecha",
+  "gameKeypadDialogBodyPortrait": "Elige dónde va el teclado numérico en vertical.",
+  "gameKeypadDialogBodyLandscape": "Elige de qué lado va el panel numérico en horizontal."
 }

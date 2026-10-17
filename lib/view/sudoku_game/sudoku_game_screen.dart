@@ -24,6 +24,7 @@ import 'package:sudoku159/view/sudoku_game/sudoku_board_grid.dart';
 import 'package:sudoku159/view/sudoku_game/game_effects_controller.dart';
 import 'package:sudoku159/services/game/auto_notes_tip_service.dart';
 import 'package:sudoku159/services/game/number_lock_tip_service.dart';
+import 'package:sudoku159/services/settings/keypad_placement_service.dart';
 import 'package:sudoku159/services/game/pencil_canvas_channel.dart';
 import 'package:sudoku159/services/game/pencil_digit_recognizer.dart';
 import 'package:sudoku159/services/game/pencil_writing_service.dart';
@@ -90,6 +91,9 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   bool _presenterReady = false;
   bool _isVibrationEnabled = true;
   bool _oneHandModeEnabled = false;
+  KeypadPlacement _keypadPlacementPortrait = KeypadPlacement.center;
+  KeypadPlacement _keypadPlacementLandscape = KeypadPlacement.right;
+  bool _keypadSlideEnabled = false;
   bool _memoHighlightEnabled = true;
   bool _showDeveloperAnswerPreview = false;
   final ValueNotifier<String> _timeNotifier = ValueNotifier<String>('0m');
@@ -1189,12 +1193,22 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
 
   Future<void> _loadGameSettings() async {
     final settings = await _settingsController.load();
+    final keypadService = KeypadPlacementService();
+    final keypadPortrait = await keypadService.portrait();
+    final keypadLandscape = await keypadService.landscape();
     if (!mounted) return;
     setState(() {
+      _keypadPlacementPortrait = keypadPortrait;
+      _keypadPlacementLandscape = keypadLandscape;
+      _keypadSlideEnabled = false;
       _isVibrationEnabled = settings.isVibrationEnabled;
       _oneHandModeEnabled = settings.oneHandModeEnabled;
       _memoHighlightEnabled =
           _featurePolicy.memoEnabled && settings.memoHighlightEnabled;
+    });
+    // 저장된 위치를 먼저 그린 뒤부터 위치 변경 애니메이션을 켠다.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() => _keypadSlideEnabled = true);
     });
   }
 
@@ -1520,7 +1534,13 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         side: BorderSide(color: palette.completedBorder),
       ),
       constraints: const BoxConstraints(minWidth: 220, maxWidth: 270),
-      onSelected: (_) => _showResetCurrentGameDialog(),
+      onSelected: (value) {
+        if (value == 'keypad') {
+          unawaited(_showKeypadPlacementDialog());
+        } else {
+          _showResetCurrentGameDialog();
+        }
+      },
       itemBuilder: (context) => [
         PopupMenuItem<String>(
           value: 'restart',
@@ -1551,7 +1571,7 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
                 Expanded(
                   child: Text(
                     l10n.gameRestartMenuTitle,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 15,
@@ -1564,8 +1584,106 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
             ),
           ),
         ),
+        if (MediaQuery.sizeOf(context).shortestSide > 600)
+          PopupMenuItem<String>(
+            value: 'keypad',
+            height: 52,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            child: Semantics(
+              label: l10n.settingsKeypadPlacementTitle,
+              excludeSemantics: true,
+              child: Row(
+                children: [
+                  ExcludeSemantics(
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: palette.completedBackground,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.dialpad_rounded,
+                        size: 21,
+                        color: palette.primaryPurple,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      l10n.settingsKeypadPlacementTitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: palette.primaryText,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
       ],
     );
+  }
+
+  /// 아이패드 전용: 현재 화면 방향의 키패드 위치를 바로 바꾸는 작은 대화상자.
+  /// 선택하면 즉시 적용·저장하고 닫는다(설정 화면의 같은 값과 공유).
+  Future<void> _showKeypadPlacementDialog() async {
+    final isLandscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
+    final current =
+        isLandscape ? _keypadPlacementLandscape : _keypadPlacementPortrait;
+    final options = isLandscape
+        ? const [KeypadPlacement.left, KeypadPlacement.right]
+        : const [
+            KeypadPlacement.center,
+            KeypadPlacement.left,
+            KeypadPlacement.right,
+          ];
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final picked = await showGeneralDialog<KeypadPlacement>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      transitionDuration:
+          reduceMotion ? Duration.zero : const Duration(milliseconds: 180),
+      pageBuilder: (dialogContext, _, __) => _KeypadPlacementDialog(
+        landscape: isLandscape,
+        current: current,
+        options: options,
+      ),
+      transitionBuilder: (context, animation, _, child) {
+        if (reduceMotion) return child;
+        final curved =
+            CurvedAnimation(parent: animation, curve: Curves.easeOut);
+        return FadeTransition(
+          opacity: curved,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.96, end: 1).animate(curved),
+            child: child,
+          ),
+        );
+      },
+    );
+    if (picked == null || picked == current || !mounted) return;
+    final service = KeypadPlacementService();
+    setState(() {
+      if (isLandscape) {
+        _keypadPlacementLandscape = picked;
+      } else {
+        _keypadPlacementPortrait = picked;
+      }
+    });
+    if (isLandscape) {
+      await service.setLandscape(picked);
+    } else {
+      await service.setPortrait(picked);
+    }
   }
 
   Widget _buildDeveloperMenuButton() {
@@ -1852,6 +1970,13 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
   static const double _kLandscapePanelBorderRadius = 22.0;
 
   /// 아이패드 가로 모드 전용 좌우 분할 레이아웃: 왼쪽 보드, 오른쪽 키패드+액션 버튼.
+  /// 키패드 위치를 바꿀 때 블록이 미끄러지는 시간. 저장값을 처음 불러오는
+  /// 동안과 '동작 줄이기' 설정에서는 애니메이션 없이 바로 배치한다.
+  Duration _keypadSlideDuration() =>
+      _keypadSlideEnabled && !MediaQuery.disableAnimationsOf(context)
+          ? const Duration(milliseconds: 320)
+          : Duration.zero;
+
   Widget _buildLandscapeLayout() {
     final mediaQuery = MediaQuery.of(context);
     final safePadding = mediaQuery.padding;
@@ -1872,159 +1997,188 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
             metrics.horizontalPadding,
             metrics.verticalPadding + metrics.bottomSafePadding,
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: Center(
-                  child: SizedBox(
-                    width: metrics.boardSize,
-                    height: metrics.boardSize,
-                    child: _buildBoardGrid(tabletPortrait: true),
+          // 패널 위치 설정: 보드와 패널의 좌우 자리를 바꾸고, 설정을 바꾸면
+          // 두 영역이 서로 미끄러져 자리를 맞바꾼다.
+          child: LayoutBuilder(builder: (context, inner) {
+            final panelWidth = metrics.keypadColumnWidth;
+            final panelLeft = _keypadPlacementLandscape == KeypadPlacement.left;
+            final boardAreaWidth =
+                math.max(0.0, inner.maxWidth - panelWidth - metrics.sectionGap);
+            final slide = _keypadSlideDuration();
+            return Stack(
+              children: [
+                AnimatedPositioned(
+                  duration: slide,
+                  curve: Curves.easeOutCubic,
+                  left: panelLeft ? panelWidth + metrics.sectionGap : 0,
+                  top: 0,
+                  bottom: 0,
+                  width: boardAreaWidth,
+                  child: Center(
+                    child: SizedBox(
+                      width: metrics.boardSize,
+                      height: metrics.boardSize,
+                      child: _buildBoardGrid(tabletPortrait: true),
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(width: metrics.sectionGap),
-              SizedBox(
-                width: metrics.keypadColumnWidth,
-                child: Container(
-                  padding: const EdgeInsets.all(_kLandscapePanelPadding),
-                  decoration: BoxDecoration(
-                    borderRadius:
-                        BorderRadius.circular(_kLandscapePanelBorderRadius),
-                    border: Border.all(color: context.colors.border),
-                  ),
-                  child: Column(
-                    children: [
-                      const Spacer(flex: _kLandscapeEdgeSpacerFlex),
-                      _buildLandscapeStatsPanel(),
-                      const Spacer(flex: _kLandscapeMidSpacerFlex),
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
+                AnimatedPositioned(
+                  duration: slide,
+                  curve: Curves.easeOutCubic,
+                  left: panelLeft ? 0 : inner.maxWidth - panelWidth,
+                  top: 0,
+                  bottom: 0,
+                  width: panelWidth,
+                  child: SizedBox(
+                    width: metrics.keypadColumnWidth,
+                    child: Container(
+                      padding: const EdgeInsets.all(_kLandscapePanelPadding),
+                      decoration: BoxDecoration(
+                        borderRadius:
+                            BorderRadius.circular(_kLandscapePanelBorderRadius),
+                        border: Border.all(color: context.colors.border),
+                      ),
+                      child: Column(
                         children: [
-                          for (int i = 0; i < 3; i++)
-                            Padding(
-                              padding: EdgeInsets.only(
-                                bottom: i < 2 ? metrics.numberButtonGap : 0,
+                          const Spacer(flex: _kLandscapeEdgeSpacerFlex),
+                          _buildLandscapeStatsPanel(),
+                          const Spacer(flex: _kLandscapeMidSpacerFlex),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              for (int i = 0; i < 3; i++)
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                    bottom: i < 2 ? metrics.numberButtonGap : 0,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      for (int j = 1; j <= 3; j++)
+                                        Padding(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal:
+                                                metrics.numberButtonGap / 2,
+                                          ),
+                                          child: _buildNumberButton(
+                                            i * 3 + j,
+                                            compact: true,
+                                            width: metrics.numberButtonWidth,
+                                            height: metrics.numberButtonHeight,
+                                            borderRadius:
+                                                metrics.numberButtonRadius,
+                                            largeBadge: true,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              SizedBox(
+                                height: metrics.compactGap +
+                                    _kLandscapeKeypadActionGapBonus,
                               ),
-                              child: Row(
+                              Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  for (int j = 1; j <= 3; j++)
-                                    Padding(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: metrics.numberButtonGap / 2,
-                                      ),
-                                      child: _buildNumberButton(
-                                        i * 3 + j,
-                                        compact: true,
-                                        width: metrics.numberButtonWidth,
-                                        height: metrics.numberButtonHeight,
-                                        borderRadius:
-                                            metrics.numberButtonRadius,
-                                        largeBadge: true,
-                                      ),
+                                  if (widget.showUndoButton)
+                                    _buildMobileActionButton(
+                                      icon: Icons.undo_rounded,
+                                      buttonKey:
+                                          const ValueKey('game-action-undo'),
+                                      label: AppLocalizations.of(context)!
+                                          .gameUndoShort,
+                                      color: AppTheme.lightBlueColor,
+                                      onPressed:
+                                          _canUndo ? _undoLastInput : null,
+                                      onLongPress:
+                                          _canRedo ? _redoLastInput : null,
+                                      longPressSemanticsHint:
+                                          AppLocalizations.of(context)!
+                                              .gameRedoShort,
+                                      compact: true,
+                                      size: metrics.actionButtonSize,
+                                      labelFontSize:
+                                          metrics.actionLabelFontSize,
                                     ),
-                                ],
-                              ),
-                            ),
-                          SizedBox(
-                            height: metrics.compactGap +
-                                _kLandscapeKeypadActionGapBonus,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (widget.showUndoButton)
-                                _buildMobileActionButton(
-                                  icon: Icons.undo_rounded,
-                                  buttonKey: const ValueKey('game-action-undo'),
-                                  label: AppLocalizations.of(context)!
-                                      .gameUndoShort,
-                                  color: AppTheme.lightBlueColor,
-                                  onPressed: _canUndo ? _undoLastInput : null,
-                                  onLongPress: _canRedo ? _redoLastInput : null,
-                                  longPressSemanticsHint:
-                                      AppLocalizations.of(context)!
-                                          .gameRedoShort,
-                                  compact: true,
-                                  size: metrics.actionButtonSize,
-                                  labelFontSize: metrics.actionLabelFontSize,
-                                ),
-                              _buildMobileActionButton(
-                                icon: Icons.edit_note,
-                                buttonKey: const ValueKey('game-action-memo'),
-                                imageDisplaySize: 28,
-                                activeBackgroundColor: _memoActiveBackground(),
-                                activeBorderColor: _memoActiveBorder(),
-                                activeLabelColor: _memoActiveLabel(),
-                                imageAsset: _memoImage,
-                                label: _presenter.isMemoMode
-                                    ? AppLocalizations.of(context)!
-                                        .gameMemoOnShort
-                                    : AppLocalizations.of(context)!
-                                        .gameMemoShort,
-                                semanticsLabel: _presenter.isMemoMode
-                                    ? AppLocalizations.of(context)!
-                                        .gameMemoModeOnSemantics
-                                    : AppLocalizations.of(context)!
-                                        .gameMemoModeOffSemantics,
-                                color: AppTheme.lightBlueColor,
-                                isActive: _presenter.isMemoMode,
-                                emphasizeActiveIcon: true,
-                                onPressed: _canToggleMemo
-                                    ? () {
-                                        unawaited(_toggleMemoMode());
-                                      }
-                                    : null,
-                                onLongPress: _canUseAutoNotes
-                                    ? () => unawaited(_applyAutoNotes())
-                                    : null,
-                                longPressSemanticsHint: _autoNotesEnabled
-                                    ? AppLocalizations.of(context)!
-                                        .gameMemoLongPressHint
-                                    : null,
-                                showAutoNotesBadge: _autoNotesEnabled,
-                                compact: true,
-                                size: metrics.actionButtonSize,
-                                labelFontSize: metrics.actionLabelFontSize,
-                              ),
-                              _buildMobileHintButton(
-                                buttonSize: metrics.actionButtonSize,
-                                labelFontSize: metrics.actionLabelFontSize,
-                              ),
-                              _buildMobileActionButton(
-                                icon: Icons.backspace_outlined,
-                                buttonKey: const ValueKey('game-action-erase'),
-                                imageDisplaySize: 32,
-                                imageAsset: _eraseImage,
-                                dimWhenDisabled: true,
-                                semanticsLabel: _canEraseSelection
-                                    ? AppLocalizations.of(context)!
-                                        .gameEraseSemanticsSelected
-                                    : AppLocalizations.of(context)!
+                                  _buildMobileActionButton(
+                                    icon: Icons.edit_note,
+                                    buttonKey:
+                                        const ValueKey('game-action-memo'),
+                                    imageDisplaySize: 28,
+                                    activeBackgroundColor:
+                                        _memoActiveBackground(),
+                                    activeBorderColor: _memoActiveBorder(),
+                                    activeLabelColor: _memoActiveLabel(),
+                                    imageAsset: _memoImage,
+                                    label: _presenter.isMemoMode
+                                        ? AppLocalizations.of(context)!
+                                            .gameMemoOnShort
+                                        : AppLocalizations.of(context)!
+                                            .gameMemoShort,
+                                    semanticsLabel: _presenter.isMemoMode
+                                        ? AppLocalizations.of(context)!
+                                            .gameMemoModeOnSemantics
+                                        : AppLocalizations.of(context)!
+                                            .gameMemoModeOffSemantics,
+                                    color: AppTheme.lightBlueColor,
+                                    isActive: _presenter.isMemoMode,
+                                    emphasizeActiveIcon: true,
+                                    onPressed: _canToggleMemo
+                                        ? () {
+                                            unawaited(_toggleMemoMode());
+                                          }
+                                        : null,
+                                    onLongPress: _canUseAutoNotes
+                                        ? () => unawaited(_applyAutoNotes())
+                                        : null,
+                                    longPressSemanticsHint: _autoNotesEnabled
+                                        ? AppLocalizations.of(context)!
+                                            .gameMemoLongPressHint
+                                        : null,
+                                    showAutoNotesBadge: _autoNotesEnabled,
+                                    compact: true,
+                                    size: metrics.actionButtonSize,
+                                    labelFontSize: metrics.actionLabelFontSize,
+                                  ),
+                                  _buildMobileHintButton(
+                                    buttonSize: metrics.actionButtonSize,
+                                    labelFontSize: metrics.actionLabelFontSize,
+                                  ),
+                                  _buildMobileActionButton(
+                                    icon: Icons.backspace_outlined,
+                                    buttonKey:
+                                        const ValueKey('game-action-erase'),
+                                    imageDisplaySize: 32,
+                                    imageAsset: _eraseImage,
+                                    dimWhenDisabled: true,
+                                    semanticsLabel: _canEraseSelection
+                                        ? AppLocalizations.of(context)!
+                                            .gameEraseSemanticsSelected
+                                        : AppLocalizations.of(context)!
+                                            .gameEraseShort,
+                                    label: AppLocalizations.of(context)!
                                         .gameEraseShort,
-                                label: AppLocalizations.of(context)!
-                                    .gameEraseShort,
-                                color: context.colors.attentionSurface,
-                                onPressed: _canEraseSelection
-                                    ? _eraseSelectedCell
-                                    : null,
-                                compact: true,
-                                size: metrics.actionButtonSize,
-                                labelFontSize: metrics.actionLabelFontSize,
+                                    color: context.colors.attentionSurface,
+                                    onPressed: _canEraseSelection
+                                        ? _eraseSelectedCell
+                                        : null,
+                                    compact: true,
+                                    size: metrics.actionButtonSize,
+                                    labelFontSize: metrics.actionLabelFontSize,
+                                  ),
+                                ],
                               ),
                             ],
                           ),
+                          const Spacer(flex: _kLandscapeEdgeSpacerFlex),
                         ],
                       ),
-                      const Spacer(flex: _kLandscapeEdgeSpacerFlex),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          }),
         );
       },
     );
@@ -2116,57 +2270,94 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         : ((playerFilledCount / widget.level.emptyCells) * 100).round();
     final l10n = AppLocalizations.of(context)!;
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: metrics.scrollBottomPadding),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final toolsBlock = SizedBox(
+      width: sideWidth,
+      height: blockHeight,
+      child: Column(
         children: [
-          SizedBox(
-            width: sideWidth,
-            height: blockHeight,
-            child: Column(
-              children: [
-                for (final tool in tools)
-                  SizedBox(
-                    height: slot,
-                    child: Center(child: tool),
-                  ),
-              ],
+          for (final tool in tools)
+            SizedBox(
+              height: slot,
+              child: Center(child: tool),
             ),
-          ),
-          const SizedBox(width: 12),
-          keypad,
-          const SizedBox(width: 12),
-          SizedBox(
-            width: sideWidth,
-            height: blockHeight,
-            child: Padding(
-              padding:
-                  EdgeInsets.symmetric(vertical: metrics.numberButtonGap / 2),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: _buildTabletStatusCard(
-                      label: l10n.gameMistakesShort,
-                      value: '$wrongCount / $maxWrongCount',
-                      accentColor: wrongCount > 0 ? AppTheme.pinkColor : null,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Expanded(
-                    child: _buildTabletStatusCard(
-                      label: l10n.gameProgressShort,
-                      value: '$progressPercent%',
-                      accentColor: AppTheme.statisticsAccent,
-                      progressValue: progressPercent / 100,
-                    ),
-                  ),
-                ],
+        ],
+      ),
+    );
+    final statusBlock = SizedBox(
+      width: sideWidth,
+      height: blockHeight,
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: metrics.numberButtonGap / 2),
+        child: Column(
+          children: [
+            Expanded(
+              child: _buildTabletStatusCard(
+                label: l10n.gameMistakesShort,
+                value: '$wrongCount / $maxWrongCount',
+                accentColor: wrongCount > 0 ? AppTheme.pinkColor : null,
               ),
             ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: _buildTabletStatusCard(
+                label: l10n.gameProgressShort,
+                value: '$progressPercent%',
+                accentColor: AppTheme.statisticsAccent,
+                progressValue: progressPercent / 100,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    // 키패드 위치 설정: 가운데(기본)는 도구 | 키패드 | 상태, 왼쪽은 키패드 | 상태 |
+    // 도구, 오른쪽은 도구 | 상태 | 키패드(도구는 항상 키패드 반대편 끝). 블록
+    // 크기는 같고 위치만 바뀌며, 설정을 바꾸면 부드럽게 미끄러져 이동한다.
+    const gap = 12.0;
+    final totalWidth = sideWidth * 2 + keypadWidth + gap * 2;
+    final (toolsX, keypadX, statusX) = switch (_keypadPlacementPortrait) {
+      KeypadPlacement.left => (
+          keypadWidth + sideWidth + gap * 2,
+          0.0,
+          keypadWidth + gap,
+        ),
+      KeypadPlacement.right => (
+          0.0,
+          sideWidth * 2 + gap * 2,
+          sideWidth + gap,
+        ),
+      KeypadPlacement.center => (
+          0.0,
+          sideWidth + gap,
+          sideWidth + keypadWidth + gap * 2,
+        ),
+    };
+    final slide = _keypadSlideDuration();
+
+    Widget place(double x, double width, Widget child) => AnimatedPositioned(
+          duration: slide,
+          curve: Curves.easeOutCubic,
+          left: x,
+          top: 0,
+          width: width,
+          height: blockHeight,
+          child: child,
+        );
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: metrics.scrollBottomPadding),
+      child: Center(
+        child: SizedBox(
+          width: totalWidth,
+          height: blockHeight,
+          child: Stack(
+            children: [
+              place(toolsX, sideWidth, toolsBlock),
+              place(keypadX, keypadWidth, keypad),
+              place(statusX, sideWidth, statusBlock),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -2190,53 +2381,62 @@ class _SudokuGameScreenState extends State<SudokuGameScreen>
         ),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            label,
-            maxLines: 1,
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 15, color: cs.onSurfaceVariant),
-          ),
-          const SizedBox(height: 4),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.center,
-            child: Text(
-              value,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: accentColor ?? cs.onSurface,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-          ),
-          // 두 카드의 라벨·값 위치가 같도록, 진행 바가 없는 카드도 같은 높이를
-          // 비워 둔다. 트랙은 카드 폭의 약 78%로 가운데 배치.
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 5,
-            child: progressValue == null
-                ? null
-                : FractionallySizedBox(
-                    widthFactor: 0.78,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(2.5),
-                      child: LinearProgressIndicator(
-                        value: progressValue.clamp(0.0, 1.0),
-                        minHeight: 5,
-                        color: accentColor,
-                        backgroundColor: cs.outlineVariant,
-                      ),
+      // 큰 글씨·낮은 높이(아이패드 가로)에서도 넘치지 않게 카드 안에서만 줄인다.
+      child: LayoutBuilder(
+        builder: (context, box) => FittedBox(
+          fit: BoxFit.scaleDown,
+          child: SizedBox(
+            width: box.maxWidth,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 15, color: cs.onSurfaceVariant),
+                ),
+                const SizedBox(height: 4),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.center,
+                  child: Text(
+                    value,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: accentColor ?? cs.onSurface,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
+                ),
+                // 두 카드의 라벨·값 위치가 같도록, 진행 바가 없는 카드도 같은 높이를
+                // 비워 둔다. 트랙은 카드 폭의 약 78%로 가운데 배치.
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 5,
+                  child: progressValue == null
+                      ? null
+                      : FractionallySizedBox(
+                          widthFactor: 0.78,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(2.5),
+                            child: LinearProgressIndicator(
+                              value: progressValue.clamp(0.0, 1.0),
+                              minHeight: 5,
+                              color: accentColor,
+                              backgroundColor: cs.outlineVariant,
+                            ),
+                          ),
+                        ),
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -3655,4 +3855,308 @@ class _RestartConfirmDialogState extends State<_RestartConfirmDialog> {
       ),
     );
   }
+}
+
+/// 키패드 위치 선택 대화상자: 앱 공통 팝업 톤(원형 아이콘·굵은 제목)에 선택지마다
+/// 배치 미리보기를 보여 주고, 고르면 바로 닫는다.
+class _KeypadPlacementDialog extends StatelessWidget {
+  const _KeypadPlacementDialog({
+    required this.landscape,
+    required this.current,
+    required this.options,
+  });
+
+  final bool landscape;
+  final KeypadPlacement current;
+  final List<KeypadPlacement> options;
+
+  String _label(AppLocalizations l10n, KeypadPlacement value) =>
+      switch (value) {
+        KeypadPlacement.center => l10n.settingsKeypadPlacementCenter,
+        KeypadPlacement.left => l10n.settingsKeypadPlacementLeft,
+        KeypadPlacement.right => l10n.settingsKeypadPlacementRight,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = LevelStatusPalette.of(context);
+    final m = DialogMetrics.of(context);
+    return Dialog(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      elevation: 3,
+      shadowColor: Colors.black.withValues(alpha: 0.2),
+      insetPadding: EdgeInsets.symmetric(horizontal: m.inset(24), vertical: 24),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(m.size(24.0, 28.0)),
+        side: BorderSide(color: colors.completedBorder),
+      ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: m.maxWidth(phone: 340, tablet: 520),
+          maxHeight: m.maxHeight ?? double.infinity,
+        ),
+        child: SingleChildScrollView(
+          padding: m.isTablet
+              ? EdgeInsets.fromLTRB(
+                  32,
+                  m.compactHeight ? 24 : 32,
+                  32,
+                  m.compactHeight ? 24 : 16,
+                )
+              : const EdgeInsets.fromLTRB(24, 24, 24, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: ExcludeSemantics(
+                  child: Container(
+                    width: m.spacing(44.0, 52.0),
+                    height: m.spacing(44.0, 52.0),
+                    decoration: BoxDecoration(
+                      color: colors.completedBackground,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.dialpad_rounded,
+                      size: m.spacing(24.0, 28.0),
+                      color: colors.primaryPurple,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: m.spacing(16.0, 20.0)),
+              Text(
+                l10n.settingsKeypadPlacementTitle,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: m.size(20.0, 24.0),
+                  fontWeight: FontWeight.w800,
+                  color: colors.primaryText,
+                ),
+              ),
+              SizedBox(height: m.spacing(10.0, 12.0)),
+              Text(
+                landscape
+                    ? l10n.gameKeypadDialogBodyLandscape
+                    : l10n.gameKeypadDialogBodyPortrait,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: m.size(14.0, 16.0),
+                  height: 1.45,
+                  color: colors.secondaryText,
+                ),
+              ),
+              SizedBox(height: m.spacing(20.0, 24.0)),
+              Row(
+                children: [
+                  for (var i = 0; i < options.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 10),
+                    Expanded(
+                      child: _KeypadPlacementOption(
+                        key: ValueKey('keypad-option-${options[i].name}'),
+                        placement: options[i],
+                        landscape: landscape,
+                        selected: options[i] == current,
+                        label: _label(l10n, options[i]),
+                        onTap: () => Navigator.of(context).pop(options[i]),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: TextButton.styleFrom(
+                  foregroundColor: colors.secondaryText,
+                  minimumSize: const Size.fromHeight(44),
+                  textStyle: TextStyle(
+                    fontSize: m.size(15.0, 16.0),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                child: Text(l10n.commonCancel),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _KeypadPlacementOption extends StatelessWidget {
+  const _KeypadPlacementOption({
+    super.key,
+    required this.placement,
+    required this.landscape,
+    required this.selected,
+    required this.label,
+    required this.onTap,
+  });
+
+  final KeypadPlacement placement;
+  final bool landscape;
+  final bool selected;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = LevelStatusPalette.of(context);
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Material(
+        color: selected ? colors.completedBackground : Colors.transparent,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: onTap,
+          child: Ink(
+            padding: const EdgeInsets.fromLTRB(10, 12, 10, 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: selected ? colors.primaryPurple : colors.completedBorder,
+                width: selected ? 2 : 1,
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AspectRatio(
+                  aspectRatio: landscape ? 1.45 : 0.78,
+                  child: CustomPaint(
+                    painter: _KeypadLayoutPainter(
+                      placement: placement,
+                      landscape: landscape,
+                      accent: colors.primaryPurple,
+                      muted: colors.completedBorder,
+                      line: selected
+                          ? colors.primaryPurple.withValues(alpha: 0.5)
+                          : colors.secondaryText.withValues(alpha: 0.35),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                    color:
+                        selected ? colors.primaryPurple : colors.secondaryText,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 보드와 키패드·도구 배치를 단순한 도형으로 그린 미리보기.
+class _KeypadLayoutPainter extends CustomPainter {
+  const _KeypadLayoutPainter({
+    required this.placement,
+    required this.landscape,
+    required this.accent,
+    required this.muted,
+    required this.line,
+  });
+
+  final KeypadPlacement placement;
+  final bool landscape;
+  final Color accent;
+  final Color muted;
+  final Color line;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final frame = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      const Radius.circular(8),
+    );
+    canvas.drawRRect(
+      frame,
+      Paint()
+        ..color = line
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.4,
+    );
+    final boardPaint = Paint()..color = muted.withValues(alpha: 0.55);
+    final sidePaint = Paint()..color = muted.withValues(alpha: 0.9);
+    final keypadPaint = Paint()..color = accent.withValues(alpha: 0.85);
+    RRect block(Rect r) => RRect.fromRectAndRadius(r, const Radius.circular(4));
+
+    const pad = 6.0;
+    if (landscape) {
+      final panelW = size.width * 0.34;
+      final boardSide = size.height - pad * 2;
+      final panelLeft = placement == KeypadPlacement.left;
+      final panelRect = Rect.fromLTWH(
+        panelLeft ? pad : size.width - pad - panelW,
+        pad,
+        panelW,
+        size.height - pad * 2,
+      );
+      final boardRect = Rect.fromLTWH(
+        panelLeft ? size.width - pad - boardSide : pad,
+        pad,
+        boardSide,
+        boardSide,
+      );
+      canvas.drawRRect(block(boardRect), boardPaint);
+      canvas.drawRRect(block(panelRect), keypadPaint);
+      return;
+    }
+
+    final boardSide = size.width - pad * 2;
+    canvas.drawRRect(
+      block(Rect.fromLTWH(pad, pad, boardSide, boardSide)),
+      boardPaint,
+    );
+    final top = pad * 2 + boardSide;
+    final height = size.height - top - pad;
+    final inner = size.width - pad * 2;
+    const gap = 4.0;
+    final sideW = inner * 0.22;
+    final keypadW = inner - sideW * 2 - gap * 2;
+    Rect slot(double x, double w) => Rect.fromLTWH(x, top, w, height);
+    final keypad = slot(0, keypadW);
+    final tools = slot(0, sideW);
+    final status = slot(0, sideW);
+    final order = switch (placement) {
+      KeypadPlacement.left => [keypad, status, tools],
+      KeypadPlacement.right => [tools, status, keypad],
+      KeypadPlacement.center => [tools, keypad, status],
+    };
+    var x = pad;
+    for (final r in order) {
+      final placed = Rect.fromLTWH(x, top, r.width, height);
+      canvas.drawRRect(
+        block(placed),
+        identical(r, keypad) ? keypadPaint : sidePaint,
+      );
+      x += r.width + gap;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _KeypadLayoutPainter old) =>
+      old.placement != placement ||
+      old.landscape != landscape ||
+      old.accent != accent ||
+      old.muted != muted ||
+      old.line != line;
 }

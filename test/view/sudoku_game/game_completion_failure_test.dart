@@ -344,7 +344,7 @@ void main() {
         tester,
         GameEndFlow(completionCoordinator: _ThrowingCoordinator()),
       );
-      expect(find.text('Beginner · Puzzle 1'), findsOneWidget);
+      expect(find.text('Beginner 001'), findsOneWidget);
       expect(find.textContaining('Game 1'), findsNothing);
     });
 

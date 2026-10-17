@@ -176,7 +176,7 @@ void main() {
       expect(find.text('You solved the puzzle'), findsOneWidget);
       expect(find.text('Beginner · Game 18'), findsOneWidget);
       expect(find.text('1:02:05'), findsOneWidget);
-      expect(find.text('2 times'), findsOneWidget);
+      expect(find.text('2'), findsOneWidget);
       // 제안 카드·알림·다른 난이도 유도는 없다.
       expect(find.text('Set tomorrow reminder'), findsNothing);
       expect(find.text('Try another level'), findsNothing);
@@ -202,7 +202,7 @@ void main() {
       expect(find.text('1:02:05'), findsOneWidget);
       expect(find.text('Time'), findsOneWidget);
       expect(find.text('Mistakes'), findsOneWidget);
-      expect(find.text('2 times'), findsOneWidget);
+      expect(find.text('2'), findsOneWidget);
       expect(find.textContaining('Wrong answers'), findsNothing);
     });
 

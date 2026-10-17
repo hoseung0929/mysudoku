@@ -144,7 +144,7 @@
   "dialogNewBadges": "새 배지 획득",
   "dialogElapsedTime": "소요 시간",
   "dialogWrongCount": "실수",
-  "dialogWrongCountValue": "{count}회",
+  "dialogWrongCountValue": "{count}",
   "@dialogWrongCountValue": {
     "placeholders": {
       "count": {
@@ -754,5 +754,13 @@
   "recordsMetricMistakeFree": "실수 없이 푼 퍼즐",
   "recordsMetricTypicalTime": "한 판에 보통 걸리는 시간",
   "recordsTypicalTimeValue": "약 {minutes}분",
-  "levelPerfectLegend": "힌트·실수 없이 푼 퍼즐"
+  "levelPerfectLegend": "힌트·실수 없이 푼 퍼즐",
+  "settingsKeypadPlacementTitle": "키패드 위치",
+  "settingsKeypadPlacementPortrait": "세로 모드",
+  "settingsKeypadPlacementLandscape": "가로 모드",
+  "settingsKeypadPlacementCenter": "가운데",
+  "settingsKeypadPlacementLeft": "왼쪽",
+  "settingsKeypadPlacementRight": "오른쪽",
+  "gameKeypadDialogBodyPortrait": "세로 화면에서 숫자 키패드를 둘 위치를 골라요.",
+  "gameKeypadDialogBodyLandscape": "가로 화면에서 숫자 패널을 둘 위치를 골라요."
 }

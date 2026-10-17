@@ -356,7 +356,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String dialogWrongCountValue(int count) {
-    return '$count times';
+    return '$count';
   }
 
   @override
@@ -1776,4 +1776,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get levelPerfectLegend => 'Solved with no hints or mistakes';
+
+  @override
+  String get settingsKeypadPlacementTitle => 'Keypad position';
+
+  @override
+  String get settingsKeypadPlacementPortrait => 'Portrait';
+
+  @override
+  String get settingsKeypadPlacementLandscape => 'Landscape';
+
+  @override
+  String get settingsKeypadPlacementCenter => 'Center';
+
+  @override
+  String get settingsKeypadPlacementLeft => 'Left';
+
+  @override
+  String get settingsKeypadPlacementRight => 'Right';
+
+  @override
+  String get gameKeypadDialogBodyPortrait =>
+      'Choose where the number keypad goes in portrait.';
+
+  @override
+  String get gameKeypadDialogBodyLandscape =>
+      'Choose which side the number panel sits on in landscape.';
 }

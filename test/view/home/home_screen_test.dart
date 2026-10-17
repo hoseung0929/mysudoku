@@ -707,6 +707,8 @@ void main() {
 
     // 삭제는 확인창을 먼저 보여주고, 취소하면 목록이 그대로다.
     await tester.tap(find.byTooltip('Delete saved progress').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete saved progress'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Delete saved progress?'), findsOneWidget);
@@ -716,7 +718,13 @@ void main() {
     expect(inList('Beginner\u00A0· Puzzle\u00A05'), findsOneWidget);
 
     // 항목을 고르면 그 게임이 저장된 상태로 복원된다.
-    await tester.tap(inList('Beginner\u00A0· Puzzle\u00A09'));
+    final continueButton = find.descendant(
+      of: find.byKey(const ValueKey('초급#9')),
+      matching: find.byType(FilledButton),
+    );
+    await tester.ensureVisible(continueButton);
+    await tester.pumpAndSettle();
+    await tester.tap(continueButton);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
     final screen =
