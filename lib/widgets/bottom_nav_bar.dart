@@ -70,7 +70,7 @@ class BottomNavBar extends StatelessWidget {
                 duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOut,
                 decoration: BoxDecoration(
-                  color: isTop ? navColor : navColor.withValues(alpha: 0.72),
+                  color: navColor.withValues(alpha: isTop ? 0.6 : 0.3),
                   borderRadius: BorderRadius.circular(46),
                   border: Border.all(
                     color: isTop
