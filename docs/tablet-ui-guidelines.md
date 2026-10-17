@@ -42,4 +42,4 @@
 
 - 태블릿 대응 범위는 현재 세로 전용으로 되어 있음 (`main.dart`에서 `DeviceOrientation.portraitUp` 고정, `Info.plist`의 `UISupportedInterfaceOrientations~ipad`도 세로만 선언, 2026-07-25). **아이패드 정식 배포 전에 가로 모드 지원이 필수로 추가되어야 함 (2026-07-26 결정) — 그때 이 세로 고정과 Info.plist 설정을 함께 되돌려야 함.**
 - `Info.plist`에 `UIRequiresFullScreen = true`를 추가해 아이패드 Slide Over/Split View 멀티태스킹을 비활성화함 (2026-07-25) — 좁은 창 폭 레이아웃을 검증하지 않은 상태에서 대응 범위를 좁히기 위한 결정. 추후 멀티태스킹 지원을 결정하면 이 값을 제거하고 좁은 폭에서의 레이아웃을 검증해야 함.
-- iOS `TARGETED_DEVICE_FAMILY`는 다시 `1`(아이폰 전용)로 되돌려져 있음 (2026-07-26). **아이패드 앱스토어 정식 배포는 (1) 애플펜슬 필기 입력, (2) 가로 모드 지원이 모두 구현된 이후로 보류됨.** 아이패드 시뮬레이터로 태블릿 UI를 확인할 때만 로컬에서 `1,2`로 임시 변경하고, 확인이 끝나면 반드시 `1`로 되돌릴 것.
+- iOS `TARGETED_DEVICE_FAMILY`는 `"1,2"`(유니버설)다 (2026-10-18, 버전 `1.3.0+6`부터 아이패드 배포). 펜슬 필기 입력과 가로 모드가 구현·실기기 검증된 뒤 배포를 결정했다. 멀티태스킹은 `UIRequiresFullScreen = true`로 계속 끈다.
